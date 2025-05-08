@@ -63,7 +63,16 @@
     }
   ],
   "variants": [],
-  "comments": [],
+  "comments": [
+    {
+      "user": "hieu",
+      "content": "Sản phẩm rất tốt",
+      "product": "",
+      "status": true,
+      "date": "08/05/2025",
+      "id": 1
+    }
+  ],
   "carts": [],
   "orders": [],
   "users": [
