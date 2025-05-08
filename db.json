@@ -76,6 +76,16 @@
       "email": "phamhieu12345@gmail.com",
       "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
       "id": 1
+    },
+    {
+      "email": "phamhieu123456@gmail.com",
+      "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
+      "id": 1
+    },
+    {
+      "email": "12@gmail.com",
+      "password": "$2a$10$RJ3bVJ6rF6eX1DVsxJm8RO/VNR3gZHDLxWBNrt/peFJdV1NulOp4m",
+      "id": 2
     }
   ]
 }

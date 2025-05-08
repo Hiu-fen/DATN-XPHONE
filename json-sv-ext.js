@@ -4,6 +4,7 @@ import {jwtDecode} from "jwt-decode"
 const server = jsonServer.create();
 const router = jsonServer.router("db.json");
 const middlewares = jsonServer.defaults();
+
 import fs from "fs"
 server.use(middlewares);
 server.use(jsonServer.bodyParser);
@@ -275,4 +276,56 @@ server.listen(port, () => {
   console.log(`Endpoint: http://localhost:${port}`);
   console.log(`Tạo mới collection: http://localhost:${port}/create-collection =>Method: POST`);  
   GetEndpoint()
+});
+// POST để tạo bình luận mới
+server.post("/comments", (req, res) => {
+  const db = JSON.parse(fs.readFileSync("db.json", "utf-8"));
+  const newComment = {
+    id: GetMaxID("comments") + 1, // Lấy ID tối đa và cộng thêm 1
+    ...req.body,
+    status: false,  // Trạng thái mặc định là false
+  };
+
+  db.comments.push(newComment);
+  fs.writeFileSync("db.json", JSON.stringify(db, null, 2), "utf-8");
+  res.status(201).json(newComment); // Trả về bình luận vừa tạo
+});
+
+// Xử lý khi thêm bình luận mới
+server.post("/comments", (req, res) => {
+  const db = JSON.parse(fs.readFileSync("db.json", "utf-8"));
+  const { text, userId } = req.body;
+
+  const newComment = {
+    id: GetMaxID("comments") + 1,
+    text: text,
+    userId: userId,
+    status: false,  // Mặc định trạng thái là false khi thêm mới
+    createdAt: new Date().toISOString(),
+  };
+
+  db.comments.push(newComment);
+
+  // Lưu lại db.json
+  fs.writeFileSync("db.json", JSON.stringify(db, null, 2), "utf-8");
+  res.status(201).json(newComment);
+});
+
+
+
+// Custom API để sửa trạng thái
+server.patch('/comments/:id', (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const db = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'db.json'), 'utf8'));
+  
+  const comment = db.comments.find(c => c.id === parseInt(id));
+  
+  if (comment) {
+    comment.status = status;
+    fs.writeFileSync(path.resolve(__dirname, 'db.json'), JSON.stringify(db, null, 2));
+    res.json(comment);
+  } else {
+    res.status(404).send({ error: 'Bình luận không tồn tại' });
+  }
 });

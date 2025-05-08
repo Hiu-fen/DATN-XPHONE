@@ -5,8 +5,8 @@ import AdminLayout from './layout/admin'
 import GetList from './components/admin/GetList'
 import PostAdd from './components/admin/PostAdd'
 import PutEdit from './components/admin/PutEdit'
-import Register from './components/admin/Register'
-import Login from './components/admin/Login'
+import Register from './components/client/Register'
+import Login from './components/client/Login'
 import GetListCategory from './components/admin/GetListCategory'
 import PostAddCategory from './components/admin/PostAddCategory'
 import PutEditCategory from './components/admin/PutEditCategory'
@@ -19,7 +19,10 @@ type Props = {}
 const App = (props: Props) => {
   const routes = useRoutes([
 
-      {path:"/client",element:<ClientLayout/>,children:[]},
+      {path:"/client",element:<ClientLayout/>,children:[
+        {path:'login', element:<Login/>},
+        {path:'register', element:<Register/>},
+      ]},
       {path:"/admin",element:<AdminLayout/>,children:[
       //Router Danh mục
       {path:'category/list',element:<GetListCategory/>},
