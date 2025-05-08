@@ -1,0 +1,81 @@
+{
+  "books": [],
+  "category": [
+    {
+      "name": "Iphone",
+      "mota": "Điện thoại táo",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "id": 1
+    },
+    {
+      "name": "SamSung",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "mota": "điện thoại androi",
+      "id": 2
+    },
+    {
+      "name": "op po",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "mota": "đập thoải moãi :v",
+      "id": 3
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "iphone12",
+      "price": "9.000000",
+      "mota": "táo",
+      "danhmuc": "1",
+      "trangthai": "Còn hàng",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 2,
+      "name": "sansung s20",
+      "price": "10.000000",
+      "mota": "sansung  đây",
+      "danhmuc": "2",
+      "trangthai": "Hết hàng",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 3,
+      "name": "oppo 12",
+      "price": "4.000000",
+      "mota": "đập k bể",
+      "danhmuc": "3",
+      "trangthai": "Hết hàng",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 5,
+      "name": "iphone11",
+      "price": "6.000000",
+      "mota": "Điện thoại mới nhất ",
+      "danhmuc": "1",
+      "trangthai": "Còn hàng",
+      "type": "simple",
+      "parent": 0
+    }
+  ],
+  "variants": [],
+  "comments": [
+    {
+      "status": true,
+      "id": 8
+    }
+  ],
+  "carts": [],
+  "orders": [],
+  "users": [
+    {
+      "email": "phamhieu12345@gmail.com",
+      "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
+      "id": 1
+    }
+  ]
+}
