@@ -12,6 +12,7 @@ import PostAddCategory from './components/admin/PostAddCategory'
 import PutEditCategory from './components/admin/PutEditCategory'
 import CommentAdmin from './components/admin/CommentList'
 import CommentAdd from './components/admin/CommentAdd'
+import GetUser from './components/admin/ListUsers'
 
 
 type Props = {}
@@ -39,7 +40,8 @@ const App = (props: Props) => {
       {path:'comment/add',element:<CommentAdd/>},
       // {path:'login',element:<Login/>},
 
-
+      /// Router quản lý tài khoản user
+      {path:'user/list',element:<GetUser/>}
 
       ]},
       

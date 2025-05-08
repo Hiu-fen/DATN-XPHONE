@@ -1,4 +1,6 @@
 import {
+  AccountBookFilled,
+  AccountBookTwoTone,
   CiOutlined,
   DashboardFilled,
   FileTextFilled,
@@ -48,6 +50,14 @@ const AdminSidebar = () => {
       ],
     },
     {
+      key: 'user',
+      label: 'Quản lý tài khoản',
+      icon: <AccountBookTwoTone/>,
+      children: [
+        { key: 'user/list', label: 'Tài khoản' },
+      ],
+    },
+    {
       key: 'report',
       label: 'Thống kê',
       icon: <FileTextFilled />,
@@ -62,6 +72,7 @@ const AdminSidebar = () => {
       'category-add': '/admin/category/add',
       'comment-list': '/admin/comment/list',
       'comment-add': '/admin/comment/add',
+      'user/list': '/admin/user/list',
       dashboard: '/admin',
       report: '/admin/report',
     };
