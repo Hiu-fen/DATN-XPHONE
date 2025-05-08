@@ -34,7 +34,6 @@ const Login = () => {
       }
       
     })
-
     const onSubmit = (data:User) => {
       mutation.mutate(data)
     }
@@ -42,7 +41,6 @@ const Login = () => {
       <div className="min-h-screen bg-gray-50 pt-32 px-4">
         <div className="max-w-md mx-auto p-8 bg-white border rounded-lg shadow-md">
           <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Đăng nhập</h2>
-  
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email */}
             <div>
@@ -94,4 +92,3 @@ const Login = () => {
   };
   
   export default Login
-  

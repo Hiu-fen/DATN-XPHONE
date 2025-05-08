@@ -20,17 +20,19 @@ const CommentAdmin = () => {
 
   // Hàm để thay đổi trạng thái bình luận (Ẩn/Hiện)
   const toggleStatus = async (id: number, currentStatus: boolean) => {
-    const newStatus = !currentStatus; 
-    await axios.put(`http://localhost:4000/comments/${id}`, { status: newStatus });
-    setComments(comments.map(comment => comment.id === id ? { ...comment, status: newStatus } : comment));
+    const newStatus = !currentStatus;
+    await axios.patch(`http://localhost:4000/comments/${id}`, { status: newStatus });
+    setComments(comments.map(comment =>
+      comment.id === id ? { ...comment, status: newStatus } : comment
+    ));
   };
   const mutation = useMutation({
     mutationFn: async (id: string) => await axios.delete(`http://localhost:4000/comments/${id}`),
-    onSuccess: () => {
-      message.success("Xóa thành công");
-     window.location.reload()
+    onSuccess: (_data, variables) => {
+      setComments(prev => prev.filter(c => c.id !== Number(variables)));
     }
-  });
+}); 
+  
   const onDelete = (id: string) => {
     
     mutation.mutate(id);
@@ -40,10 +42,9 @@ const CommentAdmin = () => {
   // Định nghĩa các cột trong bảng
   const columns = [
     { title: 'ID', dataIndex: 'id' },
-    { title: 'Người dùng', dataIndex: 'user' },
-    { title: 'Sản phẩm', dataIndex: 'product' },
-    { title: 'Nội dung', dataIndex: 'content' },
-    { title: 'Ngày', dataIndex: 'date' },
+    { title: 'Người dùng', dataIndex: 'user' },       // đúng tên đã dùng khi submit
+    { title: 'Nội dung', dataIndex: 'content' },      // đúng tên đã dùng
+    { title: 'Ngày', dataIndex: 'date' }, 
     {
       title: 'Trạng thái',
       key: 'status',
@@ -89,7 +90,7 @@ function nav(arg0: string): void {
     throw new Error('Function not implemented.');
 }
 
-function onDelete(id: string): void {
-    throw new Error('Function not implemented.');
-}
+// function onDelete(id: string): void {
+//     throw new Error('Function not implemented.');
+// }
 
