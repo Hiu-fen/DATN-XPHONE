@@ -65,7 +65,7 @@ const GetUser = () => {
     </div>
   );
 }
-<h1>hieuupdata</h1>
+<h1>DATN</h1>
 
 
 export default GetUser;
