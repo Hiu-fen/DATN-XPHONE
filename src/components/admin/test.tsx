@@ -5,6 +5,7 @@ const test = () => {
     <div>
       <h1>code test update hahaahahaa</h1>
       <h2>muahahahahahhaha</h2>
+      <h1>hieutest</h1>
     </div>
   )
 }
