@@ -4,7 +4,7 @@ import axios from 'axios'
 import React from 'react'
 import { User } from '../../interface/user'
 import { useNavigate } from 'react-router-dom'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+
 
 const GetUser = () => {
   const nav = useNavigate();
@@ -14,17 +14,7 @@ const GetUser = () => {
     queryFn: async () => (await axios.get(`http://localhost:4000/users`)).data
   });
 
-//   const mutation = useMutation({
-//     mutationFn: async (id: string) => await axios.delete(`http://localhost:4000/users/${id}`),
-//     onSuccess: () => {
-//       message.success("Xóa thành công");
-//       refetch();
-//     }
-//   });
 
-//   const onDelete = (id: string) => {
-//     mutation.mutate(id);
-//   };
 
   const columns = [
     {
@@ -64,24 +54,7 @@ const GetUser = () => {
       key: 'address',
       render: (_: any, record: User) => record.address || "Chưa có"
     },
-    // {
-    //   title: "Thao tác",
-    //   key: 'id',
-    //   dataIndex: 'id',
-    //   render: (id: string) => <>
-    //     <Button onClick={() => nav(`/phone/${id}/edit`)}><EditOutlined /></Button>
-    //     <Popconfirm
-    //       title="Thông báo"
-    //       description="Bạn chắc chắn muốn xóa?"
-    //       icon={<DeleteOutlined />}
-    //       onConfirm={() => onDelete(id)}
-    //       okText="OK"
-    //       cancelText="NO"
-    //     >
-    //       <Button danger><DeleteOutlined /></Button>
-    //     </Popconfirm>
-    //   </>
-    // },
+    
   ];
 
   return (
