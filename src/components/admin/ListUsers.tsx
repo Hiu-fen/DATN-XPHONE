@@ -6,8 +6,6 @@ import { User } from '../../interface/user'
 import { useNavigate } from 'react-router-dom'
 
 
-{/* <h2>hehehe</h2>add */}
-
 const GetUser = () => {
   const nav = useNavigate();
 
@@ -66,6 +64,7 @@ const GetUser = () => {
     </div>
   );
 }
+
 <h1>DATA</h1>
 
 
