@@ -9,4 +9,3 @@ const test = () => {
 }
 
 export default test
-git 
