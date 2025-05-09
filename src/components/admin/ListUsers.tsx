@@ -5,7 +5,7 @@ import React from 'react'
 import { User } from '../../interface/user'
 import { useNavigate } from 'react-router-dom'
 
-// hiiiii //////
+<h2>hehehe</h2>
 const GetUser = () => {
   const nav = useNavigate();
 
