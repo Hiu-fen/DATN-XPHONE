@@ -64,12 +64,6 @@ const GetUser = () => {
     </div>
   );
 }
-<<<<<<< HEAD
-
-<h1>DATA</h1>
-=======
-<h1>DATN update hieuhieu</h1>
->>>>>>> hieu
 
 
 export default GetUser;

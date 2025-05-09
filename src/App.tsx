@@ -45,15 +45,11 @@ const App = (props: Props) => {
 
       ]},
       
-      // DÀASHFJHASFKASHGKFASGFASGKFGASFJGASKFAS
-
-
       {path:"/",element:<AdminLayout/>,children:[
      
       ]},
-      // quân test code
-      // quan test git tttt
-      // quan test git ttttnn
+
+// hieutest
   ])
   return routes
 }
