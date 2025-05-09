@@ -5,11 +5,9 @@ import React from 'react'
 import { User } from '../../interface/user'
 import { useNavigate } from 'react-router-dom'
 
-<<<<<<< HEAD
+
 {/* <h2>hehehe</h2>add */}
-=======
-<h1>hiiiiiiii</h1>
->>>>>>> CheckOut
+
 const GetUser = () => {
   const nav = useNavigate();
 
@@ -68,5 +66,7 @@ const GetUser = () => {
     </div>
   );
 }
+<h1>DATA</h1>
+
 
 export default GetUser;
