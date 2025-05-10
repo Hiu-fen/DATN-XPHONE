@@ -2,7 +2,7 @@ import React from 'react'
 
 const tunglee = () => {
   return (
-    <div>tunglee</div>
+    <div>dit cu thang diuong</div>
   )
 }
 
