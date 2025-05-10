@@ -50,7 +50,6 @@ const App = (props: Props) => {
       ]},
 
 
-
   ])
   return routes
 }
