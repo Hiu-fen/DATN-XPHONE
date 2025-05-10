@@ -64,8 +64,6 @@ const GetUser = () => {
     </div>
   );
 }
-// h1111111111//
-// hieufen////
-/// duong ngu///
+
 
 export default GetUser;
