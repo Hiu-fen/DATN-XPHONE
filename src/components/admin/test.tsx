@@ -8,9 +8,7 @@ const test = () => {
         <input type="text" />
       </form>
     </div>
-    // LOZ MÁ M
-    // Quân Mặt Đầu Bíp
-    /// DCU PHUONG L
+
   )
 }
 
