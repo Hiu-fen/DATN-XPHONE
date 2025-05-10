@@ -4,9 +4,9 @@ const test = () => {
   return (
     <div>
       <form action="">
-        <label htmlFor="image">IMG</label>
+        <label htmlFor="image">Test sung đột</label>
         <input type="text" />
-        <label htmlFor="price"></label>
+        <label htmlFor="price">1000vnd</label>
       </form>
     </div>
   )
