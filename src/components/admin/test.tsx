@@ -84,7 +84,7 @@ const EditProductForm: React.FC<EditProductProps> = ({ productId }) => {
         </div>
 
         <div>
-          <button type="submit">Cập nhật</button>
+          <button type="submit">Lưu thay đổi</button>
         </div>
       </form>
     </div>
