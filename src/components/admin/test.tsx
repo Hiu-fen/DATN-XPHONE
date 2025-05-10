@@ -13,7 +13,7 @@ interface EditProductProps {
   productId: string
 }
 
-const EditProductForm: React.FC<EditProductProps> = ({ productId }) => {
+const Listproduc: React.FC<EditProductProps> = ({ productId }) => {
   const [product, setProduct] = useState<Product | null>(null)
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<Product>()
@@ -91,5 +91,6 @@ const EditProductForm: React.FC<EditProductProps> = ({ productId }) => {
   )
 }
 
-export default EditProductForm
+export default Listproduc
+
 
