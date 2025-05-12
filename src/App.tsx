@@ -20,7 +20,7 @@ type Props = {}
 const App = (props: Props) => {
   const routes = useRoutes([
 
-      {path:"/client",element:<ClientLayout/>,children:[
+      {path:"/",element:<ClientLayout/>,children:[
         {path:'login', element:<Login/>},
         {path:'register', element:<Register/>},
       ]},
@@ -44,13 +44,6 @@ const App = (props: Props) => {
       {path:'user/list',element:<GetUser/>}
 
       ]},
-      
-      {path:"/",element:<AdminLayout/>,children:[
-     
-      ]},
-
-// hieutest
-// git nhu con cac
   ])
   return routes
 }
