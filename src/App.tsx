@@ -1,4 +1,3 @@
-import React from 'react'
 import { useRoutes } from 'react-router-dom'
 import ClientLayout from './layout/client'
 import AdminLayout from './layout/admin'
@@ -15,9 +14,7 @@ import CommentAdd from './components/admin/CommentAdd'
 import GetUser from './components/admin/ListUsers'
 
 
-type Props = {}
-
-const App = (props: Props) => {
+const App = () => {
   const routes = useRoutes([
 
       {path:"/",element:<ClientLayout/>,children:[
