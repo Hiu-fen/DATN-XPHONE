@@ -27,15 +27,15 @@ const GetUser = () => {
       key: 'email',
       dataIndex: 'email',
     },
-    {
-      title: "Mật khẩu",
-      key: 'password',
-      render: (_: any, record: User) => {
-        const length = record.password?.length || 0;
-        const stars = '*'.repeat(length > 10 ? 10 : length);
-        return <span>{stars}</span>;
-      }
-    },
+    // {
+    //   title: "Mật khẩu",
+    //   key: 'password',
+    //   render: (_: any, record: User) => {
+    //     const length = record.password?.length || 0;
+    //     const stars = '*'.repeat(length > 10 ? 10 : length);
+    //     return <span>{stars}</span>;
+    //   }
+    // },
     {
         title: "Số điện thoại",
         key: 'Số điẹn thoại',
