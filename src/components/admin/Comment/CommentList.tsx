@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Table, Button, Popconfirm, message } from 'antd';
+import { Table, Button, Popconfirm } from 'antd';
 import { IComment } from '../../../interface/comments';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { QueryClient, useMutation } from '@tanstack/react-query';
+import { DeleteOutlined } from '@ant-design/icons';
+import { useMutation } from '@tanstack/react-query';
 
 
 const CommentAdmin = () => {
@@ -31,20 +31,20 @@ const CommentAdmin = () => {
     onSuccess: (_data, variables) => {
       setComments(prev => prev.filter(c => c.id !== Number(variables)));
     }
-}); 
-  
+  });
+
   const onDelete = (id: string) => {
-    
+
     mutation.mutate(id);
   };
-  
+
 
   // Định nghĩa các cột trong bảng
   const columns = [
     { title: 'ID', dataIndex: 'id' },
     { title: 'Người dùng', dataIndex: 'user' },       // đúng tên đã dùng khi submit
     { title: 'Nội dung', dataIndex: 'content' },      // đúng tên đã dùng
-    { title: 'Ngày', dataIndex: 'date' }, 
+    { title: 'Ngày', dataIndex: 'date' },
     {
       title: 'Trạng thái',
       key: 'status',
@@ -55,22 +55,22 @@ const CommentAdmin = () => {
       ),
     },
     {
-        title: "Thao tác",
-        key: 'id',
-        dataIndex: 'id',
-        render: (id: string) => <>
-          <Popconfirm
-            title="Thông báo"
-            description="Bạn chắc chắn muốn xóa?"
-            icon={<DeleteOutlined />}
-            onConfirm={() => onDelete(id)}
-            okText="OK"
-            cancelText="NO"
-          >
-            <Button danger><DeleteOutlined /></Button>
-          </Popconfirm>
-        </>
-      },
+      title: "Thao tác",
+      key: 'id',
+      dataIndex: 'id',
+      render: (id: string) => <>
+        <Popconfirm
+          title="Thông báo"
+          description="Bạn chắc chắn muốn xóa?"
+          icon={<DeleteOutlined />}
+          onConfirm={() => onDelete(id)}
+          okText="OK"
+          cancelText="NO"
+        >
+          <Button danger><DeleteOutlined /></Button>
+        </Popconfirm>
+      </>
+    },
   ];
 
   return (
@@ -87,7 +87,7 @@ const CommentAdmin = () => {
 
 export default CommentAdmin;
 function nav(arg0: string): void {
-    throw new Error('Function not implemented.');
+  throw new Error('Function not implemented.');
 }
 
 // function onDelete(id: string): void {

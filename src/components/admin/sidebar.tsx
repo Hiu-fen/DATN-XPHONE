@@ -1,7 +1,6 @@
 import {
   BarChartOutlined,
   CommentOutlined,
-  DashboardFilled,
   DatabaseOutlined,
   GiftOutlined,
   PhoneOutlined,
@@ -10,122 +9,166 @@ import {
   ShoppingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { Menu, MenuProps } from 'antd';
-// import React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminSidebar = () => {
-  type MenuItem = Required<MenuProps>['items'][number];
   const navigate = useNavigate();
+  const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [expandedMenus, setExpandedMenus] = useState(['product-manage']);
 
-  const items: MenuItem[] = [
+  const menuItems = [
     {
       key: 'dashboard',
-      label: 'Dashboard',
-      icon: <DashboardFilled />,
+      label: 'Thống kê',
+      icon: <BarChartOutlined />,
+      path: '/admin'
     },
     {
       key: 'product-manage',
       label: 'Quản lý sản phẩm',
-      icon: <ShoppingOutlined/>,
+      icon: <ShoppingOutlined />,
       children: [
-        { key: 'product-list', label: 'Danh sách sản phẩm' },
-        { key: 'product-add', label: 'Thêm sản phẩm' },
-      ],
+        { key: 'product-list', label: 'Danh sách sản phẩm', path: '/admin/phone/list' },
+        { key: 'product-add', label: 'Thêm sản phẩm', path: '/admin/phone/add' }
+      ]
     },
     {
       key: 'category-manage',
       label: 'Quản lý danh mục',
       icon: <DatabaseOutlined />,
       children: [
-        { key: 'category-list', label: 'Danh mục' },
-        { key: 'category-add', label: 'Thêm danh mục' },
-      ],
+        { key: 'category-list', label: 'Danh mục', path: '/admin/category/list' },
+        { key: 'category-add', label: 'Thêm danh mục', path: '/admin/category/add' }
+      ]
     },
     {
       key: 'comment-manage',
       label: 'Quản lý bình luận',
       icon: <CommentOutlined />,
       children: [
-        { key: 'comment-list', label: 'Bình luận' },
-        { key: 'comment-add', label: 'Thêm bình luận' },
-      ],
+        { key: 'comment-list', label: 'Bình luận', path: '/admin/comment/list' },
+        { key: 'comment-add', label: 'Thêm bình luận', path: '/admin/comment/add' }
+      ]
     },
     {
       key: 'user',
       label: 'Quản lý tài khoản',
-      icon: <UserOutlined/>,
+      icon: <UserOutlined />,
       children: [
-        { key: 'user/list', label: 'Tài khoản' },
-      ],
+        { key: 'user/list', label: 'Tài khoản', path: '/admin/user/list' }
+      ]
     },
     {
       key: 'banner',
       label: 'Quản lý Banner',
-      icon: <PictureOutlined/>,
+      icon: <PictureOutlined />,
       children: [
-        { key: 'user/list', label: 'Banner' },
-      ],
+        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' }
+      ]
     },
     {
       key: 'phone',
       label: 'Quản lý liên hệ',
-      icon: <PhoneOutlined/>,
+      icon: <PhoneOutlined />,
       children: [
-        { key: 'user/list', label: 'Liên hệ' },
-      ],
+        { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' }
+      ]
     },
     {
-      key: 'Don hang',
+      key: 'order',
       label: 'Quản lý đơn hàng',
-      icon: <ShoppingCartOutlined/>,
+      icon: <ShoppingCartOutlined />,
       children: [
-        { key: 'user/list', label: 'Đơn hàng' },
-      ],
+        { key: 'order/list', label: 'Đơn hàng', path: '/admin/order/list' }
+      ]
     },
     {
-      key: 'Khuyen mai',
+      key: 'promotion',
       label: 'Quản lý khuyến mãi',
-      icon: <GiftOutlined/>,
+      icon: <GiftOutlined />,
       children: [
-        { key: 'user/list', label: 'Khuyến mãi' },
-      ],
-    },
-    {
-      key: 'report',
-      label: 'Thống kê',
-      icon: <BarChartOutlined />,
-    },
+        { key: 'promotion/list', label: 'Khuyến mãi', path: '/admin/promotion/list' }
+      ]
+    }
   ];
 
-  const onClick: MenuProps['onClick'] = ({ key }) => {
-    const routeMap: Record<string, string> = {
-      'product-list': '/admin/phone/list',
-      'product-add': '/admin/phone/add',
-      'category-list': '/admin/category/list',
-      'category-add': '/admin/category/add',
-      'comment-list': '/admin/comment/list',
-      'comment-add': '/admin/comment/add',
-      'user/list': '/admin/user/list',
-      dashboard: '/admin',
-      report: '/admin/report',
-    };
+  const handleClick = (key: any, path: any) => {
+    setActiveMenu(key);
+    if (path) {
+      navigate(path);
+    }
+  };
 
-    if (routeMap[key]) {
-      navigate(routeMap[key]);
+  const toggleSubMenu = (key: any) => {
+    if (expandedMenus.includes(key)) {
+      setExpandedMenus(expandedMenus.filter(item => item !== key));
+    } else {
+      setExpandedMenus([...expandedMenus, key]);
     }
   };
 
   return (
-    <div className="w-1/5 h-screen bg-white">
-      <Menu
-        onClick={onClick}
-        style={{ width: '100%' }}
-        defaultSelectedKeys={['dashboard']}
-        mode="inline"
-        items={items}
-      />
-    </div>
+    <aside className="w-1/5 min-w-[280px] h-screen bg-green-700 overflow-y-auto sticky top-0 left-0">
+      {/* Menu Items */}
+      <nav className="py-4">
+        {menuItems.map(item => (
+          <div key={item.key} className="mb-1">
+            {/* Menu Item with children */}
+            {item.children ? (
+              <>
+                <div
+                  className={`px-6 py-3 flex items-center justify-between cursor-pointer ${activeMenu === item.key
+                    ? 'bg-green-800 text-white'
+                    : 'text-green-100 hover:bg-green-600'
+                    }`}
+                  onClick={() => toggleSubMenu(item.key)}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="font-medium">{item.label}</span>
+                  </div>
+                  <span className={`transform transition-transform ${expandedMenus.includes(item.key) ? 'rotate-90' : ''
+                    }`}>
+                    ›
+                  </span>
+                </div>
+
+                {/* SubMenu Items */}
+                {expandedMenus.includes(item.key) && (
+                  <div className="bg-green-800 py-1">
+                    {item.children.map(child => (
+                      <div
+                        key={child.key}
+                        className={`pl-14 pr-6 py-2 cursor-pointer ${activeMenu === child.key
+                          ? 'bg-green-900 text-white border-l-2 border-white'
+                          : 'text-green-200 hover:bg-green-700'
+                          }`}
+                        onClick={() => handleClick(child.key, child.path)}
+                      >
+                        <span className="text-sm">{child.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              // Single Menu Item
+              <div
+                className={`px-6 py-3 flex items-center gap-3 cursor-pointer ${activeMenu === item.key
+                  ? 'bg-green-800 text-white border-l-2 border-white'
+                  : 'text-green-100 hover:bg-green-600'
+                  }`}
+                onClick={() => handleClick(item.key, item.path)}
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span className="font-medium">{item.label}</span>
+              </div>
+            )}
+          </div>
+        ))}
+      </nav>
+    </aside>
   );
 };
 
