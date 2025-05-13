@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Table, Button, Popconfirm, message } from 'antd';
-import { IComment } from '../../interface/comments';
+import { IComment } from '../../../interface/comments';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { QueryClient, useMutation } from '@tanstack/react-query';
 

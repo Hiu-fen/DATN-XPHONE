@@ -1,12 +1,12 @@
 
 import React from 'react'
-import { IProduct } from '../../interface/product';
+import { IProduct } from '../../../interface/product';
 import { message } from 'antd';
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Icatagory } from '../../interface/category';
+import { Icatagory } from '../../../interface/category';
 
 
 const PostAddCategory = () => {

@@ -66,6 +66,16 @@
       "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0
+    },
+    {
+      "id": 6,
+      "name": "Iphone8",
+      "price": "5.000000",
+      "mota": "Điện thoại mới nhất ",
+      "danhmuc": "1",
+      "trangthai": "Còn hàng",
+      "type": "simple",
+      "parent": 0
     }
   ],
   "variants": [],

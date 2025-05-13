@@ -1,15 +1,17 @@
 import {
-  AccountBookFilled,
-  AccountBookTwoTone,
-  CiOutlined,
+  BarChartOutlined,
+  CommentOutlined,
   DashboardFilled,
-  FileTextFilled,
-  HighlightFilled,
-  ProductFilled,
-  ReadOutlined,
+  DatabaseOutlined,
+  GiftOutlined,
+  PhoneOutlined,
+  PictureOutlined,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { Menu, MenuProps } from 'antd';
-import React from 'react';
+// import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AdminSidebar = () => {
@@ -25,7 +27,7 @@ const AdminSidebar = () => {
     {
       key: 'product-manage',
       label: 'Quản lý sản phẩm',
-      icon: <ProductFilled />,
+      icon: <ShoppingOutlined/>,
       children: [
         { key: 'product-list', label: 'Danh sách sản phẩm' },
         { key: 'product-add', label: 'Thêm sản phẩm' },
@@ -34,7 +36,7 @@ const AdminSidebar = () => {
     {
       key: 'category-manage',
       label: 'Quản lý danh mục',
-      icon: <HighlightFilled />,
+      icon: <DatabaseOutlined />,
       children: [
         { key: 'category-list', label: 'Danh mục' },
         { key: 'category-add', label: 'Thêm danh mục' },
@@ -43,7 +45,7 @@ const AdminSidebar = () => {
     {
       key: 'comment-manage',
       label: 'Quản lý bình luận',
-      icon: <ReadOutlined />,
+      icon: <CommentOutlined />,
       children: [
         { key: 'comment-list', label: 'Bình luận' },
         { key: 'comment-add', label: 'Thêm bình luận' },
@@ -52,15 +54,47 @@ const AdminSidebar = () => {
     {
       key: 'user',
       label: 'Quản lý tài khoản',
-      icon: <AccountBookTwoTone/>,
+      icon: <UserOutlined/>,
       children: [
         { key: 'user/list', label: 'Tài khoản' },
       ],
     },
     {
+      key: 'banner',
+      label: 'Quản lý Banner',
+      icon: <PictureOutlined/>,
+      children: [
+        { key: 'user/list', label: 'Banner' },
+      ],
+    },
+    {
+      key: 'phone',
+      label: 'Quản lý liên hệ',
+      icon: <PhoneOutlined/>,
+      children: [
+        { key: 'user/list', label: 'Liên hệ' },
+      ],
+    },
+    {
+      key: 'Don hang',
+      label: 'Quản lý đơn hàng',
+      icon: <ShoppingCartOutlined/>,
+      children: [
+        { key: 'user/list', label: 'Đơn hàng' },
+      ],
+    },
+    {
+      key: 'Khuyen mai',
+      label: 'Quản lý khuyến mãi',
+      icon: <GiftOutlined/>,
+      children: [
+        { key: 'user/list', label: 'Khuyến mãi' },
+      ],
+    },
+    {
       key: 'report',
       label: 'Thống kê',
-      icon: <FileTextFilled />,
+      icon: <BarChartOutlined />,
     },
   ];
 

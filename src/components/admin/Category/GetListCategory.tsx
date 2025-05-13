@@ -6,7 +6,7 @@ import React from 'react'
 // import { IProduct } from '../../interface/product'
 import { useNavigate } from 'react-router-dom'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { Icatagory } from '../../interface/category'
+import { Icatagory } from '../../../interface/category'
 
 
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { IProduct } from '../../interface/product';
+import { IProduct } from '../../../interface/product';
 import { message } from 'antd';
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
