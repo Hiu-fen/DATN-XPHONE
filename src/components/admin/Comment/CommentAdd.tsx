@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { IComment } from '../../interface/comments';
+import { IComment } from '../../../interface/comments';
 
 const CommentAdd = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<IComment>();

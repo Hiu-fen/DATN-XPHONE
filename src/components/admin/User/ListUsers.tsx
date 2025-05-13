@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button, message, Popconfirm, Table } from 'antd'
 import axios from 'axios'
 import React from 'react'
-import { User } from '../../interface/user'
+import { User } from '../../../interface/user'
 import { useNavigate } from 'react-router-dom'
 
 

@@ -1,17 +1,19 @@
 import { useRoutes } from 'react-router-dom'
 import ClientLayout from './layout/client'
 import AdminLayout from './layout/admin'
-import GetList from './components/admin/GetList'
-import PostAdd from './components/admin/PostAdd'
-import PutEdit from './components/admin/PutEdit'
+import GetList from './components/admin/Product/GetList'
+
+import PutEdit from './components/admin/Product/PutEdit'
 import Register from './components/client/Register'
 import Login from './components/client/Login'
-import GetListCategory from './components/admin/GetListCategory'
-import PostAddCategory from './components/admin/PostAddCategory'
-import PutEditCategory from './components/admin/PutEditCategory'
-import CommentAdmin from './components/admin/CommentList'
-import CommentAdd from './components/admin/CommentAdd'
-import GetUser from './components/admin/ListUsers'
+
+import CommentAdd from './components/admin/Comment/CommentAdd'
+import GetUser from './components/admin/User/ListUsers'
+import GetListCategory from './components/admin/Category/GetListCategory'
+import PostAddCategory from './components/admin/Category/PostAddCategory'
+import PutEditCategory from './components/admin/Category/PutEditCategory'
+import PostAdd from './components/admin/Product/PostAdd'
+import CommentAdmin from './components/admin/Comment/CommentList'
 
 
 const App = () => {

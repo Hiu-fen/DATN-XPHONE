@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Button, message, Popconfirm, Table } from 'antd'
 import axios from 'axios'
 import React from 'react'
-import { IProduct } from '../../interface/product'
+import { IProduct } from '../../../interface/product'
 import { useNavigate } from 'react-router-dom'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 
