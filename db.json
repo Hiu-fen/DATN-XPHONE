@@ -96,6 +96,35 @@
   ],
   "carts": [],
   "orders": [],
+  "contacts": [
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "ưet",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 1
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "qt",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 2
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "dfgh",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 3
+    }
+  ],
   "users": [
     {
       "email": "phamhieu12345@gmail.com",

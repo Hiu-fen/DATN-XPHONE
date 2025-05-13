@@ -72,7 +72,8 @@ const AdminSidebar = () => {
       label: 'Quản lý liên hệ',
       icon: <PhoneOutlined />,
       children: [
-        { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' }
+         { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' },
+        { key: 'contact/add', label: 'Liên hệ', path: '/admin/contact/add' }
       ]
     },
     {
