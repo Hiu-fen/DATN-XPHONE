@@ -13,7 +13,9 @@ import {
 export default function XPhoneHeader() {
   const [notificationCount] = useState(3);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const timeoutRef = useRef(null); // Khai báo timeoutRef bằng useRef
+  const timeoutRef = useRef<number | null>(null);
+
+ // Khai báo timeoutRef bằng useRef
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -22,7 +24,7 @@ export default function XPhoneHeader() {
     setIsUserMenuOpen(true);
   };
 
-  const handleMouseLeave = () => {
+ const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsUserMenuOpen(false);
     }, 300); // Đợi 300ms trước khi đóng menu
@@ -85,40 +87,41 @@ export default function XPhoneHeader() {
 
         <div className="relative">
           <div
-            className="flex items-center gap-3 cursor-pointer"
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-          >
-            <div className="bg-green-100 w-10 h-10 rounded-full flex items-center justify-center text-green-600">
-              <UserOutlined style={{ fontSize: 20 }} />
-            </div>
-            <div className="hidden md:block">
-              <p className="font-medium text-gray-800">Xin Chào Admin</p>
-            </div>
+  className="relative"
+  onMouseEnter={handleMouseEnter}
+  onMouseLeave={handleMouseLeave}
+>
+  <div className="flex items-center gap-3 cursor-pointer">
+    <div className="bg-green-100 w-10 h-10 rounded-full flex items-center justify-center text-green-600">
+      <UserOutlined style={{ fontSize: 20 }} />
+    </div>
+    <div className="hidden md:block">
+      <p className="font-medium text-gray-800">Xin Chào Admin</p>
+    </div>
+  </div>
 
-            {isUserMenuOpen && (
-              <div
-                className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100"
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-              >
-                <Link
-                  to="/register"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setIsUserMenuOpen(false)}
-                >
-                  Đăng ký
-                </Link>
-                <Link
-                  to="/login"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  onClick={() => setIsUserMenuOpen(false)}
-                >
-                  Đăng nhập
-                </Link>
-              </div>
-            )}
-          </div>
+  {isUserMenuOpen && (
+    <div
+      className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100"
+    >
+      <Link
+        to="/register"
+        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+        onClick={() => setIsUserMenuOpen(false)}
+      >
+        Đăng ký
+      </Link>
+      <Link
+        to="/login"
+        className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+        onClick={() => setIsUserMenuOpen(false)}
+      >
+        Đăng nhập
+      </Link>
+    </div>
+  )}
+</div>
+
         </div>
       </div>
     </header>
