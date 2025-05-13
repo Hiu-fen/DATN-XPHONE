@@ -54,7 +54,7 @@ const GetListCategory = () => {
       key:'id',
       dataIndex:'id',
       render:(id:string)=><>
-      <Button onClick={()=>nav(`/category/phone/${id}/edit`)}><EditOutlined/></Button>
+      <Button onClick={()=>nav(`/admin/category/${id}/edit`)}><EditOutlined/></Button>
       <Popconfirm
       title="Thông báo"
       description="Bạn chắc chứ"

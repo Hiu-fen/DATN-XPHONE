@@ -26,7 +26,7 @@ const PostAddCategory = () => {
       }
     },onSuccess:()=>{
       message.success("Thêm mới thành công")
-      nav('/category/phone/list')
+      nav('/admin/category/list')
     }
   })
   const onSubmit = (data:Icatagory)=>{

@@ -35,7 +35,8 @@
       "danhmuc": "1",
       "trangthai": "Còn hàng",
       "type": "simple",
-      "parent": 0
+      "parent": 0,
+      "image": "https://picsum.photos/200"
     },
     {
       "id": 2,
@@ -45,7 +46,8 @@
       "danhmuc": "2",
       "trangthai": "Hết hàng",
       "type": "simple",
-      "parent": 0
+      "parent": 0,
+      "image": "https://picsum.photos/200"
     },
     {
       "id": 3,
@@ -55,7 +57,8 @@
       "danhmuc": "3",
       "trangthai": "Hết hàng",
       "type": "simple",
-      "parent": 0
+      "parent": 0,
+      "image": "https://picsum.photos/200"
     },
     {
       "id": 5,
@@ -65,7 +68,8 @@
       "danhmuc": "1",
       "trangthai": "Còn hàng",
       "type": "simple",
-      "parent": 0
+      "parent": 0,
+      "image": "https://picsum.photos/200"
     },
     {
       "id": 6,
@@ -74,6 +78,18 @@
       "mota": "Điện thoại mới nhất ",
       "danhmuc": "1",
       "trangthai": "Còn hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://picsum.photos/200"
+    },
+    {
+      "id": 7,
+      "name": "ten san pham",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "price": "5000000",
+      "mota": "sản phẩm chỉ mang tính chất tương chưng ",
+      "danhmuc": "4",
+      "trangthai": "Hết hàng",
       "type": "simple",
       "parent": 0
     }

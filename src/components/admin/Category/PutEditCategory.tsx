@@ -33,7 +33,7 @@ const PutEditCategory = () => {
       }
     },onSuccess:()=>{
       message.success("Sửa thành công")
-      nav('/category/phone/list')
+      nav('/admin/category/list')
     }
   })
   const onSubmit = (data:Icatagory)=>{

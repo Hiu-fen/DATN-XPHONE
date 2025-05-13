@@ -53,6 +53,15 @@ const GetList = () => {
       key: 'name',
       dataIndex: 'name',
     },
+{
+  title: "Ảnh",
+  key: 'image',
+  dataIndex: 'image',
+  render: (image: string) => (
+    <img src={image} alt="ảnh" style={{ width: 100, objectFit: 'cover', borderRadius: 8 }} />
+  )
+
+    },
     {
       title: "Giá",
       key: 'price',
@@ -86,7 +95,7 @@ const GetList = () => {
       key: 'id',
       dataIndex: 'id',
       render: (id: string) => <>
-        <Button onClick={() => nav(`/phone/${id}/edit`)}><EditOutlined /></Button>
+        <Button onClick={() => nav(`/admin/phone/${id}/edit`)}><EditOutlined /></Button>
         <Popconfirm
           title="Thông báo"
           description="Bạn chắc chắn muốn xóa?"

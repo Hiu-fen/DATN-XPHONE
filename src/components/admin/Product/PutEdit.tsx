@@ -46,7 +46,7 @@ const PutEdit = () => {
     },
     onSuccess: () => {
       message.success("Cập nhật thành công")
-      nav('/phone/list')
+      nav('/admin/phone/list')
     }
   });
 
@@ -69,6 +69,16 @@ const PutEdit = () => {
           />
           <span className='text-red-700'>{errors.name?.message}</span>
         </div>
+         <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ảnh</label>
+                  <input
+                    type="text"
+                    {...register('image', { required: "Không để trống", minLength: { value: 5, message: "Tối thiểu là 5 ký tự" } })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
+                    placeholder="Nhập url ảnh"
+                  />
+                  <span className="text-red-700">{errors.image?.message}</span>
+                </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Giá</label>
