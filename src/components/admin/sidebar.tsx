@@ -27,7 +27,7 @@ const AdminSidebar = () => {
     {
       key: 'product-manage',
       label: 'Quản lý sản phẩm',
-      icon: <ShoppingOutlined/>,
+      icon: <ShoppingOutlined />,
       children: [
         { key: 'product-list', label: 'Danh sách sản phẩm' },
         { key: 'product-add', label: 'Thêm sản phẩm' },
@@ -54,7 +54,7 @@ const AdminSidebar = () => {
     {
       key: 'user',
       label: 'Quản lý tài khoản',
-      icon: <UserOutlined/>,
+      icon: <UserOutlined />,
       children: [
         { key: 'user/list', label: 'Tài khoản' },
       ],
@@ -62,7 +62,7 @@ const AdminSidebar = () => {
     {
       key: 'banner',
       label: 'Quản lý Banner',
-      icon: <PictureOutlined/>,
+      icon: <PictureOutlined />,
       children: [
         { key: 'user/list', label: 'Banner' },
       ],
@@ -70,7 +70,7 @@ const AdminSidebar = () => {
     {
       key: 'phone',
       label: 'Quản lý liên hệ',
-      icon: <PhoneOutlined/>,
+      icon: <PhoneOutlined />,
       children: [
         { key: 'user/list', label: 'Liên hệ' },
       ],
@@ -78,7 +78,7 @@ const AdminSidebar = () => {
     {
       key: 'Don hang',
       label: 'Quản lý đơn hàng',
-      icon: <ShoppingCartOutlined/>,
+      icon: <ShoppingCartOutlined />,
       children: [
         { key: 'user/list', label: 'Đơn hàng' },
       ],
@@ -86,7 +86,7 @@ const AdminSidebar = () => {
     {
       key: 'Khuyen mai',
       label: 'Quản lý khuyến mãi',
-      icon: <GiftOutlined/>,
+      icon: <GiftOutlined />,
       children: [
         { key: 'user/list', label: 'Khuyến mãi' },
       ],
