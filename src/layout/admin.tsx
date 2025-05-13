@@ -1,22 +1,21 @@
-import React from 'react'
-import { Outlet } from 'react-router-dom'
-import AdminHeader from '../components/admin/header'
-import AdminSidebar from '../components/admin/sidebar'
+import { Outlet } from 'react-router-dom';
+import AdminHeader from '../components/admin/header';
+import AdminSidebar from '../components/admin/sidebar';
 
 const AdminLayout = () => {
     return (
-        <main className='bg-[#f6f9ff]'>
-            <AdminHeader/>
-            <div className='flex'>
-            <AdminSidebar/>
-            <div className='content w-4/5 p-5'>
-                <div className='bg-white p-5'>
-                <Outlet/>
+        <main className="min-h-screen bg-gray-50">
+            <AdminHeader />
+            <div className="flex">
+                <AdminSidebar />
+                <div className="content w-full lg:w-4/5 p-5">
+                    <div className="bg-white rounded-lg shadow-sm p-6 min-h-[calc(100vh-120px)]">
+                        <Outlet />
+                    </div>
+
                 </div>
             </div>
-            </div>
         </main>
-      )
-}
-
+    );
+};
 export default AdminLayout

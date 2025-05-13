@@ -28,17 +28,6 @@
   ],
   "products": [
     {
-      "id": 1,
-      "name": "iphone12",
-      "price": "9.000000",
-      "mota": "táo",
-      "danhmuc": "1",
-      "trangthai": "Còn hàng",
-      "type": "simple",
-      "parent": 0,
-      "image": "https://picsum.photos/200"
-    },
-    {
       "id": 2,
       "name": "sansung s20",
       "price": "10.000000",
