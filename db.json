@@ -91,7 +91,16 @@
       "product": "",
       "status": true,
       "date": "08/05/2025",
-      "id": 1
+      "id": 1,
+      "likes": 5
+    },
+    {
+      "user": "amthucv1",
+      "content": "123123123",
+      "sanpham": "5",
+      "date": "2025-05-14T09:34:29.709Z",
+      "likes": 6,
+      "id": 2
     }
   ],
   "carts": [],
