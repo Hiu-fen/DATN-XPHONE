@@ -88,7 +88,8 @@ const AdminSidebar = () => {
       label: 'Quản lý khuyến mãi',
       icon: <GiftOutlined />,
       children: [
-        { key: 'promotion/list', label: 'Khuyến mãi', path: '/admin/promotion/list' }
+        { key: 'promotion/list', label: 'Khuyến mãi', path: '/admin/promotion/list' },
+        { key: 'promotion/add', label: 'Thêm khuyến mãi', path: '/admin/promotion/add' }
       ]
     }
   ];
