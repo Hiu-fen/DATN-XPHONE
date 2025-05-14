@@ -14,6 +14,9 @@ import PostAddCategory from './components/admin/Category/PostAddCategory'
 import PutEditCategory from './components/admin/Category/PutEditCategory'
 import PostAdd from './components/admin/Product/PostAdd'
 import CommentAdmin from './components/admin/Comment/CommentList'
+import GetPromotion from './components/admin/Promotion/PromotionList'
+import PostAddPromotion from './components/admin/Promotion/PromotionAdd'
+import PutEditPromotion from './components/admin/Promotion/PromotionEdit'
 
 
 const App = () => {
@@ -44,8 +47,12 @@ const App = () => {
         // {path:'login',element:<Login/>},
 
         /// Router quản lý tài khoản user
-        { path: 'user/list', element: <GetUser /> }
+        { path: 'user/list', element: <GetUser /> },
 
+        /// Router quản lý Khuyễn mãi
+        { path: 'promotion/list', element: <GetPromotion /> },
+        { path: 'promotion/add', element: <PostAddPromotion /> },
+        { path: 'promotion/:id/edit', element: <PutEditPromotion /> },
       ]
     },
   ])
