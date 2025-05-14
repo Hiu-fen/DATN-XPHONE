@@ -14,6 +14,7 @@ import PostAddCategory from './components/admin/Category/PostAddCategory'
 import PutEditCategory from './components/admin/Category/PutEditCategory'
 import PostAdd from './components/admin/Product/PostAdd'
 import CommentAdmin from './components/admin/Comment/CommentList'
+import Search from './components/admin/Search/search'
 
 
 const App = () => {
@@ -44,8 +45,11 @@ const App = () => {
         // {path:'login',element:<Login/>},
 
         /// Router quản lý tài khoản user
-        { path: 'user/list', element: <GetUser /> }
+        { path: 'user/list', element: <GetUser /> },
 
+        //Router Search
+        {path:'search', element:<Search/>}
+        
       ]
     },
   ])
