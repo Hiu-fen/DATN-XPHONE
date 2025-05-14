@@ -73,6 +73,16 @@ const ContactList = () => {
       dataIndex: 'phone',
       key: 'phone',
     },
+     {
+      title: 'Nội dung',
+      dataIndex: 'message',
+      key: 'message',
+    },
+     {
+      title: 'Ngày gửi',
+      dataIndex: 'date',
+      key: 'date',
+    },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
