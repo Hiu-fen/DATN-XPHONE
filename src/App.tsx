@@ -55,7 +55,7 @@ const App = () => {
 
 
         //Router Search
-        {path:'search', element:<Search/>}
+        {path:'search', element:<Search/>},
 
         /// Router quản lý Khuyễn mãi
         { path: 'promotion/list', element: <GetPromotion /> },
