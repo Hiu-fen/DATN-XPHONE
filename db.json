@@ -124,5 +124,19 @@
       "password": "$2a$10$RJ3bVJ6rF6eX1DVsxJm8RO/VNR3gZHDLxWBNrt/peFJdV1NulOp4m",
       "id": 2
     }
+],
+  "promotions": [
+    {
+      "name": "Miễn phí vận chuyển",
+      "code": "FreeShip",
+      "discountType": "FreeShip",
+      "applicableProducts": [],
+      "description": "Miễn phí vận chuyển cho đơn hàng trên 500.000đ",
+      "condition": "Áp dụng toàn bộ sản phẩm",
+      "startDate": "2025-14-05",
+      "endDate": "2025-20-05",
+      "status": true,
+      "id": 1
+    }
   ]
 }
