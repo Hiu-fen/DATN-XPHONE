@@ -67,6 +67,12 @@ if (user.active === false) {
         </div>
 
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded w-full">Đăng nhập</button>
+<div className="flex items-center gap-2">
+  <p>Bạn chưa có tài khoản?</p>
+  <a href="register" className="text-blue-700">Thêm tài khoản ngay</a>
+</div>
+
+      
       </form>
     </div>
   );

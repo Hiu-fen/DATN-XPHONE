@@ -280,6 +280,21 @@
       "name": "client",
       "role": "user",
       "id": 8
+    },
+    {
+      "email": "1@gmail.com",
+      "password": "$2a$10$ng33cebMcNthSqbFTY/23evTexjtRAtKtVYBdU5CoHfwVlGcRzuYC",
+      "name": "hieuhieu",
+      "role": "admin",
+      "id": 9
+    },
+    {
+      "email": "2@gmail.com",
+      "password": "$2a$10$J1fqbZBLgSFIHuLb6rCd.eDNbY4mPZfUrufJgBQLPQIE65PCQf4fG",
+      "name": "hieuhieu",
+      "role": "admin",
+      "id": 10,
+      "active": true
     }
   ],
   "promotions": [
