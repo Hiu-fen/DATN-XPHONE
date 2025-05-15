@@ -27,12 +27,16 @@ import ContactList from './components/admin/Contact/ContactList'
 import BannerAdd from './components/admin/Banner/BannerAdd'
 import BannerList from './components/admin/Banner/BannerList'
 import BannerEdit from './components/admin/Banner/BannerEdit'
+
 import PrivateRouteAdmin from './components/PrivateRouteAdmin'
 import LoginAdmin from './components/admin/User/Login'
 import RegisterAdmin from './components/admin/User/Register'
 import GetAdmin from './components/admin/User/ListUserAdmin'
 import ProfileAdmin from './components/admin/User/ProfileAdmin'
 import GetClient from './components/admin/User/ListUserClient'
+
+import DetailPromotion from './components/admin/Promotion/PromotionDetail'
+
 
 
 const App = () => {
@@ -93,9 +97,14 @@ const App = () => {
         /// Router quản lý Khuyễn mãi
         { path: 'promotion/list', element: <GetPromotion /> },
         { path: 'promotion/add', element: <PostAddPromotion /> },
+
         { path: 'promotion/:id/edit', element: <PutEditPromotion /> },
        
         
+
+        { path: 'promotion/edit/:id', element: <PutEditPromotion /> },
+        { path: 'promotion/detail/:id', element: <DetailPromotion /> },
+
 
         /// Router quản lý lien he 
          { path: 'contact/add', element: <ContactAdd /> },
