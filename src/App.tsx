@@ -28,6 +28,7 @@ import ContactList from './components/admin/Contact/ContactList'
 import BannerAdd from './components/admin/Banner/BannerAdd'
 import BannerList from './components/admin/Banner/BannerList'
 import BannerEdit from './components/admin/Banner/BannerEdit'
+import DetailPromotion from './components/admin/Promotion/PromotionDetail'
 
 
 const App = () => {
@@ -73,7 +74,9 @@ const App = () => {
         /// Router quản lý Khuyễn mãi
         { path: 'promotion/list', element: <GetPromotion /> },
         { path: 'promotion/add', element: <PostAddPromotion /> },
-        { path: 'promotion/:id/edit', element: <PutEditPromotion /> },
+        { path: 'promotion/edit/:id', element: <PutEditPromotion /> },
+        { path: 'promotion/detail/:id', element: <DetailPromotion /> },
+
 
         { path: 'user/list', element: <GetUser /> },
 
