@@ -8,7 +8,6 @@ import Register from './components/client/Register'
 import Login from './components/client/Login'
 
 import CommentAdd from './components/admin/Comment/CommentAdd'
-import GetUser from './components/admin/User/ListUsers'
 import GetListCategory from './components/admin/Category/GetListCategory'
 import PostAddCategory from './components/admin/Category/PostAddCategory'
 import PutEditCategory from './components/admin/Category/PutEditCategory'
@@ -28,6 +27,12 @@ import ContactList from './components/admin/Contact/ContactList'
 import BannerAdd from './components/admin/Banner/BannerAdd'
 import BannerList from './components/admin/Banner/BannerList'
 import BannerEdit from './components/admin/Banner/BannerEdit'
+import PrivateRouteAdmin from './components/PrivateRouteAdmin'
+import LoginAdmin from './components/admin/User/Login'
+import RegisterAdmin from './components/admin/User/Register'
+import GetAdmin from './components/admin/User/ListUserAdmin'
+import ProfileAdmin from './components/admin/User/ProfileAdmin'
+import GetClient from './components/admin/User/ListUserClient'
 
 
 const App = () => {
@@ -40,7 +45,20 @@ const App = () => {
       ]
     },
     {
-      path: "/admin", element: <AdminLayout />, children: [
+  path: "/admin/login",
+  element: <LoginAdmin />
+},
+{
+  path: "/admin/register",
+  element: <RegisterAdmin />
+},
+    {
+  path: "/admin",
+  element: (
+    <PrivateRouteAdmin>
+      <AdminLayout />
+    </PrivateRouteAdmin>
+  ), children: [
 
         //Router Danh mục
         { path: 'category/list', element: <GetListCategory /> },
@@ -58,7 +76,9 @@ const App = () => {
         // {path:'login',element:<Login/>},
 
         /// Router quản lý tài khoản user
-        { path: 'user/list', element: <GetUser /> },
+         { path: 'user/listadmin', element: <GetAdmin /> },
+    { path: 'user/profileadmin', element: <ProfileAdmin /> },
+    { path: 'user/listclient', element: <GetClient /> },
 
 
         //Router Search
@@ -74,8 +94,8 @@ const App = () => {
         { path: 'promotion/list', element: <GetPromotion /> },
         { path: 'promotion/add', element: <PostAddPromotion /> },
         { path: 'promotion/:id/edit', element: <PutEditPromotion /> },
-
-        { path: 'user/list', element: <GetUser /> },
+       
+        
 
         /// Router quản lý lien he 
          { path: 'contact/add', element: <ContactAdd /> },
