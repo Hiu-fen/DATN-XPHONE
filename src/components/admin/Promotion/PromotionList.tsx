@@ -1,11 +1,12 @@
-import { useQuery } from "@tanstack/react-query";
-import { Button, Popconfirm, Table } from "antd";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Button, message, Popconfirm, Table, Tag } from "antd";
 import { Promotion } from "../../../interface/promotion";
 import axios from "axios";
 import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 
 const GetPromotion = () => {
-  const { data } = useQuery<Promotion[]>({
+  const { data, isLoading } = useQuery<Promotion[]>({
     queryKey: ['promotions'],
     queryFn: async () => {
       try {
@@ -13,12 +14,35 @@ const GetPromotion = () => {
         return response.data
       } catch (error) {
         console.log(error)
+        message.error('Lỗi khi tải danh sách khuyến mãi')
+        throw error
       }
-    },
+    }
   })
 
-  const onDelete = async () => {
-    
+  const nav = useNavigate()
+
+  const queryClient = useQueryClient()
+
+  const mutation = useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await axios.delete(`http://localhost:4000/promotions/${id}`)
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    onSuccess: () => {
+      message.success('Xóa thành công')
+      queryClient.invalidateQueries({queryKey: ['promotions']})
+    },
+    onError: () => {
+      message.error('Xóa thất bại')
+    }
+  })
+
+  const onDelete = async (id:string) => {
+    mutation.mutate(id)
   }
 
   const columns = [
@@ -42,39 +66,44 @@ const GetPromotion = () => {
       title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
       key: 'startDate',
+      render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
     },
-        {
+    {
       title: 'Ngày kết thúc',
       dataIndex: 'endDate',
       key: 'endDate',
+      render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (status: boolean) => (
-        <span>
-          {status ? 'Đang hoạt động' : 'Ngừng hoạt động'}
-        </span>
-      ),
+      render: (status: string) => {
+        const boolStatus = status === "true";
+        return (
+          <Tag color={boolStatus ? "green" : "red"}>
+            {boolStatus ? 'Hoạt động' : 'Hết hạn'}
+          </Tag>
+        );
+      }
     },
     {
       title: 'Thao tác',
       key: 'id',
       dataIndex: 'id',
-      render: () => (
+      render: (id:string) => (
         <>
           <div className='flex justify-center items-center'>
-              <Button className='mr-2' type="primary">
+              <Button className='mr-2' type="primary" onClick={() => nav(`/admin/promotion/edit/${id}`)}>
                   <EditOutlined />
               </Button>
-              <Button className='mr-2' >
+              <Button className='mr-2' onClick={() => nav(`/admin/promotion/detail/${id}`)}>
                   <EyeOutlined />
               </Button>
               <Popconfirm
                   title="Thông báo!!!"
                   description="Bạn chắc chắn xóa chứ?"
-                  onConfirm={() => onDelete()}
+                  onConfirm={() => onDelete(id)}
                   okText="Yes"
                   cancelText="No"
               >
@@ -90,10 +119,16 @@ const GetPromotion = () => {
   ];
 
   return (
-    <div>
-      <h1>Danh sách khuyến mãi</h1>
+    <div className="p-5">
+      <h1 className="mb-2">Danh sách khuyến mãi</h1>
       <>
-        <Table dataSource={data} columns={columns} pagination={false}/>
+        <Table 
+          dataSource={data} 
+          columns={columns} 
+          pagination={false}
+          loading={isLoading}
+          rowKey="id"
+        />
       </>
     </div>
   );
