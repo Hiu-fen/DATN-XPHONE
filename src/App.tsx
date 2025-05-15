@@ -20,6 +20,8 @@ import Search from './components/admin/Search/search'
 import GetPromotion from './components/admin/Promotion/PromotionList'
 import PostAddPromotion from './components/admin/Promotion/PromotionAdd'
 import PutEditPromotion from './components/admin/Promotion/PromotionEdit'
+import OrderList from './components/admin/Order/ListOrder'
+import OrderDetail from './components/admin/Order/OrderDetail'
 
 
 
@@ -56,6 +58,12 @@ const App = () => {
 
         //Router Search
         {path:'search', element:<Search/>},
+
+        //Router Order
+        {path:'order/list', element:<OrderList/>},
+        { path: 'order/:id', element: <OrderDetail /> },
+  
+        
 
         /// Router quản lý Khuyễn mãi
         { path: 'promotion/list', element: <GetPromotion /> },
