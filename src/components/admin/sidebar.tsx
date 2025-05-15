@@ -64,7 +64,8 @@ const AdminSidebar = () => {
       label: 'Quản lý Banner',
       icon: <PictureOutlined />,
       children: [
-        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' }
+        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' },
+        { key: 'banner/add', label: 'Thêm Banner', path: '/admin/banner/add' }
       ]
     },
     {

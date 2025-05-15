@@ -16,6 +16,9 @@ import PostAdd from './components/admin/Product/PostAdd'
 import CommentAdmin from './components/admin/Comment/CommentList'
 import ContactAdd from './components/admin/Contact/ContactAdd'
 import ContactList from './components/admin/Contact/ContactList'
+import BannerAdd from './components/admin/Banner/BannerAdd'
+import BannerList from './components/admin/Banner/BannerList'
+import BannerEdit from './components/admin/Banner/BannerEdit'
 
 
 const App = () => {
@@ -50,7 +53,12 @@ const App = () => {
 
         /// Router quản lý lien he 
          { path: 'contact/add', element: <ContactAdd /> },
-          { path: 'contact/list', element: <ContactList /> }
+          { path: 'contact/list', element: <ContactList /> },
+
+        /// Router quản lý banner
+         { path: 'banner/add', element: <BannerAdd /> },
+         { path: 'banner/list', element: <BannerList /> },
+         { path: 'banner/edit/:id', element: <BannerEdit /> }
       ]
     },
   ])

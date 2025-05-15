@@ -96,6 +96,26 @@
   ],
   "carts": [],
   "orders": [],
+  "banners": [
+    {
+      "name": "khuyến mãi 12-12",
+      "image": "https://picsum.photos/200",
+      "link": "https://www.thegioididong.com/",
+      "start_date": "2025-12-12",
+      "end_date": "2026-01-01",
+      "status": true,
+      "id": 3
+    },
+    {
+      "name": "Khuyến mãi mãi mãi",
+      "image": "https://picsum.photos/200",
+      "link": "http://localhost:5173/admin/banner/add",
+      "start_date": "2025-05-12",
+      "end_date": "2025-05-31",
+      "status": true,
+      "id": 5
+    }
+  ],
   "contacts": [
     {
       "name": "Lê Xuân Tùng",
