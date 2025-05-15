@@ -97,14 +97,8 @@ const App = () => {
         /// Router quản lý Khuyễn mãi
         { path: 'promotion/list', element: <GetPromotion /> },
         { path: 'promotion/add', element: <PostAddPromotion /> },
-
-        { path: 'promotion/:id/edit', element: <PutEditPromotion /> },
-       
-        
-
         { path: 'promotion/edit/:id', element: <PutEditPromotion /> },
         { path: 'promotion/detail/:id', element: <DetailPromotion /> },
-
 
         /// Router quản lý lien he 
          { path: 'contact/add', element: <ContactAdd /> },
