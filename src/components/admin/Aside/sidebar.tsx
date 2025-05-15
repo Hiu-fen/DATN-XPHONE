@@ -64,7 +64,8 @@ const AdminSidebar = () => {
       label: 'Quản lý Banner',
       icon: <PictureOutlined />,
       children: [
-        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' }
+        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' },
+        { key: 'banner/add', label: 'Thêm Banner', path: '/admin/banner/add' }
       ]
     },
     {
@@ -72,7 +73,8 @@ const AdminSidebar = () => {
       label: 'Quản lý liên hệ',
       icon: <PhoneOutlined />,
       children: [
-        { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' }
+         { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' },
+        { key: 'contact/add', label: 'Thêm mới liên hệ', path: '/admin/contact/add' }
       ]
     },
     {
