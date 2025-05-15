@@ -106,6 +106,64 @@
   ],
   "carts": [],
   "orders": [],
+  "banners": [
+    {
+      "name": "khuyến mãi 12-12",
+      "image": "https://picsum.photos/200",
+      "link": "https://www.thegioididong.com/",
+      "start_date": "2025-12-12",
+      "end_date": "2026-01-01",
+      "status": true,
+      "id": 3
+    },
+    {
+      "name": "Khuyến mãi mãi mãi",
+      "image": "https://picsum.photos/200",
+      "link": "http://localhost:5173/admin/banner/add",
+      "start_date": "2025-05-12",
+      "end_date": "2025-05-31",
+      "status": true,
+      "id": 5
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "ưet",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 1
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "qt",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 2
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "dfgh",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 3
+    },
+    {
+      "name": "tung",
+      "email": "tungle@gmail.com",
+      "phone": "123456789",
+      "message": "okokoko",
+      "status": false,
+      "date": "14/05/2025",
+      "id": 4
+    }
+  ],
   "users": [
     {
       "email": "phamhieu12345@gmail.com",
@@ -124,6 +182,11 @@
       "email": "12@gmail.com",
       "password": "$2a$10$RJ3bVJ6rF6eX1DVsxJm8RO/VNR3gZHDLxWBNrt/peFJdV1NulOp4m",
       "id": 2
+    },
+    {
+      "email": "letung251205@gmail.com",
+      "password": "$2a$10$xfoL0XpC.WjN3wQZ64EPvO0khX1b7/nR/5YiIPeh3QbuNXW38y4E.",
+      "id": 3
     }
   ],
   "promotions": [
