@@ -1,50 +1,125 @@
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import axios from 'axios';
-import { Table, Button, Popconfirm } from 'antd';
-import { IComment } from '../../../interface/comments';
+import { Table, Button, Popconfirm, message, Input } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { IComment } from '../../../interface/comments';
 
+interface IProduct {
+  id: number;
+  name: string;
+}
 
 const CommentAdmin = () => {
-  const [comments, setComments] = useState<IComment[]>([]);
+  const [searchText, setSearchText] = useState('');
 
-  // Lấy danh sách bình luận từ API (db.json)
-  useEffect(() => {
-    const fetchComments = async () => {
-      const response = await axios.get('http://localhost:4000/comments');
-      setComments(response.data);
-    };
-    fetchComments();
-  }, []);
+  const { data: comments, refetch } = useQuery({
+    queryKey: ['comments'],
+    queryFn: async () =>
+      (await axios.get(`http://localhost:4000/comments`)).data,
+  });
 
-  // Hàm để thay đổi trạng thái bình luận (Ẩn/Hiện)
-  const toggleStatus = async (id: number, currentStatus: boolean) => {
-    const newStatus = !currentStatus;
-    await axios.patch(`http://localhost:4000/comments/${id}`, { status: newStatus });
-    setComments(comments.map(comment =>
-      comment.id === id ? { ...comment, status: newStatus } : comment
-    ));
+  const { data: products } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () =>
+      (await axios.get(`http://localhost:4000/products`)).data,
+  });
+
+  const getProductName = (id: number) => {
+    const product = products?.find((pro: IProduct) => pro.id === id);
+    return product ? product.name : 'Không có sản phẩm';
   };
-  const mutation = useMutation({
-    mutationFn: async (id: string) => await axios.delete(`http://localhost:4000/comments/${id}`),
-    onSuccess: (_data, variables) => {
-      setComments(prev => prev.filter(c => c.id !== Number(variables)));
+
+  const toggleStatus = async (id: number, currentStatus: boolean) => {
+    try {
+      await axios.patch(`http://localhost:4000/comments/${id}`, {
+        status: !currentStatus,
+      });
+      message.success('Cập nhật trạng thái thành công');
+      refetch();
+    } catch (error: any) {
+      console.error('Lỗi khi cập nhật trạng thái:', error);
+      message.error('Cập nhật trạng thái thất bại');
     }
+  };
+
+  const toggleLike = async (id: number, currentLikes: number) => {
+    try {
+      const updatedLikes = currentLikes + 1;
+      await axios.patch(`http://localhost:4000/comments/${id}`, {
+        likes: updatedLikes,
+      });
+      message.success('Đã thích bình luận');
+      refetch();
+    } catch (error: any) {
+      console.error('Lỗi khi cập nhật số tim:', error);
+      message.error('Không thể thích bình luận');
+    }
+  };
+
+  const mutation = useMutation({
+    mutationFn: async (id: any) =>
+      await axios.delete(`http://localhost:4000/comments/${id}`),
+    onSuccess: () => {
+      message.success('Xóa thành công');
+      refetch();
+    },
+    onError: (error: any) => {
+      message.error('Xóa bình luận thất bại');
+      console.error('Lỗi khi xóa bình luận:', error);
+    },
   });
 
   const onDelete = (id: string) => {
-
     mutation.mutate(id);
   };
 
+  const filteredComments = useMemo(() => {
+    return comments?.filter((c: IComment) => {
+      const productName = getProductName(Number(c.sanpham)).toLowerCase();
+      return (
+        c.id.toString().includes(searchText.toLowerCase()) ||
+        c.user?.toLowerCase().includes(searchText.toLowerCase()) ||
+        productName.includes(searchText.toLowerCase()) ||
+        c.content.includes(searchText.toLowerCase()) ||
+        new Date(c.date).toLocaleString().toLowerCase().includes(searchText.toLowerCase())
+      );
+    });
+  }, [comments, searchText, products]);
 
-  // Định nghĩa các cột trong bảng
   const columns = [
     { title: 'ID', dataIndex: 'id' },
-    { title: 'Người dùng', dataIndex: 'user' },       // đúng tên đã dùng khi submit
-    { title: 'Nội dung', dataIndex: 'content' },      // đúng tên đã dùng
-    { title: 'Ngày', dataIndex: 'date' },
+    { title: 'Người dùng', dataIndex: 'user' },
+    {
+      title: 'Sản phẩm',
+      dataIndex: 'sanpham',
+      render: (_: any, record: IComment) =>
+        getProductName(Number(record.sanpham)),
+    },
+    { title: 'Nội dung', dataIndex: 'content' },
+    {
+      title: 'Ngày',
+      dataIndex: 'date',
+      render: (text: string) => new Date(text).toLocaleString(),
+    },
+    {
+      title: 'Đánh giá',
+      dataIndex: 'likes',
+      render: (likes: number, record: IComment) => {
+        return (
+          <div>
+            <span>{likes} ❤️</span>
+            <Button
+              onClick={() => toggleLike(record.id, likes)}
+              size="small"
+              type="link"
+            >
+              Thích
+            </Button>
+          </div>
+        );
+      },
+    },
     {
       title: 'Trạng thái',
       key: 'status',
@@ -55,10 +130,10 @@ const CommentAdmin = () => {
       ),
     },
     {
-      title: "Thao tác",
+      title: 'Thao tác',
       key: 'id',
       dataIndex: 'id',
-      render: (id: string) => <>
+      render: (id: string) => (
         <Popconfirm
           title="Thông báo"
           description="Bạn chắc chắn muốn xóa?"
@@ -67,30 +142,26 @@ const CommentAdmin = () => {
           okText="OK"
           cancelText="NO"
         >
-          <Button danger><DeleteOutlined /></Button>
+          <Button danger>
+            <DeleteOutlined />
+          </Button>
         </Popconfirm>
-      </>
+      ),
     },
   ];
 
   return (
     <div>
       <h2 className="text-xl font-bold mb-4">Danh sách bình luận</h2>
-      <Table
-        columns={columns}
-        dataSource={comments}
-        rowKey="id"
+      <Input.Search
+        placeholder=""
+        className="mb-4"
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
       />
+      <Table columns={columns} dataSource={filteredComments} rowKey="id" />
     </div>
   );
 };
 
 export default CommentAdmin;
-function nav(arg0: string): void {
-  throw new Error('Function not implemented.');
-}
-
-// function onDelete(id: string): void {
-//     throw new Error('Function not implemented.');
-// }
-
