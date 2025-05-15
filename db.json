@@ -251,6 +251,35 @@
       "email": "letung251205@gmail.com",
       "password": "$2a$10$xfoL0XpC.WjN3wQZ64EPvO0khX1b7/nR/5YiIPeh3QbuNXW38y4E.",
       "id": 3
+    },
+    {
+      "email": "admin12@gmail.com",
+      "password": "$2a$10$OVSjmg5NgApf62SQ0cRcEuxEkAWVPTol4v.P2Uzh8pAVD1UhkuF3q",
+      "name": "Admin",
+      "role": "admin",
+      "id": 5,
+      "address": "kmkakma",
+      "sdt": "kmkmakma",
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png"
+    },
+    {
+      "email": "Adminxphone@gmail.com",
+      "password": "$2a$10$m73xO/C..X8EgbvaYaeFY.6O7nstJZPB8mX5OzYbOjHa0og7sZ0Pm",
+      "name": "AdminXphone",
+      "role": "admin",
+      "id": 6
+    },
+    {
+      "email": "client@gmail.com",
+      "password": "$2a$10$b3SPfIgrj8XhCKiSIADAo.KAV01tH.AB9suJpYRuNuxh26QP7Xy6i",
+      "id": 7
+    },
+    {
+      "email": "client@gmail1.com",
+      "password": "$2a$10$w4nUAcbY4R3sI9Wl/nxQNuB3Zm.YMaXCQx6vVr5bWstlkiyDaGetC",
+      "name": "client",
+      "role": "user",
+      "id": 8
     }
   ],
   "promotions": [

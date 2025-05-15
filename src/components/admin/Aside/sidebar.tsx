@@ -56,7 +56,8 @@ const AdminSidebar = () => {
       label: 'Quản lý tài khoản',
       icon: <UserOutlined />,
       children: [
-        { key: 'user/list', label: 'Tài khoản', path: '/admin/user/list' }
+        { key: 'user/list', label: 'Quản lý tài khoản quản trị', path: '/admin/user/listadmin' },
+        { key: 'user/list', label: 'Quản lý tài người dùng', path: '/admin/user/listclient' }
       ]
     },
     {
@@ -64,8 +65,7 @@ const AdminSidebar = () => {
       label: 'Quản lý Banner',
       icon: <PictureOutlined />,
       children: [
-        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' },
-        { key: 'banner/add', label: 'Thêm Banner', path: '/admin/banner/add' }
+        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' }
       ]
     },
     {
@@ -73,8 +73,7 @@ const AdminSidebar = () => {
       label: 'Quản lý liên hệ',
       icon: <PhoneOutlined />,
       children: [
-         { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' },
-        { key: 'contact/add', label: 'Thêm mới liên hệ', path: '/admin/contact/add' }
+        { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' }
       ]
     },
     {
@@ -90,8 +89,7 @@ const AdminSidebar = () => {
       label: 'Quản lý khuyến mãi',
       icon: <GiftOutlined />,
       children: [
-        { key: 'promotion/list', label: 'Khuyến mãi', path: '/admin/promotion/list' },
-        { key: 'promotion/add', label: 'Thêm khuyến mãi', path: '/admin/promotion/add' }
+        { key: 'promotion/list', label: 'Khuyến mãi', path: '/admin/promotion/list' }
       ]
     }
   ];
