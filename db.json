@@ -84,69 +84,72 @@
     }
   ],
   "variants": [],
-  "orders": [
-    {
-      "id": 1,
-      "orderCode": "ORD-4J8K9",
-      "customerName": "Thế Anh",
-      "phone": "0987654321",
-      "address": "40 Xuân Thủy, Hà Nội",
-      "date": "2025-05-14T10:30:00Z",
-      "status": "Đang xử lý",
-      "items": [
-        {
-          "productId": 5,
-          "productName": "iPhone 11",
-          "quantity": 2,
-          "price": 6000000
-        },
-        {
-          "productId": 3,
-          "productName": "Oppo 12",
-          "quantity": 1,
-          "price": 4000000
-        }
-      ],
-      "total": 18000000
-    },
-    {
-      "id": 2,
-      "orderCode": "ORD-X9B7C",
-      "customerName": "Bảo Anh",
-      "phone": "0911223344",
-      "address": "Số 12, Vĩnh Phúc",
-      "date": "2025-05-13T15:00:00Z",
-      "status": "Đã giao",
-      "items": [
-        {
-          "productId": 6,
-          "productName": "iPhone 8",
-          "quantity": 1,
-          "price": 5000000
-        }
-      ],
-      "total": 5000000
-    },
-    
-    {
-      "id": 3,
-      "orderCode": "ORD-K2X1Y",
-      "customerName": "Tiến",
-      "phone": "0909988776",
-      "address": "Đông Tác, Hà Nội",
-      "date": "2025-05-12T11:00:00Z",
-      "status": "Hoàn thành",
-      "items": [
-        {
-          "productId": 8,
-          "productName": "Xiaomi Redmi Note 11",
-          "quantity": 2,
-          "price": 3500000
-        }
-      ],
-      "total": 7000000
-    }
-  ],
+"orders": [
+  {
+    "id": 1,
+    "orderCode": "ORD-4J8K9",
+    "customerName": "Thế Anh",
+    "phone": "0987654321",
+    "address": "40 Xuân Thủy, Hà Nội",
+    "date": "2025-05-14T10:30:00Z",
+    "status": "Đang xử lý",
+    "isPaid": false,
+    "items": [
+      {
+        "productId": 5,
+        "productName": "iPhone 11",
+        "quantity": 2,
+        "price": 6000000
+      },
+      {
+        "productId": 3,
+        "productName": "Oppo 12",
+        "quantity": 1,
+        "price": 4000000
+      }
+    ],
+    "total": 18000000
+  },
+  {
+    "id": 2,
+    "orderCode": "ORD-X9B7C",
+    "customerName": "Bảo Anh",
+    "phone": "0911223344",
+    "address": "Số 12, Vĩnh Phúc",
+    "date": "2025-05-13T15:00:00Z",
+    "status": "Đã giao",
+    "isPaid": true,
+    "items": [
+      {
+        "productId": 6,
+        "productName": "iPhone 8",
+        "quantity": 1,
+        "price": 5000000
+      }
+    ],
+    "total": 5000000
+  },
+  {
+    "id": 3,
+    "orderCode": "ORD-K2X1Y",
+    "customerName": "Tiến",
+    "phone": "0909988776",
+    "address": "Đông Tác, Hà Nội",
+    "date": "2025-05-12T11:00:00Z",
+    "status": "Hoàn thành",
+    "isPaid": true,
+    "items": [
+      {
+        "productId": 8,
+        "productName": "Xiaomi Redmi Note 11",
+        "quantity": 2,
+        "price": 3500000
+      }
+    ],
+    "total": 7000000
+  }
+],
+
   "comments": [
     {
       "user": "hieu",
@@ -169,7 +172,6 @@
   ],
   "carts": [],
 
- 
   "banners": [
     {
       "name": "khuyến mãi 12-12",
@@ -228,7 +230,6 @@
       "id": 4
     }
   ],
-
   "users": [
     {
       "email": "phamhieu12345@gmail.com",

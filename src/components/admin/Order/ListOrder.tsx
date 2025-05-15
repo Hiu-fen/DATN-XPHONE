@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-import { Table, Select, message } from 'antd';
+import { Table, Select, message, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
@@ -21,6 +21,7 @@ interface Order {
   status: string;
   items: OrderItem[];
   total: number;
+  isPaid: boolean; // Thêm trường isPaid
 }
 
 const OrderList = () => {
@@ -91,6 +92,16 @@ const OrderList = () => {
       dataIndex: 'total',
       key: 'total',
       render: (total: number) => total.toLocaleString() + ' VND',
+    },
+    {
+      title: 'Thanh toán',
+      key: 'isPaid',
+      render: (_: any, record: Order) =>
+        record.isPaid ? (
+          <Tag color="green">Đã thanh toán</Tag>
+        ) : (
+          <Tag color="red">Chưa thanh toán</Tag>
+        ),
     },
     {
       title: 'Trạng thái',
