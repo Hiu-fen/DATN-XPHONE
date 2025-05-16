@@ -5,6 +5,7 @@ export interface IProduct {
   danhmuc: string;
   price: string;
   trangthai:string;
+  albumId?: number;  
   mota:string;
   type: string;
   parent: number;

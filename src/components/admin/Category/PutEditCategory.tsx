@@ -43,7 +43,7 @@ const PutEditCategory = () => {
 
      return (
        <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
-         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Thêm mới danh mục</h2>
+         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Cập nhật danh mục</h2>
          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
            <div>
              <label className="block text-sm font-medium text-gray-700 mb-1">Tên danh mục</label>
@@ -84,7 +84,7 @@ const PutEditCategory = () => {
              type="submit"
              className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
            >
-             Thêm mới
+             Cập nhật
            </button>
          </form>
        </div>
