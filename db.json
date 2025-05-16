@@ -31,7 +31,7 @@
       "id": 2,
       "name": "sansung s20",
       "price": "10.000000",
-      "mota": "sansung  đây",
+      "mota": "SamSung  đây",
       "danhmuc": "2",
       "trangthai": "Hết hàng",
       "type": "simple",
@@ -113,7 +113,7 @@
       "phone": "0987654321",
       "address": "40 Xuân Thủy, Hà Nội",
       "date": "2025-05-14T10:30:00Z",
-      "status": "Đang xử lý",
+      "status": "Đã giao",
       "isPaid": false,
       "items": [
         {
@@ -178,7 +178,7 @@
       "status": true,
       "date": "08/05/2025",
       "id": 1,
-      "likes": 10
+      "likes": 14
     },
     {
       "user": "amthucv1",
@@ -304,10 +304,13 @@
     },
     {
       "email": "1@gmail.com",
-      "password": "$2a$10$ng33cebMcNthSqbFTY/23evTexjtRAtKtVYBdU5CoHfwVlGcRzuYC",
+      "password": "$2a$10$eutZ66OX6N3rsSlzufSUQOi/GuM.k6XbbBNgv6o7W4d3Y9CvZlNMy",
       "name": "hieuhieu",
       "role": "admin",
-      "id": 9
+      "id": 9,
+      "address": "",
+      "sdt": "",
+      "avatar": "https://imgthumb-cdn.thethao247.vn/thumbamp/storage/files/hoangtung/2025/05/09/antony-681d5ffc2e548.jpg"
     },
     {
       "email": "2@gmail.com",
@@ -316,7 +319,15 @@
       "role": "admin",
       "id": 10,
       "active": true
+    }, 
+    {
+      "email": "duong@gmail1.com",
+      "password": "$2a$10$w4nUAcbY4R3sI9Wl/nxQNuB3Zm.YMaXCQx6vVr5bWstlkiyDaGetC",
+      "name": "Duong",
+      "role": "user",
+      "id": 11
     }
+
   ],
   "promotions": [
     {

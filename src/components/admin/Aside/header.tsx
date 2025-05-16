@@ -52,12 +52,19 @@ export default function XPhoneHeader() {
   return (
     <header className="w-full bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-50 sticky top-0">
       {/* Logo */}
-      <div className="flex items-center ml-8">
-        <Link to="/admin" className="font-bold text-Chartreuse-600 text-2xl flex items-center">
-          <span className="text-green-600">X</span>Phone
-          <span className="text-green-600 ml-1">.</span>
-        </Link>
-      </div>
+     <div className="flex items-center ml-4">
+  <Link to="/admin" className="flex items-center text-xl font-bold text-gray-800">
+    <img
+      src="https://res.cloudinary.com/dazrcwwzq/image/upload/v1747381516/ChatGPT_Image_May_16_2025_02_44_57_PM_tumdy8.png"
+      alt="XPhone Icon"
+      className="h-10 w-10 object-contain select-none mr-1"
+    />
+    <span>
+      <span className="text-green-600">X</span>Phone
+    </span>
+  </Link>
+</div>
+
 
       {/* Right Section */}
       <div className="flex items-center gap-5">

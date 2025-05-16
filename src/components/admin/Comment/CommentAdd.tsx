@@ -11,8 +11,6 @@ const CommentAdd = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<IComment>();
   const [products, setProduct] = useState<IProduct[]>([]);
   const nav = useNavigate();
-  const { productIdParam } = useParams(); 
-
   
   useEffect(() =>{
     const fetchProduct = async () =>{
@@ -47,7 +45,6 @@ const CommentAdd = () => {
   };
 
   try {
-    // Gửi bình luận với trường date
     await axios.post('http://localhost:4000/comments', newComment);
     message.success("Thêm bình luận thành công");
     nav(`/admin/comment/list`);  

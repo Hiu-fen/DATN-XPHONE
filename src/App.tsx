@@ -8,13 +8,14 @@ import Register from './components/client/Register'
 import Login from './components/client/Login'
 
 import CommentAdd from './components/admin/Comment/CommentAdd'
+import CommentAdmin from './components/admin/Comment/CommentList'
+
 import GetListCategory from './components/admin/Category/GetListCategory'
 import PostAddCategory from './components/admin/Category/PostAddCategory'
 import PutEditCategory from './components/admin/Category/PutEditCategory'
 import PostAdd from './components/admin/Product/PostAdd'
-import CommentAdmin from './components/admin/Comment/CommentList'
 
-import Search from './components/admin/Search/search'
+
 
 import GetPromotion from './components/admin/Promotion/PromotionList'
 import PostAddPromotion from './components/admin/Promotion/PromotionAdd'
@@ -90,10 +91,6 @@ const App = () => {
          { path: 'user/listadmin', element: <GetAdmin /> },
          { path: 'user/profileadmin', element: <ProfileAdmin /> },
          { path: 'user/listclient', element: <GetClient /> },
-
-
-        //Router Search
-        {path:'search', element:<Search/>},
 
         //Router Order
         {path:'order/list', element:<OrderList/>},

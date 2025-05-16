@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Button, message, Popconfirm, Table, Modal } from 'antd'
+import { Button, message, Popconfirm, Table, Modal, Input } from 'antd'
 import axios from 'axios'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +9,7 @@ import AlbumImage from './AlbumImage'; // đường dẫn bạn chỉnh lại th
 
 
 const GetListAlbum = () => {
+  const [searchText, setSearchText] = useState('');
   const nav = useNavigate();
   const { data, refetch } = useQuery({
     queryKey: ['albums'],
@@ -81,6 +82,10 @@ const GetListAlbum = () => {
     formData.append('image', selectedFile);
     mutationUpdateImage.mutate(formData);
   };
+  const search = data?.filter((c: Ialbums) => {
+    const Text = `${c.id} ${c.name}  `.toLowerCase();
+    return Text.includes(searchText.toLowerCase());
+  });
 
   // Cột bảng
   const columns = [
@@ -132,7 +137,13 @@ const GetListAlbum = () => {
   return (
     <div>
       <h1 className="text-xl font-semibold mb-4">Danh sách Album</h1>
-      <Table dataSource={data} columns={columns} rowKey="id" />
+      <Input.Search
+        placeholder=""
+        className="mb-4"
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
+      />
+      <Table dataSource={search} columns={columns} rowKey="id" />
 
       {/* Modal đổi ảnh */}
       <Modal
