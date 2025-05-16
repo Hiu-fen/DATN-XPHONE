@@ -36,7 +36,7 @@
       "trangthai": "Hết hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
     },
     {
       "id": 3,
@@ -47,7 +47,7 @@
       "trangthai": "Hết hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
     },
     {
       "id": 5,
@@ -58,7 +58,7 @@
       "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
     },
     {
       "id": 6,
@@ -69,7 +69,7 @@
       "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
     },
     {
       "id": 7,
@@ -81,6 +81,27 @@
       "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0
+    }
+  ],
+  "albums": [
+    {
+      "name": "iphone 12 ",
+      "description": "2 ảnh",
+      "image": [
+        "https://images2.thanhnien.vn/thumb_w/640/528068263637045248/2023/7/9/iphone-15-pro-16889466723621397905918.jpg",
+        "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
+      ],
+      "id": 4
+    },
+    {
+      "name": "Iphone8",
+      "description": "3 ảnh",
+      "image": [
+        "https://thegioidoxachtay.com/wp-content/uploads/2022/09/iphone-8-plus-mat-lung.webp",
+        "https://product.hstatic.net/1000359786/product/vvvv_a983e96ac07c4654b51e44cba3842b5d_master.jpg",
+        "https://muabandienthoai24h.vn/storage/upload/images/iphone-8-64gb-den-1-org.jpg"
+      ],
+      "id": 5
     }
   ],
   "variants": [],
