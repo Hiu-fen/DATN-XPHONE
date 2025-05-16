@@ -36,7 +36,7 @@
       "trangthai": "Hết hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
     },
     {
       "id": 3,
@@ -47,7 +47,7 @@
       "trangthai": "Hết hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
     },
     {
       "id": 5,
@@ -58,7 +58,7 @@
       "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
     },
     {
       "id": 6,
@@ -69,7 +69,7 @@
       "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://picsum.photos/200"
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
     },
     {
       "id": 7,
@@ -78,12 +78,98 @@
       "price": "5000000",
       "mota": "sản phẩm chỉ mang tính chất tương chưng ",
       "danhmuc": "4",
-      "trangthai": "Hết hàng",
+      "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0
     }
   ],
+  "albums": [
+    {
+      "name": "iphone 12 ",
+      "description": "2 ảnh",
+      "image": [
+        "https://images2.thanhnien.vn/thumb_w/640/528068263637045248/2023/7/9/iphone-15-pro-16889466723621397905918.jpg",
+        "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
+      ],
+      "id": 4
+    },
+    {
+      "name": "Iphone8",
+      "description": "3 ảnh",
+      "image": [
+        "https://thegioidoxachtay.com/wp-content/uploads/2022/09/iphone-8-plus-mat-lung.webp",
+        "https://product.hstatic.net/1000359786/product/vvvv_a983e96ac07c4654b51e44cba3842b5d_master.jpg",
+        "https://muabandienthoai24h.vn/storage/upload/images/iphone-8-64gb-den-1-org.jpg"
+      ],
+      "id": 5
+    }
+  ],
   "variants": [],
+  "orders": [
+    {
+      "id": 1,
+      "orderCode": "ORD-4J8K9",
+      "customerName": "Thế Anh",
+      "phone": "0987654321",
+      "address": "40 Xuân Thủy, Hà Nội",
+      "date": "2025-05-14T10:30:00Z",
+      "status": "Đang xử lý",
+      "isPaid": false,
+      "items": [
+        {
+          "productId": 5,
+          "productName": "iPhone 11",
+          "quantity": 2,
+          "price": 6000000
+        },
+        {
+          "productId": 3,
+          "productName": "Oppo 12",
+          "quantity": 1,
+          "price": 4000000
+        }
+      ],
+      "total": 18000000
+    },
+    {
+      "id": 2,
+      "orderCode": "ORD-X9B7C",
+      "customerName": "Bảo Anh",
+      "phone": "0911223344",
+      "address": "Số 12, Vĩnh Phúc",
+      "date": "2025-05-13T15:00:00Z",
+      "status": "Đã giao",
+      "isPaid": true,
+      "items": [
+        {
+          "productId": 6,
+          "productName": "iPhone 8",
+          "quantity": 1,
+          "price": 5000000
+        }
+      ],
+      "total": 5000000
+    },
+    {
+      "id": 3,
+      "orderCode": "ORD-K2X1Y",
+      "customerName": "Tiến",
+      "phone": "0909988776",
+      "address": "Đông Tác, Hà Nội",
+      "date": "2025-05-12T11:00:00Z",
+      "status": "Hoàn thành",
+      "isPaid": true,
+      "items": [
+        {
+          "productId": 8,
+          "productName": "Xiaomi Redmi Note 11",
+          "quantity": 2,
+          "price": 3500000
+        }
+      ],
+      "total": 7000000
+    }
+  ],
   "comments": [
     {
       "user": "hieu",
@@ -92,19 +178,77 @@
       "status": true,
       "date": "08/05/2025",
       "id": 1,
-      "likes": 5
+      "likes": 10
     },
     {
       "user": "amthucv1",
       "content": "123123123",
       "sanpham": "5",
       "date": "2025-05-14T09:34:29.709Z",
-      "likes": 6,
-      "id": 2
+      "likes": 11,
+      "id": 2,
+      "status": false
     }
   ],
   "carts": [],
-  "orders": [],
+  "banners": [
+    {
+      "name": "khuyến mãi 12-12",
+      "image": "https://picsum.photos/200",
+      "link": "https://www.thegioididong.com/",
+      "start_date": "2025-12-12",
+      "end_date": "2026-01-01",
+      "status": true,
+      "id": 3
+    },
+    {
+      "name": "Khuyến mãi mãi mãi",
+      "image": "https://picsum.photos/200",
+      "link": "http://localhost:5173/admin/banner/add",
+      "start_date": "2025-05-12",
+      "end_date": "2025-05-31",
+      "status": true,
+      "id": 5
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "ưet",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 1
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "qt",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 2
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "dfgh",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 3
+    },
+    {
+      "name": "tung",
+      "email": "tungle@gmail.com",
+      "phone": "123456789",
+      "message": "okokoko",
+      "status": false,
+      "date": "14/05/2025",
+      "id": 4
+    }
+  ],
   "users": [
     {
       "email": "phamhieu12345@gmail.com",
@@ -123,20 +267,80 @@
       "email": "12@gmail.com",
       "password": "$2a$10$RJ3bVJ6rF6eX1DVsxJm8RO/VNR3gZHDLxWBNrt/peFJdV1NulOp4m",
       "id": 2
+    },
+    {
+      "email": "letung251205@gmail.com",
+      "password": "$2a$10$xfoL0XpC.WjN3wQZ64EPvO0khX1b7/nR/5YiIPeh3QbuNXW38y4E.",
+      "id": 3
+    },
+    {
+      "email": "admin12@gmail.com",
+      "password": "$2a$10$OVSjmg5NgApf62SQ0cRcEuxEkAWVPTol4v.P2Uzh8pAVD1UhkuF3q",
+      "name": "Admin",
+      "role": "admin",
+      "id": 5,
+      "address": "kmkakma",
+      "sdt": "kmkmakma",
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png"
+    },
+    {
+      "email": "Adminxphone@gmail.com",
+      "password": "$2a$10$m73xO/C..X8EgbvaYaeFY.6O7nstJZPB8mX5OzYbOjHa0og7sZ0Pm",
+      "name": "AdminXphone",
+      "role": "admin",
+      "id": 6
+    },
+    {
+      "email": "client@gmail.com",
+      "password": "$2a$10$b3SPfIgrj8XhCKiSIADAo.KAV01tH.AB9suJpYRuNuxh26QP7Xy6i",
+      "id": 7
+    },
+    {
+      "email": "client@gmail1.com",
+      "password": "$2a$10$w4nUAcbY4R3sI9Wl/nxQNuB3Zm.YMaXCQx6vVr5bWstlkiyDaGetC",
+      "name": "client",
+      "role": "user",
+      "id": 8
+    },
+    {
+      "email": "1@gmail.com",
+      "password": "$2a$10$ng33cebMcNthSqbFTY/23evTexjtRAtKtVYBdU5CoHfwVlGcRzuYC",
+      "name": "hieuhieu",
+      "role": "admin",
+      "id": 9
+    },
+    {
+      "email": "2@gmail.com",
+      "password": "$2a$10$J1fqbZBLgSFIHuLb6rCd.eDNbY4mPZfUrufJgBQLPQIE65PCQf4fG",
+      "name": "hieuhieu",
+      "role": "admin",
+      "id": 10,
+      "active": true
     }
-],
+  ],
   "promotions": [
     {
       "name": "Miễn phí vận chuyển",
       "code": "FreeShip",
-      "discountType": "FreeShip",
-      "applicableProducts": [],
+      "discountType": "freeShip",
+      "applicableProducts": "Iphone",
       "description": "Miễn phí vận chuyển cho đơn hàng trên 500.000đ",
       "condition": "Áp dụng toàn bộ sản phẩm",
-      "startDate": "2025-14-05",
-      "endDate": "2025-20-05",
-      "status": true,
+      "startDate": "2025-05-15",
+      "endDate": "2026-05-15",
+      "status": "true",
       "id": 1
+    },
+    {
+      "name": "nguyễn hồng quân tét",
+      "code": "FE",
+      "discountType": "sale50k",
+      "applicableProducts": "SamSung",
+      "startDate": "2025-05-15",
+      "endDate": "2025-08-15",
+      "description": "Quân test chức năng",
+      "status": "true",
+      "id": 2
     }
   ]
 }
