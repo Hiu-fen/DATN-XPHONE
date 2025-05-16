@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Table, Tag } from "antd";
+import { Button, Input, message, Popconfirm, Table, Tag } from "antd";
 import { Promotion } from "../../../interface/promotion";
 import axios from "axios";
 import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const GetPromotion = () => {
+    const [searchText, setSearchText] = useState('');
   const { data, isLoading } = useQuery<Promotion[]>({
     queryKey: ['promotions'],
     queryFn: async () => {
@@ -44,6 +46,10 @@ const GetPromotion = () => {
   const onDelete = async (id:string) => {
     mutation.mutate(id)
   }
+  const search = data?.filter((pro: Promotion)=>{
+    const Text = `${pro.id} ${pro.name} ${pro.status} ${pro.code}`.toLowerCase()
+    return Text.includes(searchText.toLowerCase());
+  })
 
   const columns = [
     {
@@ -120,17 +126,27 @@ const GetPromotion = () => {
 
   return (
     <div className="p-5">
-      <h1 className="mb-2">Danh sách khuyến mãi</h1>
-      <>
-        <Table 
-          dataSource={data} 
-          columns={columns} 
-          pagination={false}
-          loading={isLoading}
-          rowKey="id"
-        />
-      </>
-    </div>
+ <h2 className="text-2xl font-bold ">Danh sách khuyến mãi</h2>
+
+  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+    <Input.Search
+      placeholder=""
+      style={{ width: 300 }} 
+      className="mb-4"
+      onChange={(e) => setSearchText(e.target.value)}
+      allowClear
+    />
+  </div>
+
+  <Table 
+    dataSource={search} 
+    columns={columns} 
+    pagination={false}
+    loading={isLoading}
+    rowKey="id"
+  />
+</div>
+
   );
 }
 

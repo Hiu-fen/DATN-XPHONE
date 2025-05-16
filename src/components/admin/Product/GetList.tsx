@@ -1,10 +1,10 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, message, Popconfirm, Table } from 'antd';
+import { Button, Input, message, Popconfirm, Table } from 'antd';
 import axios from 'axios';
 import { IProduct } from '../../../interface/product';
 import { useNavigate } from 'react-router-dom';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 // import useAutoReloadOnBlank from '../Aside/useAutoReloadOnBlank';
 import { useLocation } from 'react-router-dom';
 // import { useEffect } from 'react';
@@ -18,6 +18,9 @@ interface ICategory {
 }
 
 const GetList = () => {
+  
+    const [searchText, setSearchText] = useState('');
+  
 
   const nav = useNavigate();
   const location = useLocation();
@@ -74,6 +77,11 @@ useEffect(() => {
     const category = categories.find((cat: ICategory) => cat.id === id);
     return category ? category.name : 'Không có danh mục';
   };
+  const search = products?.filter((p: IProduct)=>{
+    const categoryName = getCategoryName(Number(p.danhmuc));
+    const Text = `${p.id} ${p.name} ${p.mota}  ${p.price} ${categoryName}`.toLowerCase();
+    return Text.includes(searchText.toLowerCase());
+  })
 
   const columns = [
     {
@@ -159,8 +167,19 @@ useEffect(() => {
 
   return (
     <div>
-      <h1>Danh sách sản phẩm</h1>
-      <Table dataSource={products || []} columns={columns} rowKey="id" />
+       <h2 className="text-2xl font-bold ">Danh sách sản phẩm</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
+        placeholder=""
+        className="mb-4"
+         style={{ width: 300 }} 
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
+      />
+       </div>
+      
+     
+      <Table dataSource={search || [] } columns={columns}   rowKey="id" />
     </div>
   );
 };

@@ -74,18 +74,11 @@ const CommentAdmin = () => {
     mutation.mutate(id);
   };
 
-  const filteredComments = useMemo(() => {
-    return comments?.filter((c: IComment) => {
-      const productName = getProductName(Number(c.sanpham)).toLowerCase();
-      return (
-        c.id.toString().includes(searchText.toLowerCase()) ||
-        c.user?.toLowerCase().includes(searchText.toLowerCase()) ||
-        productName.includes(searchText.toLowerCase()) ||
-        c.content.includes(searchText.toLowerCase()) ||
-        new Date(c.date).toLocaleString().toLowerCase().includes(searchText.toLowerCase())
-      );
-    });
-  }, [comments, searchText, products]);
+const search = comments?.filter((c: IComment) => {
+  const productName = getProductName(Number(c.sanpham));
+  const Text = `${c.id} ${c.user} ${c.content} ${c.date} ${productName}`.toLowerCase();
+  return Text.includes(searchText.toLowerCase());
+});
 
   const columns = [
     { title: 'ID', dataIndex: 'id' },
@@ -152,14 +145,18 @@ const CommentAdmin = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Danh sách bình luận</h2>
-      <Input.Search
+     <h2 className="text-2xl font-bold ">Danh sách bình luận</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
-      <Table columns={columns} dataSource={filteredComments} rowKey="id" />
+       </div>
+      
+      <Table columns={columns} dataSource={search} rowKey="id" />
     </div>
   );
 };

@@ -1,8 +1,8 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Button, message, Popconfirm, Table } from 'antd'
+import { Button, Input, message, Popconfirm, Table } from 'antd'
 import axios from 'axios'
-import React from 'react'
+import React, { useState } from 'react'
 // import { IProduct } from '../../interface/product'
 import { useNavigate } from 'react-router-dom'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
@@ -12,6 +12,8 @@ import { Icatagory } from '../../../interface/category'
 
 const GetListCategory = () => {
   const nav = useNavigate();
+    const [searchText, setSearchText] = useState('');
+  
   const {data,refetch} =useQuery({
     queryKey:['products'],
     queryFn: async () => (await axios.get(`http://localhost:4000/category`)).data
@@ -26,6 +28,12 @@ const GetListCategory = () => {
   const onDelete = (id:string)=>{
     mutation.mutate(id)
   }
+const search = data?.filter((c: Icatagory) => {
+  const Text = `${c.id} ${c.name} ${c.mota} `.toLowerCase();
+  return Text.includes(searchText.toLowerCase());
+});
+
+
   const columns = [
     {
       title:"Stt",
@@ -69,11 +77,22 @@ const GetListCategory = () => {
  
   return (
     <div>
-      <h1>List</h1>
-     <Table dataSource={data} columns={columns}></Table>
+     <h2 className="text-2xl font-bold ">Danh mục</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
+        placeholder=""
+        className="mb-4"
+         style={{ width: 300 }} 
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
+      />
+       </div>
+      
+     <Table dataSource={search} columns={columns}></Table>
     </div>
 
   )
 }
 
 export default GetListCategory
+

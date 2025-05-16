@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, message } from 'antd';
+import { Table, Button, message, Input } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { IBanner } from '../../../interface/banner';  // Đảm bảo import interface đúng
@@ -7,6 +7,8 @@ import { IBanner } from '../../../interface/banner';  // Đảm bảo import int
 const BannerList = () => {
   const [banners, setBanners] = useState<IBanner[]>([]);  // State lưu trữ danh sách banner
   const navigate = useNavigate();
+  const [searchText, setSearchText] = useState('');
+
 
   // Hàm lấy danh sách banner từ API
   const fetchBanners = async () => {
@@ -49,6 +51,10 @@ const BannerList = () => {
       message.error('Không thể xoá banner, vui lòng thử lại!');
     }
   };
+  const search = banners?.filter((c: IBanner) => {
+    const Text = `${c.id} ${c.name}  `.toLowerCase();
+    return Text.includes(searchText.toLowerCase());
+  });
 
   // Cấu hình các cột trong bảng
   const columns = [
@@ -115,10 +121,19 @@ const BannerList = () => {
 
   return (
     <div className="container mt-10">
-      <h2 className="text-2xl font-bold mb-6">Danh sách Banner</h2>
+      <h2 className="text-2xl font-bold ">Danh sách Banner</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+       <Input.Search
+        placeholder=""
+        className="mb-4"
+         style={{ width: 300 }} 
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
+      />
+      </div>
       <Table
         columns={columns}
-        dataSource={banners}
+        dataSource={search}
         rowKey="id"
       />
     </div>

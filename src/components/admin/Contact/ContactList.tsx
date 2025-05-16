@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, message } from 'antd';
+import { Table, Button, message, Input } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { IContact } from '../../../interface/contact';
+import { IComment } from '../../../interface/comments';
 
 const ContactList = () => {
   const [contacts, setContacts] = useState<IContact[]>([]);  // State lưu trữ danh sách liên hệ
   const navigate = useNavigate();
+    const [searchText, setSearchText] = useState('');
 
   // Hàm để lấy danh sách liên hệ từ API hoặc localStorage
   const fetchContacts = async () => {
@@ -50,6 +52,11 @@ const ContactList = () => {
       message.error('Không thể xoá liên hệ, vui lòng thử lại!');
     }
   };
+  const search = contacts?.filter((c: IContact) => {
+    const Text = `${c.id} ${c.email} ${c.name} ${c.date} ${c.phone} ${c.message}  `.toLowerCase();
+    return Text.includes(searchText.toLowerCase());
+  });
+  
 
   // Cấu hình các cột trong bảng
   const columns = [
@@ -108,11 +115,22 @@ const ContactList = () => {
   ];
 
   return (
-    <div className="container mt-10">
-      <h2 className="text-2xl font-bold mb-6">Danh sách liên hệ</h2>
+    <div >
+      <h2 className="text-2xl font-bold ">Danh sách liên hệ</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Input.Search
+        placeholder=""
+        className="mb-4"
+         style={{ width: 300 }} 
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
+      />
+       </div>
+     
+      
       <Table
         columns={columns}
-        dataSource={contacts}
+        dataSource={search}
         rowKey="id"
       />
     </div>
