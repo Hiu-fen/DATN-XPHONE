@@ -20,9 +20,9 @@
       "id": 3
     },
     {
-      "name": "nguyễn hồng quân",
+      "name": "testt2",
       "image": "https://picsum.photos/200",
-      "mota": "oksdfdsfsdfsd",
+      "mota": "testt",
       "id": 4
     }
   ],
@@ -32,53 +32,46 @@
       "name": "sansung s20",
       "price": "10.000000",
       "mota": "sansung  đây",
-      "danhmuc": "2",
-      "trangthai": "Hết hàng",
+      "danhmuc": 2,
+      "trangthai": "hết hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": 5
     },
     {
       "id": 3,
       "name": "oppo 12",
       "price": "4.000000",
       "mota": "đập k bể",
-      "danhmuc": "3",
-      "trangthai": "Hết hàng",
+      "danhmuc": 3,
+      "trangthai": "còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": "5"
     },
     {
       "id": 5,
       "name": "iphone11",
       "price": "6.000000",
       "mota": "Điện thoại mới nhất ",
-      "danhmuc": "1",
-      "trangthai": "Còn hàng",
+      "danhmuc": 2,
+      "trangthai": "còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
-    },
-    {
-      "id": 6,
-      "name": "Iphone8",
-      "price": "5.000000",
-      "mota": "Điện thoại mới nhất ",
-      "danhmuc": "1",
-      "trangthai": "Còn hàng",
-      "type": "simple",
-      "parent": 0,
-      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png",
+      "albumId": 4
     },
     {
       "id": 7,
-      "name": "ten san pham",
+      "name": "tesstt",
       "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
-      "price": "5000000",
-      "mota": "sản phẩm chỉ mang tính chất tương chưng ",
+      "price": "13434134",
+      "mota": "aaaaa",
       "danhmuc": "4",
-      "trangthai": "Còn hàng",
+      "trangthai": "còn hàng",
+      "albumId": 4,
       "type": "simple",
       "parent": 0
     }
@@ -113,7 +106,7 @@
       "phone": "0987654321",
       "address": "40 Xuân Thủy, Hà Nội",
       "date": "2025-05-14T10:30:00Z",
-      "status": "Đang xử lý",
+      "status": "Chờ xác nhận",
       "isPaid": false,
       "items": [
         {
@@ -281,7 +274,8 @@
       "id": 5,
       "address": "kmkakma",
       "sdt": "kmkmakma",
-      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png"
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "active": true
     },
     {
       "email": "Adminxphone@gmail.com",
@@ -304,18 +298,24 @@
     },
     {
       "email": "1@gmail.com",
-      "password": "$2a$10$ng33cebMcNthSqbFTY/23evTexjtRAtKtVYBdU5CoHfwVlGcRzuYC",
+      "password": "$2a$10$fjh7ArsW.DOhr8QINVI.RuVKJlChI/n8tWurRwFVEksQzdZQjyGeG",
       "name": "hieuhieu",
       "role": "admin",
-      "id": 9
+      "id": 9,
+      "address": "",
+      "sdt": "123456789",
+      "avatar": "https://picsum.photos/200"
     },
     {
       "email": "2@gmail.com",
-      "password": "$2a$10$J1fqbZBLgSFIHuLb6rCd.eDNbY4mPZfUrufJgBQLPQIE65PCQf4fG",
+      "password": "$2a$10$J0EFfKQ9EAOZ/mZMCHlKQe8BBkp.KSU5qh54cvrsM.wEz/mCTyKxq",
       "name": "hieuhieu",
       "role": "admin",
       "id": 10,
-      "active": true
+      "active": true,
+      "address": "147 nam từ liêm",
+      "sdt": "123456789",
+      "avatar": "https://picsum.photos/200"
     }
   ],
   "promotions": [
