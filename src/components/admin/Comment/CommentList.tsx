@@ -74,18 +74,11 @@ const CommentAdmin = () => {
     mutation.mutate(id);
   };
 
-  const filteredComments = useMemo(() => {
-    return comments?.filter((c: IComment) => {
-      const productName = getProductName(Number(c.sanpham)).toLowerCase();
-      return (
-        c.id.toString().includes(searchText.toLowerCase()) ||
-        c.user?.toLowerCase().includes(searchText.toLowerCase()) ||
-        productName.includes(searchText.toLowerCase()) ||
-        c.content.includes(searchText.toLowerCase()) ||
-        new Date(c.date).toLocaleString().toLowerCase().includes(searchText.toLowerCase())
-      );
-    });
-  }, [comments, searchText, products]);
+const search = comments?.filter((c: IComment) => {
+  const productName = getProductName(Number(c.sanpham));
+  const Text = `${c.id} ${c.user} ${c.content} ${c.date} ${productName}`.toLowerCase();
+  return Text.includes(searchText.toLowerCase());
+});
 
   const columns = [
     { title: 'ID', dataIndex: 'id' },
@@ -159,7 +152,7 @@ const CommentAdmin = () => {
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
-      <Table columns={columns} dataSource={filteredComments} rowKey="id" />
+      <Table columns={columns} dataSource={search} rowKey="id" />
     </div>
   );
 };

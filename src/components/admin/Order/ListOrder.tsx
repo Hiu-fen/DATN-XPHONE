@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
-import { Table, Select, message, Tag } from 'antd';
+import { Table, Select, message, Tag, Input } from 'antd';
 import { useNavigate } from 'react-router-dom';
 
 interface OrderItem {
@@ -26,6 +26,9 @@ interface Order {
 
 const OrderList = () => {
   const navigate = useNavigate();
+  
+    const [searchText, setSearchText] = useState('');
+  
 
   const { data: orders, refetch, isLoading } = useQuery<Order[]>({
     queryKey: ['orders'],
@@ -48,6 +51,10 @@ const OrderList = () => {
   const handleStatusChange = (id: number, status: string) => {
     mutation.mutate({ id, status });
   };
+  const search = orders?.filter((o: Order) => {
+    const Text = `${o.orderCode} ${o.customerName} ${o.items} ${o.total}`.toLowerCase();
+    return Text.includes(searchText.toLowerCase());
+  });
 
   const columns = [
     {
@@ -125,8 +132,15 @@ const OrderList = () => {
   return (
     <div>
       <h1>Danh sách đơn hàng</h1>
+      <Input.Search
+        placeholder=""
+        className="mb-4"
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
+      />
+
       <Table
-        dataSource={orders}
+        dataSource={search}
         columns={columns}
         rowKey="id"
         loading={isLoading}

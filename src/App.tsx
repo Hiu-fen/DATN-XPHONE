@@ -14,7 +14,6 @@ import PutEditCategory from './components/admin/Category/PutEditCategory'
 import PostAdd from './components/admin/Product/PostAdd'
 import CommentAdmin from './components/admin/Comment/CommentList'
 
-import Search from './components/admin/Search/search'
 
 import GetPromotion from './components/admin/Promotion/PromotionList'
 import PostAddPromotion from './components/admin/Promotion/PromotionAdd'
@@ -92,8 +91,6 @@ const App = () => {
          { path: 'user/listclient', element: <GetClient /> },
 
 
-        //Router Search
-        {path:'search', element:<Search/>},
 
         //Router Order
         {path:'order/list', element:<OrderList/>},

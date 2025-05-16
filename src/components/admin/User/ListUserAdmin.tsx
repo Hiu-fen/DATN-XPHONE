@@ -1,12 +1,13 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, message, Popconfirm, Table, Tag } from 'antd';
+import { Button, Input, message, Popconfirm, Table, Tag } from 'antd';
 import axios from 'axios';
-import React from 'react';
+import React, { useState } from 'react';
 import { User } from '../../../interface/user';
 import { useNavigate } from 'react-router-dom';
 
 const GetAdmin = () => {
   const nav = useNavigate();
+    const [searchText, setSearchText] = useState('');
 
   // Lấy danh sách user
   const { data: users, refetch } = useQuery({
@@ -124,17 +125,30 @@ nav("/admin/login"); //
         ),
     },
   ];
+    const search = users
+    ?.filter((user: User) => user.role === 'admin')
+    ?.filter((u: User) => {
+      const text = `${u.id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
+      return text.includes(searchText.toLowerCase());
+    });
 
   return (
     <div>
       <h1 className="text-xl font-bold mb-4">Danh sách người dùng</h1>
-      <Table
-        dataSource={users?.filter((user: User) => user.role === 'admin')}
-        columns={columns}
-        rowKey="id"
-        pagination={{ pageSize: 5 }}
+         <Input.Search
+        placeholder=""
+        className="mb-4"
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
       />
-    </div>
+       <Table
+              dataSource={search}
+              columns={columns}
+              rowKey="id"
+              pagination={{ pageSize: 5 }}
+            />
+          </div>
+
   );
 };
 
