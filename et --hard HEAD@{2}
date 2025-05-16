@@ -1,0 +1,19 @@
+[33mfa7ad04[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mMDuong[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;31morigin/DATN[m[33m)[m HEAD@{0}: pull origin DATN: Fast-forward
+[33m048c63e[m[33m ([m[1;31morigin/MDuong[m[33m)[m HEAD@{1}: pull origin MDuong --rebase: Fast-forward
+[33mc9c8fee[m HEAD@{2}: checkout: moving from DATN to MDuong
+[33m588d471[m[33m ([m[1;32mDATN[m[33m)[m HEAD@{3}: commit: Tìm kiếm
+[33m9f5b108[m HEAD@{4}: commit (merge): Merge branch 'DATN' of https://github.com/Hiu-fen/DATN-XPHONE into DATN
+[33me1dc8ac[m HEAD@{5}: checkout: moving from MDuong to DATN
+[33mc9c8fee[m HEAD@{6}: checkout: moving from DATN to MDuong
+[33me1dc8ac[m HEAD@{7}: commit: duong lien he
+[33m81c5173[m HEAD@{8}: commit (merge): Merge branch 'MDuong' into DATN
+[33m342da67[m HEAD@{9}: pull origin DATN: Merge made by the 'ort' strategy.
+[33m3b5b760[m HEAD@{10}: checkout: moving from MDuong to DATN
+[33mc9c8fee[m HEAD@{11}: reset: moving to HEAD
+[33mc9c8fee[m HEAD@{12}: commit: Tìm kiếm
+[33m3b5b760[m HEAD@{13}: checkout: moving from DATN to MDuong
+[33m3b5b760[m HEAD@{14}: checkout: moving from Duong to DATN
+[33mf8df68a[m[33m ([m[1;31morigin/DuongTest[m[33m, [m[1;32mDuongTest[m[33m, [m[1;32mDuong[m[33m)[m HEAD@{15}: checkout: moving from DuongTest to Duong
+[33mf8df68a[m[33m ([m[1;31morigin/DuongTest[m[33m, [m[1;32mDuongTest[m[33m, [m[1;32mDuong[m[33m)[m HEAD@{16}: checkout: moving from DATN to DuongTest
+[33m3b5b760[m HEAD@{17}: commit: Bình luận
+[33m95cea92[m HEAD@{18}: clone: from https://github.com/Hiu-fen/DATN-XPHONE.git
