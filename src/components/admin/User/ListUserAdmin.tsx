@@ -134,13 +134,15 @@ nav("/admin/login"); //
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Danh sách người dùng</h1>
+      <h2 className="text-2xl font-bold ">Danh sách người dùng</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
          <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
-        allowClear
-      />
+        allowClear />
+       </div>    
        <Table
               dataSource={search}
               columns={columns}

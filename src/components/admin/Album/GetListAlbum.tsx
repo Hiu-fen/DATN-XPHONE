@@ -136,13 +136,17 @@ const GetListAlbum = () => {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-4">Danh sách Album</h1>
-      <Input.Search
-        placeholder=""
-        className="mb-4"
-        onChange={(e) => setSearchText(e.target.value)}
-        allowClear
-      />
+     <h2 className="text-2xl font-bold ">Danh sách Album</h2>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
+          placeholder=""
+          className="mb-4"
+          style={{ width: 300 }} 
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+        />
+      </div>
+
       <Table dataSource={search} columns={columns} rowKey="id" />
 
       {/* Modal đổi ảnh */}

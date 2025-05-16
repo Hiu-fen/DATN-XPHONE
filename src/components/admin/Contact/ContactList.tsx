@@ -115,14 +115,19 @@ const ContactList = () => {
   ];
 
   return (
-    <div className="container mt-10">
-       <Input.Search
+    <div >
+      <h2 className="text-2xl font-bold ">Danh sách liên hệ</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
-      <h2 className="text-2xl font-bold mb-6">Danh sách liên hệ</h2>
+       </div>
+     
+      
       <Table
         columns={columns}
         dataSource={search}

@@ -126,23 +126,27 @@ const GetPromotion = () => {
 
   return (
     <div className="p-5">
-      <h1 className="mb-2">Danh sách khuyến mãi</h1>
-      <>
-        <Input.Search
-        placeholder=""
-        className="mb-4"
-        onChange={(e) => setSearchText(e.target.value)}
-        allowClear
-      />
-        <Table 
-          dataSource={search} 
-          columns={columns} 
-          pagination={false}
-          loading={isLoading}
-          rowKey="id"
-        />
-      </>
-    </div>
+ <h2 className="text-2xl font-bold ">Danh sách khuyến mãi</h2>
+
+  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+    <Input.Search
+      placeholder=""
+      style={{ width: 300 }} 
+      className="mb-4"
+      onChange={(e) => setSearchText(e.target.value)}
+      allowClear
+    />
+  </div>
+
+  <Table 
+    dataSource={search} 
+    columns={columns} 
+    pagination={false}
+    loading={isLoading}
+    rowKey="id"
+  />
+</div>
+
   );
 }
 

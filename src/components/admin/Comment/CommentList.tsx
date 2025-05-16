@@ -145,13 +145,17 @@ const search = comments?.filter((c: IComment) => {
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Danh sách bình luận</h2>
-      <Input.Search
+     <h2 className="text-2xl font-bold ">Danh sách bình luận</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
+       </div>
+      
       <Table columns={columns} dataSource={search} rowKey="id" />
     </div>
   );

@@ -167,13 +167,18 @@ useEffect(() => {
 
   return (
     <div>
-      <Input.Search
+       <h2 className="text-2xl font-bold ">Danh sách sản phẩm</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
-      <h1>Danh sách sản phẩm</h1>
+       </div>
+      
+     
       <Table dataSource={search || [] } columns={columns}   rowKey="id" />
     </div>
   );

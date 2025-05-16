@@ -77,13 +77,17 @@ const search = data?.filter((c: Icatagory) => {
  
   return (
     <div>
-      <h1>Danh mục</h1>
-      <Input.Search
+     <h2 className="text-2xl font-bold ">Danh mục</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
+       </div>
+      
      <Table dataSource={search} columns={columns}></Table>
     </div>
 
