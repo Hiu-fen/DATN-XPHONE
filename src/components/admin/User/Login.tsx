@@ -4,18 +4,17 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message } from "antd";
 import bcrypt from "bcryptjs";
+import { addNotification } from "../utils/notification";
+import { User } from "../../../interface/user";
 
-interface LoginForm {
-  email: string;
-  password: string;
-}
+
 
 const LoginAdmin = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
+  const { register, handleSubmit, formState: { errors } } = useForm<User>();
   const nav = useNavigate();
 
  
-const onSubmit = async (data: LoginForm) => {
+const onSubmit = async (data: User) => {
   try {
     // Chỉ tìm theo email
     const res = await axios.get(`http://localhost:4000/users?email=${data.email}`);
@@ -39,6 +38,7 @@ if (user.active === false) {
     }
     // Đăng nhập thành công
     localStorage.setItem("user", JSON.stringify(user));
+    addNotification(`Tài khoản "${user.email}" đã đăng nhập vào hệ thống`);
     message.success("Đăng nhập thành công");
     nav("/admin/category/list");
 

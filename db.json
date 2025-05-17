@@ -279,10 +279,14 @@
     },
     {
       "email": "Adminxphone@gmail.com",
-      "password": "$2a$10$m73xO/C..X8EgbvaYaeFY.6O7nstJZPB8mX5OzYbOjHa0og7sZ0Pm",
+      "password": "$2a$10$5qw0.VSOtm1ydBPq3m260ukh38TGp/Jlca7US6cfOmcEmA.fGHIs2",
       "name": "AdminXphone",
       "role": "admin",
-      "id": 6
+      "id": 6,
+      "address": "",
+      "sdt": "",
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "notification": "AE đến mai nghỉ làm nhé"
     },
     {
       "email": "client@gmail.com",
@@ -316,6 +320,17 @@
       "address": "147 nam từ liêm",
       "sdt": "123456789",
       "avatar": "https://picsum.photos/200"
+    },
+    {
+      "email": "test12@gmail.com",
+      "password": "$2a$10$zSR4HhRedX1z/GkTtFSjgecfJb1OyIc9Fac7GlKY4wsAWhbkZiXQm",
+      "name": "test",
+      "role": "admin",
+      "id": 11,
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "sdt": "",
+      "address": "",
+      "notification": "alo alo"
     }
   ],
   "promotions": [
