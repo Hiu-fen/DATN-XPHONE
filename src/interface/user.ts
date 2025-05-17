@@ -8,4 +8,5 @@ export interface User {
     avatar?:string;
     active: boolean;
      role: 'admin' | 'user'; 
+     notification?: string;
   }
