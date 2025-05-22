@@ -298,23 +298,12 @@
     },
     {
       "email": "1@gmail.com",
-      "password": "$2a$10$fjh7ArsW.DOhr8QINVI.RuVKJlChI/n8tWurRwFVEksQzdZQjyGeG",
+      "password": "$2a$10$HsETR4SjhTo3s1uQdXz9neUFPQdU088RZt4X1Rjtc4RkoSeCX9NWu",
       "name": "hieuhieu",
       "role": "admin",
       "id": 9,
-      "address": "",
-      "sdt": "123456789",
-      "avatar": "https://picsum.photos/200"
-    },
-    {
-      "email": "2@gmail.com",
-      "password": "$2a$10$J0EFfKQ9EAOZ/mZMCHlKQe8BBkp.KSU5qh54cvrsM.wEz/mCTyKxq",
-      "name": "hieuhieu",
-      "role": "admin",
-      "id": 10,
-      "active": true,
       "address": "147 nam từ liêm",
-      "sdt": "123456789",
+      "sdt": "0987654321",
       "avatar": "https://picsum.photos/200"
     }
   ],
