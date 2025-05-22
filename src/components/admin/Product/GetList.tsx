@@ -5,33 +5,40 @@ import { IProduct } from '../../../interface/product';
 import { useNavigate } from 'react-router-dom';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
-// import useAutoReloadOnBlank from '../Aside/useAutoReloadOnBlank';
 import { useLocation } from 'react-router-dom';
-// import { useEffect } from 'react';
-
-
-
+import { Ialbums } from '../../../interface/albums';
 
 interface ICategory {
   id: number;
   name: string;
 }
 
+interface IAlbum {
+  id: number;
+  name: string;
+}
+
 const GetList = () => {
-  
-    const [searchText, setSearchText] = useState('');
-  
+  const [searchText, setSearchText] = useState('');
 
   const nav = useNavigate();
   const location = useLocation();
 
-useEffect(() => {
-  if (location.state?.forceReload) {
-    refetch();
-  }
-}, [location.state?.forceReload]);
+  // Lấy danh sách album
+  const {
+    data: albums,
+    isLoading: loadingAlbums,
+    error: errorAlbums,
+  } = useQuery({
+    queryKey: ['albums'],
+    queryFn: async () => (await axios.get('http://localhost:4000/albums')).data,
+  });
 
-  
+  useEffect(() => {
+    if (location.state?.forceReload) {
+      refetch();
+    }
+  }, [location.state?.forceReload]);
 
   // Lấy danh sách sản phẩm
   const {
@@ -77,11 +84,20 @@ useEffect(() => {
     const category = categories.find((cat: ICategory) => cat.id === id);
     return category ? category.name : 'Không có danh mục';
   };
-  const search = products?.filter((p: IProduct)=>{
+
+  // Lấy tên album theo id
+  const getAlbumName = (id: number) => {
+    if (!albums) return 'Đang tải...';
+    const album = albums.find((alb: IAlbum) => alb.id === id);
+    return album ? album.name : 'Không có album';
+  };
+
+  const search = products?.filter((p: IProduct) => {
     const categoryName = getCategoryName(Number(p.danhmuc));
-    const Text = `${p.id} ${p.name} ${p.mota}  ${p.price} ${categoryName}`.toLowerCase();
+    const albumName = getAlbumName(Number(p.albumId));
+    const Text = `${p.id} ${p.name} ${p.mota}  ${p.price} ${categoryName} ${albumName}`.toLowerCase();
     return Text.includes(searchText.toLowerCase());
-  })
+  });
 
   const columns = [
     {
@@ -107,12 +123,15 @@ useEffect(() => {
       ),
     },
     {
+      title: 'Album ảnh',
+      key: 'albumId',
+      render: (_: any, record: IProduct) => getAlbumName(Number(record.albumId)),
+    },
+    {
       title: 'Giá',
       key: 'price',
       render: (_: any, record: IProduct) => (
-        // <span>{record.price.toLocaleString()} VND</span>
         <span>{record.price ? record.price.toLocaleString() : 'Không có giá'}</span>
-
       ),
     },
     {
@@ -125,15 +144,15 @@ useEffect(() => {
       key: 'danhmuc',
       render: (_: any, record: IProduct) => getCategoryName(Number(record.danhmuc)),
     },
-    {
-      title: 'Trạng thái',
-      key: 'trangthai',
-      render: (_: any, record: IProduct) => (
-        <span style={{ color: record.trangthai === 'Còn hàng' ? 'green' : 'red' }}>
-          {record.trangthai}
-        </span>
-      ),
-    },
+   {
+  title: 'Trạng thái',
+  key: 'trangthai',
+  render: (_: any, record: IProduct) => {
+    const status = record.trangthai?.toLowerCase();
+    const color = status === 'còn hàng' ? 'green' : status === 'hết hàng' ? 'red' : 'gray';
+    return <span style={{ color }}>{record.trangthai}</span>;
+  },
+   },
     {
       title: 'Thao tác',
       key: 'id',
@@ -161,15 +180,16 @@ useEffect(() => {
   ];
 
   // Xử lý loading hoặc lỗi
-  if (loadingProducts || loadingCategories) return <p>Đang tải dữ liệu...</p>;
-  if (errorProducts || errorCategories)
+  if (loadingProducts || loadingCategories || loadingAlbums) return <p>Đang tải dữ liệu...</p>;
+  if (errorProducts || errorCategories || errorAlbums)
     return <p>Lỗi khi tải dữ liệu, vui lòng thử lại sau.</p>;
 
   return (
     <div>
-       <h2 className="text-2xl font-bold ">Danh sách sản phẩm</h2>
-       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <h2 className="text-2xl font-bold ">Danh sách sản phẩm</h2>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Input.Search
+
         placeholder=""
         className="mb-4"
          style={{ width: 300 }} 
@@ -186,6 +206,7 @@ useEffect(() => {
       pageSizeOptions: ['5', '10', '20'],
   }}
       />
+
     </div>
   );
 };

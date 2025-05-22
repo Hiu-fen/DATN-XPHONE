@@ -18,6 +18,7 @@
       "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
       "mota": "đập thoải moãi :v",
       "id": 3
+
     }
   ],
   "products": [
@@ -26,53 +27,47 @@
       "name": "sansung s20",
       "price": "10.000000",
       "mota": "sansung  đây",
-      "danhmuc": "2",
-      "trangthai": "Hết hàng",
+      "danhmuc": 2,
+      "trangthai": "hết hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": 5
     },
     {
       "id": 3,
       "name": "oppo 12",
       "price": "4.000000",
       "mota": "đập k bể",
-      "danhmuc": "3",
-      "trangthai": "Hết hàng",
+      "danhmuc": 3,
+      "trangthai": "còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": "5"
     },
     {
       "id": 5,
       "name": "iphone11",
       "price": "6.000000",
       "mota": "Điện thoại mới nhất ",
-      "danhmuc": "1",
-      "trangthai": "Còn hàng",
+      "danhmuc": 2,
+      "trangthai": "còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
-    },
-    {
-      "id": 6,
-      "name": "Iphone8",
-      "price": "5.000000",
-      "mota": "Điện thoại mới nhất ",
-      "danhmuc": "1",
-      "trangthai": "Còn hàng",
-      "type": "simple",
-      "parent": 0,
-      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png",
+      "albumId": 4
     },
     {
       "id": 7,
-      "name": "ten san pham",
+      "name": "tesstt",
       "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+
       "price": "5000000",
       "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
       "danhmuc": "1",
       "trangthai": "Còn hàng",
+
       "type": "simple",
       "parent": 0
     },
@@ -118,7 +113,9 @@
       "phone": "0987654321",
       "address": "40 Xuân Thủy, Hà Nội",
       "date": "2025-05-14T10:30:00Z",
+
       "status": "Đã giao",
+
       "isPaid": false,
       "items": [
         {
@@ -295,14 +292,19 @@
       "id": 5,
       "address": "kmkakma",
       "sdt": "kmkmakma",
-      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png"
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "active": true
     },
     {
       "email": "Adminxphone@gmail.com",
-      "password": "$2a$10$m73xO/C..X8EgbvaYaeFY.6O7nstJZPB8mX5OzYbOjHa0og7sZ0Pm",
+      "password": "$2a$10$5qw0.VSOtm1ydBPq3m260ukh38TGp/Jlca7US6cfOmcEmA.fGHIs2",
       "name": "AdminXphone",
       "role": "admin",
-      "id": 6
+      "id": 6,
+      "address": "",
+      "sdt": "",
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "notification": "AE đến mai nghỉ làm nhé"
     },
     {
       "email": "client@gmail.com",
@@ -318,20 +320,25 @@
     },
     {
       "email": "1@gmail.com",
+
       "password": "$2a$10$UmDtpAEn5tzttpRq2gkJVOM9/0ruHKFWXcotsdYJisCwyucDdBfF6",
+
       "name": "hieuhieu",
       "role": "admin",
       "id": 9,
       "address": "",
+
       "sdt": "",
       "avatar": "https://vcdn1-thethao.vnecdn.net/2013/04/24/sua1a-1366773088.jpg?w=460&h=0&q=100&dpr=2&fit=crop&s=uVmEzzZpJUP5dfwLhYIMaQ"
+
     },
     {
       "email": "2@gmail.com",
-      "password": "$2a$10$J1fqbZBLgSFIHuLb6rCd.eDNbY4mPZfUrufJgBQLPQIE65PCQf4fG",
+      "password": "$2a$10$J0EFfKQ9EAOZ/mZMCHlKQe8BBkp.KSU5qh54cvrsM.wEz/mCTyKxq",
       "name": "hieuhieu",
       "role": "admin",
       "id": 10,
+
       "active": true
     },
     {
@@ -354,6 +361,7 @@
       "address": "",
       "sdt": "",
       "avatar": "https://res.cloudinary.com/dazrcwwzq/image/upload/v1747896921/t%E1%BA%A3i_xu%E1%BB%91ng_jpqoi7.jpg"
+
     }
   ],
   "promotions": [
