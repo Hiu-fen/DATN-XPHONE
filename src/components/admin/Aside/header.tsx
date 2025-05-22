@@ -10,11 +10,12 @@ import {
   GiftOutlined,
 } from '@ant-design/icons';
 
+
 export default function XPhoneHeader() {
   const [notificationCount] = useState(3);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const timeoutRef = useRef<number | null>(null);
-  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string } | null>(null);
   const nav = useNavigate();
 
   // Lấy thông tin user từ localStorage
@@ -68,38 +69,10 @@ export default function XPhoneHeader() {
 
       {/* Right Section */}
       <div className="flex items-center gap-5">
-        <div className="relative hidden md:block">
-          <input
-            type="text"
-            placeholder="Bạn muốn tìm kiếm ...?"
-            className="w-[600px] px-4 py-2 pl-10 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-          />
-          <SearchOutlined className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" style={{ fontSize: 18 }} />
-        </div>
-
         <div className="hidden md:flex items-center gap-4">
-          <Link to="/">
+          <Link to="/home">
             <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
               <HomeOutlined className="text-gray-600" style={{ fontSize: 20 }} />
-            </button>
-          </Link>
-          <Link to="#">
-            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors relative">
-              <GiftOutlined className="text-gray-600" style={{ fontSize: 20 }} />
-              <span className="absolute -top-1 -right-1 h-5 w-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">15</span>
-            </button>
-          </Link>
-        </div>
-
-        <div className="relative">
-          <Link to="#">
-            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-              <BellOutlined className="text-gray-600" style={{ fontSize: 20 }} />
-              {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                  {notificationCount}
-                </span>
-              )}
             </button>
           </Link>
         </div>
@@ -116,16 +89,24 @@ export default function XPhoneHeader() {
 
         <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
 
-        {/* User Avatar & Dropdown */}
         <div
           className="relative"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
           <div className="flex items-center gap-3 cursor-pointer">
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt="Avatar"
+              className="w-10 h-10 rounded-full object-cover border border-green-500"
+            />
+          ) : (
             <div className="bg-green-100 w-10 h-10 rounded-full flex items-center justify-center text-green-600">
               <UserOutlined style={{ fontSize: 20 }} />
             </div>
+          )}
+
             <div className="hidden md:block">
               <p className="font-medium text-gray-800">
                 Xin chào {user?.name || user?.email || "Admin"}

@@ -179,7 +179,13 @@ useEffect(() => {
        </div>
       
      
-      <Table dataSource={search || [] } columns={columns}   rowKey="id" />
+      <Table dataSource={search || [] } columns={columns}   rowKey="id"
+      pagination={{
+      pageSize: 10, 
+      showSizeChanger: false,
+      pageSizeOptions: ['5', '10', '20'],
+  }}
+      />
     </div>
   );
 };

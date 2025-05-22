@@ -148,7 +148,11 @@ const OrderList = () => {
         columns={columns}
         rowKey="id"
         loading={isLoading}
-        pagination={{ pageSize: 5 }}
+        pagination={{
+        pageSize: 10, 
+        showSizeChanger: false,
+        pageSizeOptions: ['5', '10', '20'],
+      }}
       />
     </div>
   );

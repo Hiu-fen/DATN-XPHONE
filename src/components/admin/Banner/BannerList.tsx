@@ -135,6 +135,11 @@ const BannerList = () => {
         columns={columns}
         dataSource={search}
         rowKey="id"
+        pagination={{
+        pageSize: 10, 
+        showSizeChanger: false,
+        pageSizeOptions: ['10', '20', '30'],
+      }}
       />
     </div>
   );

@@ -41,6 +41,9 @@ import PostAddAlbum from './components/admin/Album/PostAddAlbum'
 import AdminDashboard from './components/admin/Aside/AdminDashboard'
 
 import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank'
+import About from './components/client/page/about'
+import Home from './components/client/page/home'
+import Contact from './components/client/page/contact'
 
 
 
@@ -50,8 +53,11 @@ const App = () => {
 
     {
       path: "/", element: <ClientLayout />, children: [
+        { path: 'home', element: <Home /> },
         { path: 'login', element: <Login /> },
         { path: 'register', element: <Register /> },
+        { path: 'about', element: <About /> },
+        { path: 'contact', element: <Contact /> },
       ]
     },
     {
@@ -69,7 +75,7 @@ const App = () => {
       <AdminLayout />
     </PrivateRouteAdmin>
   ), children: [
-  { index: true, element: <AdminDashboard /> }, // ✅ thêm dòng này
+  { index: true, element: <AdminDashboard /> }, 
         //Router Danh mục
         { path: 'category/list', element: <GetListCategory /> },
         { path: 'category/add', element: <PostAddCategory /> },
