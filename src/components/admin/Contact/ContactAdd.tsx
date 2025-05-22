@@ -10,11 +10,10 @@ const ContactAdd = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<IContact>();
   const navigate = useNavigate();
 
-  // Hàm lấy ID tự động từ localStorage
   const getNextId = () => {
     const currentId = localStorage.getItem('nextContactId');
-    const nextId = currentId ? parseInt(currentId) + 1 : 1; // Nếu chưa có ID thì bắt đầu từ 1
-    localStorage.setItem('nextContactId', nextId.toString()); // Lưu ID mới vào localStorage
+    const nextId = currentId ? parseInt(currentId) + 1 : 1; 
+    localStorage.setItem('nextContactId', nextId.toString()); 
     return nextId;
   };
 
@@ -36,9 +35,9 @@ const ContactAdd = () => {
   const onSubmit = (data: IContact) => {
     const contactData: IContact = {
       ...data,
-      status: false, // Mặc định liên hệ mới chưa xử lý
+      status: false, 
       date: new Date().toLocaleDateString('en-GB'),
-      id: getNextId(), // Lấy ID tự động tăng
+      id: getNextId(), 
     };
     mutation.mutate(contactData);
   };

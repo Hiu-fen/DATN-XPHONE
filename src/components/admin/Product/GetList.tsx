@@ -189,15 +189,24 @@ const GetList = () => {
       <h2 className="text-2xl font-bold ">Danh sách sản phẩm</h2>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Input.Search
-          placeholder=""
-          className="mb-4"
-          style={{ width: 300 }}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-        />
-      </div>
 
-      <Table dataSource={search || []} columns={columns} rowKey="id" />
+        placeholder=""
+        className="mb-4"
+         style={{ width: 300 }} 
+        onChange={(e) => setSearchText(e.target.value)}
+        allowClear
+      />
+       </div>
+      
+     
+      <Table dataSource={search || [] } columns={columns}   rowKey="id"
+      pagination={{
+      pageSize: 10, 
+      showSizeChanger: false,
+      pageSizeOptions: ['5', '10', '20'],
+  }}
+      />
+
     </div>
   );
 };

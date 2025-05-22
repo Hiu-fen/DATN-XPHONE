@@ -141,9 +141,14 @@ const GetPromotion = () => {
   <Table 
     dataSource={search} 
     columns={columns} 
-    pagination={false}
+    // pagination={false}
     loading={isLoading}
     rowKey="id"
+    pagination={{
+    pageSize: 10, 
+    showSizeChanger: false,
+    pageSizeOptions: ['5', '10', '20'],
+  }}
   />
 </div>
 
