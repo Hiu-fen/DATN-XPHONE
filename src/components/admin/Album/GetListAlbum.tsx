@@ -72,7 +72,7 @@ const GetListAlbum = () => {
     }
   });
 
-  // Gửi ảnh mới
+
   const handleUpload = () => {
     if (!selectedFile) {
       message.warning("Vui lòng chọn ảnh mới");
@@ -87,7 +87,7 @@ const GetListAlbum = () => {
     return Text.includes(searchText.toLowerCase());
   });
 
-  // Cột bảng
+ 
   const columns = [
     {
       title: "Stt",
@@ -147,7 +147,13 @@ const GetListAlbum = () => {
         />
       </div>
 
-      <Table dataSource={search} columns={columns} rowKey="id" />
+      <Table dataSource={search} columns={columns} rowKey="id" 
+        pagination={{
+        pageSize: 10, 
+        showSizeChanger: false,
+        pageSizeOptions: ['5', '10', '20'],
+      }}
+      />
 
       {/* Modal đổi ảnh */}
       <Modal

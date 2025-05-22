@@ -88,7 +88,13 @@ const search = data?.filter((c: Icatagory) => {
       />
        </div>
       
-     <Table dataSource={search} columns={columns}></Table>
+     <Table dataSource={search} columns={columns}
+        pagination={{
+        pageSize: 10, 
+        showSizeChanger: false,
+        pageSizeOptions: ['5', '10', '20'],
+      }}
+     />
     </div>
 
   )

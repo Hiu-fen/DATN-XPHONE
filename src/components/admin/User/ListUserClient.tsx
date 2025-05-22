@@ -149,7 +149,11 @@ nav("/admin/login"); //
         dataSource={search}
         columns={columns}
         rowKey="id"
-        pagination={{ pageSize: 5 }}
+        pagination={{
+        pageSize: 10, 
+        showSizeChanger: false,
+        pageSizeOptions: ['5', '10', '20'],
+      }}
       />
     </div>
   );

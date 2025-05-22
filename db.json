@@ -18,12 +18,7 @@
       "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
       "mota": "đập thoải moãi :v",
       "id": 3
-    },
-    {
-      "name": "testt2",
-      "image": "https://picsum.photos/200",
-      "mota": "testt",
-      "id": 4
+
     }
   ],
   "products": [
@@ -67,11 +62,23 @@
       "id": 7,
       "name": "tesstt",
       "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
-      "price": "13434134",
-      "mota": "aaaaa",
-      "danhmuc": "4",
-      "trangthai": "còn hàng",
-      "albumId": 4,
+
+      "price": "5000000",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "danhmuc": "1",
+      "trangthai": "Còn hàng",
+
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 8,
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "price": "200000",
+      "mota": "SamSung  đây",
+      "danhmuc": "3",
+      "trangthai": "Hết hàng",
       "type": "simple",
       "parent": 0
     }
@@ -106,7 +113,9 @@
       "phone": "0987654321",
       "address": "40 Xuân Thủy, Hà Nội",
       "date": "2025-05-14T10:30:00Z",
-      "status": "Chờ xác nhận",
+
+      "status": "Đã giao",
+
       "isPaid": false,
       "items": [
         {
@@ -150,7 +159,7 @@
       "phone": "0909988776",
       "address": "Đông Tác, Hà Nội",
       "date": "2025-05-12T11:00:00Z",
-      "status": "Hoàn thành",
+      "status": "Đang xử lý",
       "isPaid": true,
       "items": [
         {
@@ -168,17 +177,17 @@
       "user": "hieu",
       "content": "Sản phẩm rất tốt",
       "product": "",
-      "status": true,
+      "status": false,
       "date": "08/05/2025",
       "id": 1,
-      "likes": 10
+      "likes": 23
     },
     {
       "user": "amthucv1",
       "content": "123123123",
       "sanpham": "5",
       "date": "2025-05-14T09:34:29.709Z",
-      "likes": 11,
+      "likes": 27,
       "id": 2,
       "status": false
     }
@@ -240,6 +249,15 @@
       "status": false,
       "date": "14/05/2025",
       "id": 4
+    },
+    {
+      "name": "Trịnh Mạnh Dương",
+      "email": "trinhvanduong2005tq@gmail.com",
+      "phone": "0343452076",
+      "message": "12312312",
+      "status": false,
+      "date": "22/05/2025",
+      "id": 5
     }
   ],
   "users": [
@@ -279,10 +297,14 @@
     },
     {
       "email": "Adminxphone@gmail.com",
-      "password": "$2a$10$m73xO/C..X8EgbvaYaeFY.6O7nstJZPB8mX5OzYbOjHa0og7sZ0Pm",
+      "password": "$2a$10$5qw0.VSOtm1ydBPq3m260ukh38TGp/Jlca7US6cfOmcEmA.fGHIs2",
       "name": "AdminXphone",
       "role": "admin",
-      "id": 6
+      "id": 6,
+      "address": "",
+      "sdt": "",
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "notification": "AE đến mai nghỉ làm nhé"
     },
     {
       "email": "client@gmail.com",
@@ -298,12 +320,23 @@
     },
     {
       "email": "1@gmail.com",
-      "password": "$2a$10$HsETR4SjhTo3s1uQdXz9neUFPQdU088RZt4X1Rjtc4RkoSeCX9NWu",
+      "password": "$2a$10$fjh7ArsW.DOhr8QINVI.RuVKJlChI/n8tWurRwFVEksQzdZQjyGeG",
       "name": "hieuhieu",
       "role": "admin",
       "id": 9,
+      "address": "",
+      "sdt": "123456789",
+      "avatar": "https://picsum.photos/200"
+    },
+    {
+      "email": "2@gmail.com",
+      "password": "$2a$10$J0EFfKQ9EAOZ/mZMCHlKQe8BBkp.KSU5qh54cvrsM.wEz/mCTyKxq",
+      "name": "hieuhieu",
+      "role": "admin",
+      "id": 10,
+      "active": true,
       "address": "147 nam từ liêm",
-      "sdt": "0987654321",
+      "sdt": "123456789",
       "avatar": "https://picsum.photos/200"
     }
   ],
