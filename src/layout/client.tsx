@@ -6,7 +6,7 @@ const ClientLayout = () => {
   return (
     <>
         <ClientHeader/>
-        <div className=''>
+        <div className='max-w-7xl mx-auto'>
           <Outlet/>
           </div>
         <ClientFooter/>
