@@ -80,7 +80,11 @@ const PutEdit = () => {
 
   const onSubmit = async (data: IProduct) => {
     try {
-      await axios.put(`http://localhost:4000/products/${id}`, data);
+          const newData = {
+      ...data,
+      danhmuc: Number(data.danhmuc), // Ép kiểu về số
+    };
+      await axios.put(`http://localhost:4000/products/${id}`, newData);
       message.success("Cập nhật sản phẩm thành công!");
       navigate("/admin/phone/list");
     } catch (error) {

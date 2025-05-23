@@ -42,6 +42,7 @@ const ClientHeader = () => {
         <div className="max-w-7xl mx-auto flex justify-center gap-8 p-2 text-gray-700 font-medium px-4 items-center">
             <a href="/home" className="hover:text-red-600">Trang chủ</a>
             <a href="/about" className="hover:text-red-600">Giới thiệu</a>
+            <a href="/categorys" className="hover:text-red-600">Danh mục</a>
             <a href="#" className="hover:text-red-600">iPhone</a>
             <a href="#" className="hover:text-red-600">Macbook</a>
             <a href="#" className="hover:text-red-600">iPad</a>
