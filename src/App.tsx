@@ -59,7 +59,7 @@ const App = () => {
 
     {
       path: "/", element: <ClientLayout />, children: [
-        { path: 'home', element: <Home /> },
+        { path: '/', element: <Home /> },
         { path: 'login', element: <Login /> },
         { path: 'register', element: <Register /> },
         { path: 'about', element: <About /> },
@@ -72,13 +72,13 @@ const App = () => {
       ]
     },
     {
-  path: "/admin/login",
-  element: <LoginAdmin />
-},
-{
-  path: "/admin/register",
-  element: <RegisterAdmin />
-},
+      path: "/admin/login",
+      element: <LoginAdmin />
+    },
+    {
+      path: "/admin/register",
+      element: <RegisterAdmin />
+    },
     {
   path: "/admin",
   element: (
