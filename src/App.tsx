@@ -48,6 +48,7 @@ import Contact from './components/client/page/contact'
 import Categorys from './components/client/page/categorys'
 
 import Cart from './components/client/page/cart'
+import Account from './components/client/page/account'
 
 
 
@@ -65,6 +66,7 @@ const App = () => {
         { path: 'contact', element: <Contact /> },
         { path: 'cart', element: <Cart /> },
         { path: 'categorys', element: <Categorys/> },
+        { path: 'account', element: <Account/> },
 
 
       ]

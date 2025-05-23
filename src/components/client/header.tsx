@@ -31,7 +31,7 @@ const ClientHeader = () => {
             <a href="/cart" className="hover:text-red-500 flex flex-col items-center">
               <FaShoppingCart /><span className="text-xs">Giỏ hàng</span>
             </a>
-            <a href="#" className="hover:text-red-500 flex flex-col items-center">
+            <a href="/account" className="hover:text-red-500 flex flex-col items-center">
               <FaUser /><span className="text-xs">Tài khoản</span>
             </a>
           </div>
