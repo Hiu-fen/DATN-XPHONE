@@ -4,21 +4,56 @@
     {
       "name": "Iphone",
       "mota": "Điện thoại táo",
-      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "image": "https://cdnv2.tgdd.vn/mwg-static/common/News/1569702/iphone%2016%20pro%20-%203.jpg",
       "id": 1
     },
     {
       "name": "SamSung",
-      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGGBzWOKOkHXbnNQobVpJlA2IKK266T1tE-Q&s",
       "mota": "điện thoại androi",
       "id": 2
     },
     {
       "name": "op po",
-      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "image": "https://tgs.vn/wp-content/uploads/2022/03/DSC8174.jpg",
       "mota": "đập thoải moãi :v",
       "id": 3
-
+    },
+    {
+      "name": "vivo  ",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfMW4kaQoFEXOAJO4O8BfZTbhTB0PKNSL0tw&s",
+      "mota": "Điện thoại mới nhất ",
+      "id": 4
+    },
+    {
+      "name": "rog phone ",
+      "image": "https://cellphones.com.vn/sforum/wp-content/uploads/2022/07/default_wallpaper_Rog6_picker_02.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 5
+    },
+    {
+      "name": "xiaomi",
+      "image": "https://cdn.tgdd.vn/Files/2022/08/15/1456491/redmi_k50_ultra_1280x1065-800-resize.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 6
+    },
+    {
+      "name": "Huawei",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxbB6CP9CeZcjRJnBzf_kZISCErKFgJHBC8A&s",
+      "mota": "Điện thoại mới nhất ",
+      "id": 7
+    },
+    {
+      "name": "OnePlus",
+      "image": "https://cdn.tgdd.vn/Products/Images/42/230770/oneplus-9-pro-600x600-1-600x600.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 8
+    },
+    {
+      "name": "Nokia",
+      "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
+      "mota": "Điện thoại mới nhất ",
+      "id": 9
     }
   ],
   "products": [
@@ -51,7 +86,7 @@
       "name": "iphone11",
       "price": "6.000000",
       "mota": "Điện thoại mới nhất ",
-      "danhmuc": 2,
+      "danhmuc": 1,
       "trangthai": "còn hàng",
       "type": "simple",
       "parent": 0,
@@ -60,25 +95,84 @@
     },
     {
       "id": 7,
-      "name": "tesstt",
+      "name": "iphone",
       "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
-
       "price": "5000000",
       "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
       "danhmuc": "1",
       "trangthai": "Còn hàng",
-
       "type": "simple",
       "parent": 0
     },
     {
       "id": 8,
-      "name": "Dương",
-      "image": "https://picsum.photos/200",
-      "price": "200000",
-      "mota": "SamSung  đây",
-      "danhmuc": "3",
-      "trangthai": "Hết hàng",
+      "name": "sansung s20",
+      "price": "10.000000",
+      "mota": "sansung  đây",
+      "danhmuc": 2,
+      "trangthai": "hết hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": 5
+    },
+    {
+      "id": 9,
+      "name": "oppo 12",
+      "price": "4.000000",
+      "mota": "đập k bể",
+      "danhmuc": 3,
+      "trangthai": "còn hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": "5"
+    },
+    {
+      "id": 10,
+      "name": "Huawei",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxbB6CP9CeZcjRJnBzf_kZISCErKFgJHBC8A&s",
+      "price": "123456",
+      "mota": "aaa",
+      "danhmuc": 7,
+      "trangthai": "còn hàng",
+      "albumId": "5",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 11,
+      "name": "OnePlus",
+      "image": "https://cdn.tgdd.vn/Products/Images/42/230770/oneplus-9-pro-600x600-1-600x600.jpg",
+      "price": "123456",
+      "mota": "aaa",
+      "danhmuc": 8,
+      "trangthai": "còn hàng",
+      "albumId": "4",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 12,
+      "name": "Nokia",
+      "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
+      "price": "123456",
+      "mota": "áa",
+      "danhmuc": 9,
+      "trangthai": "còn hàng",
+      "albumId": 5,
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 13,
+      "name": "rog",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "price": "123",
+      "mota": "aa",
+      "danhmuc": 5,
+      "trangthai": "còn hàng",
+      "albumId": 4,
       "type": "simple",
       "parent": 0
     }
@@ -113,9 +207,7 @@
       "phone": "0987654321",
       "address": "40 Xuân Thủy, Hà Nội",
       "date": "2025-05-14T10:30:00Z",
-
       "status": "Đã giao",
-
       "isPaid": false,
       "items": [
         {

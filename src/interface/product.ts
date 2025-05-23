@@ -2,7 +2,8 @@ export interface IProduct {
   id: number;
   name: string;
   image: string;
-  danhmuc: string;
+  danhmuc: string|number|null;
+  // categoryI: string|null
   price: string;
   trangthai:string;
   albumId?: number;  

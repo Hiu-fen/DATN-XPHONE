@@ -51,11 +51,14 @@ const AddProduct = () => {
 
 const onSubmit = async (data: IProduct) => {
   try {
-    await axios.post("http://localhost:4000/products", data);
-    message.success("Thêm mới thành công")
-      nav('/admin/phone/list')
+    const newData = {
+      ...data,
+      danhmuc: Number(data.danhmuc), // Ép kiểu về số
+    };
 
-    // reset(); // ✅ reset lại form
+    await axios.post("http://localhost:4000/products", newData);
+    message.success("Thêm mới thành công");
+    nav('/admin/phone/list');
   } catch (error) {
     message.error("Có lỗi khi thêm sản phẩm");
     console.error(error);
