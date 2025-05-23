@@ -44,6 +44,8 @@ import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank'
 import About from './components/client/page/about'
 import Home from './components/client/page/home'
 import Contact from './components/client/page/contact'
+import Cart from './components/client/page/cart'
+
 
 
 
@@ -58,6 +60,7 @@ const App = () => {
         { path: 'register', element: <Register /> },
         { path: 'about', element: <About /> },
         { path: 'contact', element: <Contact /> },
+        { path: 'cart', element: <Cart/> },
       ]
     },
     {
