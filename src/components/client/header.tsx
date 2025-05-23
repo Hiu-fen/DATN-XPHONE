@@ -28,7 +28,7 @@ const ClientHeader = () => {
             <a href="#" className="hover:text-red-500 flex flex-col items-center">
               <FaBell /><span className="text-xs">Thông báo</span>
             </a>
-            <a href="#" className="hover:text-red-500 flex flex-col items-center">
+            <a href="/cart" className="hover:text-red-500 flex flex-col items-center">
               <FaShoppingCart /><span className="text-xs">Giỏ hàng</span>
             </a>
             <a href="#" className="hover:text-red-500 flex flex-col items-center">
