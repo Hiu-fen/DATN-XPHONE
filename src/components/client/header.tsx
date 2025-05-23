@@ -1,5 +1,5 @@
-import React from 'react';
 import { FaShoppingCart, FaUser, FaBell, FaHeart } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const ClientHeader = () => {
   return (
@@ -10,7 +10,7 @@ const ClientHeader = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4">
 
           <div className="flex-1 min-w-[120px]">
-            <span className="text-2xl font-bold text-red-600">XPhone</span>
+            <Link to={"/"} className="text-2xl font-bold text-red-600">XPhone</Link>
           </div>
 
           <div className="flex-1 flex justify-center">
@@ -40,7 +40,7 @@ const ClientHeader = () => {
       {/* Menu */}
         <nav className="bg-gray-100 border-t">
         <div className="max-w-7xl mx-auto flex justify-center gap-8 p-2 text-gray-700 font-medium px-4 items-center">
-            <a href="/home" className="hover:text-red-600">Trang chủ</a>
+            <a href="/" className="hover:text-red-600">Trang chủ</a>
             <a href="/about" className="hover:text-red-600">Giới thiệu</a>
             <a href="#" className="hover:text-red-600">iPhone</a>
             <a href="#" className="hover:text-red-600">Macbook</a>
