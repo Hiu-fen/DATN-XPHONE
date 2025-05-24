@@ -4,11 +4,12 @@ import { FaFacebookF, FaInstagram, FaTiktok } from 'react-icons/fa';
 const ClientFooter = () => {
   return (
     <footer className="bg-gray-800 text-white py-8 mt-8">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 px-4">
+      <div className="max-w-7xl mx-auto grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 px-4">
+        {/* <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 w-full text-sm  justify-between "> */}
 
         <div>
           <h3 className="font-bold text-lg mb-2">XPhone</h3>
-          <p className="text-sm w-2/4 flex">
+          <p className="text-sm w-5/5 flex justify-between">
             Hệ thống cửa hàng XPhone chuyên bán lẻ điện thoại, máy tính laptop, smartwatch, smartphone, phụ kiện chính hãng - Giá tốt, giao miễn phí.
           </p>
         </div>

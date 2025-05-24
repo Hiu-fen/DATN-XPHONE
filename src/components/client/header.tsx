@@ -1,52 +1,60 @@
-import { FaShoppingCart, FaUser, FaBell, FaHeart } from 'react-icons/fa';
+import { useState } from 'react';
+import { FaShoppingCart, FaUser, FaBell, FaHeart, FaBars } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
-const ClientHeader = () => {
-  return (
-    <header className="bg-white shadow">
 
+const ClientHeader = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  return (
+
+    <header className="bg-white shadow">
       {/* Phần trên: Logo, Tìm kiếm, Icon */}
       <div className="w-full bg-white sm:px-6 md:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between py-3 px-4 gap-3 sm:gap-0">
-
+        <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 gap-3">
           {/* Logo */}
-          <div className="w-full sm:w-auto text-center sm:text-left">
-            <Link to="/" className="text-2xl sm:text-3xl font-bold text-red-600">XPhone</Link>
-          </div>
+          <Link to="/" className="text-2xl sm:text-3xl font-bold text-red-600 whitespace-nowrap">
+            XPhone
+          </Link>
 
-          {/* Tìm kiếm */}
-          <div className="w-full sm:flex-1 sm:px-4">
-            <input
-              type="text"
-              placeholder="Tìm kiếm sản phẩm..."
-              className="w-full border p-2 rounded max-w-full sm:max-w-lg"
-            />
-          </div>
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Tìm kiếm sản phẩm..."
+            className="flex-grow mx-4 border p-2 rounded"
+          />
 
-          {/* Icon */}
-          <div className="w-full sm:w-auto flex justify-around sm:justify-end gap-4 sm:gap-6 text-sm sm:text-base text-gray-600 mt-2 sm:mt-0">
-            <Link to="/wishlist" className="hover:text-red-500 flex flex-col items-center">
-              <FaHeart className="text-lg sm:text-xl" />
-              <span className="text-xs">Yêu thích</span>
-            </Link>
-            <Link to="/notifications" className="hover:text-red-500 flex flex-col items-center">
-              <FaBell className="text-lg sm:text-xl" />
-              <span className="text-xs">Thông báo</span>
-            </Link>
-            <Link to="/cart" className="hover:text-red-500 flex flex-col items-center">
-              <FaShoppingCart className="text-lg sm:text-xl" />
-              <span className="text-xs">Giỏ hàng</span>
-            </Link>
-            <Link to="/account" className="hover:text-red-500 flex flex-col items-center">
-              <FaUser className="text-lg sm:text-xl" />
-              <span className="text-xs">Tài khoản</span>
-            </Link>
+          {/* Hamburger Icon */}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="text-gray-600 hover:text-red-500 focus:outline-none"
+            >
+              <FaBars className="text-2xl" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {menuOpen && (
+              <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg z-10 p-4 flex flex-col gap-3 text-gray-600 text-sm sm:text-base w-40">
+                <Link to="/wishlist" className="hover:text-red-500 flex items-center gap-2">
+                  <FaHeart /> Yêu thích
+                </Link>
+                <Link to="/notifications" className="hover:text-red-500 flex items-center gap-2">
+                  <FaBell /> Thông báo
+                </Link>
+                <Link to="/cart" className="hover:text-red-500 flex items-center gap-2">
+                  <FaShoppingCart /> Giỏ hàng
+                </Link>
+                <Link to="/account" className="hover:text-red-500 flex items-center gap-2">
+                  <FaUser /> Tài khoản
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Menu ngang */}
-      <nav className="bg-gray-100 border-t overflow-x-auto justify-center  pl-0 w-full">
+      <nav className="bg-gray-100 border-t overflow-x-auto w-full">
         <div className="max-w-7xl mx-auto flex gap-4 sm:gap-6 px-4 py-2 text-gray-700 font-medium items-center whitespace-nowrap text-sm sm:text-base">
           <Link to="/" className="hover:text-red-600">Trang chủ</Link>
           <Link to="/about" className="hover:text-red-600">Giới thiệu</Link>
