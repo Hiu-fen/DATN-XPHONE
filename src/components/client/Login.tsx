@@ -40,6 +40,7 @@ if (user.active === false) {
     // Đăng nhập thành công
     localStorage.setItem("user", JSON.stringify(user));
     message.success("Đăng nhập thành công");
+   nav ('/')
   
 
   } catch (error) {

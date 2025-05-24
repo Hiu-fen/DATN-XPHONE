@@ -354,14 +354,6 @@
   ],
   "users": [
     {
-      "email": "phamhieu12345@gmail.com",
-      "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
-      "name": "Phạm Hữu Hiếu",
-      "sdt": "0123456789",
-      "address": "Hà Nội",
-      "id": 1
-    },
-    {
       "email": "phamhieu123456@gmail.com",
       "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
       "id": 1
@@ -412,24 +404,28 @@
     },
     {
       "email": "1@gmail.com",
-      "password": "$2a$10$fjh7ArsW.DOhr8QINVI.RuVKJlChI/n8tWurRwFVEksQzdZQjyGeG",
-      "name": "hieuhieu",
+      "password": "$2a$10$BJ/VkOyAIaL/JeQG9nspC.cWxuioWJawEcGflukqyzcrMAlzZWMsO",
+      "name": "test",
       "role": "admin",
-      "id": 9,
-      "address": "",
-      "sdt": "123456789",
-      "avatar": "https://picsum.photos/200"
+      "id": 9
     },
     {
       "email": "2@gmail.com",
-      "password": "$2a$10$J0EFfKQ9EAOZ/mZMCHlKQe8BBkp.KSU5qh54cvrsM.wEz/mCTyKxq",
-      "name": "hieuhieu",
+      "password": "$2a$10$3hlfWcbmM4iNLezr1PE.ieU5WBm14D51OeFxxdR49U.vylVykkz.u",
+      "name": "test2",
       "role": "admin",
       "id": 10,
-      "active": true,
-      "address": "147 nam từ liêm",
-      "sdt": "123456789",
-      "avatar": "https://picsum.photos/200"
+      "avatar": "",
+      "sdt": "",
+      "address": "aaa",
+      "notification": ""
+    },
+    {
+      "email": "3@gmail.com",
+      "password": "$2a$10$52HP7SDpclbAsDnpYg5uaOn.GENweM8H.bxddiiMdDvhCXWLki6/K",
+      "name": "hieu",
+      "role": "admin",
+      "id": 11
     }
   ],
   "promotions": [
