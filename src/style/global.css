@@ -1,0 +1,9 @@
+/* Ẩn thanh cuộn ngang (và dọc nếu muốn) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE & Edge */
+  scrollbar-width: none;     /* Firefox */
+}
