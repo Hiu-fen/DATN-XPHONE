@@ -426,6 +426,13 @@
       "name": "hieu",
       "role": "admin",
       "id": 11
+    },
+    {
+      "email": "phuongnvph52264@gmail.com",
+      "password": "$2a$10$aCzEj4kfoQ1v2.DdXT3Wi.H4oobZ60zs2wJcgOy/R9l65NFmraKYi",
+      "name": "Nguyễn Văn Phương",
+      "role": "admin",
+      "id": 12
     }
   ],
   "promotions": [
