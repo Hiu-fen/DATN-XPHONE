@@ -8,7 +8,7 @@ const ClientFooter = () => {
 
         <div>
           <h3 className="font-bold text-lg mb-2">XPhone</h3>
-          <p className="text-sm">
+          <p className="text-sm w-2/4 flex">
             Hệ thống cửa hàng XPhone chuyên bán lẻ điện thoại, máy tính laptop, smartwatch, smartphone, phụ kiện chính hãng - Giá tốt, giao miễn phí.
           </p>
         </div>
