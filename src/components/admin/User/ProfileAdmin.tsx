@@ -13,11 +13,12 @@ const ProfileAdmin = () => {
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<User>();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("admin");
     if (storedUser) {
       const userData: User = JSON.parse(storedUser);
       Object.entries(userData).forEach(([key, value]) => {
@@ -30,11 +31,22 @@ const ProfileAdmin = () => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser) return;
 
-    const userData = JSON.parse(storedUser);
-    if (!userData?.id) return;
+    const originalData: User = JSON.parse(storedUser);
+    if (!originalData?.id) return;
+
+    // Tạo đối tượng chứa chỉ các trường thay đổi
+    const updatedFields: Partial<Record<keyof User, string | number | boolean | undefined>> = {};
+
+(Object.keys(form) as (keyof User)[]).forEach((key) => {
+  const newValue = form[key];
+  const oldValue = originalData[key];
+  if (newValue !== oldValue) {
+    updatedFields[key] = newValue;
+  }
+});
 
     try {
-      const res = await axios.patch(`http://localhost:4000/users/${userData.id}`, form);
+      const res = await axios.patch(`http://localhost:4000/users/${originalData.id}`, updatedFields);
       localStorage.setItem("user", JSON.stringify(res.data));
       addNotification(`Nhắc nhở: \"${res.data.notification}\"`);
       message.success("Cập nhật thành công!");
