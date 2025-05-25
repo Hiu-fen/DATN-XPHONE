@@ -52,7 +52,7 @@ const Contact = () => {
           </p>
           <p className="mb-1"><span className="font-semibold">Địa chỉ:</span> Trịnh Văn Bô</p>
           <p className="mb-1"><span className="font-semibold">Hotline:</span> gọi cho hiếu</p>
-          <p className="mb-1"><span className="font-semibold">Email:</span> hieukongu@gmail.com</p>
+          <p className="mb-1"><span className="font-semibold">Email:</span> trinhthiduong@gmail.com</p>
         </div>
 
         <div className="bg-gray-100 rounded shadow p-6">
