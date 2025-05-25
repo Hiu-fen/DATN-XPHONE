@@ -7,6 +7,7 @@ export interface User {
   address?: string;
   avatar?: string;
   active: boolean;
+  dob?: string;
   role: 'admin' | 'user';
   notification?: string;
 }
