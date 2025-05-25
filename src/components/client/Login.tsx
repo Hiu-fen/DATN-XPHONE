@@ -21,18 +21,22 @@ const Login = () => {
       if (!user) {
         return message.error("Sai email hoặc mật khẩu");
       }
+
       const isMatch = await bcrypt.compare(data.password, user.password);
       if (!isMatch) {
         return message.error("Sai email hoặc mật khẩu");
       }
-      if (user.role !== 'user') {
-        return message.error("Tài khoản không có quyền admin");
-      }
+
       if (user.active === false) {
         return message.error("Tài khoản đã bị tạm dừng");
       }
+
       localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", user.id); // Tuỳ bạn có thể dùng token thật
+
       message.success("Đăng nhập thành công");
+
+      // Điều hướng theo role
       nav('/');
     } catch (error) {
       message.error("Đăng nhập thất bại");
@@ -41,7 +45,7 @@ const Login = () => {
 
   return (
     <div className="flex min-h-screen">
-      {/* Phần ảnh bên trái, chỉ hiện trên md trở lên */}
+      {/* Phần ảnh bên trái */}
       <div className="hidden md:flex w-1/2 bg-gradient-to-tr from-red-400 via-pink-500 to-red-600 items-center justify-center">
         <img 
           src="./src/assets/bannerlogin.png" 
