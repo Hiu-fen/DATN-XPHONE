@@ -28,7 +28,7 @@ const ProfileAdmin = () => {
   }, [setValue]);
 
   const onSubmit = async (form: User) => {
-    const storedUser = localStorage.getItem("user");
+    const storedUser = localStorage.getItem("admin");
     if (!storedUser) return;
 
     const originalData: User = JSON.parse(storedUser);
@@ -47,7 +47,7 @@ const ProfileAdmin = () => {
 
     try {
       const res = await axios.patch(`http://localhost:4000/users/${originalData.id}`, updatedFields);
-      localStorage.setItem("user", JSON.stringify(res.data));
+      localStorage.setItem("admin", JSON.stringify(res.data));
       addNotification(`Nhắc nhở: \"${res.data.notification}\"`);
       message.success("Cập nhật thành công!");
       nav("/admin/");
@@ -64,8 +64,7 @@ const ProfileAdmin = () => {
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col items-center mb-6">
           <img
-            src={"https://via.placeholder.com/100"}
-            alt="Avatar"
+            src={getValues("avatar") || "https://via.placeholder.com/150"}
             className="w-28 h-28 rounded-full border-2 border-green-500 object-cover"
           />
           <input

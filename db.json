@@ -355,48 +355,55 @@
   "users": [
     {
       "email": "Adminxphone@gmail.com",
-      "password": "$2a$10$YR1wE.DgG3zAPyVKZ8B3oOGzQ4KKaclL9YPwGTVb1gesXYmumOefK",
+      "password": "$2a$10$PVyo4x5j1MI7u1VtS1QlbOnZ7gENkjEtyShp5YEbRAQIGIcVDeJNK",
       "name": "AdminXphone1",
       "role": "admin",
+      "active": true,
       "id": 1,
-      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
-      "sdt": "0123456789",
-      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội",
-      "notification": "Không có j"
-    },
-    {
-      "email": "kien1@gmail.com",
-      "password": "$2a$10$vKbecf2EsQJtpq/1tkkDDeBf5VCTTT9PckJlMa3jvgp3oqwK9vEgy",
-      "name": "Vũ Xuân Kiên",
-      "role": "user",
-      "id": 2,
-      "active": true
+      "avatar": "https://tse4.mm.bing.net/th?id=OIP.-Q0xswb54svfYXoOLrsY2wHaE7&pid=Api&P=0&h=180",
+      "sdt": "0987654321",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nộiiii",
+      "notification": ""
     },
     {
       "email": "client@gmail.com",
-      "password": "$2a$10$.iUAr1YSzGOrbi/Yl6OctuWcwChj3v95nRYSBV9iZ9VlwJzhFzucC",
+      "password": "$2a$10$zL8hS1TJ9JTQBMHY9JxN0uClyot0gqDaaJszKgZ2vCEzrQmg2g4Om",
       "name": "client",
       "role": "user",
       "active": true,
-      "id": 3,
+      "id": 2,
       "sdt": "0123456789",
-      "address": "Phường Tân Thịnh, thành phố Thái Nguyên, tỉnh Thái Nguyên."
+      "address": "Số 6, Đại lộ Hòa Bình, Phường An Cư, Quận Ninh Kiều, Thành Phố Cần Thơ.",
+      "avatar": "blob:http://localhost:5173/1ba928e6-f8b4-4ceb-ac6b-4e5750a8eb3e"
+    },
+    {
+      "email": "1@gmail.com",
+      "password": "$2a$10$ssaFsghUS4Sicd/DmHc3m.fyuot4VK1N3FohnYcmmWzaLdUMLD7E2",
+      "name": "123",
+      "role": "admin",
+      "active": true,
+      "id": 3
     },
     {
       "email": "test12@gmail.com",
-      "password": "$2a$10$sEa/YvRANrnY.USbGOb2OuoaAatGamUT3fosL66KCo6IDWKsZ7S42",
-      "name": "test",
+      "password": "$2a$10$rvwY533K9tSaD5GHTbRzZuJXCRE3qmGHcFX5Jry2WXNsSfBhtJLfK",
+      "name": "testne",
       "role": "user",
       "active": true,
-      "id": 4
+      "id": 4,
+      "avatar": "blob:http://localhost:5173/69a7e915-980f-4d47-8f0b-c73c0ff3f954",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội"
     },
     {
-      "email": "datttt@gmail.com",
-      "password": "$2a$10$Zo/4ZkyObLv1d7N8PQ/J6u2gAx61uVB6KcRKYzdNRicOo3sshkp5e",
-      "name": "dat",
+      "email": "kiente123@gmail.com",
+      "password": "$2a$10$futF.jP3qHPmH6l66obzXOPoHroFtxkXwDAb8eOSNEyXBeeToO8tC",
+      "name": "kiên te nè hihi",
       "role": "user",
       "active": true,
-      "id": 5
+      "id": 5,
+      "avatar": "blob:http://localhost:5173/37a96057-54c3-41e1-ae20-1aef9c073031",
+      "address": "Số 290 đường Lạc Long Quân, phường Bưởi, quận Tây Hồ, thành phố Hà Nội",
+      "sdt": "0987654321"
     }
   ],
   "promotions": [
