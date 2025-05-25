@@ -76,7 +76,7 @@ export default function XPhoneHeader() {
       <div className="flex items-center gap-5">
 
         <div className="hidden md:flex items-center gap-4">
-          <Link to="/home">
+          <Link to="/">
             <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
               <HomeOutlined className="text-gray-600" style={{ fontSize: 20 }} />
             </button>
@@ -109,18 +109,18 @@ export default function XPhoneHeader() {
         >
           <div className="flex items-center gap-3 cursor-pointer">
 
-          {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt="Avatar"
-              className="w-10 h-10 rounded-full object-cover border border-green-500"
-            />
-          ) : (
-            <div className="bg-green-100 w-10 h-10 rounded-full flex items-center justify-center text-green-600">
-              <UserOutlined style={{ fontSize: 20 }} />
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt="Avatar"
+                className="w-10 h-10 rounded-full object-cover border border-green-500"
+              />
+            ) : (
+              <div className="bg-green-100 w-10 h-10 rounded-full flex items-center justify-center text-green-600">
+                <UserOutlined style={{ fontSize: 20 }} />
 
-            </div>
-          )}
+              </div>
+            )}
 
             <div className="hidden md:block">
               <p className="font-medium text-gray-800">
