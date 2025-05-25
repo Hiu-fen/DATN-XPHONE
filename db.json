@@ -391,12 +391,52 @@
       "id": 4
     },
     {
+      "email": "2@gmail.com",
+      "password": "$2a$10$3hlfWcbmM4iNLezr1PE.ieU5WBm14D51OeFxxdR49U.vylVykkz.u",
+      "name": "test2",
+      "role": "admin",
+      "id": 10,
+      "avatar": "",
+      "sdt": "",
+      "address": "aaa",
+      "notification": ""
+    },
+    {
+      "email": "3@gmail.com",
+      "password": "$2a$10$52HP7SDpclbAsDnpYg5uaOn.GENweM8H.bxddiiMdDvhCXWLki6/K",
+      "name": "hieu",
+      "role": "admin",
+      "id": 11
+    },
+    {
+      "email": "phuongnvph52264@gmail.com",
+      "password": "$2a$10$aCzEj4kfoQ1v2.DdXT3Wi.H4oobZ60zs2wJcgOy/R9l65NFmraKYi",
+      "name": "Nguyễn Văn Phương",
+      "role": "admin",
+      "id": 12
+    },
+    {
+      "email": "anhhtph50205@gmail.com",
+      "password": "$2a$10$ljY8UPshcMAnE11XOidDYeETsgoKV4kXwBmhAVTiMnvuK5L9sUoWW",
+      "name": "Hoàng Thế Anh",
+      "role": "admin",
+      "id": 13
+    },
+    {
+      "email": "theanhhtt@gmail.com",
+      "password": "$2a$10$xC.p3f/UY0iNJCaeVdVXUusbbpsDg5h5HtaYtZiTrmiJm/t.SaW6C",
+      "name": "Thế Anh user",
+      "role": "user",
+      "id": 14
+    },
+    {
       "email": "datttt@gmail.com",
       "password": "$2a$10$Zo/4ZkyObLv1d7N8PQ/J6u2gAx61uVB6KcRKYzdNRicOo3sshkp5e",
       "name": "dat",
       "role": "user",
       "active": true,
       "id": 5
+
     },
     {
       "email": "phamhieu123456@gmail.com",
@@ -411,6 +451,7 @@
       "dob": "03/11/2005",
       "avatar": "",
       "notification": ""
+
     }
   ],
   "promotions": [
