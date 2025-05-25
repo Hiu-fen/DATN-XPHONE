@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { IProduct } from '../../../interface/product';
 import { Icatagory } from '../../../interface/category';
-import { Card, Row, Col, Typography, Tag, Spin, Select, Input, Space, Divider } from 'antd';
+import { Card, Row, Col, Typography, Tag, Spin, Select, Input, Space } from 'antd';
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 
@@ -31,10 +31,10 @@ const ProductPage = () => {
   // Lọc sản phẩm
   const filteredProducts = useMemo(() => {
     if (!products) return [];
-    
+
     return products.filter((product: IProduct) => {
       // Lọc theo danh mục
-      if (selectedCategory && product.danhmuc !== selectedCategory) {
+      if (selectedCategory !== null && product.danhmuc !== selectedCategory) {
         return false;
       }
 
@@ -89,9 +89,11 @@ const ProductPage = () => {
               <Select
                 className="w-full"
                 placeholder="Chọn danh mục"
-                allowClear
+                value={selectedCategory ?? undefined}
                 onChange={(value) => setSelectedCategory(value)}
+                allowClear
               >
+                <Option value={null}>Tất cả danh mục</Option>
                 {categories?.map((category: Icatagory) => (
                   <Option key={category.id} value={category.id}>
                     {category.name}
