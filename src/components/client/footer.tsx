@@ -3,7 +3,7 @@ import { FaFacebookF, FaInstagram, FaTiktok } from 'react-icons/fa';
 
 const ClientFooter = () => {
   return (
-    <footer className="bg-gray-800 text-white py-8 mt-8">
+    <footer className="bg-gray-800 text-white py-8 mt-2">
       <div className="max-w-7xl mx-auto grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 px-4">
         {/* <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4 w-full text-sm  justify-between "> */}
 
