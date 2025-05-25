@@ -436,7 +436,6 @@
       "role": "user",
       "active": true,
       "id": 5
-
     },
     {
       "email": "phamhieu123456@gmail.com",
@@ -451,7 +450,18 @@
       "dob": "03/11/2005",
       "avatar": "",
       "notification": ""
-
+    },
+    {
+      "email": "duongabc@gmail.com",
+      "password": "$2a$10$SN52duH6ks/xcroJSet1...2rQhkKsakCvBw7Ew.mE18AFMAvBF3K",
+      "name": "duong",
+      "role": "admin",
+      "active": true,
+      "id": 15,
+      "sdt": "0987654321",
+      "address": "147 nam từ liêm",
+      "gender": "nam",
+      "dob": "03/11/2005"
     }
   ],
   "promotions": [
