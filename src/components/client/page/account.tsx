@@ -68,6 +68,7 @@ const Account = () => {
       </div>
     )
   }
+  
   return <p className="p-10">Đang tải dữ liệu...</p>
 
   } 
@@ -100,9 +101,13 @@ const Account = () => {
               label="Trạng thái"
               name="active"
               value={user.active ? 'Đang hoạt động' : 'Bị khóa'}
+              
               editable={false}
               className={user.active ? 'text-green-600' : 'text-red-600'}
+              
             />
+
+
             <InfoRow label="Ngày sinh" name="dob" value={user.dob || ''} editable={isEditing} onChange={handleChange} />
 
             {isEditing ? (

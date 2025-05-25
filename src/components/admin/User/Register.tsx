@@ -35,7 +35,7 @@ const RegisterAdmin = () => {
    * @param {Omit<UserAdmin, "role">} data Dữ liệu từ form
    */
   const onSubmit = (data: Omit<User, "role">) => {
-    const adminData: User = { ...data, role: "admin" };
+    const adminData: User = { ...data, role: "admin", active: true };
     mutation.mutate(adminData);
   };
 

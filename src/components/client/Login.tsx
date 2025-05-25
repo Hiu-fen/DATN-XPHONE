@@ -32,7 +32,7 @@ const onSubmit = async (data: LoginForm) => {
       return message.error("Sai email hoặc mật khẩu");
     }
 
-    if (user.role !== 'admin') {
+    if (user.role !== 'user') {
       return message.error("Tài khoản không có quyền admin");
     }
 if (user.active === false) {

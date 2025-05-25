@@ -354,60 +354,41 @@
   ],
   "users": [
     {
-      "email": "phamhieu123456@gmail.com",
-      "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
-      "id": 1
-    },
-    {
-      "email": "12@gmail.com",
-      "password": "$2a$10$RJ3bVJ6rF6eX1DVsxJm8RO/VNR3gZHDLxWBNrt/peFJdV1NulOp4m",
-      "id": 2
-    },
-    {
-      "email": "letung251205@gmail.com",
-      "password": "$2a$10$xfoL0XpC.WjN3wQZ64EPvO0khX1b7/nR/5YiIPeh3QbuNXW38y4E.",
-      "id": 3
-    },
-    {
-      "email": "admin12@gmail.com",
-      "password": "$2a$10$OVSjmg5NgApf62SQ0cRcEuxEkAWVPTol4v.P2Uzh8pAVD1UhkuF3q",
-      "name": "Admin",
+      "email": "Adminxphone@gmail.com",
+      "password": "$2a$10$YR1wE.DgG3zAPyVKZ8B3oOGzQ4KKaclL9YPwGTVb1gesXYmumOefK",
+      "name": "AdminXphone1",
       "role": "admin",
-      "id": 5,
-      "address": "kmkakma",
-      "sdt": "kmkmakma",
+      "id": 1,
       "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "sdt": "0123456789",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội",
+      "notification": "Không có j"
+    },
+    {
+      "email": "kien1@gmail.com",
+      "password": "$2a$10$vKbecf2EsQJtpq/1tkkDDeBf5VCTTT9PckJlMa3jvgp3oqwK9vEgy",
+      "name": "Vũ Xuân Kiên",
+      "role": "user",
+      "id": 2,
       "active": true
     },
     {
-      "email": "Adminxphone@gmail.com",
-      "password": "$2a$10$5qw0.VSOtm1ydBPq3m260ukh38TGp/Jlca7US6cfOmcEmA.fGHIs2",
-      "name": "AdminXphone",
-      "role": "admin",
-      "id": 6,
-      "address": "",
-      "sdt": "",
-      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
-      "notification": "AE đến mai nghỉ làm nhé"
-    },
-    {
       "email": "client@gmail.com",
-      "password": "$2a$10$b3SPfIgrj8XhCKiSIADAo.KAV01tH.AB9suJpYRuNuxh26QP7Xy6i",
-      "id": 7
-    },
-    {
-      "email": "client@gmail1.com",
-      "password": "$2a$10$w4nUAcbY4R3sI9Wl/nxQNuB3Zm.YMaXCQx6vVr5bWstlkiyDaGetC",
+      "password": "$2a$10$.iUAr1YSzGOrbi/Yl6OctuWcwChj3v95nRYSBV9iZ9VlwJzhFzucC",
       "name": "client",
       "role": "user",
-      "id": 8
+      "active": true,
+      "id": 3,
+      "sdt": "0123456789",
+      "address": "Phường Tân Thịnh, thành phố Thái Nguyên, tỉnh Thái Nguyên."
     },
     {
-      "email": "1@gmail.com",
-      "password": "$2a$10$BJ/VkOyAIaL/JeQG9nspC.cWxuioWJawEcGflukqyzcrMAlzZWMsO",
+      "email": "test12@gmail.com",
+      "password": "$2a$10$sEa/YvRANrnY.USbGOb2OuoaAatGamUT3fosL66KCo6IDWKsZ7S42",
       "name": "test",
-      "role": "admin",
-      "id": 9
+      "role": "user",
+      "active": true,
+      "id": 4
     },
     {
       "email": "2@gmail.com",
@@ -447,6 +428,15 @@
       "name": "Thế Anh user",
       "role": "user",
       "id": 14
+    },
+    {
+      "email": "datttt@gmail.com",
+      "password": "$2a$10$Zo/4ZkyObLv1d7N8PQ/J6u2gAx61uVB6KcRKYzdNRicOo3sshkp5e",
+      "name": "dat",
+      "role": "user",
+      "active": true,
+      "id": 5
+
     }
   ],
   "promotions": [
