@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 const Account = () => {
   const [user, setUser] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const localUser = localStorage.getItem('user')
@@ -18,13 +19,14 @@ const Account = () => {
         if (res.data.length > 0) {
           setUser(res.data[0])
         } else {
-          alert("Không tìm thấy người dùng")
+          alert("Không tìm thấy người dùng. Vui lòng đăng nhập lại.")
+          navigate('/login')
         }
       })
       .catch((err) => {
         console.error("Lỗi lấy thông tin người dùng:", err)
       })
-  }, [])
+  }, [navigate])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -44,23 +46,44 @@ const Account = () => {
 
   const handleSave = async () => {
     try {
-      await axios.patch(`http://localhost:4000/users/${user.id}`, user)
+      const updatedFields = {
+        name: user.name,
+        email: user.email,
+        sdt: user.sdt,
+        address: user.address,
+        gender: user.gender,
+        dob: user.dob,
+        avatar: user.avatar,
+      }
+
+      await axios.patch(`http://localhost:4000/users/${user.id}`, updatedFields)
       alert("Cập nhật thành công!")
       setIsEditing(false)
+
+      const localUser = JSON.parse(localStorage.getItem('user') || '{}')
+      localStorage.setItem('user', JSON.stringify({ ...localUser, ...updatedFields }))
+
     } catch (error) {
       console.error("Lỗi cập nhật:", error)
       alert("Cập nhật thất bại.")
     }
   }
 
-  if (!user){
-      const localUser = localStorage.getItem('user')
+  // ✅ Hàm ĐĂNG XUẤT
+  const handleLogout = () => {
+    localStorage.removeItem('token')  // Xóa token (nếu có)
+    localStorage.removeItem('user')   // Xóa thông tin user
+    navigate('/login')                // Chuyển hướng sang trang đăng nhập
+  }
+
+  // Nếu chưa đăng nhập
+  const localUser = localStorage.getItem('user')
   if (!localUser) {
     return (
       <div className="p-10 text-center">
         <p className="mb-4 text-red-600 font-semibold">Bạn chưa đăng nhập.</p>
-        <Link 
-          to="/login" 
+        <Link
+          to="/login"
           className="text-blue-600 underline hover:text-blue-800"
         >
           Vui lòng đăng nhập tại đây
@@ -68,10 +91,15 @@ const Account = () => {
       </div>
     )
   }
-  
-  return <p className="p-10">Đang tải dữ liệu...</p>
 
-  } 
+  if (!user) {
+    return (
+      <div className="p-10 text-center">
+        <p className="text-gray-600">Đang tải dữ liệu người dùng...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="flex font-sans text-gray-800 bg-gray-100 p-10">
       {/* Sidebar */}
@@ -80,6 +108,14 @@ const Account = () => {
           <img src={user.avatar || 'https://picsum.photos/200'} alt="Avatar" className="w-12 h-12 rounded-full mr-3 object-cover" />
           <span className="font-bold text-lg">{user.name}</span>
         </div>
+
+        {/* ✅ Nút Đăng xuất */}
+        <button
+          onClick={handleLogout}
+          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+        >
+          Đăng xuất
+        </button>
       </div>
 
       {/* Main Content */}
@@ -91,7 +127,7 @@ const Account = () => {
 
           <div className="bg-white p-8 rounded-lg border border-gray-300 shadow-sm space-y-5">
             <InfoRow label="Tên đăng nhập" name="name" value={user.name} editable={isEditing} onChange={handleChange} />
-            <InfoRow label="Email" name="email" value={user.email} editable={false} />
+            <InfoRow label="Email" name="email" value={user.email} editable={isEditing} onChange={handleChange} />
             <InfoRow label="SĐT" name="sdt" value={user.sdt} editable={isEditing} onChange={handleChange} />
             <InfoRow label="Địa chỉ" name="address" value={user.address} editable={isEditing} onChange={handleChange} />
             <InfoRow label="Giới tính" name="gender" value={user.gender} editable={isEditing} onChange={handleChange} />
@@ -101,13 +137,9 @@ const Account = () => {
               label="Trạng thái"
               name="active"
               value={user.active ? 'Đang hoạt động' : 'Bị khóa'}
-              
               editable={false}
               className={user.active ? 'text-green-600' : 'text-red-600'}
-              
             />
-
-
             <InfoRow label="Ngày sinh" name="dob" value={user.dob || ''} editable={isEditing} onChange={handleChange} />
 
             {isEditing ? (
@@ -157,7 +189,6 @@ const Account = () => {
   )
 }
 
-// Component hiển thị mỗi dòng thông tin
 const InfoRow = ({
   label,
   value,

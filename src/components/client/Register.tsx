@@ -10,7 +10,7 @@ const Register = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<User>();
 
   const nav = useNavigate();
@@ -26,12 +26,12 @@ const Register = () => {
     },
     onError: () => {
       message.error("Đăng ký thất bại!");
-    }
+    },
   });
 
   /**
    * Xử lý dữ liệu sau khi form được submit
-   * 
+   *
    * @param {Omit<UserAdmin, "role">} data Dữ liệu từ form
    */
   const onSubmit = (data: Omit<User, "role">) => {
@@ -40,93 +40,118 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-3xl font-semibold text-center text-blue-600 mb-6">
-          Đăng ký Người dùng
-        </h2>
+    <div className="flex ">
+      {/* Left side - Image giống Login (bạn có thể thêm nếu muốn) */}
+      <div className="w-1/2 hidden md:block">
+        <img
+          src="./src/assets/bannerlogin.png"
+          alt="Register banner"
+          className="w-full max-h-[650px] object-cover"
+        />
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tên
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-400">
-                <UserOutlined  />
-              </span>
-              <input
-                type="text"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                {...register("name", {
-                  required: "Tên không được để trống",
-                  minLength: {
-                    value: 3,
-                    message: "Tên phải trên 3 ký tự"
-                  }
-                })}
-              />
-            </div>
-            <p className="text-red-500 text-sm mt-1">{errors.name?.message}</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-400">
-                <MailOutlined />
-              </span>
-              <input
-                type="email"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                {...register("email", {
-                  required: "Email không được để trống",
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: "Vui lòng nhập đúng định dạng email"
-                  }
-                })}
-              />
-            </div>
-            <p className="text-red-500 text-sm mt-1">{errors.email?.message}</p>
-          </div>
+      {/* Right side - Form */}
+      <div className="w-full md:w-1/2 flex items-center justify-center p-4 md:p-10 bg-white">
+        <div className="w-full max-w-md">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+            Đăng ký Người dùng
+          </h2>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mật khẩu
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-400">
-                <LockOutlined />
-              </span>
-              <input
-                type="password"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                {...register("password", {
-                  required: "Mật khẩu không được để trống",
-                  minLength: {
-                    value: 6,
-                    message: "Mật khẩu phải trên 6 ký tự"
-                  }
-                })}
-              />
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Tên */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">
+                Tên
+              </label>
+              <div className="relative">
+                <input
+                  {...register("name", {
+                    required: "Tên không được để trống",
+                    minLength: { value: 3, message: "Tên phải trên 3 ký tự" },
+                  })}
+                  type="text"
+                  placeholder="Nhập tên của bạn"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10"
+                />
+                <UserOutlined className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              </div>
+              {errors.name && (
+                <p className="text-sm text-red-600 mt-1">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
-            <p className="text-red-500 text-sm mt-1">{errors.password?.message}</p>
-          </div>
 
-          {/* Submit */}
-          <div>
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">
+                Email
+              </label>
+              <div className="relative">
+                <input
+                  {...register("email", {
+                    required: "Email không được để trống",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: "Vui lòng nhập đúng định dạng email",
+                    },
+                  })}
+                  type="email"
+                  placeholder="Nhập email của bạn"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10"
+                />
+                <MailOutlined className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              </div>
+              {errors.email && (
+                <p className="text-sm text-red-600 mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 block">
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <input
+                  {...register("password", {
+                    required: "Mật khẩu không được để trống",
+                    minLength: {
+                      value: 6,
+                      message: "Mật khẩu phải trên 6 ký tự",
+                    },
+                  })}
+                  type="password"
+                  placeholder="Nhập mật khẩu"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all pr-10"
+                />
+                <LockOutlined className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              </div>
+              {errors.password && (
+                <p className="text-sm text-red-600 mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300"
+              className="w-full bg-red-500 text-white py-3 rounded-md hover:bg-red-600 transition-all focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
             >
               Đăng ký ngay
             </button>
-          </div>
-        </form>
+
+            <p className="text-center text-gray-500 text-sm mt-4">
+              Đã có tài khoản?{" "}
+              <a href="/login" className="text-blue-500 hover:underline">
+                Đăng nhập ngay
+              </a>
+            </p>
+          </form>
+        </div>
       </div>
     </div>
   );
