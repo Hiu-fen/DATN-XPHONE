@@ -437,6 +437,21 @@
       "active": true,
       "id": 5
 
+    },
+    {
+      "email": "phamhieu123456@gmail.com",
+      "password": "$2a$10$rMkOG0R3uBJUrOqIW0rJV.JE8LHuQHm4LZzI2/yoIxqJv5QcvfZSC",
+      "name": "hieuhieu3",
+      "role": "admin",
+      "active": true,
+      "id": 6,
+      "sdt": "09876543212",
+      "address": "147 nam từ liêm",
+      "gender": "nam",
+      "dob": "03/11/2005",
+      "avatar": "",
+      "notification": ""
+
     }
   ],
   "promotions": [
