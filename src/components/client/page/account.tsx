@@ -48,7 +48,7 @@ const Account = () => {
     try {
       const updatedFields = {
         name: user.name,
-        email: user.email,  // Đã thêm email vào đây để lưu
+        email: user.email,
         sdt: user.sdt,
         address: user.address,
         gender: user.gender,
@@ -60,7 +60,6 @@ const Account = () => {
       alert("Cập nhật thành công!")
       setIsEditing(false)
 
-      // Cập nhật lại localStorage để đảm bảo thông tin mới nhất được lưu
       const localUser = JSON.parse(localStorage.getItem('user') || '{}')
       localStorage.setItem('user', JSON.stringify({ ...localUser, ...updatedFields }))
 
@@ -70,8 +69,14 @@ const Account = () => {
     }
   }
 
+  // ✅ Hàm ĐĂNG XUẤT
+  const handleLogout = () => {
+    localStorage.removeItem('token')  // Xóa token (nếu có)
+    localStorage.removeItem('user')   // Xóa thông tin user
+    navigate('/login')                // Chuyển hướng sang trang đăng nhập
+  }
 
-  // Kiểm tra nếu chưa đăng nhập
+  // Nếu chưa đăng nhập
   const localUser = localStorage.getItem('user')
   if (!localUser) {
     return (
@@ -87,7 +92,6 @@ const Account = () => {
     )
   }
 
-  // Hiển thị khi đang tải user từ API
   if (!user) {
     return (
       <div className="p-10 text-center">
@@ -104,6 +108,14 @@ const Account = () => {
           <img src={user.avatar || 'https://picsum.photos/200'} alt="Avatar" className="w-12 h-12 rounded-full mr-3 object-cover" />
           <span className="font-bold text-lg">{user.name}</span>
         </div>
+
+        {/* ✅ Nút Đăng xuất */}
+        <button
+          onClick={handleLogout}
+          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+        >
+          Đăng xuất
+        </button>
       </div>
 
       {/* Main Content */}
@@ -177,7 +189,6 @@ const Account = () => {
   )
 }
 
-// Component hiển thị mỗi dòng thông tin
 const InfoRow = ({
   label,
   value,
