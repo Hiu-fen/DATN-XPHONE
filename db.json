@@ -433,6 +433,20 @@
       "name": "Nguyễn Văn Phương",
       "role": "admin",
       "id": 12
+    },
+    {
+      "email": "anhhtph50205@gmail.com",
+      "password": "$2a$10$ljY8UPshcMAnE11XOidDYeETsgoKV4kXwBmhAVTiMnvuK5L9sUoWW",
+      "name": "Hoàng Thế Anh",
+      "role": "admin",
+      "id": 13
+    },
+    {
+      "email": "theanhhtt@gmail.com",
+      "password": "$2a$10$xC.p3f/UY0iNJCaeVdVXUusbbpsDg5h5HtaYtZiTrmiJm/t.SaW6C",
+      "name": "Thế Anh user",
+      "role": "user",
+      "id": 14
     }
   ],
   "promotions": [
