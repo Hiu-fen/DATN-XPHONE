@@ -1,9 +1,8 @@
-export interface Icatagory {
-  id: number;
+export interface ICategory {
+  _id: string;
   name: string;
-  mota:string;
-  image:string;
+  mota: string;
+  image: string;
   type: string;
-  parent: number;
-  
+  parent: string | null; // Nếu bạn dùng nested category
 }

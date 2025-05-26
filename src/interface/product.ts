@@ -1,14 +1,13 @@
 export interface IProduct {
-  id: number;
+  _id: string; // sửa lại từ number -> string
   name: string;
   image: string;
-  danhmuc: string|number|null;
-  // categoryI: string|null
+  danhmuc: string; // sửa lại từ string | number | null -> string
   price: string;
-  trangthai:string;
-  albumId?: number;  
-  mota:string;
+  soluong: string;
+  trangthai: string;
+  mota: string;
   type: string;
   parent: number;
-  score:number
+  score: number;
 }

@@ -8,19 +8,14 @@ interface IProduct {
   name: string;
   image: string;
   price: number;
+  soluong: number;
   mota: string;
   danhmuc: number;
   trangthai: string;
-  albumId: number;
 }
 
 interface ICategory {
-  id: number;
-  name: string;
-}
-
-interface IAlbum {
-  id: number;
+  _id: string;
   name: string;
 }
 
@@ -28,37 +23,28 @@ const AddProduct = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },reset
+    formState: { errors },
+    reset,
   } = useForm<IProduct>();
   const nav = useNavigate();
 
-    const [categories, setCategories] = useState<ICategory[]>([]);
-  const [albums, setAlbums] = useState<IAlbum[]>([]);
+  const [categories, setCategories] = useState<ICategory[]>([]);
 
   // Lấy danh mục sản phẩm
   useEffect(() => {
-    axios.get("http://localhost:4000/category").then((res) => {
+    axios.get("http://localhost:5000/api/category").then((res) => {
       setCategories(res.data);
     });
   }, []);
 
-  // Lấy danh sách album
-  useEffect(() => {
-    axios.get("http://localhost:4000/albums").then((res) => {
-      setAlbums(res.data);
-    });
-  }, []);
-
-const onSubmit = async (data: IProduct) => {
+  const onSubmit = async (data: IProduct) => {
   try {
-    const newData = {
-      ...data,
-      danhmuc: Number(data.danhmuc), // Ép kiểu về số
-    };
+    // Gửi request đến backend
+    await axios.post("http://localhost:5000/api/products", data);
 
-    await axios.post("http://localhost:4000/products", newData);
     message.success("Thêm mới thành công");
-    nav('/admin/phone/list');
+    nav("/admin/phone/list", { state: { forceReload: true } });
+    reset();
   } catch (error) {
     message.error("Có lỗi khi thêm sản phẩm");
     console.error(error);
@@ -66,7 +52,10 @@ const onSubmit = async (data: IProduct) => {
 };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-lg mx-auto p-6 bg-white rounded shadow-md space-y-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="max-w-lg mx-auto p-6 bg-white rounded shadow-md space-y-4"
+    >
       <h2 className="text-xl font-semibold text-center mb-4">Thêm sản phẩm</h2>
 
       <div>
@@ -92,17 +81,32 @@ const onSubmit = async (data: IProduct) => {
       <div>
         <label className="block mb-1 font-medium">Giá</label>
         <input
-  type="number"
-  {...register("price", {
-    required: "Vui lòng nhập giá",
-    min: {
-      value: 1,
-      message: "Giá phải lớn hơn 0",
-    },
-  })}
-  className="w-full px-3 py-2 border rounded"
-/>
+          type="number"
+          {...register("price", {
+            required: "Vui lòng nhập giá",
+            min: {
+              value: 1,
+              message: "Giá phải lớn hơn 0",
+            },
+          })}
+          className="w-full px-3 py-2 border rounded"
+        />
         <p className="text-red-500 text-sm">{errors.price?.message}</p>
+      </div>
+      <div>
+        <label className="block mb-1 font-medium">Số lương</label>
+        <input
+          type="number"
+          {...register("soluong", {
+            required: "Vui lòng nhập số lượng",
+            min: {
+              value: 1,
+              message: "Số phải lớn hơn 0",
+            },
+          })}
+          className="w-full px-3 py-2 border rounded"
+        />
+        <p className="text-red-500 text-sm">{errors.soluong?.message}</p>
       </div>
 
       <div>
@@ -114,18 +118,22 @@ const onSubmit = async (data: IProduct) => {
       </div>
 
       <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
-          <select
-            {...register('danhmuc', { required: "Không để trống" })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-          >
-            <option value="">-- Chọn danh mục --</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
-          <span className="text-red-700">{errors.danhmuc?.message}</span>
-        </div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Danh mục
+        </label>
+       <select
+  {...register("danhmuc", { required: "Không để trống" })}
+  className="w-full px-4 py-2 border border-gray-300 rounded-md"
+>
+  <option value="">-- Chọn danh mục --</option>
+  {categories.map((cat) => (
+    <option key={cat._id} value={cat._id}>
+      {cat.name}
+    </option>
+  ))}
+</select>
+        <span className="text-red-700">{errors.danhmuc?.message}</span>
+      </div>
 
       <div>
         <label className="block mb-1 font-medium">Trạng thái</label>
@@ -138,22 +146,6 @@ const onSubmit = async (data: IProduct) => {
           <option value="hết hàng">Hết hàng</option>
         </select>
         <p className="text-red-500 text-sm">{errors.trangthai?.message}</p>
-      </div>
-
-      <div>
-        <label className="block mb-1 font-medium">Album ảnh</label>
-        <select
-          {...register("albumId", { required: "Vui lòng chọn album" })}
-          className="w-full px-3 py-2 border rounded"
-        >
-          <option value="">-- Chọn album --</option>
-          {albums.map((album) => (
-            <option key={album.id} value={album.id}>
-              {album.name}
-            </option>
-          ))}
-        </select>
-        <p className="text-red-500 text-sm">{errors.albumId?.message}</p>
       </div>
 
       <button

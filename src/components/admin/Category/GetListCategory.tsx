@@ -6,7 +6,7 @@ import React, { useState } from 'react'
 // import { IProduct } from '../../interface/product'
 import { useNavigate } from 'react-router-dom'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
-import { Icatagory } from '../../../interface/category'
+import { ICategory } from '../../../interface/category'
 
 
 
@@ -16,10 +16,10 @@ const GetListCategory = () => {
   
   const {data,refetch} =useQuery({
     queryKey:['products'],
-    queryFn: async () => (await axios.get(`http://localhost:4000/category`)).data
+    queryFn: async () => (await axios.get(`http://localhost:5000/api/category`)).data
   })
   const mutation = useMutation({
-    mutationFn: async (id:string) => await axios.delete(`http://localhost:4000/category/${id}`),
+    mutationFn: async (id:string) => await axios.delete(`http://localhost:5000/api/category/${id}`),
     onSuccess:()=>{
       message.success("Xóa thành công")
       refetch()
@@ -28,8 +28,8 @@ const GetListCategory = () => {
   const onDelete = (id:string)=>{
     mutation.mutate(id)
   }
-const search = data?.filter((c: Icatagory) => {
-  const Text = `${c.id} ${c.name} ${c.mota} `.toLowerCase();
+const search = data?.filter((c: ICategory) => {
+  const Text = `${c._id} ${c.name} ${c.mota} `.toLowerCase();
   return Text.includes(searchText.toLowerCase());
 });
 
@@ -38,7 +38,7 @@ const search = data?.filter((c: Icatagory) => {
     {
       title:"Stt",
       key:'stt',
-      render:(_:any,__:Icatagory,index:number) => index + 1
+      render:(_:any,__:ICategory,index:number) => index + 1
     },
     {
       title:"Name",
