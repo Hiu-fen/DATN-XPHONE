@@ -34,46 +34,51 @@ const search = data?.filter((c: ICategory) => {
 });
 
 
-  const columns = [
-    {
-      title:"Stt",
-      key:'stt',
-      render:(_:any,__:ICategory,index:number) => index + 1
-    },
-    {
-      title:"Name",
-      key:'name',
-      dataIndex:'name',
-    },
-    {
-      title:"Ảnh minh họa",
-      key:'image',
-      dataIndex:'image',
-      render:(img:string)=> <img src={img} width={100}></img>
-    },
-    {
-      title:"Mo tả danh mục",
-      key:'mota',
-      dataIndex:'mota',
-    },
-   
-    {
-      title:"Thao tác",
-      key:'id',
-      dataIndex:'id',
-      render:(id:string)=><>
-      <Button onClick={()=>nav(`/admin/category/${id}/edit`)}><EditOutlined/></Button>
-      <Popconfirm
-      title="Thông báo"
-      description="Bạn chắc chứ"
-      icon={<DeleteOutlined/>}
-      onConfirm={()=>onDelete(id)}
-      okText="OK"
-      cancelText="NO"
-      ><Button danger><DeleteOutlined/></Button></Popconfirm>
+const columns = [
+  {
+    title:"Stt",
+    key:'stt',
+    render:(_:any,__:ICategory,index:number) => index + 1
+  },
+  {
+    title:"Name",
+    key:'name',
+    dataIndex:'name',
+  },
+  {
+    title:"Ảnh minh họa",
+    key:'image',
+    dataIndex:'image',
+    render:(img:string)=> <img src={img} width={100}></img>
+  },
+  {
+    title:"Mô tả danh mục",
+    key:'mota',
+    dataIndex:'mota',
+  },
+  {
+    title:"Thao tác",
+    key:'action',
+    render: (_: any, record: ICategory) => (
+      <>
+        <Button onClick={() => nav(`/admin/category/${record._id}/edit`)}>
+          <EditOutlined />
+        </Button>
+        <Popconfirm
+          title="Thông báo"
+          description="Bạn chắc chứ"
+          icon={<DeleteOutlined />}
+          onConfirm={() => onDelete(record._id)}
+          okText="OK"
+          cancelText="NO"
+        >
+          <Button danger><DeleteOutlined /></Button>
+        </Popconfirm>
       </>
-    },
-  ]
+    )
+  },
+]
+
  
   return (
     <div>

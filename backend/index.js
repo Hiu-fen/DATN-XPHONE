@@ -9,6 +9,9 @@ const categoryRoutes = require('./routes/categoryRouter');
 const app = express();
 const PORT = 5000;
 
+// 👉 thêm cấu hình dưới đây trước các router
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Middleware
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
