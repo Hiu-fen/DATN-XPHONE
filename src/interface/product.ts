@@ -1,8 +1,9 @@
 export interface IProduct {
-  _id: string; // sửa lại từ number -> string
+  _id: string;
   name: string;
   image: string;
-  danhmuc: string; // sửa lại từ string | number | null -> string
+  albumImages: string[];
+  danhmuc: string;
   price: string;
   soluong: string;
   trangthai: string;

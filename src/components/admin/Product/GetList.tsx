@@ -28,7 +28,7 @@ const GetList = () => {
       (await axios.get('http://localhost:5000/api/products')).data,
   });
 
-  // Lấy danh sách danh mục từ MongoDB
+  // Lấy danh sách danh mục
   const {
     data: categories,
     isLoading: loadingCategories,
@@ -39,18 +39,19 @@ const GetList = () => {
       (await axios.get('http://localhost:5000/api/category')).data,
   });
 
-  // Xử lý reload khi cần
+  // Reload lại khi cần
   useEffect(() => {
     if (location.state?.forceReload) {
       refetch();
     }
-  }, [location.state?.forceReload]);
-  useEffect(() => {
-  if (categories) {
-    console.log('Danh mục:', categories);
-  }
-}, [categories]);
+  }, [location.state?.forceReload, refetch]);
 
+  // Hàm lấy tên danh mục theo _id
+  const getCategoryName = (id: string): string => {
+    if (!categories) return 'Đang tải danh mục...';
+    const category = categories.find((cat: ICategory) => cat._id === id);
+    return category ? category.name : 'Không rõ';
+  };
 
   // Xử lý xóa sản phẩm
   const mutation = useMutation({
@@ -69,23 +70,17 @@ const GetList = () => {
     mutation.mutate(id);
   };
 
-  // 👉 Hàm lấy tên danh mục theo _id
-const getCategoryName = (id: string): string => {
-  const category = categories?.find((cat: ICategory) => cat._id === id);
-  return category ? category.name : 'Không rõ';
-};
-
-
-  // Tìm kiếm sản phẩm
+  // Lọc sản phẩm theo tìm kiếm
   const search = products?.filter((p: IProduct) => {
     const categoryName = getCategoryName(p.danhmuc);
     const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${categoryName}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
 
+  // Cột bảng
   const columns = [
     {
-      title: 'Stt',
+      title: 'STT',
       key: 'stt',
       render: (_: any, __: IProduct, index: number) => index + 1,
     },
@@ -125,9 +120,10 @@ const getCategoryName = (id: string): string => {
       key: 'mota',
       dataIndex: 'mota',
     },
-   {
+{
   title: 'Danh mục',
-  render: (_: any, record: IProduct) => getCategoryName(record.danhmuc),
+  dataIndex: 'danhmuc', // vì giờ danhmuc đã là chuỗi tên
+  key: 'danhmuc',
 },
     {
       title: 'Trạng thái',
@@ -154,7 +150,7 @@ const getCategoryName = (id: string): string => {
             okText="OK"
             cancelText="NO"
           >
-            <Button danger>
+            <Button danger style={{ marginLeft: 8 }}>
               <DeleteOutlined />
             </Button>
           </Popconfirm>
@@ -163,8 +159,9 @@ const getCategoryName = (id: string): string => {
     },
   ];
 
+  // Hiển thị loading/error
   if (loadingProducts || loadingCategories) return <p>Đang tải dữ liệu...</p>;
-  if (errorProducts || errorCategories) return <p>Lỗi khi tải dữ liệu, vui lòng thử lại sau.</p>;
+  if (errorProducts || errorCategories) return <p>Lỗi khi tải dữ liệu.</p>;
 
   return (
     <div>
