@@ -5,14 +5,14 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import { message } from 'antd'
-import { Icatagory } from '../../../interface/category'
+import { ICategory } from '../../../interface/category'
 
 
 const PutEditCategory = () => {
   
   
 
-  const {register,handleSubmit,formState:{errors},reset} = useForm<Icatagory>()
+  const {register,handleSubmit,formState:{errors},reset} = useForm<ICategory>()
   const nav = useNavigate();
   const params = useParams();
   const {data} = useQuery({
@@ -24,7 +24,7 @@ const PutEditCategory = () => {
     }
   })
   const mutation = useMutation({
-    mutationFn: async (data:Icatagory) => {
+    mutationFn: async (data:ICategory) => {
       try {
         const {data:product} = await axios.put(`http://localhost:4000/category/${params.id}`,data)
         return product
@@ -36,7 +36,7 @@ const PutEditCategory = () => {
       nav('/admin/category/list')
     }
   })
-  const onSubmit = (data:Icatagory)=>{
+  const onSubmit = (data:ICategory)=>{
     mutation.mutate(data)
   }
  

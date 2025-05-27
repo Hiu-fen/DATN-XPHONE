@@ -54,6 +54,42 @@
       "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
       "mota": "Điện thoại mới nhất ",
       "id": 9
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "1235656",
+      "id": 10
+    },
+    {
+      "name": "duong",
+      "image": "https://picsum.photos/200",
+      "mota": "SamSung  đây",
+      "id": 11
+    },
+    {
+      "name": "admin",
+      "image": "https://picsum.photos/200",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "id": 12
+    },
+    {
+      "name": "duong",
+      "image": "https://picsum.photos/200",
+      "mota": "SamSung  đây",
+      "id": 13
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "id": 14
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "123444444",
+      "id": 15
     }
   ],
   "products": [
@@ -175,7 +211,6 @@
       "albumId": 4,
       "type": "simple",
       "parent": 0
-  
     }
   ],
   "albums": [
@@ -283,6 +318,14 @@
       "likes": 27,
       "id": 2,
       "status": false
+    },
+    {
+      "user": "duong2906",
+      "content": "123123123ssfadsfd",
+      "sanpham": "8",
+      "date": "2025-05-27T07:32:08.551Z",
+      "likes": 0,
+      "id": 3
     }
   ],
   "carts": [],
@@ -312,7 +355,7 @@
       "email": "letung251205@gmail.com",
       "phone": "1234567",
       "message": "ưet",
-      "status": false,
+      "status": true,
       "date": "13/05/2025",
       "id": 1
     },
@@ -321,7 +364,7 @@
       "email": "letung251205@gmail.com",
       "phone": "1234567",
       "message": "qt",
-      "status": false,
+      "status": true,
       "date": "13/05/2025",
       "id": 2
     },
@@ -348,7 +391,7 @@
       "email": "trinhvanduong2005tq@gmail.com",
       "phone": "0343452076",
       "message": "12312312",
-      "status": false,
+      "status": true,
       "date": "22/05/2025",
       "id": 5
     },
@@ -426,59 +469,12 @@
       "id": 11
     },
     {
-      "email": "phuongnvph52264@gmail.com",
-      "password": "$2a$10$aCzEj4kfoQ1v2.DdXT3Wi.H4oobZ60zs2wJcgOy/R9l65NFmraKYi",
-      "name": "Nguyễn Văn Phương",
+      "email": "4@gmail.com",
+      "password": "$2a$10$l4.AmpzlTLsOz0yyOOHbyOLLs4DG5J0j8Sa1c7RzjgZXc43Ej3Tly",
+      "name": "Dương",
       "role": "admin",
+      "active": true,
       "id": 12
-    },
-    {
-      "email": "anhhtph50205@gmail.com",
-      "password": "$2a$10$ljY8UPshcMAnE11XOidDYeETsgoKV4kXwBmhAVTiMnvuK5L9sUoWW",
-      "name": "Hoàng Thế Anh",
-      "role": "admin",
-      "id": 13
-    },
-    {
-      "email": "theanhhtt@gmail.com",
-      "password": "$2a$10$xC.p3f/UY0iNJCaeVdVXUusbbpsDg5h5HtaYtZiTrmiJm/t.SaW6C",
-      "name": "Thế Anh user",
-      "role": "user",
-      "id": 14
-    },
-    {
-      "email": "datttt@gmail.com",
-      "password": "$2a$10$Zo/4ZkyObLv1d7N8PQ/J6u2gAx61uVB6KcRKYzdNRicOo3sshkp5e",
-      "name": "dat",
-      "role": "user",
-      "active": true,
-      "id": 5
-    },
-    {
-      "email": "phamhieu123456@gmail.com",
-      "password": "$2a$10$rMkOG0R3uBJUrOqIW0rJV.JE8LHuQHm4LZzI2/yoIxqJv5QcvfZSC",
-      "name": "hieuhieu3",
-      "role": "admin",
-      "active": true,
-      "id": 6,
-      "sdt": "09876543212",
-      "address": "147 nam từ liêm",
-      "gender": "nam",
-      "dob": "03/11/2005",
-      "avatar": "",
-      "notification": ""
-    },
-    {
-      "email": "duongabc@gmail.com",
-      "password": "$2a$10$SN52duH6ks/xcroJSet1...2rQhkKsakCvBw7Ew.mE18AFMAvBF3K",
-      "name": "duong",
-      "role": "admin",
-      "active": true,
-      "id": 15,
-      "sdt": "0987654321",
-      "address": "147 nam từ liêm",
-      "gender": "nam",
-      "dob": "03/11/2005"
     }
   ],
   "promotions": [

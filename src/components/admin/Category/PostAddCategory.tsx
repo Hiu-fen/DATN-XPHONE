@@ -6,20 +6,20 @@ import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { Icatagory } from '../../../interface/category';
+import { ICategory } from '../../../interface/category';
 
 
 const PostAddCategory = () => {
  
 
  
-  const {register,handleSubmit,formState:{errors}} = useForm<Icatagory>()
+  const {register,handleSubmit,formState:{errors}} = useForm<ICategory>()
   const nav = useNavigate();
  
   const mutation = useMutation({
-    mutationFn: async (data:Icatagory) => {
+    mutationFn: async (data:ICategory) => {
       try {
-        const {data:product} = await axios.post(`http://localhost:4000/category`,data)
+        const {data:product} = await axios.post(`http://localhost:5000/api/category`,data)
         return product
       } catch (error) {
         console.log(error);   
@@ -29,7 +29,7 @@ const PostAddCategory = () => {
       nav('/admin/category/list')
     }
   })
-  const onSubmit = (data:Icatagory)=>{
+  const onSubmit = (data:ICategory)=>{
     mutation.mutate(data)
   }
  
