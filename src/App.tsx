@@ -50,6 +50,7 @@ import Categorys from './components/client/page/categorys'
 import Cart from './components/client/page/cart'
 import Account from './components/client/page/account'
 import Details from './components/client/page/details'
+import ProductDetail from './components/admin/Product/Detail'
 
 
 
@@ -97,6 +98,7 @@ const App = () => {
         //Router Sản phẩm
         { path: 'phone/list', element: <GetList /> },
         { path: 'phone/add', element: <PostAdd /> },
+        { path: 'phone/:id', element: <ProductDetail /> },
         { path: 'phone/:id/edit', element: <PutEdit /> },
 
         //Router Đăng ký, Đăng nhập

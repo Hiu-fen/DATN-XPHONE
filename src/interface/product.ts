@@ -5,7 +5,7 @@ export interface IProduct {
   albumImages: string[];
   danhmuc: string;
   price: string;
-  soluong: string;
+  soluong: number;
   trangthai: string;
   mota: string;
   type: string;
