@@ -1,61 +1,52 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Input, message, Popconfirm, Table, Tag } from "antd";
+import { Button, message, Popconfirm, Table, Tag } from "antd";
 import { Promotion } from "../../../interface/promotion";
-import axios from "axios";
 import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { deletePromotion, getAllPromotions } from "../../../api/promotionApi";
 
 const GetPromotion = () => {
-    const [searchText, setSearchText] = useState('');
-  const { data, isLoading } = useQuery<Promotion[]>({
-    queryKey: ['promotions'],
-    queryFn: async () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Lấy danh sách khuyến mãi
+  const { data, isLoading } = useQuery({
+  queryKey: ['promotions'],
+  queryFn: async () => {
       try {
-        const response = await axios.get(`http://localhost:4000/promotions`)
-        return response.data
+        const response = await getAllPromotions();
+        return response.data;
       } catch (error) {
-        console.log(error)
-        message.error('Lỗi khi tải danh sách khuyến mãi')
-        throw error
+        message.error("Lỗi khi tải danh sách khuyến mãi");
+        throw error; 
       }
     }
   })
 
-  const nav = useNavigate()
-
-  const queryClient = useQueryClient()
-
+  // Mutation xóa khuyến mãi
   const mutation = useMutation({
-    mutationFn: async (id: string) => {
-      try {
-        await axios.delete(`http://localhost:4000/promotions/${id}`)
-      } catch (error) {
-        console.log(error)
-      }
+    mutationFn: async (_id: string) => {
+      await deletePromotion(_id);
     },
     onSuccess: () => {
-      message.success('Xóa thành công')
-      queryClient.invalidateQueries({queryKey: ['promotions']})
+      message.success('Xóa thành công');
+      queryClient.invalidateQueries({ queryKey: ['promotions'] });
     },
     onError: () => {
-      message.error('Xóa thất bại')
+      message.error('Xóa thất bại');
     }
-  })
+  });
 
-  const onDelete = async (id:string) => {
-    mutation.mutate(id)
-  }
-  const search = data?.filter((pro: Promotion)=>{
-    const Text = `${pro.id} ${pro.name} ${pro.status} ${pro.code}`.toLowerCase()
-    return Text.includes(searchText.toLowerCase());
-  })
+  // Hàm gọi xóa
+  const onDelete = (_id: string) => {
+    mutation.mutate(_id);
+  };
 
+  // Định nghĩa cột cho bảng
   const columns = [
     {
       title: 'STT',
-      dataIndex: 'STT',
-      key: 'STT',
+      key: 'index',
       render: (_: any, __: Promotion, index: number) => index + 1,
     },
     {
@@ -84,75 +75,61 @@ const GetPromotion = () => {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => {
-        const boolStatus = status === "true";
+      render: (status: boolean) => {
+        const isActive = status
         return (
-          <Tag color={boolStatus ? "green" : "red"}>
-            {boolStatus ? 'Hoạt động' : 'Hết hạn'}
+          <Tag color={isActive ? "green" : "red"}>
+            {isActive ? 'Hoạt động' : 'Hết hạn'}
           </Tag>
         );
       }
     },
     {
       title: 'Thao tác',
-      key: 'id',
-      dataIndex: 'id',
-      render: (id:string) => (
-        <>
-          <div className='flex justify-center items-center'>
-              <Button className='mr-2' type="primary" onClick={() => nav(`/admin/promotion/edit/${id}`)}>
-                  <EditOutlined />
-              </Button>
-              <Button className='mr-2' onClick={() => nav(`/admin/promotion/detail/${id}`)}>
-                  <EyeOutlined />
-              </Button>
-              <Popconfirm
-                  title="Thông báo!!!"
-                  description="Bạn chắc chắn xóa chứ?"
-                  onConfirm={() => onDelete(id)}
-                  okText="Yes"
-                  cancelText="No"
-              >
-                  <Button danger>
-                      <DeleteOutlined /> 
-                  </Button>
-              </Popconfirm>
-          </div>
-        </>
+      key: 'actions',
+      render: (_: any, record: Promotion) => (
+        <div className="flex justify-center items-center gap-2">
+          <Button type="primary" onClick={() => navigate(`/admin/promotion/edit/${record._id}`)}>
+            <EditOutlined />
+          </Button>
+          <Button onClick={() => navigate(`/admin/promotion/detail/${record._id}`)}>
+            <EyeOutlined />
+          </Button>
+          <Popconfirm
+            title="Thông báo"
+            description="Bạn chắc chắn muốn xóa?"
+            onConfirm={() => onDelete(record._id)}
+            okText="Đồng ý"
+            cancelText="Hủy"
+          >
+            <Button danger>
+              <DeleteOutlined />
+            </Button>
+          </Popconfirm>
+        </div>
       ),
     },
-
   ];
 
   return (
     <div className="p-5">
- <h2 className="text-2xl font-bold ">Danh sách khuyến mãi</h2>
+      <h2 className="text-2xl font-bold mb-4">Danh sách khuyến mãi</h2>
 
-  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-    <Input.Search
-      placeholder=""
-      style={{ width: 300 }} 
-      className="mb-4"
-      onChange={(e) => setSearchText(e.target.value)}
-      allowClear
-    />
-  </div>
-
-  <Table 
-    dataSource={search} 
-    columns={columns} 
-    // pagination={false}
-    loading={isLoading}
-    rowKey="id"
-    pagination={{
-    pageSize: 10, 
-    showSizeChanger: false,
-    pageSizeOptions: ['5', '10', '20'],
-  }}
-  />
-</div>
-
-  );
+      {/* Bảng hiển thị dữ liệu */}
+      <Table
+        dataSource={data}
+        columns={columns}
+        loading={isLoading}
+        rowKey="_id"
+        pagination={{
+          pageSize: 5,
+          showSizeChanger: false,
+          showTotal: (total) => `Tổng ${total} khuyến mãi`,
+        }}
+        //  pagination={false}
+      />
+    </div>
+  )
 }
 
-export default GetPromotion
+export default GetPromotion;

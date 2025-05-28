@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRouter');
+const promotionRoutes = require('./routes/promotionRouter');
 
 const app = express();
 const PORT = 5000;
@@ -27,6 +28,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // Mount router
 app.use('/api/category', categoryRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/promotions', promotionRoutes);
 
 // Chạy server
 app.listen(PORT, () => {
