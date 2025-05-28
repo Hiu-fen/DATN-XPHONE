@@ -6,7 +6,7 @@ import { ICategory } from '../../../interface/category'
 import '../../../style/global.css'
 
 const Categorys = () => {
-  const [selectedCategoryId, setSelectedCategoryId] = React.useState<number | null>(null)
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null)
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],

@@ -3,7 +3,7 @@ import { Button, Input, message, Popconfirm, Table } from 'antd';
 import axios from 'axios';
 import { IProduct } from '../../../interface/product';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import { useEffect, useState } from 'react';
 
 interface ICategory {
@@ -139,6 +139,13 @@ const GetList = () => {
       key: 'actions',
       render: (_: any, record: IProduct) => (
         <>
+              <Button 
+        style={{ marginRight: 8 }} 
+        onClick={() => nav(`/admin/phone/${record._id}`)}  // đường dẫn xem chi tiết
+      >
+        <EyeOutlined />
+      </Button>
+
           <Button onClick={() => nav(`/admin/phone/${record._id}/edit`)}>
             <EditOutlined />
           </Button>

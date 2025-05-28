@@ -1,0 +1,120 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { IProduct } from '../../../interface/product';
+
+const ProductDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const { data: product, isLoading, error } = useQuery<IProduct>({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+      return res.data;
+    },
+    enabled: !!id,
+  });
+
+  const [mainImage, setMainImage] = useState('');
+  const [album, setAlbum] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!product) return;
+    const albumImages = product.albumImages || [];
+    let newAlbum = albumImages;
+    if (product.image && !albumImages.includes(product.image)) {
+      newAlbum = [product.image, ...albumImages];
+    }
+    setMainImage(newAlbum[0] || '');
+    setAlbum(newAlbum);
+  }, [product]);
+
+  if (isLoading) return <p>Đang tải dữ liệu...</p>;
+  if (error || !product) return <p>Lỗi hoặc không tìm thấy sản phẩm</p>;
+
+  return (
+    <div style={{ maxWidth: 1000, margin: 'auto', padding: 20, fontFamily: 'Arial' }}>
+      <div style={{ display: 'flex', gap: 40 }}>
+        {/* Hình ảnh sản phẩm */}
+        <div style={{ flex: 1 }}>
+          <div style={{ border: '1px solid #eee', padding: 10, marginBottom: 20 }}>
+            <img
+              src={mainImage}
+              alt="main"
+              style={{ width: '100%', maxHeight: 500, objectFit: 'contain' }}
+            />
+          </div>
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto' }}>
+            {album.map((img, i) => (
+              <img
+                key={i}
+                src={img}
+                alt="thumb"
+                style={{
+                  width: 60,
+                  height: 60,
+                  objectFit: 'cover',
+                  border: img === mainImage ? '2px solid black' : '1px solid #ddd',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setMainImage(img)}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Thông tin sản phẩm */}
+        <div style={{ flex: 1 }}>
+          <h2 style={{ marginBottom: 10 }}>{product.name}</h2>
+          <p style={{ fontWeight: 600, fontSize: 24, marginBottom: 10 }}>
+            {Number(product.price).toLocaleString('vi-VN', {
+              style: 'currency',
+              currency: 'VND',
+            })}
+          </p>
+
+          <p style={{ marginBottom: 10 }}><strong>Mô tả:</strong> {product.mota || 'Chưa có mô tả'}</p>
+          <p style={{ marginBottom: 10 }}><strong>Danh mục:</strong> {product.danhmuc || 'Không xác định'}</p>
+          <p style={{ marginBottom: 10 }}><strong>Trạng thái:</strong> {product.trangthai || 'Không rõ'}</p>
+          {/* <p style={{ marginBottom: 10 }}><strong>Loại:</strong> {product.type || 'Không rõ'}</p> */}
+           <p>
+      <strong>Số lượng:</strong>{' '}
+      <span style={{ color: product.soluong > 0 ? '#389e0d' : '#cf1322' }}>
+        {product.soluong > 0 ? product.soluong : 'Hết hàng'}
+      </span>
+    </p>
+
+          <button
+  onClick={() => navigate(-1)}
+  style={{
+    marginTop: 20,
+    padding: '10px 20px',
+    backgroundColor: '#1890ff',
+    color: '#fff',
+    fontWeight: 600,
+    fontSize: 16,
+    border: 'none',
+    borderRadius: 8,
+    cursor: 'pointer',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+    transition: 'all 0.3s ease',
+  }}
+  onMouseOver={(e) => {
+    e.currentTarget.style.backgroundColor = '#40a9ff';
+  }}
+  onMouseOut={(e) => {
+    e.currentTarget.style.backgroundColor = '#1890ff';
+  }}
+>
+  ← Quay lại
+</button>
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProductDetail;

@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import axios from "axios";
-import { message } from "antd";
+import { message, Form, Input, Button, Select, Upload, Spin } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
+import type { RcFile } from "antd/lib/upload";
+
+const { TextArea } = Input;
 
 interface IProduct {
   name: string;
@@ -11,7 +15,7 @@ interface IProduct {
   price: number;
   soluong: number;
   mota: string;
-  danhmuc: string; // ID danh mục
+  danhmuc: string; // tên danh mục
   trangthai: string;
 }
 
@@ -25,7 +29,7 @@ const PutEdit = () => {
   const nav = useNavigate();
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors },
     reset,
@@ -40,12 +44,11 @@ const PutEdit = () => {
 
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(false);
-  const [ablumLoading, setAblumLoading] = useState(false);
+  const [albumLoading, setAlbumLoading] = useState(false);
 
   const image = watch("image");
-  const ablumImage = watch("albumImages");
+  const albumImages = watch("albumImages");
 
-  // Lấy danh sách danh mục và sản phẩm
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,12 +62,11 @@ const PutEdit = () => {
 
         const product = productRes.data;
 
-        // Nếu product.danhmuc đang là tên thì tìm _id tương ứng
-const matchedCategory = categoryList.find(
-  (cat: ICategory) => cat.name === product.danhmuc || cat._id === product.danhmuc
-);
-
-
+        // Tìm category theo tên hoặc id, ưu tiên lấy tên danh mục
+        const matchedCategory = categoryList.find(
+          (cat: ICategory) =>
+            cat.name === product.danhmuc || cat._id === product.danhmuc
+        );
 
         reset({
           name: product.name || "",
@@ -73,8 +75,7 @@ const matchedCategory = categoryList.find(
           price: product.price || 0,
           soluong: product.soluong || 0,
           mota: product.mota || "",
-          danhmuc: matchedCategory?.name || "",
-
+          danhmuc: matchedCategory ? matchedCategory.name : "",
           trangthai: product.trangthai || "",
         });
       } catch (error) {
@@ -85,11 +86,12 @@ const matchedCategory = categoryList.find(
     if (id) fetchData();
   }, [id, reset]);
 
-  const upLoadImage = async (file: FileList | null) => {
-    if (!file || file.length === 0) return;
+  // Upload ảnh chính (file đầu tiên)
+  const uploadImage = async (file: RcFile | null) => {
+    if (!file) return;
     setLoading(true);
     const formData = new FormData();
-    formData.append("file", file[0]);
+    formData.append("file", file);
     formData.append("upload_preset", "datn-xphone");
     const endPoint = "https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload";
 
@@ -105,12 +107,13 @@ const matchedCategory = categoryList.find(
     }
   };
 
-  const upLoadAblumImage = async (file: FileList | null) => {
-    if (!file || file.length === 0) return;
-    setAblumLoading(true);
+  // Upload ảnh phụ nhận File[]
+  const uploadAlbumImages = async (files: RcFile[] | null) => {
+    if (!files || files.length === 0) return;
+    setAlbumLoading(true);
 
     try {
-      const uploadPromises = Array.from(file).map(async (fileItem) => {
+      const uploadPromises = files.map(async (fileItem) => {
         const formData = new FormData();
         formData.append("file", fileItem);
         formData.append("upload_preset", "datn-xphone");
@@ -120,19 +123,19 @@ const matchedCategory = categoryList.find(
       });
 
       const urls = await Promise.all(uploadPromises);
-      const newAlbum = [...ablumImage, ...urls];
+      const newAlbum = [...albumImages, ...urls];
       setValue("albumImages", newAlbum, { shouldValidate: true });
       message.success("Tải ảnh phụ thành công");
     } catch (error) {
       console.error(error);
       message.error("Lỗi upload ảnh phụ");
     } finally {
-      setAblumLoading(false);
+      setAlbumLoading(false);
     }
   };
 
   const removeImage = (index: number) => {
-    const updated = [...ablumImage];
+    const updated = [...albumImages];
     updated.splice(index, 1);
     setValue("albumImages", updated, { shouldValidate: true });
   };
@@ -149,145 +152,198 @@ const matchedCategory = categoryList.find(
   };
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="max-w-lg mx-auto p-6 bg-white rounded shadow-md space-y-4"
+    <Form
+      layout="vertical"
+      onFinish={handleSubmit(onSubmit)}
+      className="max-w-lg mx-auto p-6 bg-white rounded shadow-md"
     >
       <h2 className="text-xl font-semibold text-center mb-4">Cập nhật sản phẩm</h2>
 
       {/* Tên sản phẩm */}
-      <div>
-        <label className="block mb-1 font-medium">Tên sản phẩm</label>
-        <input
-          type="text"
-          {...register("name", { required: "Vui lòng nhập tên sản phẩm" })}
-          className="w-full px-3 py-2 border rounded"
+      <Form.Item
+        label="Tên sản phẩm"
+        validateStatus={errors.name ? "error" : ""}
+        help={errors.name?.message}
+        required
+      >
+        <Controller
+          name="name"
+          control={control}
+          rules={{ required: "Vui lòng nhập tên sản phẩm" }}
+          render={({ field }) => <Input {...field} />}
         />
-        <p className="text-red-500 text-sm">{errors.name?.message}</p>
-      </div>
+      </Form.Item>
 
-      {/* Hình ảnh chính */}
-      <div>
-        <label className="block mb-1 font-medium">Hình ảnh chính</label>
-        <input type="file" accept="image/*" onChange={(e) => upLoadImage(e.target.files)} />
-        {loading && <p>Đang tải ảnh chính...</p>}
+      {/* Ảnh chính */}
+      <Form.Item
+        label="Hình ảnh chính"
+        required
+        validateStatus={errors.image ? "error" : ""}
+        help={errors.image?.message}
+      >
+        <Upload
+          accept="image/*"
+          showUploadList={false}
+          beforeUpload={(file) => {
+            uploadImage(file);
+            return false; // prevent auto upload
+          }}
+        >
+          <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+        </Upload>
+        {loading && <Spin style={{ marginLeft: 10 }} />}
         {image && (
           <img
             src={image}
             alt="Ảnh chính"
-            className="mt-2 rounded"
-            style={{ maxWidth: "150px", maxHeight: "150px" }}
+            style={{ marginTop: 8, maxWidth: 150, maxHeight: 150, borderRadius: 6 }}
           />
         )}
-        <input type="hidden" {...register("image", { required: "Ảnh chính không được để trống" })} />
-        <p className="text-red-500 text-sm">{errors.image?.message}</p>
-      </div>
+      </Form.Item>
 
       {/* Ảnh phụ */}
-      <div>
-        <label className="block mb-1 font-medium">Ảnh phụ</label>
-        <input type="file" accept="image/*" multiple onChange={(e) => upLoadAblumImage(e.target.files)} />
-        {ablumLoading && <p>Đang tải ảnh phụ...</p>}
-        <div className="flex flex-wrap gap-2 mt-2">
-          {ablumImage?.map((img, index) => (
-            <div key={index} className="relative">
+      <Form.Item
+        label="Hình ảnh phụ"
+        required
+        validateStatus={errors.albumImages ? "error" : ""}
+        help={errors.albumImages?.message}
+      >
+        <Upload
+          accept="image/*"
+          multiple
+          showUploadList={false}
+          beforeUpload={(fileList) => {
+            uploadAlbumImages(Array.isArray(fileList) ? fileList : [fileList]);
+            return false; // prevent auto upload
+          }}
+        >
+          <Button icon={<UploadOutlined />}>Chọn ảnh phụ</Button>
+        </Upload>
+        {albumLoading && <Spin style={{ marginLeft: 10 }} />}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+          {albumImages?.map((img, index) => (
+            <div key={index} style={{ position: "relative" }}>
               <img
                 src={img}
                 alt={`Ảnh phụ ${index + 1}`}
-                className="rounded"
-                style={{ width: 100, height: 100, objectFit: "cover" }}
+                style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 6 }}
               />
-              <button
-                type="button"
+              <Button
+                type="primary"
+                danger
+                size="small"
+                style={{ position: "absolute", top: 0, right: 0, padding: "0 6px" }}
                 onClick={() => removeImage(index)}
-                className="absolute top-0 right-0 bg-red-600 text-white rounded-full px-1 text-xs"
               >
                 ✕
-              </button>
+              </Button>
             </div>
           ))}
         </div>
-        <input
-          type="hidden"
-          {...register("albumImages", {
-            validate: (value) => (value && value.length > 0) || "Ảnh phụ không được để trống",
-          })}
-        />
-        <p className="text-red-500 text-sm">{errors.albumImages?.message}</p>
-      </div>
+      </Form.Item>
 
       {/* Giá */}
-      <div>
-        <label className="block mb-1 font-medium">Giá</label>
-        <input
-          type="number"
-          {...register("price", {
+      <Form.Item
+        label="Giá"
+        validateStatus={errors.price ? "error" : ""}
+        help={errors.price?.message}
+        required
+      >
+        <Controller
+          name="price"
+          control={control}
+          rules={{
             required: "Vui lòng nhập giá",
             min: { value: 1, message: "Giá phải lớn hơn 0" },
-          })}
-          className="w-full px-3 py-2 border rounded"
+          }}
+          render={({ field }) => <Input type="number" {...field} />}
         />
-        <p className="text-red-500 text-sm">{errors.price?.message}</p>
-      </div>
+      </Form.Item>
 
       {/* Số lượng */}
-      <div>
-        <label className="block mb-1 font-medium">Số lượng</label>
-        <input
-          type="number"
-          {...register("soluong", {
+      <Form.Item
+        label="Số lượng"
+        validateStatus={errors.soluong ? "error" : ""}
+        help={errors.soluong?.message}
+        required
+      >
+        <Controller
+          name="soluong"
+          control={control}
+          rules={{
             required: "Vui lòng nhập số lượng",
             min: { value: 1, message: "Số lượng phải lớn hơn 0" },
-          })}
-          className="w-full px-3 py-2 border rounded"
+          }}
+          render={({ field }) => <Input type="number" {...field} />}
         />
-        <p className="text-red-500 text-sm">{errors.soluong?.message}</p>
-      </div>
+      </Form.Item>
 
       {/* Mô tả */}
-      <div>
-        <label className="block mb-1 font-medium">Mô tả</label>
-        <textarea {...register("mota")} className="w-full px-3 py-2 border rounded" />
-      </div>
+      <Form.Item label="Mô tả">
+        <Controller
+          name="mota"
+          control={control}
+          render={({ field }) => <TextArea rows={4} {...field} />}
+        />
+      </Form.Item>
 
       {/* Danh mục */}
-      <div>
-        <label className="block mb-1 font-medium">Danh mục</label>
-        <select
-          {...register("danhmuc", { required: "Vui lòng chọn danh mục" })}
-          className="w-full px-3 py-2 border rounded"
-        >
-          <option value="">-- Chọn danh mục --</option>
-          {categories.map((cat) => (
-  <option key={cat._id} value={cat.name}>
-    {cat.name}
-  </option>
-))}
-        </select>
-        <p className="text-red-500 text-sm">{errors.danhmuc?.message}</p>
-      </div>
+      <Form.Item
+        label="Danh mục"
+        validateStatus={errors.danhmuc ? "error" : ""}
+        help={errors.danhmuc?.message}
+        required
+      >
+        <Controller
+          name="danhmuc"
+          control={control}
+          rules={{ required: "Vui lòng chọn danh mục" }}
+          render={({ field }) => (
+            <Select
+              placeholder="Chọn danh mục"
+              onChange={field.onChange}
+              value={field.value}
+              options={categories.map((cat) => ({
+                label: cat.name,
+                value: cat.name, // gửi name thay vì id
+              }))}
+            />
+          )}
+        />
+      </Form.Item>
 
       {/* Trạng thái */}
-      <div>
-        <label className="block mb-1 font-medium">Trạng thái</label>
-        <select
-          {...register("trangthai", { required: "Vui lòng chọn trạng thái" })}
-          className="w-full px-3 py-2 border rounded"
-        >
-          <option value="">-- Chọn trạng thái --</option>
-          <option value="còn hàng">Còn hàng</option>
-          <option value="hết hàng">Hết hàng</option>
-        </select>
-        <p className="text-red-500 text-sm">{errors.trangthai?.message}</p>
-      </div>
-
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+      <Form.Item
+        label="Trạng thái"
+        validateStatus={errors.trangthai ? "error" : ""}
+        help={errors.trangthai?.message}
+        required
       >
-        Cập nhật sản phẩm
-      </button>
-    </form>
+        <Controller
+          name="trangthai"
+          control={control}
+          rules={{ required: "Vui lòng chọn trạng thái" }}
+          render={({ field }) => (
+            <Select
+              placeholder="Chọn trạng thái"
+              onChange={field.onChange}
+              value={field.value}
+              options={[
+                { label: "Còn hàng", value: "còn hàng" },
+                { label: "Hết hàng", value: "hết hàng" },
+              ]}
+            />
+          )}
+        />
+      </Form.Item>
+
+      {/* Nút submit */}
+      <Form.Item>
+        <Button type="primary" htmlType="submit" block loading={loading || albumLoading}>
+          Cập nhật sản phẩm
+        </Button>
+      </Form.Item>
+    </Form>
   );
 };
 
