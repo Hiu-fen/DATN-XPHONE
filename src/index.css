@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hiệu ứng của thông tin sản phẩm trong trang home */
+@keyframes float-natural {
+  0% {
+    transform: rotate(-30deg) translate(0, 0);
+  }
+  25% {
+    transform: rotate(-29.5deg) translate(5px, -5px);
+  }
+  50% {
+    transform: rotate(-30deg) translate(0, -8px);
+  }
+  75% {
+    transform: rotate(-30.5deg) translate(-5px, -5px);
+  }
+  100% {
+    transform: rotate(-30deg) translate(0, 0);
+  }
+}
+
+.floating-animation {
+  animation: float-natural 10s ease-in-out infinite;
+}
+

@@ -121,17 +121,25 @@ const BannerList = () => {
 
   return (
     <div className="container mt-10">
-      <h2 className="text-2xl font-bold mb-6">Danh sách Banner</h2>
+      <h2 className="text-2xl font-bold ">Danh sách Banner</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
        <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
+      </div>
       <Table
         columns={columns}
         dataSource={search}
         rowKey="id"
+        pagination={{
+        pageSize: 10, 
+        showSizeChanger: false,
+        pageSizeOptions: ['10', '20', '30'],
+      }}
       />
     </div>
   );

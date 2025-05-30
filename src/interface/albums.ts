@@ -1,5 +1,5 @@
 export interface Ialbums {
-  id: number;
+  _id: number;
   name: string;
   description:string;
   image:string[];

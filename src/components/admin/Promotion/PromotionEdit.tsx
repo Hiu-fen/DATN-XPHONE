@@ -2,17 +2,23 @@ import { useForm } from "react-hook-form"
 import { Promotion } from "../../../interface/promotion"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import axios from "axios"
 import { message } from "antd"
+import { getPromotionById, getRandomCode, updatePromotion } from "../../../api/promotionApi"
+import { useState } from "react"
 
 const PutEditPromotion = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset
+    reset,
+    setValue,
+    getValues
   } = useForm<Promotion>()
 
+  // State để lưu mã khuyến mãi
+  const [code, setCode] = useState<string>("")
+  
   const nav = useNavigate()
 
   const params = useParams()
@@ -21,9 +27,18 @@ const PutEditPromotion = () => {
     queryKey: ['promotions', params.id],
     queryFn: async () => {
       try {
-        const {data:product} = await axios.get(`http://localhost:4000/promotions/${params.id}`)
-        reset(product)
-        return product
+        const {data:promotion} = await getPromotionById(params.id as string)
+        // Format lại ngày tháng
+        const formattedPromotion = {
+          ...promotion,
+          startDate: promotion.startDate ? new Date(promotion.startDate).toISOString().slice(0, 10) : "",
+          endDate: promotion.endDate ? new Date(promotion.endDate).toISOString().slice(0, 10) : "",
+        }
+
+        reset(formattedPromotion)
+        setCode(promotion.code)
+        setValue('status', promotion.status)
+        return promotion
       } catch (error) {
         console.log(error);
         throw error
@@ -34,7 +49,7 @@ const PutEditPromotion = () => {
   const mutation = useMutation({
     mutationFn: async (data: Promotion) => {
       try {
-        const {data:promotion} = await axios.put(`http://localhost:4000/promotions/${params.id}`, data)
+        const {data:promotion} = await updatePromotion(params.id as string, data)
         return promotion
       } catch (error) {
         console.log(error)
@@ -51,7 +66,21 @@ const PutEditPromotion = () => {
   })
 
   const onSubmit = (data: Promotion) => {
-    mutation.mutate(data)
+    mutation.mutate({
+      ...data,
+      code // dùng mã từ state thay vì từ register
+    });
+  }
+
+  // Hàm tạo mã khuyến mãi ngẫu nhiên
+  const handleGenerateCode = async () => {
+    try {
+      const res = await getRandomCode();
+      setCode(res.data.code);
+      setValue('code', res.data.code, { shouldValidate: true })
+    } catch (error) {
+      message.error("Không thể tạo mã khuyến mãi")
+    }
   }
 
   return (
@@ -74,13 +103,25 @@ const PutEditPromotion = () => {
         {/* Mã khuyến mãi */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Mã khuyến mãi</label>
-          <input
-            type="text"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-            {...register("code", 
-              { required: "Mã khuyến mãi không được để trống" }
-            )}
-          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              className="w-full px-4 py-1 border border-gray-300 rounded-md"
+              {...register("code", { required: "Mã khuyến mãi không được để trống" })}
+              value={code}
+              onChange={(e) => {
+                setCode(e.target.value);
+                setValue('code', e.target.value, { shouldValidate: true });
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleGenerateCode}
+              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+            >
+              Tạo mã
+            </button>
+          </div>
           <span className="text-red-500">{errors.code?.message}</span>
         </div>
         
@@ -124,21 +165,22 @@ const PutEditPromotion = () => {
             type="text"
             placeholder="Không bắt buộc"
             className="w-full px-4 py-2 border border-gray-300 rounded-md"
+            {...register("condition")}
           />
         </div>
         
         {/* Ngày bắt đầu và ngày kết thúc */}
         <div className="flex space-x-4">
           <div className="w-1/2">
-      <label className="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu</label>
-      <input
-        type="date"
-        className="w-full px-4 py-2 border border-gray-300 rounded-md"
-        {...register("startDate", 
-          { required: "Ngày bắt đầu không được để trống" }
-        )}
-      />
-      <span className="text-red-500">{errors.startDate?.message}</span>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu</label>
+            <input
+              type="date"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md"
+              {...register("startDate", 
+                { required: "Ngày bắt đầu không được để trống" }
+              )}
+            />
+            <span className="text-red-500">{errors.startDate?.message}</span>
           </div>
 
           <div className="w-1/2">
@@ -147,7 +189,12 @@ const PutEditPromotion = () => {
               type="date"
               className="w-full px-4 py-2 border border-gray-300 rounded-md"
               {...register("endDate", 
-                { required: "Ngày kết thúc không được để trống" }
+                { required: "Ngày kết thúc không được để trống",
+                  validate: (value) => {
+                    const startDate = getValues("startDate");
+                    return new Date(value) >= new Date(startDate) || "Ngày kết thúc phải sau ngày bắt đầu";
+                  }
+                }
               )}
             />
             <span className="text-red-500">{errors.endDate?.message}</span>
@@ -170,16 +217,15 @@ const PutEditPromotion = () => {
         {/* Trạng thái */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-          <select
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-            {...register("status", 
-              { required: "Trạng thái không được để trống" }
-            )}
-          >
-            <option value="">-- Chọn trạng thái --</option>
-            <option value="true">Hoạt động</option>
-            <option value="false">Hết hạn</option>
-          </select>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              className="w-5 h-5"
+              checked={getValues("status") || false}
+              onChange={(e) => setValue("status", e.target.checked, { shouldValidate: true })}
+            />
+            <span>{getValues("status") ? "Đang hoạt động" : "Không hoạt động"}</span>
+          </div>
           <span className="text-red-500">{errors.status?.message}</span>
         </div>
 

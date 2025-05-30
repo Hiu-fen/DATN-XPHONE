@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, message, Input } from 'antd';
+import { Table, Button, message, Input, Popconfirm } from 'antd';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { IContact } from '../../../interface/contact';
 import { IComment } from '../../../interface/comments';
+import { DeleteOutlined } from '@ant-design/icons';
 
 const ContactList = () => {
   const [contacts, setContacts] = useState<IContact[]>([]);  // State lưu trữ danh sách liên hệ
@@ -41,11 +42,9 @@ const ContactList = () => {
     }
   };
 
-  // Hàm xử lý xóa liên hệ
   const deleteContact = async (id: number) => {
     try {
       await axios.delete(`http://localhost:4000/contacts/${id}`);
-      // Xoá liên hệ khỏi danh sách trong state
       setContacts((prevContacts) => prevContacts.filter(contact => contact.id !== id));
       message.success('Xoá liên hệ thành công!');
     } catch (error) {
@@ -106,27 +105,45 @@ const ContactList = () => {
             style={{ marginRight: 8 }}>
             {record.status ? 'Đánh dấu chưa xử lý' : 'Đánh dấu đã xử lý'}
           </Button>
-          <Button onClick={() => deleteContact(record.id)} danger> 
-            Xoá
+           <Popconfirm
+          title="Thông báo" 
+          description="Bạn chắc chắn muốn xóa?"
+          icon={<DeleteOutlined />}
+          onConfirm={() => deleteContact(record.id)}
+          okText="OK"
+          cancelText="NO"
+        >
+          <Button danger>
+            <DeleteOutlined />
           </Button>
+        </Popconfirm>
         </span>
       ),
     },
   ];
 
   return (
-    <div className="container mt-10">
-       <Input.Search
+    <div >
+      <h2 className="text-2xl font-bold ">Danh sách liên hệ</h2>
+       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Input.Search
         placeholder=""
         className="mb-4"
+         style={{ width: 300 }} 
         onChange={(e) => setSearchText(e.target.value)}
         allowClear
       />
-      <h2 className="text-2xl font-bold mb-6">Danh sách liên hệ</h2>
+       </div>
+      
       <Table
         columns={columns}
         dataSource={search}
         rowKey="id"
+        pagination={{
+        pageSize: 10, 
+        showSizeChanger: false,
+        pageSizeOptions: ['5', '10', '20'],
+      }}
       />
     </div>
   );

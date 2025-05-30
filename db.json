@@ -4,26 +4,56 @@
     {
       "name": "Iphone",
       "mota": "Điện thoại táo",
-      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "image": "https://cdnv2.tgdd.vn/mwg-static/common/News/1569702/iphone%2016%20pro%20-%203.jpg",
       "id": 1
     },
     {
       "name": "SamSung",
-      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGGBzWOKOkHXbnNQobVpJlA2IKK266T1tE-Q&s",
       "mota": "điện thoại androi",
       "id": 2
     },
     {
       "name": "op po",
-      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "image": "https://tgs.vn/wp-content/uploads/2022/03/DSC8174.jpg",
       "mota": "đập thoải moãi :v",
       "id": 3
     },
     {
-      "name": "nguyễn hồng quân",
-      "image": "https://picsum.photos/200",
-      "mota": "oksdfdsfsdfsd",
+      "name": "vivo  ",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfMW4kaQoFEXOAJO4O8BfZTbhTB0PKNSL0tw&s",
+      "mota": "Điện thoại mới nhất ",
       "id": 4
+    },
+    {
+      "name": "rog phone ",
+      "image": "https://cellphones.com.vn/sforum/wp-content/uploads/2022/07/default_wallpaper_Rog6_picker_02.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 5
+    },
+    {
+      "name": "xiaomi",
+      "image": "https://cdn.tgdd.vn/Files/2022/08/15/1456491/redmi_k50_ultra_1280x1065-800-resize.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 6
+    },
+    {
+      "name": "Huawei",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxbB6CP9CeZcjRJnBzf_kZISCErKFgJHBC8A&s",
+      "mota": "Điện thoại mới nhất ",
+      "id": 7
+    },
+    {
+      "name": "OnePlus",
+      "image": "https://cdn.tgdd.vn/Products/Images/42/230770/oneplus-9-pro-600x600-1-600x600.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 8
+    },
+    {
+      "name": "Nokia",
+      "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
+      "mota": "Điện thoại mới nhất ",
+      "id": 9
     }
   ],
   "products": [
@@ -31,56 +61,121 @@
       "id": 2,
       "name": "sansung s20",
       "price": "10.000000",
-      "mota": "SamSung  đây",
-      "danhmuc": "2",
-      "trangthai": "Hết hàng",
+      "mota": "sansung  đây",
+      "danhmuc": 2,
+      "trangthai": "hết hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": 5
     },
     {
       "id": 3,
       "name": "oppo 12",
       "price": "4.000000",
       "mota": "đập k bể",
-      "danhmuc": "3",
-      "trangthai": "Hết hàng",
+      "danhmuc": 3,
+      "trangthai": "còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg"
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": "5"
     },
     {
       "id": 5,
       "name": "iphone11",
       "price": "6.000000",
       "mota": "Điện thoại mới nhất ",
-      "danhmuc": "1",
-      "trangthai": "Còn hàng",
+      "danhmuc": 1,
+      "trangthai": "còn hàng",
       "type": "simple",
       "parent": 0,
-      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
-    },
-    {
-      "id": 6,
-      "name": "Iphone8",
-      "price": "5.000000",
-      "mota": "Điện thoại mới nhất ",
-      "danhmuc": "1",
-      "trangthai": "Còn hàng",
-      "type": "simple",
-      "parent": 0,
-      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png",
+      "albumId": 4
     },
     {
       "id": 7,
-      "name": "ten san pham",
+      "name": "iphone",
       "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
       "price": "5000000",
-      "mota": "sản phẩm chỉ mang tính chất tương chưng ",
-      "danhmuc": "4",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "danhmuc": "1",
       "trangthai": "Còn hàng",
       "type": "simple",
       "parent": 0
+    },
+    {
+      "id": 8,
+      "name": "sansung s20",
+      "price": "10.000000",
+      "mota": "sansung  đây",
+      "danhmuc": 2,
+      "trangthai": "hết hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": 5
+    },
+    {
+      "id": 9,
+      "name": "oppo 12",
+      "price": "4.000000",
+      "mota": "đập k bể",
+      "danhmuc": 3,
+      "trangthai": "còn hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": "5"
+    },
+    {
+      "id": 10,
+      "name": "Huawei",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxbB6CP9CeZcjRJnBzf_kZISCErKFgJHBC8A&s",
+      "price": "123456",
+      "mota": "aaa",
+      "danhmuc": 7,
+      "trangthai": "còn hàng",
+      "albumId": "5",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 11,
+      "name": "OnePlus",
+      "image": "https://cdn.tgdd.vn/Products/Images/42/230770/oneplus-9-pro-600x600-1-600x600.jpg",
+      "price": "123456",
+      "mota": "aaa",
+      "danhmuc": 8,
+      "trangthai": "còn hàng",
+      "albumId": "4",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 12,
+      "name": "Nokia",
+      "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
+      "price": "123456",
+      "mota": "áa",
+      "danhmuc": 9,
+      "trangthai": "còn hàng",
+      "albumId": 5,
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 13,
+      "name": "rog",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "price": "123",
+      "mota": "aa",
+      "danhmuc": 5,
+      "trangthai": "còn hàng",
+      "albumId": 4,
+      "type": "simple",
+      "parent": 0
+  
     }
   ],
   "albums": [
@@ -157,7 +252,7 @@
       "phone": "0909988776",
       "address": "Đông Tác, Hà Nội",
       "date": "2025-05-12T11:00:00Z",
-      "status": "Hoàn thành",
+      "status": "Đang xử lý",
       "isPaid": true,
       "items": [
         {
@@ -175,17 +270,17 @@
       "user": "hieu",
       "content": "Sản phẩm rất tốt",
       "product": "",
-      "status": true,
+      "status": false,
       "date": "08/05/2025",
       "id": 1,
-      "likes": 14
+      "likes": 23
     },
     {
       "user": "amthucv1",
       "content": "123123123",
       "sanpham": "5",
       "date": "2025-05-14T09:34:29.709Z",
-      "likes": 11,
+      "likes": 27,
       "id": 2,
       "status": false
     }
@@ -247,87 +342,144 @@
       "status": false,
       "date": "14/05/2025",
       "id": 4
+    },
+    {
+      "name": "Trịnh Mạnh Dương",
+      "email": "trinhvanduong2005tq@gmail.com",
+      "phone": "0343452076",
+      "message": "12312312",
+      "status": false,
+      "date": "22/05/2025",
+      "id": 5
+    },
+    {
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "dfgh",
+      "status": false,
+      "id": 6
+    },
+    {
+      "name": "Trịnh Mạnh Dương tét",
+      "email": "trinhvanduong2005tq@gmail.com",
+      "phone": "0343452076",
+      "message": "12312312",
+      "status": false,
+      "date": "",
+      "id": 7
     }
   ],
   "users": [
     {
-      "email": "phamhieu12345@gmail.com",
-      "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
-      "name": "Phạm Hữu Hiếu",
-      "sdt": "0123456789",
-      "address": "Hà Nội",
-      "id": 1
-    },
-    {
-      "email": "phamhieu123456@gmail.com",
-      "password": "$2a$10$grwQ0hDvXPFbq.3KgSP8LeVMeLs3tCtAXR4OffenuunaKuZXHXLjq",
-      "id": 1
-    },
-    {
-      "email": "12@gmail.com",
-      "password": "$2a$10$RJ3bVJ6rF6eX1DVsxJm8RO/VNR3gZHDLxWBNrt/peFJdV1NulOp4m",
-      "id": 2
-    },
-    {
-      "email": "letung251205@gmail.com",
-      "password": "$2a$10$xfoL0XpC.WjN3wQZ64EPvO0khX1b7/nR/5YiIPeh3QbuNXW38y4E.",
-      "id": 3
-    },
-    {
-      "email": "admin12@gmail.com",
-      "password": "$2a$10$OVSjmg5NgApf62SQ0cRcEuxEkAWVPTol4v.P2Uzh8pAVD1UhkuF3q",
-      "name": "Admin",
-      "role": "admin",
-      "id": 5,
-      "address": "kmkakma",
-      "sdt": "kmkmakma",
-      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png"
-    },
-    {
       "email": "Adminxphone@gmail.com",
-      "password": "$2a$10$m73xO/C..X8EgbvaYaeFY.6O7nstJZPB8mX5OzYbOjHa0og7sZ0Pm",
-      "name": "AdminXphone",
+      "password": "$2a$10$YR1wE.DgG3zAPyVKZ8B3oOGzQ4KKaclL9YPwGTVb1gesXYmumOefK",
+      "name": "AdminXphone1",
       "role": "admin",
-      "id": 6
+      "id": 1,
+      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
+      "sdt": "0123456789",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội",
+      "notification": "Không có j"
+    },
+    {
+      "email": "kien1@gmail.com",
+      "password": "$2a$10$vKbecf2EsQJtpq/1tkkDDeBf5VCTTT9PckJlMa3jvgp3oqwK9vEgy",
+      "name": "Vũ Xuân Kiên",
+      "role": "user",
+      "id": 2,
+      "active": true
     },
     {
       "email": "client@gmail.com",
-      "password": "$2a$10$b3SPfIgrj8XhCKiSIADAo.KAV01tH.AB9suJpYRuNuxh26QP7Xy6i",
-      "id": 7
-    },
-    {
-      "email": "client@gmail1.com",
-      "password": "$2a$10$w4nUAcbY4R3sI9Wl/nxQNuB3Zm.YMaXCQx6vVr5bWstlkiyDaGetC",
+      "password": "$2a$10$.iUAr1YSzGOrbi/Yl6OctuWcwChj3v95nRYSBV9iZ9VlwJzhFzucC",
       "name": "client",
       "role": "user",
-      "id": 8
+      "active": true,
+      "id": 3,
+      "sdt": "0123456789",
+      "address": "Phường Tân Thịnh, thành phố Thái Nguyên, tỉnh Thái Nguyên."
     },
     {
-      "email": "1@gmail.com",
-      "password": "$2a$10$eutZ66OX6N3rsSlzufSUQOi/GuM.k6XbbBNgv6o7W4d3Y9CvZlNMy",
-      "name": "hieuhieu",
-      "role": "admin",
-      "id": 9,
-      "address": "",
-      "sdt": "",
-      "avatar": "https://imgthumb-cdn.thethao247.vn/thumbamp/storage/files/hoangtung/2025/05/09/antony-681d5ffc2e548.jpg"
+      "email": "test12@gmail.com",
+      "password": "$2a$10$sEa/YvRANrnY.USbGOb2OuoaAatGamUT3fosL66KCo6IDWKsZ7S42",
+      "name": "test",
+      "role": "user",
+      "active": true,
+      "id": 4
     },
     {
       "email": "2@gmail.com",
-      "password": "$2a$10$J1fqbZBLgSFIHuLb6rCd.eDNbY4mPZfUrufJgBQLPQIE65PCQf4fG",
-      "name": "hieuhieu",
+      "password": "$2a$10$3hlfWcbmM4iNLezr1PE.ieU5WBm14D51OeFxxdR49U.vylVykkz.u",
+      "name": "test2",
       "role": "admin",
       "id": 10,
-      "active": true
-    }, 
+      "avatar": "",
+      "sdt": "",
+      "address": "aaa",
+      "notification": ""
+    },
     {
-      "email": "duong@gmail1.com",
-      "password": "$2a$10$w4nUAcbY4R3sI9Wl/nxQNuB3Zm.YMaXCQx6vVr5bWstlkiyDaGetC",
-      "name": "Duong",
-      "role": "user",
+      "email": "3@gmail.com",
+      "password": "$2a$10$52HP7SDpclbAsDnpYg5uaOn.GENweM8H.bxddiiMdDvhCXWLki6/K",
+      "name": "hieu",
+      "role": "admin",
       "id": 11
+    },
+    {
+      "email": "phuongnvph52264@gmail.com",
+      "password": "$2a$10$aCzEj4kfoQ1v2.DdXT3Wi.H4oobZ60zs2wJcgOy/R9l65NFmraKYi",
+      "name": "Nguyễn Văn Phương",
+      "role": "admin",
+      "id": 12
+    },
+    {
+      "email": "anhhtph50205@gmail.com",
+      "password": "$2a$10$ljY8UPshcMAnE11XOidDYeETsgoKV4kXwBmhAVTiMnvuK5L9sUoWW",
+      "name": "Hoàng Thế Anh",
+      "role": "admin",
+      "id": 13
+    },
+    {
+      "email": "theanhhtt@gmail.com",
+      "password": "$2a$10$xC.p3f/UY0iNJCaeVdVXUusbbpsDg5h5HtaYtZiTrmiJm/t.SaW6C",
+      "name": "Thế Anh user",
+      "role": "user",
+      "id": 14
+    },
+    {
+      "email": "datttt@gmail.com",
+      "password": "$2a$10$Zo/4ZkyObLv1d7N8PQ/J6u2gAx61uVB6KcRKYzdNRicOo3sshkp5e",
+      "name": "dat",
+      "role": "user",
+      "active": true,
+      "id": 5
+    },
+    {
+      "email": "phamhieu123456@gmail.com",
+      "password": "$2a$10$rMkOG0R3uBJUrOqIW0rJV.JE8LHuQHm4LZzI2/yoIxqJv5QcvfZSC",
+      "name": "hieuhieu3",
+      "role": "admin",
+      "active": true,
+      "id": 6,
+      "sdt": "09876543212",
+      "address": "147 nam từ liêm",
+      "gender": "nam",
+      "dob": "03/11/2005",
+      "avatar": "",
+      "notification": ""
+    },
+    {
+      "email": "duongabc@gmail.com",
+      "password": "$2a$10$SN52duH6ks/xcroJSet1...2rQhkKsakCvBw7Ew.mE18AFMAvBF3K",
+      "name": "duong",
+      "role": "admin",
+      "active": true,
+      "id": 15,
+      "sdt": "0987654321",
+      "address": "147 nam từ liêm",
+      "gender": "nam",
+      "dob": "03/11/2005"
     }
-
   ],
   "promotions": [
     {

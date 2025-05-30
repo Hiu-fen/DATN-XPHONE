@@ -1,12 +1,14 @@
 export interface IProduct {
-  id: number;
+  _id: string;
   name: string;
   image: string;
+  albumImages: string[];
   danhmuc: string;
   price: string;
-  trangthai:string;
-  mota:string;
+  soluong: number;
+  trangthai: string;
+  mota: string;
   type: string;
   parent: number;
-  score:number
+  score: number;
 }
