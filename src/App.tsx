@@ -17,34 +17,34 @@ import PostAdd from './components/admin/Product/PostAdd'
 
 
 
-import GetPromotion from './components/admin/Promotion/PromotionList'
-import PostAddPromotion from './components/admin/Promotion/PromotionAdd'
-import PutEditPromotion from './components/admin/Promotion/PromotionEdit'
-import OrderList from './components/admin/Order/ListOrder'
-import OrderDetail from './components/admin/Order/OrderDetail'
+import GetPromotion from "./components/admin/Promotion/PromotionList";
+import PostAddPromotion from "./components/admin/Promotion/PromotionAdd";
+import PutEditPromotion from "./components/admin/Promotion/PromotionEdit";
+import OrderList from "./components/admin/Order/ListOrder";
+import OrderDetail from "./components/admin/Order/OrderDetail";
 
-import ContactAdd from './components/admin/Contact/ContactAdd'
-import ContactList from './components/admin/Contact/ContactList'
-import BannerAdd from './components/admin/Banner/BannerAdd'
-import BannerList from './components/admin/Banner/BannerList'
-import BannerEdit from './components/admin/Banner/BannerEdit'
+import ContactAdd from "./components/admin/Contact/ContactAdd";
+import ContactList from "./components/admin/Contact/ContactList";
+import BannerAdd from "./components/admin/Banner/BannerAdd";
+import BannerList from "./components/admin/Banner/BannerList";
+import BannerEdit from "./components/admin/Banner/BannerEdit";
 
-import PrivateRouteAdmin from './components/PrivateRouteAdmin'
-import LoginAdmin from './components/admin/User/Login'
-import RegisterAdmin from './components/admin/User/Register'
-import GetAdmin from './components/admin/User/ListUserAdmin'
-import ProfileAdmin from './components/admin/User/ProfileAdmin'
-import GetClient from './components/admin/User/ListUserClient'
+import PrivateRouteAdmin from "./components/PrivateRouteAdmin";
+import LoginAdmin from "./components/admin/User/Login";
+import RegisterAdmin from "./components/admin/User/Register";
+import GetAdmin from "./components/admin/User/ListUserAdmin";
+import ProfileAdmin from "./components/admin/User/ProfileAdmin";
+import GetClient from "./components/admin/User/ListUserClient";
 
 import DetailPromotion from './components/admin/Promotion/PromotionDetail'
 
 import AdminDashboard from './components/admin/Aside/AdminDashboard'
 
-import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank'
-import About from './components/client/page/about'
-import Home from './components/client/page/home'
-import Contact from './components/client/page/contact'
-import Product from './components/client/page/product'
+import useReloadIfBlank from "./components/admin/Aside/useReloadIfBlank";
+import About from "./components/client/page/about";
+import Home from "./components/client/page/home";
+import Contact from "./components/client/page/contact";
+import Product from "./components/client/page/product";
 
 import Categorys from './components/client/page/categorys'
 import Cart from './components/client/page/cart'

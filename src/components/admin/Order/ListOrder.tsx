@@ -24,13 +24,21 @@ interface Order {
   isPaid: boolean;
 }
 
+<<<<<<< HEAD
 // Danh sách trạng thái hợp lệ
+=======
+// Thứ tự trạng thái đúng theo luồng xử lý
+>>>>>>> e50b36a ([AnhHTPH50205] Order)
 const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
   "Đã giao",
   "Hoàn thành",
+<<<<<<< HEAD
   "Đã huỷ",
+=======
+  "Đã huỷ"
+>>>>>>> e50b36a ([AnhHTPH50205] Order)
 ];
 
 const OrderList = () => {
@@ -89,8 +97,12 @@ const OrderList = () => {
   };
 
   const filteredOrders = orders?.filter((o) => {
+<<<<<<< HEAD
     const text =
       `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+=======
+    const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+>>>>>>> e50b36a ([AnhHTPH50205] Order)
     return text.includes(searchText.toLowerCase());
   });
 
@@ -154,19 +166,33 @@ const OrderList = () => {
       key: "status",
       render: (_: any, record: Order) => (
         <Select
+<<<<<<< HEAD
           value={
             statusOptions.includes(record.status) ? record.status : undefined
           }
+=======
+          value={record.status}
+>>>>>>> e50b36a ([AnhHTPH50205] Order)
           onChange={(value) =>
             handleStatusChange(record._id, record.status, value)
           }
           style={{ width: 160 }}
+<<<<<<< HEAD
           options={statusOptions.map((status) => ({
             label: status,
             value: status,
           }))}
           placeholder="Chọn trạng thái"
         />
+=======
+        >
+          {statusOptions.map((status) => (
+            <Select.Option key={status} value={status}>
+              {status}
+            </Select.Option>
+          ))}
+        </Select>
+>>>>>>> e50b36a ([AnhHTPH50205] Order)
       ),
     },
   ];
