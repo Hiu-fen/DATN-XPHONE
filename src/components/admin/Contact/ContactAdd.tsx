@@ -10,16 +10,10 @@ const ContactAdd = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<IContact>();
   const navigate = useNavigate();
 
-  const getNextId = () => {
-    const currentId = localStorage.getItem('nextContactId');
-    const nextId = currentId ? parseInt(currentId) + 1 : 1; 
-    localStorage.setItem('nextContactId', nextId.toString()); 
-    return nextId;
-  };
 
   const mutation = useMutation({
     mutationFn: async (data: IContact) => {
-      const response = await axios.post('http://localhost:4000/contacts', data);
+      const response = await axios.post('http://localhost:5000/api/contacts', data);
       return response.data;
     },
     onSuccess: () => {
@@ -28,6 +22,7 @@ const ContactAdd = () => {
     },
     onError: () => {
       message.error('Gửi liên hệ thất bại, vui lòng thử lại!');
+      console.log(errors)
     },
   });
 
@@ -37,7 +32,6 @@ const ContactAdd = () => {
       ...data,
       status: false, 
       date: new Date().toLocaleDateString('en-GB'),
-      id: getNextId(), 
     };
     mutation.mutate(contactData);
   };

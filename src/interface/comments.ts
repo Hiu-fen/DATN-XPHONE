@@ -1,5 +1,5 @@
 export interface IComment {
-    id: number,
+    _id: string,
     content: string,
     status: boolean,
     user:string,

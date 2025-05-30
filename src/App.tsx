@@ -8,11 +8,13 @@ import Register from './components/client/Register'
 import Login from './components/client/Login'
 
 import CommentAdd from './components/admin/Comment/CommentAdd'
+import CommentAdmin from './components/admin/Comment/CommentList'
+
 import GetListCategory from './components/admin/Category/GetListCategory'
 import PostAddCategory from './components/admin/Category/PostAddCategory'
 import PutEditCategory from './components/admin/Category/PutEditCategory'
 import PostAdd from './components/admin/Product/PostAdd'
-import CommentAdmin from './components/admin/Comment/CommentList'
+
 
 
 import GetPromotion from './components/admin/Promotion/PromotionList'
