@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import axios from 'axios'
 import React from 'react'
 import { IProduct } from '../../../interface/product'
-import { Icatagory } from '../../../interface/category'
+import { ICategory } from '../../../interface/category'
 import '../../../style/global.css'
 
 const Categorys = () => {
-  const [selectedCategoryId, setSelectedCategoryId] = React.useState<number | null>(null)
+  const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null)
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
@@ -61,14 +61,14 @@ const Categorys = () => {
         id="scroll-container"
         className="flex gap-3 overflow-x-auto scroll-smooth px-10 py-2 no-scrollbar"
       >
-        {categories?.map((cat: Icatagory) => (
+        {categories?.map((cat: ICategory) => (
           <img
-            key={cat.id}
+            key={cat._id}
             src={cat.image}
             alt={cat.name}
-            onClick={() => setSelectedCategoryId(cat.id)}
+            onClick={() => setSelectedCategoryId(cat._id)}
             className={`w-[80px] h-[80px] sm:w-[120px] sm:h-[120px] object-cover rounded-lg border cursor-pointer transition-transform hover:scale-105 ${
-              selectedCategoryId === cat.id ? 'ring-4 ring-blue-500' : ''
+              selectedCategoryId === cat._id ? 'ring-4 ring-blue-500' : ''
             }`}
           />
         ))}
@@ -105,7 +105,7 @@ const Categorys = () => {
 <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-2 max-w-[1400px] mx-auto p-2 box-border">
   {filteredProducts?.map((product: IProduct) => (
     <div
-      key={product.id}
+      key={product._id}
       className="group bg-white rounded-md shadow-sm border overflow-hidden flex flex-col justify-between transition-transform hover:-translate-y-1"
     >
       {/* Ảnh sản phẩm */}

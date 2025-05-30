@@ -11,8 +11,6 @@ const CommentAdd = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<IComment>();
   const [products, setProduct] = useState<IProduct[]>([]);
   const nav = useNavigate();
-  const { productIdParam } = useParams(); 
-
   
   useEffect(() =>{
     const fetchProduct = async () =>{

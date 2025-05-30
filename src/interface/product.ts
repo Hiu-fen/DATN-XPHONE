@@ -1,10 +1,11 @@
 export interface IProduct {
-  _id: string; 
+  _id: string;
   name: string;
   image: string;
-  danhmuc: string; 
+  albumImages: string[];
+  danhmuc: string;
   price: string;
-  soluong: string;
+  soluong: number;
   trangthai: string;
   mota: string;
   type: string;
