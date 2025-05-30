@@ -4,7 +4,7 @@ const categorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   mota: { type: String, default: '' },
   image: { type: String, required: true },
-  type: { type: String, default: '' }, // có thể để trống nếu chưa dùng
+  type: { type: String, default: '' }, 
   parent: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Category',

@@ -1,115 +1,110 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import { Table, Button, message, Input, Popconfirm } from 'antd';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 import { IContact } from '../../../interface/contact';
-import { IComment } from '../../../interface/comments';
 import { DeleteOutlined } from '@ant-design/icons';
 
 const ContactList = () => {
-  const [contacts, setContacts] = useState<IContact[]>([]);  // State lưu trữ danh sách liên hệ
-  const navigate = useNavigate();
-    const [searchText, setSearchText] = useState('');
-
-  // Hàm để lấy danh sách liên hệ từ API hoặc localStorage
+  const [contacts, setContacts] = useState<IContact[]>([]); 
+  const [searchText, setSearchText] = useState('');
   const fetchContacts = async () => {
     try {
-      // Dữ liệu từ backend
-      const response = await axios.get('http://localhost:4000/contacts');
-      setContacts(response.data);  // Lưu dữ liệu vào state
+  
+      const response = await axios.get('http://localhost:5000/api/contacts');
+      setContacts(response.data);  
     } catch (error) {
       message.error('Không thể tải danh sách liên hệ, vui lòng thử lại!');
     }
   };
 
-  // Sử dụng useEffect để gọi hàm fetch khi component được render
+
   useEffect(() => {
     fetchContacts();
   }, []);
 
-  // Hàm xử lý thay đổi trạng thái
-  const toggleStatus = async (id: number, currentStatus: boolean) => {
-    try {
-      const updatedStatus = !currentStatus;
-      await axios.patch(`http://localhost:4000/contacts/${id}`, { status: updatedStatus });
-      // Cập nhật lại danh sách sau khi thay đổi trạng thái
-      setContacts((prevContacts) => prevContacts.map(contact => 
-        contact.id === id ? { ...contact, status: updatedStatus } : contact
-      ));
-      message.success('Thay đổi trạng thái thành công!');
-    } catch (error) {
-      message.error('Không thể thay đổi trạng thái, vui lòng thử lại!');
-    }
-  };
 
-  const deleteContact = async (id: number) => {
-    try {
-      await axios.delete(`http://localhost:4000/contacts/${id}`);
-      setContacts((prevContacts) => prevContacts.filter(contact => contact.id !== id));
-      message.success('Xoá liên hệ thành công!');
-    } catch (error) {
-      message.error('Không thể xoá liên hệ, vui lòng thử lại!');
-    }
-  };
+const toggleStatus = async (id: string, currentStatus: boolean) => {
+  try {
+    const updatedStatus = !currentStatus;
+    await axios.patch(`http://localhost:5000/api/contacts/${id}`, { status: updatedStatus });
+    setContacts(prev =>
+      prev.map(contact => contact._id === id ? { ...contact, status: updatedStatus } : contact)
+    );
+    message.success('Thay đổi trạng thái thành công!');
+  } catch (error) {
+    message.error('Không thể thay đổi trạng thái, vui lòng thử lại!');
+  }
+};
+
+const deleteContact = async (id: string) => {
+  try {
+    await axios.delete(`http://localhost:5000/api/contacts/${id}`);
+    setContacts(prev => prev.filter(contact => contact._id !== id));
+    message.success('Xoá liên hệ thành công!');
+  } catch (error) {
+    message.error('Không thể xoá liên hệ, vui lòng thử lại!');
+  }
+};
+
   const search = contacts?.filter((c: IContact) => {
-    const Text = `${c.id} ${c.email} ${c.name} ${c.date} ${c.phone} ${c.message}  `.toLowerCase();
+    const Text = ` ${c.email} ${c.name} ${c.date} ${c.phone} ${c.message}  `.toLowerCase();
     return Text.includes(searchText.toLowerCase());
   });
   
 
-  // Cấu hình các cột trong bảng
   const columns = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-    },
-    {
-      title: 'Họ tên',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
-    {
-      title: 'Số điện thoại',
-      dataIndex: 'phone',
-      key: 'phone',
-    },
-     {
-      title: 'Nội dung',
-      dataIndex: 'message',
-      key: 'message',
-    },
-     {
-      title: 'Ngày gửi',
-      dataIndex: 'date',
-      key: 'date',
-    },
-    {
-      title: 'Trạng thái',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: boolean) => (status ? 'Đã xử lý' : 'Chưa xử lý'),
-    },
-    {
-      title: 'Thao tác',
-      key: 'action',
-      render: (_: any, record: IContact) => (
-        <span>
-          <Button 
-            onClick={() => toggleStatus(record.id, record.status)} 
-            style={{ marginRight: 8 }}>
-            {record.status ? 'Đánh dấu chưa xử lý' : 'Đánh dấu đã xử lý'}
-          </Button>
-           <Popconfirm
-          title="Thông báo" 
+  {
+    title: 'STT',
+    key: 'index',
+    render: (_: any, __: IContact, index: number) => index + 1,
+  },
+  {
+    title: 'Họ tên',
+    dataIndex: 'name',
+    key: 'name',
+  },
+  {
+    title: 'Email',
+    dataIndex: 'email',
+    key: 'email',
+  },
+  {
+    title: 'Số điện thoại',
+    dataIndex: 'phone',
+    key: 'phone',
+  },
+  {
+    title: 'Nội dung',
+    dataIndex: 'message',
+    key: 'message',
+  },
+  {
+    title: 'Ngày gửi',
+    dataIndex: 'date',
+    key: 'date',
+  },
+  {
+    title: 'Trạng thái',
+    dataIndex: 'status',
+    key: 'status',
+    render: (status: boolean) => (status ? 'Đã xử lý' : 'Chưa xử lý'),
+  },
+  {
+    title: 'Thao tác',
+    key: 'action',
+    render: (_: any, record: IContact) => (
+      <span>
+        <Button
+          onClick={() => toggleStatus(record._id, record.status)}
+          style={{ marginRight: 8 }}
+        >
+          {record.status ? 'Đánh dấu chưa xử lý' : 'Đánh dấu đã xử lý'}
+        </Button>
+        <Popconfirm
+          title="Thông báo"
           description="Bạn chắc chắn muốn xóa?"
           icon={<DeleteOutlined />}
-          onConfirm={() => deleteContact(record.id)}
+          onConfirm={() => deleteContact(record._id)}
           okText="OK"
           cancelText="NO"
         >
@@ -117,10 +112,11 @@ const ContactList = () => {
             <DeleteOutlined />
           </Button>
         </Popconfirm>
-        </span>
-      ),
-    },
-  ];
+      </span>
+    ),
+  },
+];
+
 
   return (
     <div >
@@ -138,7 +134,7 @@ const ContactList = () => {
       <Table
         columns={columns}
         dataSource={search}
-        rowKey="id"
+        rowKey="_id"
         pagination={{
         pageSize: 10, 
         showSizeChanger: false,
