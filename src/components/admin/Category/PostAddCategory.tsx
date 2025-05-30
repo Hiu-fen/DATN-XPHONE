@@ -5,24 +5,19 @@ import { UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { ICategory } from '../../../interface/category';
-
+import { useForm, Controller } from 'react-hook-form';
 
 const PostAddCategory = () => {
- 
-
- 
-  const {register,handleSubmit,formState:{errors}} = useForm<ICategory>()
+  const { control, handleSubmit, formState: { errors }, setValue, watch } = useForm<ICategory>();
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
   const image = watch("image");
 
   const mutation = useMutation({
-    mutationFn: async (data:ICategory) => {
+    mutationFn: async (data: ICategory) => {
       try {
-        const {data:product} = await axios.post(`http://localhost:5000/api/category`,data)
-        return product
+        const { data: category } = await axios.post(`http://localhost:5000/api/category`, data);
+        return category;
       } catch (error) {
         console.log(error);
         message.error("Thêm thất bại");
@@ -32,11 +27,42 @@ const PostAddCategory = () => {
       message.success("Thêm mới thành công");
       nav('/admin/category/list');
     }
-  })
-  const onSubmit = (data:ICategory)=>{
-    mutation.mutate(data)
-  }
- 
+  });
+
+  const onSubmit = (data: ICategory) => {
+    mutation.mutate(data);
+  };
+
+  const upLoadImage = async (fileList: File[]) => {
+    const name = watch("name");
+    if (!fileList || fileList.length === 0 || !name) {
+      message.warning("Vui lòng nhập tên danh mục trước khi tải ảnh");
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+
+    const publicId = `category_${name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "")}`;
+
+    // Đặt tên file upload giống public_id
+    const renamedFile = new File([fileList[0]], publicId, { type: fileList[0].type });
+    formData.append("file", renamedFile);
+    formData.append("upload_preset", "datn-xphone");
+
+    const endPoint = "https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload";
+
+    try {
+      const { data } = await axios.post(endPoint, formData);
+      setValue("image", data.secure_url, { shouldValidate: true });
+      message.success("Tải ảnh thành công");
+    } catch (error) {
+      console.error(error);
+      message.error("Lỗi upload ảnh");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">

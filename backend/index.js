@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-require('dotenv').config();
+
 require('dotenv').config();
 
 const productRoutes = require('./routes/productRoutes');
@@ -20,21 +20,17 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Middleware
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
-app.use(cors({ origin: 'http://localhost:5173' }));
-app.use(express.json());
+
 
 // Kết nối MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   // useNewUrlParser: true,
   // useUnifiedTopology: true,
-mongoose.connect(process.env.MONGO_URI, {
-  // useNewUrlParser: true,
-  // useUnifiedTopology: true,
+
 })
 .then(() => console.log('✅ Kết nối MongoDB thành công'))
 .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
-.then(() => console.log('✅ Kết nối MongoDB thành công'))
-.catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
+
 
 // Mount router
 // Mount router
@@ -48,5 +44,5 @@ app.use('/api/promotions', promotionRoutes);
 // Chạy server
 app.listen(PORT, () => {
   console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
-  console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
+
 });
