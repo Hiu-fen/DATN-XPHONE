@@ -4,10 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = 'your_secret_key_here';
 
-
-// hàm lấy thông tin người dùng
-
-
+// Đăng ký người dùng mới
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -20,8 +17,8 @@ exports.register = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role:'admin',
-        active: true, 
+      role: 'user',
+      active: true,
     });
 
     await newUser.save();
@@ -32,6 +29,7 @@ exports.register = async (req, res) => {
   }
 };
 
+// Đăng nhập người dùng
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -51,6 +49,7 @@ exports.login = async (req, res) => {
   }
 };
 
+// Lấy danh sách Admin
 exports.listAdmins = async (req, res) => {
   try {
     const admins = await User.find({ role: 'admin' });
@@ -60,6 +59,7 @@ exports.listAdmins = async (req, res) => {
   }
 };
 
+// Lấy danh sách người dùng (user)
 exports.listClients = async (req, res) => {
   try {
     const clients = await User.find({ role: 'user' });
@@ -69,7 +69,7 @@ exports.listClients = async (req, res) => {
   }
 };
 
-
+// Cập nhật trạng thái người dùng (active, role,...)
 exports.updateUserStatus = async (req, res) => {
   try {
     const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -81,8 +81,18 @@ exports.updateUserStatus = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Lỗi khi cập nhật người dùng' });
   }
-
 };
+exports.getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
+// ✅ Cập nhật hồ sơ người dùng (profile)
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -113,6 +123,3 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
-
-
-

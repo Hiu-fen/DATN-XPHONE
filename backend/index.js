@@ -40,7 +40,7 @@ app.use('/api/contacts', contactRoutes);
 
 app.use('/api/comments', commentRoutes);
 app.use('/api/promotions', promotionRoutes);
-app.use('/api/user', userRouter)
+app.use('/api/users', userRouter);
 
 // Chạy server
 app.listen(PORT, () => {

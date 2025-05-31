@@ -3,45 +3,48 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { message } from "antd";
-import { User } from "../../interface/user";
 import { MailOutlined, LockOutlined, UserOutlined } from "@ant-design/icons";
+
+interface UserForm {
+  name: string;
+  email: string;
+  password: string;
+}
 
 const Register = () => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<User>();
+  } = useForm<UserForm>();
 
-  const nav = useNavigate();
+  const navigate = useNavigate();
 
   const mutation = useMutation({
-    mutationFn: async (data: User) => {
-      await axios.post(`http://localhost:4000/register`, data);
-      return data;
+    mutationFn: async (data: any) => {
+      await axios.post("http://localhost:5000/api/users/register", data);
     },
     onSuccess: () => {
       message.success("Đăng ký thành công!");
-      nav("/login");
+      navigate("/login");
     },
     onError: () => {
       message.error("Đăng ký thất bại!");
     },
   });
 
-  /**
-   * Xử lý dữ liệu sau khi form được submit
-   *
-   * @param {Omit<UserAdmin, "role">} data Dữ liệu từ form
-   */
-  const onSubmit = (data: Omit<User, "role">) => {
-    const adminData: User = { ...data, role: "user", active:true };
-    mutation.mutate(adminData);
+  const onSubmit = (data: UserForm) => {
+    const userData = {
+      ...data,
+      role: "user",      
+      active: true,     
+    };
+    mutation.mutate(userData);
   };
 
   return (
-    <div className="flex ">
-      {/* Left side - Image giống Login (bạn có thể thêm nếu muốn) */}
+    <div className="flex">
+      {/* Left side - Banner */}
       <div className="w-1/2 hidden md:block">
         <img
           src="./src/assets/bannerlogin.png"
@@ -60,9 +63,7 @@ const Register = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Tên */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">
-                Tên
-              </label>
+              <label className="text-sm font-medium text-gray-700 block">Tên</label>
               <div className="relative">
                 <input
                   {...register("name", {
@@ -75,18 +76,12 @@ const Register = () => {
                 />
                 <UserOutlined className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               </div>
-              {errors.name && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.name.message}
-                </p>
-              )}
+              {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
             </div>
 
             {/* Email */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">
-                Email
-              </label>
+              <label className="text-sm font-medium text-gray-700 block">Email</label>
               <div className="relative">
                 <input
                   {...register("email", {
@@ -102,26 +97,17 @@ const Register = () => {
                 />
                 <MailOutlined className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               </div>
-              {errors.email && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.email.message}
-                </p>
-              )}
+              {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
             </div>
 
-            {/* Password */}
+            {/* Mật khẩu */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 block">
-                Mật khẩu
-              </label>
+              <label className="text-sm font-medium text-gray-700 block">Mật khẩu</label>
               <div className="relative">
                 <input
                   {...register("password", {
                     required: "Mật khẩu không được để trống",
-                    minLength: {
-                      value: 6,
-                      message: "Mật khẩu phải trên 6 ký tự",
-                    },
+                    minLength: { value: 6, message: "Mật khẩu phải trên 6 ký tự" },
                   })}
                   type="password"
                   placeholder="Nhập mật khẩu"
@@ -129,11 +115,7 @@ const Register = () => {
                 />
                 <LockOutlined className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               </div>
-              {errors.password && (
-                <p className="text-sm text-red-600 mt-1">
-                  {errors.password.message}
-                </p>
-              )}
+              {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
             </div>
 
             {/* Submit */}

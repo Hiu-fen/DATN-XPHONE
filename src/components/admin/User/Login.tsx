@@ -16,7 +16,7 @@ const LoginAdmin = () => {
  
 const onSubmit = async (data: User) => {
   try {
-    const res = await axios.post("http://localhost:5000/api/user/login", {
+    const res = await axios.post("http://localhost:5000/api/users/login", {
       email: data.email,
       password: data.password,
     });

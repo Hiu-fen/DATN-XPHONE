@@ -23,7 +23,7 @@ const RegisterAdmin = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: RegisterForm) => {
-      await axios.post("http://localhost:5000/api/user/register", data);
+      await axios.post("http://localhost:5000/api/users/register", data);
     },
     onSuccess: () => {
       message.success("Đăng ký thành công!");

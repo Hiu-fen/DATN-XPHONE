@@ -1,6 +1,6 @@
+// components/client/User/Login.tsx
 import axios from "axios";
 import { message } from "antd";
-import bcrypt from "bcryptjs";
 import { Mail, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
@@ -16,30 +16,27 @@ const Login = () => {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      const res = await axios.get(`http://localhost:4000/users?email=${data.email}`);
-      const user = res.data[0];
-      if (!user) {
-        return message.error("Sai email hoặc mật khẩu");
-      }
+      // Gửi POST request tới server thật (MongoDB)
+      const res = await axios.post("http://localhost:5000/api/users/login", {
+        email: data.email,
+        password: data.password,
+      });
 
-      const isMatch = await bcrypt.compare(data.password, user.password);
-      if (!isMatch) {
-        return message.error("Sai email hoặc mật khẩu");
-      }
+      const user = res.data.user;
 
       if (user.active === false) {
         return message.error("Tài khoản đã bị tạm dừng");
       }
 
+      // Lưu vào localStorage
       localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", user.id); // Tuỳ bạn có thể dùng token thật
+      localStorage.setItem("token", res.data.token);
 
       message.success("Đăng nhập thành công");
-
-      // Điều hướng theo role
-      nav('/');
-    } catch (error) {
-      message.error("Đăng nhập thất bại");
+      nav("/"); // 👉 điều hướng về trang chính sau khi đăng nhập
+    } catch (error: any) {
+      const errMsg = error.response?.data?.message || "Đăng nhập thất bại";
+      message.error(errMsg);
     }
   };
 

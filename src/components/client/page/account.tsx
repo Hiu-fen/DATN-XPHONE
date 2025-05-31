@@ -9,26 +9,29 @@ const Account = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const localUser = localStorage.getItem('user')
-    if (!localUser) return
+ useEffect(() => {
+  const localUser = localStorage.getItem('user')
+  if (!localUser) return
 
-    const { email } = JSON.parse(localUser)
+  const { email } = JSON.parse(localUser)
 
-    axios.get(`http://localhost:4000/users?email=${email}`)
-      .then((res) => {
-        if (res.data.length > 0) {
-          setUser(res.data[0])
-          setOriginalUser(res.data[0])
-        } else {
-          alert("Không tìm thấy người dùng. Vui lòng đăng nhập lại.")
-          navigate('/login')
-        }
-      })
-      .catch((err) => {
-        console.error("Lỗi lấy thông tin người dùng:", err)
-      })
-  }, [navigate])
+  axios.get(`http://localhost:5000/api/users?email=${email}`)
+    .then((res) => {
+      const userData = res.data
+      if (userData) {
+        setUser(userData)
+        setOriginalUser(userData)
+      } else {
+        alert("Không tìm thấy người dùng. Vui lòng đăng nhập lại.")
+        navigate('/login')
+      }
+    })
+    .catch((err) => {
+      console.error("Lỗi lấy thông tin người dùng:", err)
+      alert("Lỗi kết nối server. Vui lòng thử lại sau.")
+      navigate('/login')
+    })
+}, [navigate])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -47,51 +50,40 @@ const Account = () => {
   }
 
   const handleSave = async () => {
-    if (!originalUser || !user) return
+  if (!originalUser || !user) return
 
-    const updatedFields: Partial<typeof user> = {}
-    for (const key in user) {
-      if (user[key] !== originalUser[key]) {
-        updatedFields[key] = user[key]
-      }
-    }
-
-    if (Object.keys(updatedFields).length === 0) {
-      alert("Không có thay đổi nào để lưu.")
-      return
-    }
-
-    try {
-
-      await axios.patch(`http://localhost:4000/users/${user.id}`, updatedFields)
-      alert("Cập nhật thành công!")
-      setIsEditing(false)
-      setOriginalUser(user) // cập nhật lại bản gốc
-
-      const updatedFields = {
-        name: user.name,
-        email: user.email,
-        sdt: user.sdt,
-        address: user.address,
-        gender: user.gender,
-        dob: user.dob,
-        avatar: user.avatar,
-      }
-
-      await axios.patch(`http://localhost:4000/users/${user.id}`, updatedFields)
-      alert("Cập nhật thành công!")
-      setIsEditing(false)
-
-      const localUser = JSON.parse(localStorage.getItem('user') || '{}')
-      localStorage.setItem('user', JSON.stringify({ ...localUser, ...updatedFields }))
-
-
-    } catch (error) {
-      console.error("Lỗi cập nhật:", error)
-      alert("Cập nhật thất bại.")
+  const updatedFields: Partial<typeof user> = {}
+  for (const key in user) {
+    if (user[key] !== originalUser[key]) {
+      updatedFields[key] = user[key]
     }
   }
 
+  if (Object.keys(updatedFields).length === 0) {
+    alert("Không có thay đổi nào để lưu.")
+    return
+  }
+
+  try {
+    await axios.patch(`http://localhost:5000/api/users/${user._id}`, updatedFields)
+    alert("Cập nhật thành công!")
+    setIsEditing(false)
+    setOriginalUser(user)
+
+    const localUser = JSON.parse(localStorage.getItem('user') || '{}')
+    localStorage.setItem('user', JSON.stringify({ ...localUser, ...updatedFields }))
+
+  } catch (error) {
+    console.error("Lỗi cập nhật:", error)
+    alert("Cập nhật thất bại.")
+  }
+}
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    navigate('/login')
+  }
 
   if (!user) {
     const localUser = localStorage.getItem('user')
@@ -108,38 +100,6 @@ const Account = () => {
     return <p className="p-10">Đang tải dữ liệu...</p>
   }
 
-  // ✅ Hàm ĐĂNG XUẤT
-  const handleLogout = () => {
-    localStorage.removeItem('token')  // Xóa token (nếu có)
-    localStorage.removeItem('user')   // Xóa thông tin user
-    navigate('/login')                // Chuyển hướng sang trang đăng nhập
-  }
-
-  // Nếu chưa đăng nhập
-  const localUser = localStorage.getItem('user')
-  if (!localUser) {
-    return (
-      <div className="p-10 text-center">
-        <p className="mb-4 text-red-600 font-semibold">Bạn chưa đăng nhập.</p>
-        <Link
-          to="/login"
-          className="text-blue-600 underline hover:text-blue-800"
-        >
-          Vui lòng đăng nhập tại đây
-        </Link>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="p-10 text-center">
-        <p className="text-gray-600">Đang tải dữ liệu người dùng...</p>
-      </div>
-    )
-  }
-
-
   return (
     <div className="flex font-sans text-gray-800 bg-gray-100 p-10">
       {/* Sidebar */}
@@ -149,7 +109,6 @@ const Account = () => {
           <span className="font-bold text-lg">{user.name}</span>
         </div>
 
-        {/* ✅ Nút Đăng xuất */}
         <button
           onClick={handleLogout}
           className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
