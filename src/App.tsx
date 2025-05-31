@@ -50,9 +50,12 @@ import Product from './components/client/page/product'
 
 import Categorys from './components/client/page/categorys'
 import Cart from './components/client/page/cart'
-import Account from './components/client/page/account'
+import Account from './components/client/page/account/account'
 import Details from './components/client/page/details'
 import ProductDetail from './components/admin/Product/Detail'
+import AccountSibaLayout from './components/AccountSibaLayout'
+import AccountSiba from './components/client/page/account/siba'
+import AddAccountAdmin from './components/client/page/account/add-admin'
 
 
 
@@ -71,7 +74,16 @@ const App = () => {
         { path: 'cart', element: <Cart /> },
         { path: 'detail', element: <Details /> },
         { path: 'categorys', element: <Categorys /> },
-        { path: 'account', element: <Account /> },
+        // { path: 'account',  element: <Account /> },
+        {
+          path: 'accounts',
+          element: <AccountSibaLayout />,
+          children: [
+            { index: true, element: <Account /> }, // ✅ Đây là mặc định
+            { path: 'account', element: <Account /> },
+            { path: 'addaccountadmin', element: <AddAccountAdmin /> }, // nếu có
+          ],
+        },
         { path: 'product', element: <Product /> },
 
       ]

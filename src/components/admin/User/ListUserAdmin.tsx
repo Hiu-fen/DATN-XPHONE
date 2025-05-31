@@ -12,13 +12,13 @@ const GetAdmin = () => {
   // ✅ Lấy danh sách admin từ MongoDB
   const { data: users, refetch } = useQuery({
     queryKey: ['admins'],
-    queryFn: async () => (await axios.get(`http://localhost:5000/api/user/admins`)).data,
+    queryFn: async () => (await axios.get(`http://localhost:5000/api/users/admins`)).data,
   });
 
   // ✅ Mutation để cập nhật trạng thái active
   const updateStatus = useMutation({
     mutationFn: async ({ user, status }: { user: any; status: boolean }) => {
-      return await axios.patch(`http://localhost:5000/api/user/${user._id}`, {
+      return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
         active: status,
       });
     },

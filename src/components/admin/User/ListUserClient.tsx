@@ -12,13 +12,13 @@ const GetClient = () => {
   // Lấy danh sách client (role: user)
   const { data: users, refetch } = useQuery({
     queryKey: ['clients'],
-    queryFn: async () => (await axios.get(`http://localhost:5000/api/user/clients`)).data,
+    queryFn: async () => (await axios.get(`http://localhost:5000/api/users/clients`)).data,
   });
 
   // Mutation để cập nhật trạng thái active
   const updateStatus = useMutation({
     mutationFn: async ({ user, status }: { user: User; status: boolean }) => {
-      return await axios.patch(`http://localhost:5000/api/user/${user._id}`, {
+      return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
         active: status,
       });
     },
