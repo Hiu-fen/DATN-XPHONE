@@ -15,3 +15,5 @@ export const deletePromotion = (id: string) => axios.delete(`${BASE_URL}/${id}`)
 
 export const getRandomCode = () => axios.get(`${BASE_URL}/random-code`);
 
+export const getAllCategory = () => axios.get('http://localhost:5000/api/category');
+ 

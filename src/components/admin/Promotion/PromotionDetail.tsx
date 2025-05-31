@@ -3,11 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Promotion } from "../../../interface/promotion";
 import { useQuery } from "@tanstack/react-query";
 import { getPromotionById } from "../../../api/promotionApi";
-
-// import icon copy
 import { FiCopy, FiCheck } from "react-icons/fi";
 import { message } from "antd";
-
 
 const DetailPromotion = () => {
   const params = useParams();
@@ -17,14 +14,14 @@ const DetailPromotion = () => {
   const { data: promotion, isLoading, isError, error } = useQuery<Promotion>({
     queryKey: ["promotions", params.id],
     queryFn: async () => {
-      const { data } = await getPromotionById(params.id as string);
+      const { data } = await getPromotionById(params.id as string)
       return data;
     },
     enabled: !!params.id,
-  });
+  })
 
   if (isLoading) {
-    return <p className="text-center mt-10">Đang tải dữ liệu...</p>;
+    return <p className="text-center mt-10">Đang tải dữ liệu...</p>
   }
 
   if (isError) {
@@ -32,24 +29,26 @@ const DetailPromotion = () => {
       <p className="text-center mt-10 text-red-600">
         Có lỗi xảy ra khi tải dữ liệu: {(error as Error).message}
       </p>
-    );
+    )
   }
 
   if (!promotion) {
-    return <p className="text-center mt-10">Không tìm thấy khuyến mãi.</p>;
+    return <p className="text-center mt-10">Không tìm thấy khuyến mãi.</p>
   }
 
+  // Hàm định dạng ngày tháng
   const formatDate = (dateInput: string | Date) => {
-    const date = new Date(dateInput);
-    return isNaN(date.getTime()) ? String(dateInput) : date.toLocaleDateString("vi-VN");
-  };
+    const date = new Date(dateInput)
+    return isNaN(date.getTime()) ? String(dateInput) : date.toLocaleDateString("vi-VN")
+  }
 
+  // Hàm sao chép mã khuyến mãi 
   const handleCopyCode = () => {
     if (promotion.code) {
-      navigator.clipboard.writeText(promotion.code);
-      setCopySuccess(true);
-      message.success("Đã sao chép mã khuyến mãi!");
-      setTimeout(() => setCopySuccess(false), 2000); // reset trạng thái sau 2s
+      navigator.clipboard.writeText(promotion.code)
+      setCopySuccess(true)
+      message.success("Đã sao chép mã khuyến mãi!")
+      setTimeout(() => setCopySuccess(false), 2000)
     }
   };
 
@@ -78,7 +77,6 @@ const DetailPromotion = () => {
           </button>
         </div>
 
-        {/* Các phần còn lại giữ nguyên */}
         <div>
           <p className="text-sm font-semibold">Loại giảm giá</p>
           <p className="text-lg">{promotion.discountType}</p>
@@ -86,12 +84,21 @@ const DetailPromotion = () => {
 
         <div>
           <p className="text-sm font-semibold">Sản phẩm áp dụng</p>
-          <p className="text-lg">{promotion.applicableProducts}</p>
+          <p className="text-lg">
+            {promotion.applicableCategories && promotion.applicableCategories.length > 0
+              ? promotion.applicableCategories[0].name
+              : "Không có sản phẩm áp dụng"}
+          </p>
         </div>
 
         <div>
           <p className="text-sm font-semibold">Điều kiện áp dụng</p>
           <p className="text-lg">{promotion.condition || "Không có"}</p>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold">Số lượng khuyến mãi</p>
+          <p className="text-lg">{promotion.quantity || "Không có"}</p>
         </div>
 
         <div>
