@@ -69,15 +69,7 @@ exports.listClients = async (req, res) => {
   }
 };
 
-exports.getProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi máy chủ' });
-  }
-};
+
 exports.updateUserStatus = async (req, res) => {
   try {
     const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -90,6 +82,36 @@ exports.updateUserStatus = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi cập nhật người dùng' });
   }
 
+};
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    const { name, email, password, avatar, sdt, address, notification } = req.body;
+
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) return res.status(400).json({ message: 'Email đã tồn tại' });
+      user.email = email;
+    }
+
+    if (name) user.name = name;
+    if (avatar) user.avatar = avatar;
+    if (sdt) user.sdt = sdt;
+    if (address) user.address = address;
+    if (notification) user.notification = notification;
+
+    if (password && password !== '') {
+      user.password = await bcrypt.hash(password, 10);
+    }
+
+    await user.save();
+    res.json({ message: "Cập nhật thành công", user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
 };
 
 
