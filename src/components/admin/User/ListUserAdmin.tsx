@@ -23,7 +23,7 @@ const GetAdmin = () => {
       });
     },
     onSuccess: (data, variables) => {
-      const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+      const currentUser = JSON.parse(localStorage.getItem("admin") || "null");
 
       if (
         variables.status === false &&
@@ -31,7 +31,8 @@ const GetAdmin = () => {
         currentUser._id === variables.user._id
       ) {
         message.error("Tài khoản của bạn đã bị tạm dừng");
-        localStorage.removeItem("user");
+        localStorage.removeItem("admin");
+        localStorage.removeItem("token"); // Nếu dùng token
         nav("/admin/login");
       }
 

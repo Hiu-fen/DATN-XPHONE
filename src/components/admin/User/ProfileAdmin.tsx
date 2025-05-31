@@ -8,7 +8,6 @@ import { User } from "../../../interface/user";
 
 const ProfileAdmin = () => {
   const nav = useNavigate();
-
   const {
     register,
     handleSubmit,
@@ -32,23 +31,25 @@ const ProfileAdmin = () => {
     if (!storedUser) return;
 
     const originalData: User = JSON.parse(storedUser);
-    if (!originalData?.id) return;
+    if (!originalData?._id) return;
+const updatedFields: Partial<User> = {};
+    // Chỉ cập nhật các trường đã thay đổi
+    Object.entries(form).forEach(([key, value]) => {
+      if (value !== originalData[key as keyof User]) {
+        updatedFields[key as keyof User] = value;
+      }
+    });
+    if (Object.keys(updatedFields).length === 0) {
+      message.warning("Không có thay đổi nào để cập nhật.");
+      return;
+    }
 
-    // Tạo đối tượng chứa chỉ các trường thay đổi
-    const updatedFields: Partial<Record<keyof User, string | number | boolean | undefined>> = {};
 
-(Object.keys(form) as (keyof User)[]).forEach((key) => {
-  const newValue = form[key];
-  const oldValue = originalData[key];
-  if (newValue !== oldValue) {
-    updatedFields[key] = newValue;
-  }
-});
 
     try {
-      const res = await axios.patch(`http://localhost:4000/users/${originalData.id}`, updatedFields);
-      localStorage.setItem("admin", JSON.stringify(res.data));
-      addNotification(`Nhắc nhở: \"${res.data.notification}\"`);
+      const res = await axios.put(`http://localhost:5000/api/user/profile/${originalData._id}`, updatedFields);
+      localStorage.setItem("admin", JSON.stringify(res.data.user));
+      addNotification(`Nhắc nhở: \"${res.data.user.notification || "Không có"}\"`);
       message.success("Cập nhật thành công!");
       nav("/admin/");
     } catch (error) {
@@ -60,7 +61,6 @@ const ProfileAdmin = () => {
   return (
     <div className="max-w-2xl mx-auto mt-10 p-8 bg-white rounded-xl shadow-md">
       <h2 className="text-2xl font-bold mb-6 text-center text-green-700">Thông tin cá nhân</h2>
-
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="flex flex-col items-center mb-6">
           <img
@@ -74,7 +74,7 @@ const ProfileAdmin = () => {
             {...register("avatar")}
           />
         </div>
-=
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block mb-1 font-medium">Tên</label>
