@@ -5,49 +5,47 @@ import React, { useState } from 'react';
 import { User } from '../../../interface/user';
 import { useNavigate } from 'react-router-dom';
 
-const GetClient= () => {
+const GetClient = () => {
   const nav = useNavigate();
   const [searchText, setSearchText] = useState('');
-  
 
-  // Lấy danh sách user
+  // Lấy danh sách client (role: user)
   const { data: users, refetch } = useQuery({
-    queryKey: ['users'],
-    queryFn: async () => (await axios.get(`http://localhost:4000/users`)).data,
+    queryKey: ['clients'],
+    queryFn: async () => (await axios.get(`http://localhost:5000/api/user/clients`)).data,
   });
 
   // Mutation để cập nhật trạng thái active
-const updateStatus = useMutation({
-  mutationFn: async ({ user, status }: { user: User; status: boolean }) => {
-    return await axios.patch(`http://localhost:4000/users/${user.id}`, {
-      active: status,
-    });
-  },
-  onSuccess: (data, variables) => {
-    const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+  const updateStatus = useMutation({
+    mutationFn: async ({ user, status }: { user: User; status: boolean }) => {
+      return await axios.patch(`http://localhost:5000/api/user/${user._id}`, {
+        active: status,
+      });
+    },
+    onSuccess: (data, variables) => {
+      const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
-    if (
-      variables.status === false &&
-      currentUser &&
-      currentUser.id === variables.user.id
-    ) {
-      message.error("Tài khoản của bạn đã bị tạm dừng");
-localStorage.removeItem("user");
-nav("/admin/login"); // 
-    }
+      if (
+        variables.status === false &&
+        currentUser &&
+        currentUser._id === variables.user._id
+      ) {
+        message.error("Tài khoản của bạn đã bị tạm dừng");
+        localStorage.removeItem("user");
+        nav("/admin/login");
+      }
 
-    message.success(
-      variables.status
-        ? 'Mở lại tài khoản thành công'
-        : 'Tạm dừng tài khoản thành công'
-    );
-    refetch();
-  },
-  onError: () => {
-    message.error('Có lỗi xảy ra khi cập nhật tài khoản');
-  },
-});
-
+      message.success(
+        variables.status
+          ? 'Mở lại tài khoản thành công'
+          : 'Tạm dừng tài khoản thành công'
+      );
+      refetch();
+    },
+    onError: () => {
+      message.error('Có lỗi xảy ra khi cập nhật tài khoản');
+    },
+  });
 
   const columns = [
     {
@@ -57,8 +55,8 @@ nav("/admin/login"); //
     },
     {
       title: 'Email',
-      key: 'email',
       dataIndex: 'email',
+      key: 'email',
     },
     {
       title: 'Ảnh đại diện',
@@ -69,9 +67,7 @@ nav("/admin/login"); //
           alt="Avatar"
           className="w-10 h-10 rounded-full"
         />
-
       )
-     
     },
     {
       title: 'Số điện thoại',
@@ -126,34 +122,34 @@ nav("/admin/login"); //
         ),
     },
   ];
-  const search = users
-  ?.filter((user: User) => user.role === 'user')
-  ?.filter((u: User) => {
-    const text = `${u.id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
+
+  // Tìm kiếm client
+  const filteredUsers = users?.filter((u: User) => {
+    const text = `${u._id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
+
   return (
     <div>
-      <h2 className="text-2xl font-bold ">Danh sách người dùng</h2>
-       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-         <Input.Search
-        placeholder=""
-        className="mb-4"
-         style={{ width: 300 }} 
-        onChange={(e) => setSearchText(e.target.value)}
-        allowClear
-      />
-       </div>
-      
+      <h2 className="text-2xl font-bold">Danh sách người dùng</h2>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Input.Search
+          placeholder="Tìm kiếm theo email, sdt, địa chỉ..."
+          className="mb-4"
+          style={{ width: 300 }}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+        />
+      </div>
+
       <Table
-        dataSource={search}
+        dataSource={filteredUsers}
         columns={columns}
-        rowKey="id"
+        rowKey="_id"
         pagination={{
-        pageSize: 10, 
-        showSizeChanger: false,
-        pageSizeOptions: ['5', '10', '20'],
-      }}
+          pageSize: 10,
+          showSizeChanger: false,
+        }}
       />
     </div>
   );

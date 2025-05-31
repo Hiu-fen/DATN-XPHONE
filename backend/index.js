@@ -10,7 +10,7 @@ const contactRoutes = require('./routes/contactRouter')
 const commentRoutes = require('./routes/commentRouter')
 
 const promotionRoutes = require('./routes/promotionRouter');
-
+const userRouter = require('./routes/userRouter');
 const app = express();
 const PORT = 5000;
 
@@ -40,6 +40,7 @@ app.use('/api/contacts', contactRoutes);
 
 app.use('/api/comments', commentRoutes);
 app.use('/api/promotions', promotionRoutes);
+app.use('/api/user', userRouter)
 
 // Chạy server
 app.listen(PORT, () => {

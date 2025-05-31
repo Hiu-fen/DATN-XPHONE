@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 
 const Account = () => {
   const [user, setUser] = useState<any>(null)
+  const [originalUser, setOriginalUser] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
@@ -18,6 +19,7 @@ const Account = () => {
       .then((res) => {
         if (res.data.length > 0) {
           setUser(res.data[0])
+          setOriginalUser(res.data[0])
         } else {
           alert("Không tìm thấy người dùng. Vui lòng đăng nhập lại.")
           navigate('/login')
@@ -45,7 +47,27 @@ const Account = () => {
   }
 
   const handleSave = async () => {
+    if (!originalUser || !user) return
+
+    const updatedFields: Partial<typeof user> = {}
+    for (const key in user) {
+      if (user[key] !== originalUser[key]) {
+        updatedFields[key] = user[key]
+      }
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+      alert("Không có thay đổi nào để lưu.")
+      return
+    }
+
     try {
+
+      await axios.patch(`http://localhost:4000/users/${user.id}`, updatedFields)
+      alert("Cập nhật thành công!")
+      setIsEditing(false)
+      setOriginalUser(user) // cập nhật lại bản gốc
+
       const updatedFields = {
         name: user.name,
         email: user.email,
@@ -63,10 +85,27 @@ const Account = () => {
       const localUser = JSON.parse(localStorage.getItem('user') || '{}')
       localStorage.setItem('user', JSON.stringify({ ...localUser, ...updatedFields }))
 
+
     } catch (error) {
       console.error("Lỗi cập nhật:", error)
       alert("Cập nhật thất bại.")
     }
+  }
+
+
+  if (!user) {
+    const localUser = localStorage.getItem('user')
+    if (!localUser) {
+      return (
+        <div className="p-10 text-center">
+          <p className="mb-4 text-red-600 font-semibold">Bạn chưa đăng nhập.</p>
+          <Link to="/login" className="text-blue-600 underline hover:text-blue-800">
+            Vui lòng đăng nhập tại đây
+          </Link>
+        </div>
+      )
+    }
+    return <p className="p-10">Đang tải dữ liệu...</p>
   }
 
   // ✅ Hàm ĐĂNG XUẤT
@@ -100,6 +139,7 @@ const Account = () => {
     )
   }
 
+
   return (
     <div className="flex font-sans text-gray-800 bg-gray-100 p-10">
       {/* Sidebar */}
@@ -120,7 +160,6 @@ const Account = () => {
 
       {/* Main Content */}
       <div className="flex-grow p-10 bg-white rounded-r-lg shadow-md relative flex flex-col md:flex-row items-start gap-10">
-        {/* Profile Info */}
         <div className="max-w-xl w-full">
           <h1 className="text-3xl font-bold mb-1">Hồ sơ của tôi</h1>
           <p className="text-gray-600 text-sm mb-8">Thông tin hồ sơ cá nhân</p>
@@ -168,14 +207,12 @@ const Account = () => {
             className="w-32 h-32 rounded-full object-cover border-4 border-[#ffcad4] shadow-xl mx-auto"
           />
           <p className="mt-2 text-gray-600 text-sm">Ảnh đại diện của bạn</p>
-
           <button
             onClick={() => fileInputRef.current?.click()}
             className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
           >
             Chọn ảnh
           </button>
-
           <input
             type="file"
             ref={fileInputRef}

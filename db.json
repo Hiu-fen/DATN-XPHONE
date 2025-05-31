@@ -415,66 +415,44 @@
   "users": [
     {
       "email": "Adminxphone@gmail.com",
-      "password": "$2a$10$YR1wE.DgG3zAPyVKZ8B3oOGzQ4KKaclL9YPwGTVb1gesXYmumOefK",
+      "password": "$2a$10$PVyo4x5j1MI7u1VtS1QlbOnZ7gENkjEtyShp5YEbRAQIGIcVDeJNK",
       "name": "AdminXphone1",
       "role": "admin",
+      "active": true,
       "id": 1,
-      "avatar": "https://img.lovepik.com/free-png/20211204/lovepik-cartoon-avatar-png-image_401302777_wh1200.png",
-      "sdt": "0123456789",
-      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội",
-      "notification": "Không có j"
-    },
-    {
-      "email": "kien1@gmail.com",
-      "password": "$2a$10$vKbecf2EsQJtpq/1tkkDDeBf5VCTTT9PckJlMa3jvgp3oqwK9vEgy",
-      "name": "Vũ Xuân Kiên",
-      "role": "user",
-      "id": 2,
-      "active": true
-    },
-    {
-      "email": "client@gmail.com",
-      "password": "$2a$10$.iUAr1YSzGOrbi/Yl6OctuWcwChj3v95nRYSBV9iZ9VlwJzhFzucC",
-      "name": "client",
-      "role": "user",
-      "active": true,
-      "id": 3,
-      "sdt": "0123456789",
-      "address": "Phường Tân Thịnh, thành phố Thái Nguyên, tỉnh Thái Nguyên."
-    },
-    {
-      "email": "test12@gmail.com",
-      "password": "$2a$10$sEa/YvRANrnY.USbGOb2OuoaAatGamUT3fosL66KCo6IDWKsZ7S42",
-      "name": "test",
-      "role": "user",
-      "active": true,
-      "id": 4
-    },
-    {
-      "email": "2@gmail.com",
-      "password": "$2a$10$3hlfWcbmM4iNLezr1PE.ieU5WBm14D51OeFxxdR49U.vylVykkz.u",
-      "name": "test2",
-      "role": "admin",
-      "id": 10,
-      "avatar": "",
-      "sdt": "",
-      "address": "aaa",
+      "avatar": "https://tse4.mm.bing.net/th?id=OIP.-Q0xswb54svfYXoOLrsY2wHaE7&pid=Api&P=0&h=180",
+      "sdt": "0987654321",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nộiiii",
       "notification": ""
     },
     {
-      "email": "3@gmail.com",
-      "password": "$2a$10$52HP7SDpclbAsDnpYg5uaOn.GENweM8H.bxddiiMdDvhCXWLki6/K",
-      "name": "hieu",
-      "role": "admin",
-      "id": 11
+      "email": "client@gmail.com",
+      "password": "$2a$10$zL8hS1TJ9JTQBMHY9JxN0uClyot0gqDaaJszKgZ2vCEzrQmg2g4Om",
+      "name": "client",
+      "role": "user",
+      "active": true,
+      "id": 2,
+      "sdt": "0123456789",
+      "address": "Số 6, Đại lộ Hòa Bình, Phường An Cư, Quận Ninh Kiều, Thành Phố Cần Thơ.",
+      "avatar": "blob:http://localhost:5173/1ba928e6-f8b4-4ceb-ac6b-4e5750a8eb3e"
     },
     {
-      "email": "4@gmail.com",
-      "password": "$2a$10$l4.AmpzlTLsOz0yyOOHbyOLLs4DG5J0j8Sa1c7RzjgZXc43Ej3Tly",
-      "name": "Dương",
+      "email": "1@gmail.com",
+      "password": "$2a$10$ssaFsghUS4Sicd/DmHc3m.fyuot4VK1N3FohnYcmmWzaLdUMLD7E2",
+      "name": "123",
       "role": "admin",
       "active": true,
-      "id": 12
+      "id": 3
+    },
+    {
+      "email": "test12@gmail.com",
+      "password": "$2a$10$rvwY533K9tSaD5GHTbRzZuJXCRE3qmGHcFX5Jry2WXNsSfBhtJLfK",
+      "name": "testne",
+      "role": "user",
+      "active": true,
+      "id": 4,
+      "avatar": "blob:http://localhost:5173/69a7e915-980f-4d47-8f0b-c73c0ff3f954",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội"
     }
   ],
   "promotions": [
