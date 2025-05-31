@@ -1,7 +1,5 @@
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { IContact } from '../../../interface/contact';
-
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { message } from 'antd';
@@ -12,7 +10,7 @@ const Contact = () => {
 
     const mutation = useMutation({
         mutationFn: async (data: IContact) => {
-            const res = await axios.post('http://localhost:4000/contacts', data)
+            const res = await axios.post('http://localhost:5000/api/contacts', data)
             console.log(data);
             return res.data;
         },
@@ -52,7 +50,7 @@ const Contact = () => {
           </p>
           <p className="mb-1"><span className="font-semibold">Địa chỉ:</span> Trịnh Văn Bô</p>
           <p className="mb-1"><span className="font-semibold">Hotline:</span> gọi cho hiếu</p>
-          <p className="mb-1"><span className="font-semibold">Email:</span> hieukongu@gmail.com</p>
+          <p className="mb-1"><span className="font-semibold">Email:</span> trinhthiduong@gmail.com</p>
         </div>
 
         <div className="bg-gray-100 rounded shadow p-6">

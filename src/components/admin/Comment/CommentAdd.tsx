@@ -11,12 +11,10 @@ const CommentAdd = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<IComment>();
   const [products, setProduct] = useState<IProduct[]>([]);
   const nav = useNavigate();
-  const { productIdParam } = useParams(); 
-
   
   useEffect(() =>{
     const fetchProduct = async () =>{
-      const { data } = await axios.get(`http://localhost:4000/products`)
+      const { data } = await axios.get(`http://localhost:5000/api/products`)
       setProduct(data)
     };
     fetchProduct();
@@ -25,7 +23,7 @@ const CommentAdd = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: IComment) => {
-      const response = await axios.post('http://localhost:4000/comments', data);
+      const response = await axios.post('http://localhost:5000/api/comments', data);
       return response.data;
     },
     onSuccess: () => {
@@ -48,7 +46,7 @@ const CommentAdd = () => {
 
   try {
     // Gửi bình luận với trường date
-    await axios.post('http://localhost:4000/comments', newComment);
+    await axios.post('http://localhost:5000/api/comments', newComment);
     message.success("Thêm bình luận thành công");
     nav(`/admin/comment/list`);  
   } catch (error) {
@@ -92,7 +90,7 @@ const CommentAdd = () => {
           >
             <option value="">-- Chọn sản phẩm --</option>
             {products?.map((product: IProduct) => (
-              <option key={product.id} value={product.id}>
+              <option key={product._id} value={product._id}>
                 {product.name}
               </option>
             ))}

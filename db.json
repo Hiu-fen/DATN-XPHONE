@@ -54,6 +54,42 @@
       "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
       "mota": "Điện thoại mới nhất ",
       "id": 9
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "1235656",
+      "id": 10
+    },
+    {
+      "name": "duong",
+      "image": "https://picsum.photos/200",
+      "mota": "SamSung  đây",
+      "id": 11
+    },
+    {
+      "name": "admin",
+      "image": "https://picsum.photos/200",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "id": 12
+    },
+    {
+      "name": "duong",
+      "image": "https://picsum.photos/200",
+      "mota": "SamSung  đây",
+      "id": 13
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "id": 14
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "123444444",
+      "id": 15
     }
   ],
   "products": [
@@ -207,7 +243,7 @@
       "phone": "0987654321",
       "address": "40 Xuân Thủy, Hà Nội",
       "date": "2025-05-14T10:30:00Z",
-      "status": "Đã giao",
+      "status": "Đang xử lý",
       "isPaid": false,
       "items": [
         {
@@ -272,7 +308,7 @@
       "status": false,
       "date": "08/05/2025",
       "id": 1,
-      "likes": 23
+      "likes": 24
     },
     {
       "user": "amthucv1",
@@ -282,6 +318,14 @@
       "likes": 27,
       "id": 2,
       "status": false
+    },
+    {
+      "user": "duong2906",
+      "content": "123123123ssfadsfd",
+      "sanpham": "8",
+      "date": "2025-05-27T07:32:08.551Z",
+      "likes": 0,
+      "id": 3
     }
   ],
   "carts": [],
@@ -311,7 +355,7 @@
       "email": "letung251205@gmail.com",
       "phone": "1234567",
       "message": "ưet",
-      "status": false,
+      "status": true,
       "date": "13/05/2025",
       "id": 1
     },
@@ -320,7 +364,7 @@
       "email": "letung251205@gmail.com",
       "phone": "1234567",
       "message": "qt",
-      "status": false,
+      "status": true,
       "date": "13/05/2025",
       "id": 2
     },
@@ -347,9 +391,25 @@
       "email": "trinhvanduong2005tq@gmail.com",
       "phone": "0343452076",
       "message": "12312312",
-      "status": false,
+      "status": true,
       "date": "22/05/2025",
       "id": 5
+    },
+    {
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "dfgh",
+      "status": false,
+      "id": 6
+    },
+    {
+      "name": "Trịnh Mạnh Dương tét",
+      "email": "trinhvanduong2005tq@gmail.com",
+      "phone": "0343452076",
+      "message": "12312312",
+      "status": false,
+      "date": "",
+      "id": 7
     }
   ],
   "users": [
@@ -393,17 +453,6 @@
       "id": 4,
       "avatar": "blob:http://localhost:5173/69a7e915-980f-4d47-8f0b-c73c0ff3f954",
       "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội"
-    },
-    {
-      "email": "kiente123@gmail.com",
-      "password": "$2a$10$futF.jP3qHPmH6l66obzXOPoHroFtxkXwDAb8eOSNEyXBeeToO8tC",
-      "name": "kiên te nè hihi",
-      "role": "user",
-      "active": true,
-      "id": 5,
-      "avatar": "blob:http://localhost:5173/37a96057-54c3-41e1-ae20-1aef9c073031",
-      "address": "Số 290 đường Lạc Long Quân, phường Bưởi, quận Tây Hồ, thành phố Hà Nội",
-      "sdt": "0987654321"
     }
   ],
   "promotions": [

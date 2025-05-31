@@ -83,7 +83,7 @@ const GetListAlbum = () => {
     mutationUpdateImage.mutate(formData);
   };
   const search = data?.filter((c: Ialbums) => {
-    const Text = `${c.id} ${c.name}  `.toLowerCase();
+    const Text = `${c._id} ${c.name}  `.toLowerCase();
     return Text.includes(searchText.toLowerCase());
   });
 

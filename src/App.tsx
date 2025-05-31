@@ -8,11 +8,13 @@ import Register from './components/client/Register'
 import Login from './components/client/Login'
 
 import CommentAdd from './components/admin/Comment/CommentAdd'
+import CommentAdmin from './components/admin/Comment/CommentList'
+
 import GetListCategory from './components/admin/Category/GetListCategory'
 import PostAddCategory from './components/admin/Category/PostAddCategory'
 import PutEditCategory from './components/admin/Category/PutEditCategory'
 import PostAdd from './components/admin/Product/PostAdd'
-import CommentAdmin from './components/admin/Comment/CommentList'
+
 
 
 import GetPromotion from './components/admin/Promotion/PromotionList'
@@ -44,11 +46,13 @@ import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank'
 import About from './components/client/page/about'
 import Home from './components/client/page/home'
 import Contact from './components/client/page/contact'
+import Product from './components/client/page/product'
 
 import Categorys from './components/client/page/categorys'
 import Cart from './components/client/page/cart'
 import Account from './components/client/page/account'
 import Details from './components/client/page/details'
+import ProductDetail from './components/admin/Product/Detail'
 
 
 
@@ -68,7 +72,7 @@ const App = () => {
         { path: 'detail', element: <Details /> },
         { path: 'categorys', element: <Categorys /> },
         { path: 'account', element: <Account /> },
-
+        { path: 'product', element: <Product /> },
 
       ]
     },
@@ -96,6 +100,7 @@ const App = () => {
         //Router Sản phẩm
         { path: 'phone/list', element: <GetList /> },
         { path: 'phone/add', element: <PostAdd /> },
+        { path: 'phone/:id', element: <ProductDetail /> },
         { path: 'phone/:id/edit', element: <PutEdit /> },
 
         //Router Đăng ký, Đăng nhập

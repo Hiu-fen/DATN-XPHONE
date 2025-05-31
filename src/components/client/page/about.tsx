@@ -20,7 +20,7 @@ const About = () => {
       <p className="text-gray-700">
         Địa chỉ: Trịnh Văn Bô <br />
         Hotline: <span className="text-red-600 font-semibold">Hãy alo cho hiếu</span><br />
-        Email: <a href="mailto:info@xphone.vn" className="text-blue-600 underline">hieungu@gmail.com</a>
+        Email: <a href="mailto:info@xphone.vn" className="text-blue-600 underline">trinhthiduong@gmail.com</a>
       </p>
     </div>
   )

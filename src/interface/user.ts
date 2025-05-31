@@ -1,5 +1,5 @@
 export interface User {
-  id?: number;
+  _id: string;
   name: string;
   email: string;
   password: string;
@@ -7,6 +7,7 @@ export interface User {
   address?: string;
   avatar?: string;
   active: boolean;
+  dob?: string;
   role: 'admin' | 'user';
   notification?: string;
 }
