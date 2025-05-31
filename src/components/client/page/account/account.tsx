@@ -19,11 +19,11 @@ const Account = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const localUser = localStorage.getItem('user')
-    if (!localUser) return
+ useEffect(() => {
+  const localUser = localStorage.getItem('user')
+  if (!localUser) return
 
-    const { email } = JSON.parse(localUser)
+  const { email } = JSON.parse(localUser)
 
     axios.get(`http://localhost:5000/api/users?email=${email}`)
       .then((res) => {
@@ -60,19 +60,19 @@ const Account = () => {
   }
 
   const handleSave = async () => {
-    if (!originalUser || !user) return
+  if (!originalUser || !user) return
 
-    const updatedFields: Partial<typeof user> = {}
-    for (const key in user) {
-      if (user[key] !== originalUser[key]) {
-        updatedFields[key] = user[key]
-      }
+  const updatedFields: Partial<typeof user> = {}
+  for (const key in user) {
+    if (user[key] !== originalUser[key]) {
+      updatedFields[key] = user[key]
     }
+  }
 
-    if (Object.keys(updatedFields).length === 0) {
-      alert("Không có thay đổi nào để lưu.")
-      return
-    }
+  if (Object.keys(updatedFields).length === 0) {
+    alert("Không có thay đổi nào để lưu.")
+    return
+  }
 
     try {
       await axios.patch(`http://localhost:5000/api/users/${user._id}`, updatedFields)
