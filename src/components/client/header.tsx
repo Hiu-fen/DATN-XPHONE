@@ -75,7 +75,7 @@ const ClientHeader = () => {
                 <Link to="/cart" className="hover:text-red-500 flex items-center gap-2">
                   <FaShoppingCart /> Giỏ hàng
                 </Link>
-                <Link to="/account" className="hover:text-red-500 flex items-center gap-2">
+                <Link to="/accounts" className="hover:text-red-500 flex items-center gap-2">
                   <FaUser /> Tài khoản
                 </Link>
               </div>
