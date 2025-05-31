@@ -3,8 +3,9 @@ import { Promotion } from "../../../interface/promotion"
 import { useNavigate, useParams } from "react-router-dom"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { message } from "antd"
-import { getPromotionById, getRandomCode, updatePromotion } from "../../../api/promotionApi"
+import { getAllCategory, getPromotionById, getRandomCode, updatePromotion } from "../../../api/promotionApi"
 import { useState } from "react"
+import { ICategory } from "../../../interface/category"
 
 const PutEditPromotion = () => {
   const {
@@ -27,17 +28,22 @@ const PutEditPromotion = () => {
     queryKey: ['promotions', params.id],
     queryFn: async () => {
       try {
-        const {data:promotion} = await getPromotionById(params.id as string)
+        if (!params.id) return;
+        const { data: promotion } = await getPromotionById(params.id);
         // Format lại ngày tháng
         const formattedPromotion = {
           ...promotion,
           startDate: promotion.startDate ? new Date(promotion.startDate).toISOString().slice(0, 10) : "",
           endDate: promotion.endDate ? new Date(promotion.endDate).toISOString().slice(0, 10) : "",
-        }
+          applicableCategories: promotion.applicableCategories && promotion.applicableCategories.length > 0
+            ? promotion.applicableCategories[0]._id
+            : ""  
+        };
 
-        reset(formattedPromotion)
-        setCode(promotion.code)
-        setValue('status', promotion.status)
+        reset(formattedPromotion);
+        setCode(promotion.code);
+        setValue('status', promotion.status);
+
         return promotion
       } catch (error) {
         console.log(error);
@@ -68,7 +74,7 @@ const PutEditPromotion = () => {
   const onSubmit = (data: Promotion) => {
     mutation.mutate({
       ...data,
-      code // dùng mã từ state thay vì từ register
+      code,
     });
   }
 
@@ -82,6 +88,12 @@ const PutEditPromotion = () => {
       message.error("Không thể tạo mã khuyến mãi")
     }
   }
+
+  // Lấy danh sách danh mục (nếu cần)
+  const { data: categories } = useQuery({
+    queryKey: ['category'],
+    queryFn: getAllCategory,
+  });
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
@@ -135,9 +147,9 @@ const PutEditPromotion = () => {
             )}
           >
                 <option value="">-- Chọn loại giảm giá --</option>
-                <option value="freeShip">Miễn phí ship</option>
-                <option value="sale20%">Giảm giá 20%</option>
-                <option value="sale50k">Giảm giá 50k</option>
+                <option value="free_ship">Miễn phí ship</option>
+                <option value="giam_10%">Khuyến mãi 10%</option>
+                <option value="giam_50k">Khuyến mãi 50k</option>
           </select>
           <span className="text-red-500">{errors.discountType?.message}</span>
         </div>
@@ -147,15 +159,16 @@ const PutEditPromotion = () => {
           <label className="block text-sm font-medium text-gray-700 mb-1">Sản phẩm áp dụng</label>
           <select
             className="w-full px-4 py-2 border border-gray-300 rounded-md"
-            {...register("applicableProducts", 
-              { required: "Sản phẩm áp dụng không được để trống" }
-            )}
+            {...register("applicableCategories", { required: "Sản phẩm áp dụng không được để trống" })}
           >
-                <option value="">-- Chọn sản phẩm --</option>
-                <option value="Iphone">IPhone</option>
-                <option value="SamSung">SamSung</option>
+            <option value=''>-- Chọn sản phẩm --</option>
+            {categories?.data.map((category: ICategory) => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))}
           </select>
-          <span className="text-red-500">{errors.applicableProducts?.message}</span>
+          <span className="text-red-500">{errors.applicableCategories ?.message}</span>
         </div>
 
         {/* Điều kiện áp dụng */}
@@ -167,6 +180,23 @@ const PutEditPromotion = () => {
             className="w-full px-4 py-2 border border-gray-300 rounded-md"
             {...register("condition")}
           />
+        </div>
+
+        {/* Số lượng khuyến mãi */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Số lượng khuyến mãi</label>
+          <input
+            type="number"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md"
+            {...register("quantity",{
+              required: "Số lượng khuyến mãi không được để trống",
+              min: {
+                value: 1,
+                message: "Số lượng phải lớn hơn 0"
+              }
+            })}
+          />
+          <span className="text-red-500">{errors.quantity?.message}</span>
         </div>
         
         {/* Ngày bắt đầu và ngày kết thúc */}
@@ -200,7 +230,6 @@ const PutEditPromotion = () => {
             <span className="text-red-500">{errors.endDate?.message}</span>
           </div>
         </div>
-
 
         {/* Mô tả khuyến mãi */}
         <div>
@@ -238,7 +267,6 @@ const PutEditPromotion = () => {
       </form>
     </div>
   )
-
 }
 
 export default PutEditPromotion
