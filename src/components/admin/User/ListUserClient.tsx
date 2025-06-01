@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Input, message, Popconfirm, Table, Tag } from 'antd';
+import { Button, Input, message, Popconfirm, Table, Tag, Switch } from 'antd';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { User } from '../../../interface/user';
@@ -12,10 +12,11 @@ const GetClient = () => {
   // Lấy danh sách client (role: user)
   const { data: users, refetch } = useQuery({
     queryKey: ['clients'],
-    queryFn: async () => (await axios.get(`http://localhost:5000/api/users/clients`)).data,
+    queryFn: async () =>
+      (await axios.get(`http://localhost:5000/api/users/clients`)).data,
   });
 
-  // Mutation để cập nhật trạng thái active
+  // Mutation cập nhật trạng thái active (tạm dừng / mở lại)
   const updateStatus = useMutation({
     mutationFn: async ({ user, status }: { user: User; status: boolean }) => {
       return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
@@ -23,16 +24,16 @@ const GetClient = () => {
       });
     },
     onSuccess: (data, variables) => {
-      const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+      const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
 
       if (
         variables.status === false &&
         currentUser &&
         currentUser._id === variables.user._id
       ) {
-        message.error("Tài khoản của bạn đã bị tạm dừng");
-        localStorage.removeItem("user");
-        nav("/admin/login");
+        message.error('Tài khoản của bạn đã bị tạm dừng');
+        localStorage.removeItem('user');
+        nav('/admin/login');
       }
 
       message.success(
@@ -44,6 +45,22 @@ const GetClient = () => {
     },
     onError: () => {
       message.error('Có lỗi xảy ra khi cập nhật tài khoản');
+    },
+  });
+
+  // ✅ Mutation cập nhật vai trò (role)
+  const updateRole = useMutation({
+    mutationFn: async ({ user, role }: { user: User; role: string }) => {
+      return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
+        role,
+      });
+    },
+    onSuccess: () => {
+      message.success('Cập nhật vai trò thành công');
+      refetch();
+    },
+    onError: () => {
+      message.error('Lỗi khi cập nhật vai trò');
     },
   });
 
@@ -67,7 +84,7 @@ const GetClient = () => {
           alt="Avatar"
           className="w-10 h-10 rounded-full"
         />
-      )
+      ),
     },
     {
       title: 'Số điện thoại',
@@ -97,6 +114,27 @@ const GetClient = () => {
           <Tag color="red">Bị tạm dừng</Tag>
         ),
     },
+    // ✅ Cột Tài khoản (role)
+   {
+  title: 'Tài khoản',
+  key: 'role',
+  render: (_: any, record: User) => (
+    <Switch
+      checked={record.role === 'admin'}
+      onChange={(checked) =>
+        updateRole.mutate({
+          user: record,
+          role: checked ? 'admin' : 'user',
+        })
+      }
+      checkedChildren={<span style={{ color: '#fff' }}>Admin</span>}
+      unCheckedChildren="User"
+      style={{
+        backgroundColor: record.role === 'admin' ? '#52c41a' : undefined,
+      }}
+    />
+  ),
+},
     {
       title: 'Hành động',
       key: 'action',
@@ -104,7 +142,9 @@ const GetClient = () => {
         record.active !== false ? (
           <Popconfirm
             title="Bạn có chắc muốn tạm dừng tài khoản này không?"
-            onConfirm={() => updateStatus.mutate({ user: record, status: false })}
+            onConfirm={() =>
+              updateStatus.mutate({ user: record, status: false })
+            }
             okText="Có"
             cancelText="Không"
           >
@@ -113,17 +153,20 @@ const GetClient = () => {
         ) : (
           <Popconfirm
             title="Bạn có chắc muốn mở lại tài khoản này không?"
-            onConfirm={() => updateStatus.mutate({ user: record, status: true })}
+            onConfirm={() =>
+              updateStatus.mutate({ user: record, status: true })
+            }
             okText="Mở lại"
             cancelText="Hủy"
           >
-            <Button type="primary" ghost>Mở lại</Button>
+            <Button type="primary" ghost>
+              Mở lại
+            </Button>
           </Popconfirm>
         ),
     },
   ];
 
-  // Tìm kiếm client
   const filteredUsers = users?.filter((u: User) => {
     const text = `${u._id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
