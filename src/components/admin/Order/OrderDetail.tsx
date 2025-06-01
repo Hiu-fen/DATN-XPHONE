@@ -13,7 +13,7 @@ import {
   Button,
 } from "antd";
 
-  const { Title } = Typography;
+const { Title } = Typography;
 
 const OrderDetail = () => {
   const { id } = useParams();
@@ -120,4 +120,4 @@ const OrderDetail = () => {
   );
 };
 
-  export default OrderDetail;
+export default OrderDetail;
