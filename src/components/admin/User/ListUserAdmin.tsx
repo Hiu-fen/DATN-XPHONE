@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Input, message, Popconfirm, Table, Tag } from 'antd';
+import { Button, Input, message, Popconfirm, Switch, Table, Tag } from 'antd';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { User } from '../../../interface/user';
@@ -15,7 +15,9 @@ const GetAdmin = () => {
     queryFn: async () => (await axios.get(`http://localhost:5000/api/users/admins`)).data,
   });
 
-  // ✅ Mutation để cập nhật trạng thái active
+  const currentUser = JSON.parse(localStorage.getItem("admin") || "null");
+
+  // ✅ Mutation cập nhật trạng thái active
   const updateStatus = useMutation({
     mutationFn: async ({ user, status }: { user: any; status: boolean }) => {
       return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
@@ -23,8 +25,6 @@ const GetAdmin = () => {
       });
     },
     onSuccess: (data, variables) => {
-      const currentUser = JSON.parse(localStorage.getItem("admin") || "null");
-
       if (
         variables.status === false &&
         currentUser &&
@@ -32,7 +32,7 @@ const GetAdmin = () => {
       ) {
         message.error("Tài khoản của bạn đã bị tạm dừng");
         localStorage.removeItem("admin");
-        localStorage.removeItem("token"); // Nếu dùng token
+        localStorage.removeItem("token");
         nav("/admin/login");
       }
 
@@ -40,6 +40,26 @@ const GetAdmin = () => {
         variables.status
           ? 'Mở lại tài khoản thành công'
           : 'Tạm dừng tài khoản thành công'
+      );
+      refetch();
+    },
+    onError: () => {
+      message.error('Có lỗi xảy ra khi cập nhật tài khoản');
+    },
+  });
+
+  // ✅ Mutation cập nhật role (admin <=> user)
+  const updateRole = useMutation({
+    mutationFn: async ({ user, role }: { user: User; role: string }) => {
+      return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
+        role,
+      });
+    },
+    onSuccess: (_, variables) => {
+      message.success(
+        variables.role === 'admin'
+          ? 'Đã chuyển thành Admin'
+          : 'Đã chuyển thành User'
       );
       refetch();
     },
@@ -89,6 +109,24 @@ const GetAdmin = () => {
       render: (_: any, record: User) => record.address || 'Chưa có',
     },
     {
+      title: 'Tài khoản',
+      key: 'role',
+      render: (_: any, record: User) => (
+        <Switch
+          checked={record.role === 'admin'}
+          checkedChildren="Admin"
+          unCheckedChildren="User"
+          onChange={(checked) =>
+            updateRole.mutate({
+              user: record,
+              role: checked ? 'admin' : 'user',
+            })
+          }
+          disabled={record._id === currentUser?._id}
+        />
+      ),
+    },
+    {
       title: 'Trạng thái',
       key: 'active',
       render: (_: any, record: User) =>
@@ -102,10 +140,12 @@ const GetAdmin = () => {
       title: 'Hành động',
       key: 'action',
       render: (_: any, record: User) =>
-        record.active !== false ? (
+        record._id === currentUser?._id ? null : record.active !== false ? (
           <Popconfirm
             title="Bạn có chắc muốn tạm dừng tài khoản này không?"
-            onConfirm={() => updateStatus.mutate({ user: record, status: false })}
+            onConfirm={() =>
+              updateStatus.mutate({ user: record, status: false })
+            }
             okText="Có"
             cancelText="Không"
           >
@@ -114,17 +154,21 @@ const GetAdmin = () => {
         ) : (
           <Popconfirm
             title="Bạn có chắc muốn mở lại tài khoản này không?"
-            onConfirm={() => updateStatus.mutate({ user: record, status: true })}
+            onConfirm={() =>
+              updateStatus.mutate({ user: record, status: true })
+            }
             okText="Mở lại"
             cancelText="Hủy"
           >
-            <Button type="primary" ghost>Mở lại</Button>
+            <Button type="primary" ghost>
+              Mở lại
+            </Button>
           </Popconfirm>
         ),
     },
   ];
 
-  const search = users
+  const filteredUsers = users
     ?.filter((user: User) => user.role === 'admin')
     ?.filter((u: User) => {
       const text = `${u._id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
@@ -133,7 +177,7 @@ const GetAdmin = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold">Danh sách người dùng</h2>
+      <h2 className="text-2xl font-bold">Danh sách quản trị viên</h2>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Input.Search
           placeholder="Tìm kiếm theo email, địa chỉ, số điện thoại..."
@@ -144,13 +188,12 @@ const GetAdmin = () => {
         />
       </div>
       <Table
-        dataSource={search}
+        dataSource={filteredUsers}
         columns={columns}
         rowKey="_id"
         pagination={{
           pageSize: 10,
           showSizeChanger: false,
-          pageSizeOptions: ['5', '10', '20'],
         }}
       />
     </div>
