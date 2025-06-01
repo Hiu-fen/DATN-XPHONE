@@ -9,6 +9,9 @@ const categoryRoutes = require('./routes/categoryRouter');
 const contactRoutes = require('./routes/contactRouter')
 const commentRoutes = require('./routes/commentRouter')
 
+const orderRoutes = require('./routes/orderRouter');
+
+
 const promotionRoutes = require('./routes/promotionRouter');
 
 const bannerRouter = require('./routes/bannerRouter');
@@ -41,6 +44,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // Mount router
 app.use('/api/category', categoryRoutes);
 app.use('/api/products', productRoutes);
+
 app.use('/api/contacts', contactRoutes);
 
 app.use('/api/comments', commentRoutes);
@@ -49,6 +53,9 @@ app.use('/api/promotions', promotionRoutes);
 app.use('/api/banners', bannerRouter);
 
 app.use('/api/users', userRouter);
+
+// Order
+app.use('/api/orders', orderRoutes);
 
 
 // Chạy server

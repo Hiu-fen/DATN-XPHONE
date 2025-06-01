@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import axios from 'axios';
-import { Table, Select, message, Tag, Input } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { Table, Select, message, Tag, Input } from "antd";
+import { useNavigate } from "react-router-dom";
 
 interface OrderItem {
-  productId: number;
+  productId: string;
   productName: string;
   quantity: number;
   price: number;
 }
 
 interface Order {
-  id: number;
+  _id: string;
   orderCode: string;
   customerName: string;
   phone: string;
@@ -21,88 +21,126 @@ interface Order {
   status: string;
   items: OrderItem[];
   total: number;
-  isPaid: boolean; // Thêm trường isPaid
+  isPaid: boolean;
 }
+
+// Thứ tự trạng thái đúng theo luồng xử lý
+const statusOptions = [
+  "Chờ xác nhận",
+  "Đang xử lý",
+  "Đã giao",
+  "Hoàn thành",
+  "Đã huỷ"
+];
 
 const OrderList = () => {
   const navigate = useNavigate();
-  
-    const [searchText, setSearchText] = useState('');
-  
+  const [searchText, setSearchText] = useState("");
 
-  const { data: orders, refetch, isLoading } = useQuery<Order[]>({
-    queryKey: ['orders'],
+  const {
+    data: orders,
+    refetch,
+    isLoading,
+  } = useQuery<Order[]>({
+    queryKey: ["orders"],
     queryFn: async () => {
-      const res = await axios.get('http://localhost:4000/orders');
+      const res = await axios.get("http://localhost:5000/api/orders");
       return res.data;
-    }
+    },
   });
 
   const mutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      await axios.patch(`http://localhost:4000/orders/${id}`, { status });
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await axios.patch(`http://localhost:5000/api/orders/${id}`, { status });
     },
     onSuccess: () => {
-      message.success('Cập nhật trạng thái thành công');
+      message.success("Cập nhật trạng thái thành công");
       refetch();
-    }
+    },
+    onError: () => {
+      message.error("Lỗi khi cập nhật trạng thái");
+    },
   });
 
-  const handleStatusChange = (id: number, status: string) => {
-    mutation.mutate({ id, status });
+  const handleStatusChange = (
+    id: string,
+    currentStatus: string,
+    newStatus: string
+  ) => {
+    const currentIndex = statusOptions.indexOf(currentStatus);
+    const newIndex = statusOptions.indexOf(newStatus);
+
+    if (newStatus === "Đã huỷ") {
+      mutation.mutate({ id, status: newStatus });
+      return;
+    }
+
+    if (newIndex <= currentIndex) {
+      message.warning("Không thể quay lại trạng thái trước!");
+      return;
+    }
+
+    if (newIndex === -1) {
+      message.error("Trạng thái không hợp lệ");
+      return;
+    }
+
+    mutation.mutate({ id, status: newStatus });
   };
-  const search = orders?.filter((o: Order) => {
-    const Text = `${o.orderCode} ${o.customerName} ${o.items} ${o.total}`.toLowerCase();
-    return Text.includes(searchText.toLowerCase());
+
+  const filteredOrders = orders?.filter((o) => {
+    const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+    return text.includes(searchText.toLowerCase());
   });
 
   const columns = [
     {
-      title: 'Mã đơn hàng',
-      dataIndex: 'orderCode',
-      key: 'orderCode',
+      title: "Mã đơn hàng",
+      dataIndex: "orderCode",
+      key: "orderCode",
       render: (_: any, record: Order) => (
         <a
-          style={{ cursor: 'pointer', color: '#1890ff' }}
-          onClick={() => navigate(`/admin/order/${record.id}`)}
+          style={{ cursor: "pointer", color: "#1890ff" }}
+          onClick={() => navigate(`/admin/orders/${record._id}`)}
         >
           {record.orderCode}
         </a>
-      )
+      ),
     },
     {
-      title: 'Khách hàng',
-      dataIndex: 'customerName',
-      key: 'customerName',
+      title: "Khách hàng",
+      dataIndex: "customerName",
+      key: "customerName",
     },
     {
-      title: 'Ngày đặt',
-      dataIndex: 'date',
-      key: 'date',
+      title: "Ngày đặt",
+      dataIndex: "date",
+      key: "date",
       render: (date: string) => new Date(date).toLocaleString(),
     },
     {
-      title: 'Sản phẩm',
-      key: 'items',
+      title: "Sản phẩm",
+      key: "items",
       render: (_: any, record: Order) => (
         <ul style={{ paddingLeft: 20 }}>
           {record.items.map((item) => (
             <li key={item.productId}>
-              {item.productName} x {item.quantity} - {item.price.toLocaleString()} VND
+              {item.productName} x {item.quantity} -{" "}
+              {item.price.toLocaleString()} VND
             </li>
           ))}
         </ul>
       ),
     },
     {
-      title: 'Tổng tiền',
-      dataIndex: 'total',
-      key: 'total',
-      render: (total: number) => total.toLocaleString() + ' VND',
+      title: "Tổng tiền",
+      dataIndex: "total",
+      key: "total",
+      render: (total: number) => total.toLocaleString() + " VND",
     },
     {
-      title: 'Thanh toán',
-      key: 'isPaid',
+      title: "Thanh toán",
+      key: "isPaid",
       render: (_: any, record: Order) =>
         record.isPaid ? (
           <Tag color="green">Đã thanh toán</Tag>
@@ -111,19 +149,21 @@ const OrderList = () => {
         ),
     },
     {
-      title: 'Trạng thái',
-      key: 'status',
+      title: "Trạng thái",
+      key: "status",
       render: (_: any, record: Order) => (
         <Select
           value={record.status}
-          onChange={(value) => handleStatusChange(record.id, value)}
-          style={{ width: 150 }}
+          onChange={(value) =>
+            handleStatusChange(record._id, record.status, value)
+          }
+          style={{ width: 160 }}
         >
-          <Select.Option value="Chờ xác nhận">Chờ xác nhận</Select.Option>
-          <Select.Option value="Đang xử lý">Đang xử lý</Select.Option>
-          <Select.Option value="Đã giao">Đã giao</Select.Option>
-          <Select.Option value="Hoàn thành">Hoàn thành</Select.Option>
-          <Select.Option value="Đã huỷ">Đã huỷ</Select.Option>
+          {statusOptions.map((status) => (
+            <Select.Option key={status} value={status}>
+              {status}
+            </Select.Option>
+          ))}
         </Select>
       ),
     },
@@ -131,28 +171,27 @@ const OrderList = () => {
 
   return (
     <div>
-     <h2 className="text-2xl font-bold ">Danh sách đơn hàng</h2>
-       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-         <Input.Search
-        placeholder=""
-        className="mb-4"
-         style={{ width: 300 }} 
-        onChange={(e) => setSearchText(e.target.value)}
-        allowClear
-      />
-       </div>
-     
+      <h2 className="text-2xl font-bold">Danh sách đơn hàng</h2>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        <Input.Search
+          placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
+          className="mb-4"
+          style={{ width: 300 }}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+        />
+      </div>
 
       <Table
-        dataSource={search}
+        dataSource={filteredOrders}
         columns={columns}
-        rowKey="id"
+        rowKey="_id"
         loading={isLoading}
         pagination={{
-        pageSize: 10, 
-        showSizeChanger: false,
-        pageSizeOptions: ['5', '10', '20'],
-      }}
+          pageSize: 10,
+          showSizeChanger: false,
+          pageSizeOptions: ["5", "10", "20"],
+        }}
       />
     </div>
   );
