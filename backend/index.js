@@ -13,7 +13,12 @@ const orderRoutes = require('./routes/orderRouter');
 
 
 const promotionRoutes = require('./routes/promotionRouter');
+
+const bannerRouter = require('./routes/bannerRouter');
+
+
 const userRouter = require('./routes/userRouter');
+
 const app = express();
 const PORT = 5000;
 
@@ -44,6 +49,9 @@ app.use('/api/contacts', contactRoutes);
 
 app.use('/api/comments', commentRoutes);
 app.use('/api/promotions', promotionRoutes);
+
+app.use('/api/banners', bannerRouter);
+
 app.use('/api/users', userRouter);
 
 // Order

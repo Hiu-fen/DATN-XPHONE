@@ -20,7 +20,7 @@ const BannerEdit = () => {
   const { data: banner, isLoading } = useQuery({
     queryKey: ['banner', id],
     queryFn: async () => {
-      const res = await axios.get(`http://localhost:4000/banners/${id}`);
+      const res = await axios.get(`http://localhost:5000/api/banners/${id}`);
       return res.data;
     },
     enabled: !!id, // Chỉ chạy nếu có ID
@@ -34,7 +34,7 @@ const BannerEdit = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: IBanner) => {
-      await axios.put(`http://localhost:4000/banners/${id}`, data);
+      await axios.put(`http://localhost:5000/api/banners/${id}`, data);
     },
     onSuccess: () => {
       message.success('Cập nhật banner thành công');
