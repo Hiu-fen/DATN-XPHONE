@@ -16,19 +16,14 @@ const LoginAdmin = () => {
  
 const onSubmit = async (data: User) => {
   try {
-    const res = await axios.get(`http://localhost:4000/users?email=${data.email}`);
-    const user = res.data[0];
+    const res = await axios.post("http://localhost:5000/api/users/login", {
+      email: data.email,
+      password: data.password,
+    });
 
-    if (!user) {
-      return message.error("Sai email hoặc mật khẩu");
-    }
+    const user = res.data.user;
 
-    const isMatch = await bcrypt.compare(data.password, user.password);
-    if (!isMatch) {
-      return message.error("Sai email hoặc mật khẩu");
-    }
-
-    if (user.role !== 'admin') {
+    if (user.role !== "admin") {
       return message.error("Tài khoản không có quyền admin");
     }
 
@@ -36,16 +31,17 @@ const onSubmit = async (data: User) => {
       return message.error("Tài khoản đã bị tạm dừng");
     }
 
-    // ✅ Quan trọng: Lưu đúng key
     localStorage.setItem("admin", JSON.stringify(user));
+    localStorage.setItem("token", res.data.token); // 👉 nếu dùng token
 
     addNotification(`Tài khoản "${user.email}" đã đăng nhập vào hệ thống`);
     message.success("Đăng nhập thành công");
-    nav("/admin/category/list");
 
-  } catch (error) {
+    nav("/admin/category/list");
+  } catch (error: any) {
+    const errMsg = error.response?.data?.message || "Đăng nhập thất bại";
+    message.error(errMsg);
     console.error(error);
-    message.error("Đăng nhập thất bại");
   }
 };
 

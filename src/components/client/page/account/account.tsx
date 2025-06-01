@@ -1,10 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react'
 import axios from 'axios'
 import { Link, useNavigate } from 'react-router-dom'
+import AccountSiba from './siba'
 
 const Account = () => {
   const [user, setUser] = useState<any>(null)
+  const [originalUser, setOriginalUser] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [showRegisterForm, setShowRegisterForm] = useState(false)
+
+  const [registerData, setRegisterData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    sdt: '',
+  })
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
 
@@ -14,10 +25,12 @@ const Account = () => {
 
     const { email } = JSON.parse(localUser)
 
-    axios.get(`http://localhost:4000/users?email=${email}`)
+    axios.get(`http://localhost:5000/api/users?email=${email}`)
       .then((res) => {
-        if (res.data.length > 0) {
-          setUser(res.data[0])
+        const userData = res.data
+        if (userData) {
+          setUser(userData)
+          setOriginalUser(userData)
         } else {
           alert("Không tìm thấy người dùng. Vui lòng đăng nhập lại.")
           navigate('/login')
@@ -25,6 +38,8 @@ const Account = () => {
       })
       .catch((err) => {
         console.error("Lỗi lấy thông tin người dùng:", err)
+        alert("Lỗi kết nối server. Vui lòng thử lại sau.")
+        navigate('/login')
       })
   }, [navigate])
 
@@ -45,82 +60,143 @@ const Account = () => {
   }
 
   const handleSave = async () => {
-    try {
-      const updatedFields = {
-        name: user.name,
-        email: user.email,
-        sdt: user.sdt,
-        address: user.address,
-        gender: user.gender,
-        dob: user.dob,
-        avatar: user.avatar,
-      }
+    if (!originalUser || !user) return
 
-      await axios.patch(`http://localhost:4000/users/${user.id}`, updatedFields)
+    const updatedFields: Partial<typeof user> = {}
+    for (const key in user) {
+      if (user[key] !== originalUser[key]) {
+        updatedFields[key] = user[key]
+      }
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+      alert("Không có thay đổi nào để lưu.")
+      return
+    }
+
+    try {
+      await axios.patch(`http://localhost:5000/api/users/${user._id}`, updatedFields)
       alert("Cập nhật thành công!")
       setIsEditing(false)
+      setOriginalUser(user)
 
       const localUser = JSON.parse(localStorage.getItem('user') || '{}')
       localStorage.setItem('user', JSON.stringify({ ...localUser, ...updatedFields }))
-
     } catch (error) {
       console.error("Lỗi cập nhật:", error)
       alert("Cập nhật thất bại.")
     }
   }
 
-  // ✅ Hàm ĐĂNG XUẤT
-  const handleLogout = () => {
-    localStorage.removeItem('token')  // Xóa token (nếu có)
-    localStorage.removeItem('user')   // Xóa thông tin user
-    navigate('/login')                // Chuyển hướng sang trang đăng nhập
+  const handleRegisterInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setRegisterData(prev => ({ ...prev, [name]: value }))
   }
 
-  // Nếu chưa đăng nhập
-  const localUser = localStorage.getItem('user')
-  if (!localUser) {
-    return (
-      <div className="p-10 text-center">
-        <p className="mb-4 text-red-600 font-semibold">Bạn chưa đăng nhập.</p>
-        <Link
-          to="/login"
-          className="text-blue-600 underline hover:text-blue-800"
-        >
-          Vui lòng đăng nhập tại đây
-        </Link>
-      </div>
-    )
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    try {
+      await axios.post('http://localhost:5000/api/user/register', {
+        ...registerData,
+        role: 'seller'
+      })
+      alert('Đăng ký tài khoản bán hàng thành công! Vui lòng đăng nhập.')
+      setShowRegisterForm(false)
+      setRegisterData({ name: '', email: '', password: '', sdt: '' })
+    } catch (error) {
+      console.error('Lỗi đăng ký:', error)
+      alert('Đăng ký thất bại, vui lòng thử lại.')
+    }
   }
 
   if (!user) {
-    return (
-      <div className="p-10 text-center">
-        <p className="text-gray-600">Đang tải dữ liệu người dùng...</p>
-      </div>
-    )
+    const localUser = localStorage.getItem('user')
+    if (!localUser) {
+      return (
+        <div className="p-10 text-center">
+          <p className="mb-4 text-red-600 font-semibold">Bạn chưa đăng nhập.</p>
+          <Link to="/login" className="text-blue-600 underline hover:text-blue-800">
+            Vui lòng đăng nhập tại đây
+          </Link>
+          <hr className="my-6" />
+          {!showRegisterForm && (
+            <p
+              onClick={() => setShowRegisterForm(true)}
+              className="cursor-pointer text-green-600 font-semibold underline hover:text-green-800"
+            >
+              Đăng ký tài khoản bán hàng
+            </p>
+          )}
+
+          {showRegisterForm && (
+            <form
+              onSubmit={handleRegisterSubmit}
+              className="max-w-md mx-auto bg-white p-6 rounded shadow space-y-4"
+            >
+              <h2 className="text-2xl font-bold mb-4">Form đăng ký tài khoản bán hàng</h2>
+              <input
+                type="text"
+                name="name"
+                value={registerData.name}
+                onChange={handleRegisterInputChange}
+                placeholder="Tên đăng nhập"
+                required
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="email"
+                name="email"
+                value={registerData.email}
+                onChange={handleRegisterInputChange}
+                placeholder="Email"
+                required
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="password"
+                name="password"
+                value={registerData.password}
+                onChange={handleRegisterInputChange}
+                placeholder="Mật khẩu"
+                required
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                name="sdt"
+                value={registerData.sdt}
+                onChange={handleRegisterInputChange}
+                placeholder="Số điện thoại"
+                required
+                className="w-full p-2 border border-gray-300 rounded"
+              />
+              <button
+                type="submit"
+                className="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+              >
+                Đăng ký
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowRegisterForm(false)}
+                className="w-full py-2 mt-2 bg-gray-300 rounded hover:bg-gray-400 transition"
+              >
+                Hủy
+              </button>
+            </form>
+          )}
+        </div>
+      )
+    }
+    return <p className="p-10">Đang tải dữ liệu...</p>
   }
 
   return (
     <div className="flex font-sans text-gray-800 bg-gray-100 p-10">
       {/* Sidebar */}
-      <div className="w-60 p-5 border-r bg-white rounded-l-lg shadow-md">
-        <div className="flex items-center mb-5">
-          <img src={user.avatar || 'https://picsum.photos/200'} alt="Avatar" className="w-12 h-12 rounded-full mr-3 object-cover" />
-          <span className="font-bold text-lg">{user.name}</span>
-        </div>
-
-        {/* ✅ Nút Đăng xuất */}
-        <button
-          onClick={handleLogout}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
-        >
-          Đăng xuất
-        </button>
-      </div>
-
+      <AccountSiba/>
       {/* Main Content */}
       <div className="flex-grow p-10 bg-white rounded-r-lg shadow-md relative flex flex-col md:flex-row items-start gap-10">
-        {/* Profile Info */}
         <div className="max-w-xl w-full">
           <h1 className="text-3xl font-bold mb-1">Hồ sơ của tôi</h1>
           <p className="text-gray-600 text-sm mb-8">Thông tin hồ sơ cá nhân</p>
@@ -160,7 +236,7 @@ const Account = () => {
           </div>
         </div>
 
-        {/* Avatar */}
+        {/* Avatar section (giữ nguyên nếu vẫn muốn cho phép đổi ảnh) */}
         <div className="flex-shrink-0 text-center mt-[150px] ml-[70px]">
           <img
             src={user.avatar || 'https://picsum.photos/200'}
@@ -168,14 +244,12 @@ const Account = () => {
             className="w-32 h-32 rounded-full object-cover border-4 border-[#ffcad4] shadow-xl mx-auto"
           />
           <p className="mt-2 text-gray-600 text-sm">Ảnh đại diện của bạn</p>
-
           <button
             onClick={() => fileInputRef.current?.click()}
             className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
           >
             Chọn ảnh
           </button>
-
           <input
             type="file"
             ref={fileInputRef}

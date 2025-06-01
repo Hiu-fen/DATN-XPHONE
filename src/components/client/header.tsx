@@ -1,14 +1,46 @@
-import { useState } from 'react';
+import { UserOutlined } from '@ant-design/icons';
+import { useEffect, useState, useRef } from 'react';
 import { FaShoppingCart, FaUser, FaBell, FaHeart, FaBars } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
-
+import { Link, useNavigate } from 'react-router-dom';
 
 const ClientHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  return (
+  
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const timeoutRef = useRef<number | null>(null);
+    const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string } | null>(null);
+  const nav = useNavigate();
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error("Lỗi parse user:", error);
+      }
+    }
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsUserMenuOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setIsUserMenuOpen(false), 300);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    setIsUserMenuOpen(false);
+    nav("/login");
+  };
+
+  return (
     <header className="bg-white shadow">
-      {/* Phần trên: Logo, Tìm kiếm, Icon */}
+      {/* Phần trên */}
       <div className="w-full bg-white sm:px-6 md:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between py-3 px-4 gap-3">
           {/* Logo */}
@@ -23,7 +55,7 @@ const ClientHeader = () => {
             className="flex-grow mx-4 border p-2 rounded"
           />
 
-          {/* Hamburger Icon */}
+          {/* Hamburger Menu */}
           <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -32,7 +64,6 @@ const ClientHeader = () => {
               <FaBars className="text-2xl" />
             </button>
 
-            {/* Dropdown Menu */}
             {menuOpen && (
               <div className="absolute right-0 mt-2 bg-white border rounded shadow-lg z-10 p-4 flex flex-col gap-3 text-gray-600 text-sm sm:text-base w-40">
                 <Link to="/wishlist" className="hover:text-red-500 flex items-center gap-2">
@@ -44,9 +75,68 @@ const ClientHeader = () => {
                 <Link to="/cart" className="hover:text-red-500 flex items-center gap-2">
                   <FaShoppingCart /> Giỏ hàng
                 </Link>
-                <Link to="/account" className="hover:text-red-500 flex items-center gap-2">
+                <Link to="/accounts" className="hover:text-red-500 flex items-center gap-2">
                   <FaUser /> Tài khoản
                 </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Avatar/User Menu */}
+          <div
+            className="relative"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            <div className="flex items-center gap-3 cursor-pointer">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-full object-cover border border-green-500"
+                />
+              ) : (
+                <div className="bg-green-100 w-10 h-10 rounded-full flex items-center justify-center text-green-600">
+                  <UserOutlined style={{ fontSize: 20 }} />
+                </div>
+              )}
+              <div className="hidden md:block">
+                <p className="font-medium text-gray-800">
+                  Xin chào {user?.name || user?.email || "Khách"}
+                </p>
+              </div>
+            </div>
+
+            {isUserMenuOpen && (
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50 border border-gray-100">
+                {!user ? (
+                  <>
+                    <Link
+                      to="/register"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Đăng ký
+                    </Link>
+                    <Link
+                      to="/login"
+                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Đăng nhập
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                 
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+                    >
+                      Đăng xuất
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

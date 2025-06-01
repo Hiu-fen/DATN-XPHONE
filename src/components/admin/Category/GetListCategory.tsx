@@ -1,11 +1,11 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Button, Input, message, Popconfirm, Table } from 'antd'
+import { Button, Input, message, Popconfirm, Space, Table } from 'antd'
 import axios from 'axios'
 import React, { useState } from 'react'
 // import { IProduct } from '../../interface/product'
 import { useNavigate } from 'react-router-dom'
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons'
 import { ICategory } from '../../../interface/category'
 
 
@@ -60,21 +60,34 @@ const columns = [
     title:"Thao tác",
     key:'action',
     render: (_: any, record: ICategory) => (
-      <>
-        <Button onClick={() => nav(`/admin/category/${record._id}/edit`)}>
-          <EditOutlined />
-        </Button>
-        <Popconfirm
-          title="Thông báo"
-          description="Bạn chắc chứ"
-          icon={<DeleteOutlined />}
-          onConfirm={() => onDelete(record._id)}
-          okText="OK"
-          cancelText="NO"
-        >
-          <Button danger><DeleteOutlined /></Button>
-        </Popconfirm>
-      </>
+      <Space>
+  <Button 
+    type="default"
+    onClick={() => nav(`/admin/category/${record._id}`)} 
+  >
+    <EyeOutlined />
+  </Button>
+
+  <Button 
+    type="primary"
+    onClick={() => nav(`/admin/category/${record._id}/edit`)}
+  >
+    <EditOutlined />
+  </Button>
+
+  <Popconfirm
+    title="Thông báo"
+    description="Bạn chắc chắn muốn xóa?"
+    icon={<DeleteOutlined style={{ color: 'red' }} />}
+    onConfirm={() => onDelete(record._id)}
+    okText="OK"
+    cancelText="NO"
+  >
+    <Button danger>
+      <DeleteOutlined />
+    </Button>
+  </Popconfirm>
+</Space>
     )
   },
 ]

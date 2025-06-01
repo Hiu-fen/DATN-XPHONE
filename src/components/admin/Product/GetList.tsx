@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Input, message, Popconfirm, Table } from 'antd';
+import { Button, Input, message, Popconfirm, Space, Table } from 'antd';
 import axios from 'axios';
 import { IProduct } from '../../../interface/product';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -138,30 +138,34 @@ const GetList = () => {
       title: 'Thao tác',
       key: 'actions',
       render: (_: any, record: IProduct) => (
-        <>
-              <Button 
-        style={{ marginRight: 8 }} 
-        onClick={() => nav(`/admin/phone/${record._id}`)}  // đường dẫn xem chi tiết
-      >
-        <EyeOutlined />
-      </Button>
+        <Space>
+  <Button 
+    type="default"
+    onClick={() => nav(`/admin/phone/${record._id}`)} 
+  >
+    <EyeOutlined />
+  </Button>
 
-          <Button onClick={() => nav(`/admin/phone/${record._id}/edit`)}>
-            <EditOutlined />
-          </Button>
-          <Popconfirm
-            title="Thông báo"
-            description="Bạn chắc chắn muốn xóa?"
-            icon={<DeleteOutlined />}
-            onConfirm={() => onDelete(record._id)}
-            okText="OK"
-            cancelText="NO"
-          >
-            <Button danger style={{ marginLeft: 8 }}>
-              <DeleteOutlined />
-            </Button>
-          </Popconfirm>
-        </>
+  <Button 
+    type="primary"
+    onClick={() => nav(`/admin/phone/${record._id}/edit`)}
+  >
+    <EditOutlined />
+  </Button>
+
+  <Popconfirm
+    title="Thông báo"
+    description="Bạn chắc chắn muốn xóa?"
+    icon={<DeleteOutlined style={{ color: 'red' }} />}
+    onConfirm={() => onDelete(record._id)}
+    okText="OK"
+    cancelText="NO"
+  >
+    <Button danger>
+      <DeleteOutlined />
+    </Button>
+  </Popconfirm>
+</Space>
       ),
     },
   ];

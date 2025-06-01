@@ -15,7 +15,7 @@ exports.getRandomCode = (req, res) => {
 // Hàm để lấy tất cả danh sách khuyến mãi
 exports.getAllPromotions = async (req, res) => {
   try {
-    const promotions = await Promotion.find();
+    const promotions = await Promotion.find().populate('applicableCategories', '_id name');
     res.json(promotions);
   } catch (err) {
     res.status(500).json({ message: "Lỗi máy chủ, không thể lấy danh sách khuyến mãi." });
@@ -36,7 +36,7 @@ exports.createPromotion = async (req, res) => {
 // Hàm để lấy khuyến mãi theo ID
 exports.getPromotionById = async (req, res) => {
   try {
-    const promotion = await Promotion.findById(req.params.id);
+    const promotion = await Promotion.findById(req.params.id).populate('applicableCategories', '_id name');
     if (!promotion) return res.status(404).json({ message: "Không tìm thấy khuyến mãi." });
     res.json(promotion);
   } catch (err) {

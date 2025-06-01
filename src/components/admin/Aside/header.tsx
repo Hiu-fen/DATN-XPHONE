@@ -90,73 +90,73 @@ export default function XPhoneHeader() {
           </Link>
 
         </div>
-       <div className="relative">
-  <button
-    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-    onClick={() => setShowNotifications(!showNotifications)}
-  >
-    <BellOutlined className="text-gray-600" style={{ fontSize: 20 }} />
-    {notifications.length > 0 && (
-      <span className="absolute -top-1 -right-1 h-5 w-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-        {notifications.length}
-      </span>
-    )}
-  </button>
-
-  {showNotifications && (
-    <div className="absolute right-0 mt-2 w-[400px] bg-white shadow-lg rounded-lg p-4 z-50 max-h-[400px] overflow-y-auto">
-      <div className="flex justify-between items-center mb-2">
-        <h4 className="font-bold text-gray-700">Thông báo</h4>
-        {notifications.length > 0 && (
+        <div className="relative">
           <button
-            onClick={() => {
-              setNotifications([]);
-              localStorage.removeItem("notifications");
-            }}
-            className="text-sm text-red-500 hover:underline"
+            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            onClick={() => setShowNotifications(!showNotifications)}
           >
-            Xóa tất cả thông báo
+            <BellOutlined className="text-gray-600" style={{ fontSize: 20 }} />
+            {notifications.length > 0 && (
+              <span className="absolute -top-1 -right-1 h-5 w-5 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                {notifications.length}
+              </span>
+            )}
           </button>
-        )}
-      </div>
 
-      {notifications.length > 0 ? (
-        notifications.map((item, idx) => (
-          <div
-            key={idx}
-            className="group relative text-sm py-2 border-b border-gray-100 break-words whitespace-normal"
-          >
-            <p className="text-gray-800">
-              {item.message.startsWith("Nhắc nhở:") ? (
-                <>
-                  <span className="text-red-500 font-semibold">Nhắc nhở:</span>{" "}
-                  {item.message.replace("Nhắc nhở:", "")}
-                </>
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-[400px] bg-white shadow-lg rounded-lg p-4 z-50 max-h-[400px] overflow-y-auto">
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="font-bold text-gray-700">Thông báo</h4>
+                {notifications.length > 0 && (
+                  <button
+                    onClick={() => {
+                      setNotifications([]);
+                      localStorage.removeItem("notifications");
+                    }}
+                    className="text-sm text-red-500 hover:underline"
+                  >
+                    Xóa tất cả thông báo
+                  </button>
+                )}
+              </div>
+
+              {notifications.length > 0 ? (
+                notifications.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="group relative text-sm py-2 border-b border-gray-100 break-words whitespace-normal"
+                  >
+                    <p className="text-gray-800">
+                      {item.message.startsWith("Nhắc nhở:") ? (
+                        <>
+                          <span className="text-red-500 font-semibold">Nhắc nhở:</span>{" "}
+                          {item.message.replace("Nhắc nhở:", "")}
+                        </>
+                      ) : (
+                        item.message
+                      )}
+                    </p>
+                    <p className="text-gray-400 text-xs">{item.time}</p>
+                    <p>Thực hiện bởi {user?.name}</p>
+
+                    <button
+                      onClick={() => {
+                        const updated = notifications.filter((_, i) => i !== idx);
+                        setNotifications(updated);
+                        localStorage.setItem("notifications", JSON.stringify(updated));
+                      }}
+                      className="absolute top-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-red-500 hover:underline"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                ))
               ) : (
-                item.message
+                <p className="text-gray-400 text-sm text-center">Không có thông báo</p>
               )}
-            </p>
-            <p className="text-gray-400 text-xs">{item.time}</p>
-            <p>Thực hiện bởi {user?.name}</p>
-
-            <button
-              onClick={() => {
-                const updated = notifications.filter((_, i) => i !== idx);
-                setNotifications(updated);
-                localStorage.setItem("notifications", JSON.stringify(updated));
-              }}
-              className="absolute top-2 right-0 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-red-500 hover:underline"
-            >
-              Xóa
-            </button>
-          </div>
-        ))
-      ) : (
-        <p className="text-gray-400 text-sm text-center">Không có thông báo</p>
-      )}
-    </div>
-  )}
-</div>
+            </div>
+          )}
+        </div>
 
 
 
