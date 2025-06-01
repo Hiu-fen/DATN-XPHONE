@@ -1,11 +1,11 @@
-import { useRoutes } from 'react-router-dom'
-import ClientLayout from './layout/client'
-import AdminLayout from './layout/admin'
-import GetList from './components/admin/Product/GetList'
+import { useRoutes } from "react-router-dom";
+import ClientLayout from "./layout/client";
+import AdminLayout from "./layout/admin";
+import GetList from "./components/admin/Product/GetList";
 
-import PutEdit from './components/admin/Product/PutEdit'
-import Register from './components/client/Register'
-import Login from './components/client/Login'
+import PutEdit from "./components/admin/Product/PutEdit";
+import Register from "./components/client/Register";
+import Login from "./components/client/Login";
 
 import CommentAdd from './components/admin/Comment/CommentAdd'
 import CommentAdmin from './components/admin/Comment/CommentList'
@@ -58,9 +58,6 @@ import AccountSiba from './components/client/page/account/siba'
 import AddAccountAdmin from './components/client/page/account/add-admin'
 
 
-
-
-
 const App = () => {
   useReloadIfBlank();
   const routes = useRoutes([
@@ -90,11 +87,11 @@ const App = () => {
     },
     {
       path: "/admin/login",
-      element: <LoginAdmin />
+      element: <LoginAdmin />,
     },
     {
       path: "/admin/register",
-      element: <RegisterAdmin />
+      element: <RegisterAdmin />,
     },
     {
       path: "/admin",
@@ -102,12 +99,13 @@ const App = () => {
         <PrivateRouteAdmin>
           <AdminLayout />
         </PrivateRouteAdmin>
-      ), children: [
+      ),
+      children: [
         { index: true, element: <AdminDashboard /> },
         //Router Danh mục
-        { path: 'category/list', element: <GetListCategory /> },
-        { path: 'category/add', element: <PostAddCategory /> },
-        { path: 'category/:id/edit', element: <PutEditCategory /> },
+        { path: "category/list", element: <GetListCategory /> },
+        { path: "category/add", element: <PostAddCategory /> },
+        { path: "category/:id/edit", element: <PutEditCategory /> },
 
         //Router Sản phẩm
         { path: 'phone/list', element: <GetList /> },
@@ -116,46 +114,48 @@ const App = () => {
         { path: 'phone/:id/edit', element: <PutEdit /> },
 
         //Router Đăng ký, Đăng nhập
-        { path: 'comment/list', element: <CommentAdmin /> },
-        { path: 'comment/add', element: <CommentAdd /> },
+        { path: "comment/list", element: <CommentAdmin /> },
+        { path: "comment/add", element: <CommentAdd /> },
         // {path:'login',element:<Login/>},
 
         /// Router quản lý tài khoản user
-        { path: 'user/listadmin', element: <GetAdmin /> },
-        { path: 'user/profileadmin', element: <ProfileAdmin /> },
-        { path: 'user/listclient', element: <GetClient /> },
-
-
+        { path: "user/listadmin", element: <GetAdmin /> },
+        { path: "user/profileadmin", element: <ProfileAdmin /> },
+        { path: "user/listclient", element: <GetClient /> },
 
         //Router Order
-        { path: 'order/list', element: <OrderList /> },
-        { path: 'order/:id', element: <OrderDetail /> },
+        {
+          path: "orders", element: <OrderList />,
+          
+        },
+        {
+          path: "orders/:id", element: <OrderDetail />,
+        },
+
 
         //Router Albums ảnh
-        { path: 'album/list', element: <GetListAlbum /> },
-        { path: 'album/add', element: <PostAddAlbum /> },
-        { path: 'album/edit/:id', element: <PutEditAlbum /> },
-
-
+        { path: "album/list", element: <GetListAlbum /> },
+        { path: "album/add", element: <PostAddAlbum /> },
+        { path: "album/edit/:id", element: <PutEditAlbum /> },
 
         /// Router quản lý Khuyễn mãi
-        { path: 'promotion/list', element: <GetPromotion /> },
-        { path: 'promotion/add', element: <PostAddPromotion /> },
-        { path: 'promotion/edit/:id', element: <PutEditPromotion /> },
-        { path: 'promotion/detail/:id', element: <DetailPromotion /> },
+        { path: "promotion/list", element: <GetPromotion /> },
+        { path: "promotion/add", element: <PostAddPromotion /> },
+        { path: "promotion/edit/:id", element: <PutEditPromotion /> },
+        { path: "promotion/detail/:id", element: <DetailPromotion /> },
 
-        /// Router quản lý lien he 
-        { path: 'contact/add', element: <ContactAdd /> },
-        { path: 'contact/list', element: <ContactList /> },
+        /// Router quản lý lien he
+        { path: "contact/add", element: <ContactAdd /> },
+        { path: "contact/list", element: <ContactList /> },
 
         /// Router quản lý banner
-        { path: 'banner/add', element: <BannerAdd /> },
-        { path: 'banner/list', element: <BannerList /> },
-        { path: 'banner/edit/:id', element: <BannerEdit /> }
-      ]
+        { path: "banner/add", element: <BannerAdd /> },
+        { path: "banner/list", element: <BannerList /> },
+        { path: "banner/edit/:id", element: <BannerEdit /> },
+      ],
     },
-  ])
-  return routes
-}
+  ]);
+  return routes;
+};
 
-export default App
+export default App;

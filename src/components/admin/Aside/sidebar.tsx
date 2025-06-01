@@ -81,10 +81,10 @@ const AdminSidebar = () => {
       ],
     },
     {
-      key: 'order',
+      key: 'orders',
       label: 'Quản lý đơn hàng',
       icon: <ShoppingCartOutlined />,
-      children: [{ key: 'order/list', label: 'Đơn hàng', path: '/admin/order/list' }],
+      children: [{ key: 'order/list', label: 'Đơn hàng', path: '/admin/orders' }],
     },
     {
       key: 'album',
