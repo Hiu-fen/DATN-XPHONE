@@ -21,7 +21,7 @@ const BannerAdd = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: IBanner) => {
-      const response = await axios.post('http://localhost:4000/banners', data);
+      const response = await axios.post('http://localhost:5000/api/banners', data);
       return response.data;
     },
     onSuccess: () => {
