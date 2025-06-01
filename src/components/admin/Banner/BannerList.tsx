@@ -4,8 +4,13 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { IBanner } from '../../../interface/banner';  // Đảm bảo import interface đúng
 
+// Thêm dòng này để mở rộng IBanner nếu chưa có _id
+interface IBannerWithId extends IBanner {
+  _id: string;
+}
+
 const BannerList = () => {
-  const [banners, setBanners] = useState<IBanner[]>([]);  // State lưu trữ danh sách banner
+  const [banners, setBanners] = useState<IBannerWithId[]>([]);  // State lưu trữ danh sách banner
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
 
@@ -13,7 +18,7 @@ const BannerList = () => {
   // Hàm lấy danh sách banner từ API
   const fetchBanners = async () => {
     try {
-      const response = await axios.get('http://localhost:4000/banners');
+      const response = await axios.get('http://localhost:5000/api/banners');
       setBanners(response.data);  // Lưu dữ liệu vào state
     } catch (error) {
       message.error('Không thể tải danh sách banner, vui lòng thử lại!');
@@ -26,13 +31,13 @@ const BannerList = () => {
   }, []);
 
   // Hàm xử lý thay đổi trạng thái banner
-  const toggleStatus = async (id: number, currentStatus: boolean) => {
+  const toggleStatus = async (_id: string, currentStatus: boolean) => {
     try {
       const updatedStatus = !currentStatus;
-      await axios.patch(`http://localhost:4000/banners/${id}`, { status: updatedStatus });
+      await axios.put(`http://localhost:5000/api/banners/${_id}`, { status: updatedStatus });
       // Cập nhật lại danh sách sau khi thay đổi trạng thái
       setBanners((prevBanners) => prevBanners.map(banner => 
-        banner.id === id ? { ...banner, status: updatedStatus } : banner
+        banner._id === _id ? { ...banner, status: updatedStatus } : banner
       ));
       message.success('Thay đổi trạng thái thành công!');
     } catch (error) {
@@ -41,27 +46,27 @@ const BannerList = () => {
   };
 
   // Hàm xử lý xóa banner
-  const deleteBanner = async (id: number) => {
+  const deleteBanner = async (_id: string) => {
     try {
-      await axios.delete(`http://localhost:4000/banners/${id}`);
+      await axios.delete(`http://localhost:5000/api/banners/${_id}`);
       // Xoá banner khỏi danh sách trong state
-      setBanners((prevBanners) => prevBanners.filter(banner => banner.id !== id));
+      setBanners((prevBanners) => prevBanners.filter(banner => banner._id !== _id));
       message.success('Xoá banner thành công!');
     } catch (error) {
       message.error('Không thể xoá banner, vui lòng thử lại!');
     }
   };
-  const search = banners?.filter((c: IBanner) => {
-    const Text = `${c.id} ${c.name}  `.toLowerCase();
+  const search = banners?.filter((c: IBannerWithId) => {
+    const Text = `${c._id} ${c.name}  `.toLowerCase();
     return Text.includes(searchText.toLowerCase());
   });
 
   // Cấu hình các cột trong bảng
   const columns = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
+      title: 'STT',
+      key: 'stt',
+      render: (_: any, __: any, index: number) => index + 1,
     },
     {
       title: 'Tên Banner',
@@ -84,7 +89,7 @@ const BannerList = () => {
       title: 'Thời gian',
       dataIndex: 'start_date',
       key: 'start_date',
-      render: (start_date: string, record: IBanner) => `${start_date} - ${record.end_date}`,
+      render: (start_date: string, record: IBannerWithId) => `${start_date} - ${record.end_date}`,
     },
     {
       title: 'Trạng thái',
@@ -95,22 +100,22 @@ const BannerList = () => {
     {
       title: 'Thao tác',
       key: 'action',
-      render: (_: any, record: IBanner) => (
+      render: (_: any, record: IBannerWithId) => (
         <span>
           <Button 
-            onClick={() => toggleStatus(record.id, record.status)} 
+            onClick={() => toggleStatus(record._id, record.status)} 
             style={{ marginRight: 8 }}
           >
             {record.status ? 'Ẩn ' : 'Hiển thị '}
           </Button>
           <Button 
-            onClick={() => navigate(`/admin/banner/edit/${record.id}`)} 
+            onClick={() => navigate(`/admin/banner/edit/${record._id}`)} 
             style={{ marginRight: 8 }}
           >
             Sửa
           </Button>
           <Button 
-            onClick={() => deleteBanner(record.id)} 
+            onClick={() => deleteBanner(record._id)} 
             danger>
             Xoá
           </Button>
@@ -134,7 +139,7 @@ const BannerList = () => {
       <Table
         columns={columns}
         dataSource={search}
-        rowKey="id"
+        rowKey="_id"
         pagination={{
         pageSize: 10, 
         showSizeChanger: false,
