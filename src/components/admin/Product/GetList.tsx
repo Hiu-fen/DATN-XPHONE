@@ -1,18 +1,18 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Input, message, Popconfirm, Space, Table } from 'antd';
-import axios from 'axios';
-import { IProduct } from '../../../interface/product';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Button, Input, message, Popconfirm, Space, Table } from "antd";
+import axios from "axios";
+import { IProduct } from "../../../interface/product";
+import { useNavigate, useLocation } from "react-router-dom";
+import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 
 interface ICategory {
   _id: string;
   name: string;
 }
 
-const GetList = () => {
-  const [searchText, setSearchText] = useState('');
+const GetList: React.FC = () => {
+  const [searchText, setSearchText] = useState("");
   const nav = useNavigate();
   const location = useLocation();
 
@@ -23,9 +23,9 @@ const GetList = () => {
     error: errorProducts,
     refetch,
   } = useQuery({
-    queryKey: ['products'],
+    queryKey: ["products"],
     queryFn: async () =>
-      (await axios.get('http://localhost:5000/api/products')).data,
+      (await axios.get("http://localhost:5000/api/products")).data as IProduct[],
   });
 
   // Lấy danh sách danh mục
@@ -34,35 +34,28 @@ const GetList = () => {
     isLoading: loadingCategories,
     error: errorCategories,
   } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: async () =>
-      (await axios.get('http://localhost:5000/api/category')).data,
+      (await axios.get("http://localhost:5000/api/category")).data as ICategory[],
   });
 
-  // Reload lại khi cần
+  // Reload khi location.state.forceReload = true
   useEffect(() => {
     if (location.state?.forceReload) {
       refetch();
     }
   }, [location.state?.forceReload, refetch]);
 
-  // Hàm lấy tên danh mục theo _id
-  const getCategoryName = (id: string): string => {
-    if (!categories) return 'Đang tải danh mục...';
-    const category = categories.find((cat: ICategory) => cat._id === id);
-    return category ? category.name : 'Không rõ';
-  };
-
   // Xử lý xóa sản phẩm
   const mutation = useMutation({
     mutationFn: async (id: string) =>
       await axios.delete(`http://localhost:5000/api/products/${id}`),
     onSuccess: () => {
-      message.success('Xóa thành công');
+      message.success("Xóa thành công");
       refetch();
     },
     onError: () => {
-      message.error('Xóa thất bại');
+      message.error("Xóa thất bại");
     },
   });
 
@@ -70,114 +63,127 @@ const GetList = () => {
     mutation.mutate(id);
   };
 
-  // Lọc sản phẩm theo tìm kiếm
-  const search = products?.filter((p: IProduct) => {
-    const categoryName = getCategoryName(p.danhmuc);
-    const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${categoryName}`.toLowerCase();
+  // Lọc sản phẩm theo searchText (theo _id, name, mota, price, danhmuc)
+  const search = products?.filter((p) => {
+    const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${p.danhmuc}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
 
   // Cột bảng
   const columns = [
     {
-      title: 'STT',
-      key: 'stt',
+      title: "STT",
+      key: "stt",
       render: (_: any, __: IProduct, index: number) => index + 1,
     },
     {
-      title: 'Tên sản phẩm',
-      key: 'name',
-      dataIndex: 'name',
+      title: "Tên sản phẩm",
+      key: "name",
+      dataIndex: "name",
     },
     {
-      title: 'Ảnh',
-      key: 'image',
-      dataIndex: 'image',
+      title: "Ảnh",
+      key: "image",
+      dataIndex: "image",
       render: (image: string) => (
         <img
           src={image}
           alt="ảnh"
-          style={{ width: 100, objectFit: 'cover', borderRadius: 8 }}
+          style={{ width: 100, objectFit: "cover", borderRadius: 8 }}
         />
       ),
     },
     {
-      title: 'Giá',
-      key: 'price',
-      render: (_: any, record: IProduct) => (
-        <span>{record.price ? record.price.toLocaleString() : 'Không có giá'}</span>
+      title: "Giá",
+      key: "price",
+      dataIndex: "price",
+      render: (price: number) => (
+        <span>{price ? price.toLocaleString() : "Không có giá"}</span>
       ),
     },
     {
-      title: 'Số lượng',
-      key: 'soluong',
-      render: (_: any, record: IProduct) => (
-        <span>{record.soluong ? record.soluong.toLocaleString() : 'Không còn sản phẩm'}</span>
+      title: "Số lượng",
+      key: "soluong",
+      dataIndex: "soluong",
+      render: (soluong: number) => (
+        <span>{soluong ? soluong.toLocaleString() : "Không còn sản phẩm"}</span>
       ),
     },
     {
-      title: 'Mô tả',
-      key: 'mota',
-      dataIndex: 'mota',
+      title: "Mô tả",
+      key: "mota",
+      dataIndex: "mota",
     },
-{
-  title: 'Danh mục',
-  dataIndex: 'danhmuc', // vì giờ danhmuc đã là chuỗi tên
-  key: 'danhmuc',
-},
     {
-      title: 'Trạng thái',
-      key: 'trangthai',
+      title: "Danh mục",
+      key: "danhmuc",
       render: (_: any, record: IProduct) => {
-        const status = record.trangthai?.toLowerCase();
-        const color = status === 'còn hàng' ? 'green' : status === 'hết hàng' ? 'red' : 'gray';
-        return <span style={{ color }}>{record.trangthai}</span>;
+        // Nếu danhmuc đã là tên, hiển thị luôn; nếu là id, tìm và hiển thị tên
+        const found = categories?.find((c) => c._id === record.danhmuc);
+        return found ? found.name : record.danhmuc;
       },
     },
     {
-      title: 'Thao tác',
-      key: 'actions',
+      title: "Trạng thái",
+      key: "trangthai",
+      dataIndex: "trangthai",
+      render: (_: any, record: IProduct) => {
+        const isAvailable = record.soluong >= 1;
+        const statusText = isAvailable ? "Còn hàng" : "Hết hàng";
+        const color = isAvailable ? "green" : "red";
+        return <span style={{ color }}>{statusText}</span>;
+      },
+    },
+    {
+      title: "Đang bán?",
+      key: "status",
+      dataIndex: "status",
+      render: (status: boolean) => (
+        <span style={{ color: status ? "green" : "gray" }}>
+          {status ? "Đang bán" : "Ngừng bán"}
+        </span>
+      ),
+    },
+    {
+      title: "Thao tác",
+      key: "actions",
       render: (_: any, record: IProduct) => (
         <Space>
-  <Button 
-    type="default"
-    onClick={() => nav(`/admin/phone/${record._id}`)} 
-  >
-    <EyeOutlined />
-  </Button>
+          <Button type="default" onClick={() => nav(`/admin/phone/${record._id}`)}>
+            <EyeOutlined />
+          </Button>
 
-  <Button 
-    type="primary"
-    onClick={() => nav(`/admin/phone/${record._id}/edit`)}
-  >
-    <EditOutlined />
-  </Button>
+          <Button
+            type="primary"
+            onClick={() => nav(`/admin/phone/${record._id}/edit`)}
+          >
+            <EditOutlined />
+          </Button>
 
-  <Popconfirm
-    title="Thông báo"
-    description="Bạn chắc chắn muốn xóa?"
-    icon={<DeleteOutlined style={{ color: 'red' }} />}
-    onConfirm={() => onDelete(record._id)}
-    okText="OK"
-    cancelText="NO"
-  >
-    <Button danger>
-      <DeleteOutlined />
-    </Button>
-  </Popconfirm>
-</Space>
+          <Popconfirm
+            title="Thông báo"
+            description="Bạn chắc chắn muốn xóa?"
+            icon={<DeleteOutlined style={{ color: "red" }} />}
+            onConfirm={() => record._id && onDelete(record._id)}
+            okText="OK"
+            cancelText="NO"
+          >
+            <Button danger>
+              <DeleteOutlined />
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
 
-  // Hiển thị loading/error
   if (loadingProducts || loadingCategories) return <p>Đang tải dữ liệu...</p>;
   if (errorProducts || errorCategories) return <p>Lỗi khi tải dữ liệu.</p>;
 
   return (
     <div>
       <h2 className="text-2xl font-bold">Danh sách sản phẩm</h2>
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <Input.Search
           placeholder="Tìm kiếm sản phẩm..."
           className="mb-4"
@@ -194,7 +200,7 @@ const GetList = () => {
         pagination={{
           pageSize: 10,
           showSizeChanger: false,
-          pageSizeOptions: ['5', '10', '20'],
+          pageSizeOptions: ["5", "10", "20"],
         }}
       />
     </div>

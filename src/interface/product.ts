@@ -1,14 +1,19 @@
 export interface IProduct {
-  _id: string;
+  _id?: string;
   name: string;
   image: string;
   albumImages: string[];
-  danhmuc: string;
-  price: string;
+  price: number;       // bạn vẫn giữ nếu cần
   soluong: number;
+  mota?: string;
+  danhmuc: string;
   trangthai: string;
-  mota: string;
-  type: string;
-  parent: number;
-  score: number;
+  status: boolean;
+
+  // Thêm mảng variants
+  variants?: {
+    color: string;
+    ram: string;
+    price: number;
+  }[];
 }

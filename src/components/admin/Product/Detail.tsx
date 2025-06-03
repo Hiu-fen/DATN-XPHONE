@@ -19,6 +19,7 @@ const ProductDetail = () => {
 
   const [mainImage, setMainImage] = useState('');
   const [album, setAlbum] = useState<string[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
 
   useEffect(() => {
     if (!product) return;
@@ -29,7 +30,12 @@ const ProductDetail = () => {
     }
     setMainImage(newAlbum[0] || '');
     setAlbum(newAlbum);
+    setSelectedVariant(null); // reset biến thể khi thay sản phẩm
   }, [product]);
+
+  const handleSelectVariant = (variant: any) => {
+    setSelectedVariant(variant);
+  };
 
   if (isLoading) return <p>Đang tải dữ liệu...</p>;
   if (error || !product) return <p>Lỗi hoặc không tìm thấy sản phẩm</p>;
@@ -68,49 +74,78 @@ const ProductDetail = () => {
         {/* Thông tin sản phẩm */}
         <div style={{ flex: 1 }}>
           <h2 style={{ marginBottom: 10 }}>{product.name}</h2>
+
+          {/* Giá theo biến thể nếu có */}
           <p style={{ fontWeight: 600, fontSize: 24, marginBottom: 10 }}>
-            {Number(product.price).toLocaleString('vi-VN', {
+            {(Number(selectedVariant?.price || product.price)).toLocaleString('vi-VN', {
               style: 'currency',
               currency: 'VND',
             })}
           </p>
 
-          <p style={{ marginBottom: 10 }}><strong>Mô tả:</strong> {product.mota || 'Chưa có mô tả'}</p>
-          <p style={{ marginBottom: 10 }}><strong>Danh mục:</strong> {product.danhmuc || 'Không xác định'}</p>
-          <p style={{ marginBottom: 10 }}><strong>Trạng thái:</strong> {product.trangthai || 'Không rõ'}</p>
-          {/* <p style={{ marginBottom: 10 }}><strong>Loại:</strong> {product.type || 'Không rõ'}</p> */}
-           <p>
-      <strong>Số lượng:</strong>{' '}
-      <span style={{ color: product.soluong > 0 ? '#389e0d' : '#cf1322' }}>
-        {product.soluong > 0 ? product.soluong : 'Hết hàng'}
-      </span>
-    </p>
+          {/* Biến thể */}
+          {product.variants && product.variants.length > 0 && (
+            <div style={{ marginBottom: 10 }}>
+              <strong>Biến thể:</strong>{' '}
+{product.variants.map((variant, index) => (
+  <button
+    key={index}
+    onClick={() => handleSelectVariant(variant)}
+    style={{
+      marginRight: 10,
+      padding: '6px 12px',
+      borderRadius: 6,
+      border: selectedVariant === variant ? '2px solid #1890ff' : '1px solid #ccc',
+      backgroundColor: selectedVariant === variant ? '#e6f7ff' : '#fff',
+      cursor: 'pointer',
+    }}
+  >
+    {variant.color} - {variant.ram}
+  </button>
+))}
+            </div>
+          )}
+
+          <p style={{ marginBottom: 10 }}>
+            <strong>Mô tả:</strong> {product.mota || 'Chưa có mô tả'}
+          </p>
+          <p style={{ marginBottom: 10 }}>
+            <strong>Danh mục:</strong> {product.danhmuc || 'Không xác định'}
+          </p>
+          <p style={{ marginBottom: 10 }}>
+            <strong>Trạng thái:</strong> {product.trangthai || 'Không rõ'}
+          </p>
+          <p>
+            <strong>Số lượng:</strong>{' '}
+            <span style={{ color: product.soluong > 0 ? '#389e0d' : '#cf1322' }}>
+              {product.soluong > 0 ? product.soluong : 'Hết hàng'}
+            </span>
+          </p>
 
           <button
-  onClick={() => navigate(-1)}
-  style={{
-    marginTop: 20,
-    padding: '10px 20px',
-    backgroundColor: '#1890ff',
-    color: '#fff',
-    fontWeight: 600,
-    fontSize: 16,
-    border: 'none',
-    borderRadius: 8,
-    cursor: 'pointer',
-    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
-    transition: 'all 0.3s ease',
-  }}
-  onMouseOver={(e) => {
-    e.currentTarget.style.backgroundColor = '#40a9ff';
-  }}
-  onMouseOut={(e) => {
-    e.currentTarget.style.backgroundColor = '#1890ff';
-  }}
->
-  ← Quay lại
-</button>
-
+            onClick={() => navigate(-1)}
+            style={{
+              marginTop: 20,
+              padding: '10px 20px',
+              backgroundColor: '#1890ff',
+              color: '#fff',
+              fontWeight: 600,
+              fontSize: 16,
+              border: 'none',
+              borderRadius: 8,
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.15)',
+              transition: 'all 0.3s ease',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = '#40a9ff';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = '#1890ff';
+            }}
+          >
+            ← Quay lại
+          </button>
         </div>
       </div>
     </div>

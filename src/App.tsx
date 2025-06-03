@@ -37,9 +37,7 @@ import ProfileAdmin from './components/admin/User/ProfileAdmin'
 import GetClient from './components/admin/User/ListUserClient'
 
 import DetailPromotion from './components/admin/Promotion/PromotionDetail'
-import GetListAlbum from './components/admin/Album/GetListAlbum'
-import PutEditAlbum from './components/admin/Album/PutEditAlbum'
-import PostAddAlbum from './components/admin/Album/PostAddAlbum'
+
 import AdminDashboard from './components/admin/Aside/AdminDashboard'
 
 import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank'
@@ -133,10 +131,7 @@ const App = () => {
         },
 
 
-        //Router Albums ảnh
-        { path: "album/list", element: <GetListAlbum /> },
-        { path: "album/add", element: <PostAddAlbum /> },
-        { path: "album/edit/:id", element: <PutEditAlbum /> },
+       
 
         /// Router quản lý Khuyễn mãi
         { path: "promotion/list", element: <GetPromotion /> },

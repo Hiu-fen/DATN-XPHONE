@@ -18,6 +18,9 @@ const bannerRouter = require('./routes/bannerRouter');
 
 
 const userRouter = require('./routes/userRouter');
+// const variantRoutes = require('./routes/variantRoutes');
+
+
 
 const app = express();
 const PORT = 5000;
@@ -56,6 +59,7 @@ app.use('/api/users', userRouter);
 
 // Order
 app.use('/api/orders', orderRoutes);
+// app.use('/api/variants', variantRoutes);
 
 
 // Chạy server
