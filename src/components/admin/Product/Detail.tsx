@@ -21,6 +21,33 @@ const ProductDetail = () => {
   const [album, setAlbum] = useState<string[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
 
+  // ✅ Lấy tên danh mục dựa theo ID
+
+const { data: categoryNames } = useQuery<string[]>({
+  queryKey: ['category-names', product?.danhmuc],
+  queryFn: async () => {
+    if (!product?.danhmuc) return ['Không xác định'];
+
+    const categoryIds = Array.isArray(product.danhmuc)
+      ? product.danhmuc
+      : [product.danhmuc];
+
+    const names = await Promise.all(
+      categoryIds.map(async (id) => {
+        try {
+          const res = await axios.get(`http://localhost:5000/api/category/${id}`);
+          return res.data.name;
+        } catch (error) {
+          return 'Không xác định';
+        }
+      })
+    );
+
+    return names;
+  },
+  enabled: !!product?.danhmuc,
+});
+
   useEffect(() => {
     if (!product) return;
     const albumImages = product.albumImages || [];
@@ -87,22 +114,22 @@ const ProductDetail = () => {
           {product.variants && product.variants.length > 0 && (
             <div style={{ marginBottom: 10 }}>
               <strong>Biến thể:</strong>{' '}
-{product.variants.map((variant, index) => (
-  <button
-    key={index}
-    onClick={() => handleSelectVariant(variant)}
-    style={{
-      marginRight: 10,
-      padding: '6px 12px',
-      borderRadius: 6,
-      border: selectedVariant === variant ? '2px solid #1890ff' : '1px solid #ccc',
-      backgroundColor: selectedVariant === variant ? '#e6f7ff' : '#fff',
-      cursor: 'pointer',
-    }}
-  >
-    {variant.color} - {variant.ram}
-  </button>
-))}
+              {product.variants.map((variant, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSelectVariant(variant)}
+                  style={{
+                    marginRight: 10,
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    border: selectedVariant === variant ? '2px solid #1890ff' : '1px solid #ccc',
+                    backgroundColor: selectedVariant === variant ? '#e6f7ff' : '#fff',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {variant.color} - {variant.ram}
+                </button>
+              ))}
             </div>
           )}
 
@@ -110,8 +137,8 @@ const ProductDetail = () => {
             <strong>Mô tả:</strong> {product.mota || 'Chưa có mô tả'}
           </p>
           <p style={{ marginBottom: 10 }}>
-            <strong>Danh mục:</strong> {product.danhmuc || 'Không xác định'}
-          </p>
+  <strong>Danh mục:</strong> {categoryNames?.join(', ') || 'Không xác định'}
+</p>
           <p style={{ marginBottom: 10 }}>
             <strong>Trạng thái:</strong> {product.trangthai || 'Không rõ'}
           </p>

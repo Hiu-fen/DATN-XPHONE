@@ -27,7 +27,7 @@ exports.createProduct = async (req, res) => {
     const savedProduct = await product.save();
     res.status(201).json(savedProduct);
   } catch (error) {
-    console.error("❌ Lỗi khi thêm sản phẩm:", error.message);
+    // console.error("❌ Lỗi khi thêm sản phẩm:", error.message);
     res.status(500).json({ message: 'Lỗi server khi thêm sản phẩm' });
   }
 };
@@ -51,7 +51,7 @@ exports.updateProduct = async (req, res) => {
     }
     res.json(updatedProduct);
   } catch (error) {
-    console.error("❌ Lỗi khi cập nhật sản phẩm:", error.message);
+    // console.error("❌ Lỗi khi cập nhật sản phẩm:", error.message);
     res.status(500).json({ message: 'Lỗi khi cập nhật sản phẩm' });
   }
 };
