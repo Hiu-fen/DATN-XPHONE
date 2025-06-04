@@ -2,6 +2,7 @@ import {
   BarChartOutlined,
   CommentOutlined,
   DatabaseOutlined,
+  FolderOpenOutlined,
   GiftOutlined,
   PhoneOutlined,
   PictureOutlined,
@@ -84,8 +85,7 @@ const AdminSidebar = () => {
       label: 'Quản lý đơn hàng',
       icon: <ShoppingCartOutlined />,
       children: [{ key: 'order/list', label: 'Đơn hàng', path: '/admin/orders' }],
-<<<<<<< HEAD
-=======
+
     },
     {
       key: 'album',
@@ -95,7 +95,7 @@ const AdminSidebar = () => {
         { key: 'album/list', label: 'Album ảnh', path: '/admin/album/list' },
         { key: 'album-add', label: 'Thêm Album ảnh', path: '/admin/album/add' },
       ],
->>>>>>> e50b36a ([AnhHTPH50205] Order)
+
     },
     
     {

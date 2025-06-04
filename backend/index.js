@@ -15,7 +15,7 @@ const orderRoutes = require('./routes/orderRouter');
 const promotionRoutes = require('./routes/promotionRouter');
 const bannerRouter = require('./routes/bannerRouter');
 
-const bannerRouter = require('./routes/bannerRouter');
+
 
 
 const userRouter = require('./routes/userRouter');
