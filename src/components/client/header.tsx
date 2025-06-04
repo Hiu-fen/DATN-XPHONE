@@ -8,7 +8,7 @@ const ClientHeader = () => {
   
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     const timeoutRef = useRef<number | null>(null);
-    const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string } | null>(null);
+    const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; _id?:string } | null>(null);
   const nav = useNavigate();
 
   useEffect(() => {
@@ -72,9 +72,9 @@ const ClientHeader = () => {
                 <Link to="/notifications" className="hover:text-red-500 flex items-center gap-2">
                   <FaBell /> Thông báo
                 </Link>
-                <Link to="/cart" className="hover:text-red-500 flex items-center gap-2">
-                  <FaShoppingCart /> Giỏ hàng
-                </Link>
+             <Link to={`/cart/${user?._id}`} className="hover:text-red-500 flex items-center gap-2">
+              <FaShoppingCart /> Giỏ hàng
+            </Link>
                 <Link to="/accounts" className="hover:text-red-500 flex items-center gap-2">
                   <FaUser /> Tài khoản
                 </Link>

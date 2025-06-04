@@ -52,7 +52,7 @@ import Account from './components/client/page/account/account'
 import Details from './components/client/page/details'
 import ProductDetail from './components/admin/Product/Detail'
 import AccountSibaLayout from './components/AccountSibaLayout'
-import AccountSiba from './components/client/page/account/siba'
+// import AccountSiba from './components/client/page/account/siba'
 import AddAccountAdmin from './components/client/page/account/add-admin'
 
 
@@ -66,8 +66,8 @@ const App = () => {
         { path: 'register', element: <Register /> },
         { path: 'about', element: <About /> },
         { path: 'contact', element: <Contact /> },
-        { path: 'cart', element: <Cart /> },
-        { path: 'detail', element: <Details /> },
+        { path: 'cart/:id', element: <Cart /> },
+        { path: 'detail/:id', element: <Details /> },
         { path: 'categorys', element: <Categorys /> },
         // { path: 'account',  element: <Account /> },
         {

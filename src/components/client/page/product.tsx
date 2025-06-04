@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { IProduct } from '../../../interface/product';
 import { ICategory } from '../../../interface/category';
-import { Card, Row, Col, Typography, Tag, Spin, Select, Input, Space, Divider } from 'antd';
+import { Card, Row, Col, Typography, Tag, Spin, Select, Input, Space } from 'antd';
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 
@@ -163,7 +163,7 @@ const ProductPage = () => {
       <Row gutter={[16, 16]}>
         {filteredProducts.map((product: IProduct) => (
           <Col xs={24} sm={12} md={8} lg={6} key={product._id}>
-            <Link to={`/product/${product._id}`}>
+            <Link to={`/detail/${product._id}`}>
               <Card
                 hoverable
                 cover={
