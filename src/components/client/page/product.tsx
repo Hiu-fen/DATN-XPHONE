@@ -6,6 +6,7 @@ import { Card, Row, Col, Typography, Tag, Spin, Select, Input, Space, Divider, I
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { FilterOutlined } from '@ant-design/icons';
+import BannerClient from "../componentChild/Home/banner"
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -67,15 +68,17 @@ const ProductPage = () => {
       });
     }
 
-    // Lọc theo RAM
-    if (selectedRams.length > 0) {
-      filtered = filtered.filter((product: IProduct) => {
-        if (!product.variants || product.variants.length === 0) return false;
-        return product.variants.some(variant => 
-          selectedRams.some(ram => variant.ram.toUpperCase().includes(ram))
-        );
-      });
-    }
+    // Lọc theo RAM (so sánh chính xác)
+if (selectedRams.length > 0) {
+  filtered = filtered.filter((product: IProduct) => {
+    if (!product.variants || product.variants.length === 0) return false;
+
+    return product.variants.some(variant =>
+      selectedRams.includes(variant.ram.toUpperCase())
+    );
+  });
+}
+
 
     // Lọc theo trạng thái còn hàng
     if (showInStockOnly) {
@@ -165,8 +168,10 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
-      <Title level={2} className="text-center mb-8 text-3xl font-bold text-gray-800">Danh sách sản phẩm</Title>
+  
+    <div className="">
+      <BannerClient />
+      <Title level={2} className=" text-center mb-8 text-3xl font-bold text-gray-800">Danh sách sản phẩm</Title>
 
       {/* Bộ lọc */}
       <div className="bg-white p-6 rounded-xl shadow-lg mb-8 border border-gray-100">
