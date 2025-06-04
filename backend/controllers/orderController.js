@@ -123,7 +123,7 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
     }
 
-    // Tạo mã đơn hàng dạng ORD-4J8K9
+    // Tạo mã đơn hàng
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let randomCode = '';
     for (let i = 0; i < 5; i++) {
@@ -172,6 +172,7 @@ exports.createOrder = async (req, res) => {
     await order.save();
     res.status(201).json(order);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Lỗi khi tạo đơn hàng' });
   }
 };

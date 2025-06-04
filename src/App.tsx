@@ -1,11 +1,11 @@
-import { useRoutes } from "react-router-dom";
-import ClientLayout from "./layout/client";
-import AdminLayout from "./layout/admin";
-import GetList from "./components/admin/Product/GetList";
+import { useRoutes } from 'react-router-dom';
+import ClientLayout from './layout/client';
+import AdminLayout from './layout/admin';
+import GetList from './components/admin/Product/GetList';
 
-import PutEdit from "./components/admin/Product/PutEdit";
-import Register from "./components/client/Register";
-import Login from "./components/client/Login";
+import PutEdit from './components/admin/Product/PutEdit';
+import Register from './components/client/Register';
+import Login from './components/client/Login';
 
 import CommentAdd from './components/admin/Comment/CommentAdd'
 import CommentAdmin from './components/admin/Comment/CommentList'
@@ -37,9 +37,7 @@ import ProfileAdmin from './components/admin/User/ProfileAdmin'
 import GetClient from './components/admin/User/ListUserClient'
 
 import DetailPromotion from './components/admin/Promotion/PromotionDetail'
-import GetListAlbum from './components/admin/Album/GetListAlbum'
-import PutEditAlbum from './components/admin/Album/PutEditAlbum'
-import PostAddAlbum from './components/admin/Album/PostAddAlbum'
+
 import AdminDashboard from './components/admin/Aside/AdminDashboard'
 
 import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank'
@@ -57,33 +55,33 @@ import AccountSibaLayout from './components/AccountSibaLayout'
 import AccountSiba from './components/client/page/account/siba'
 import AddAccountAdmin from './components/client/page/account/add-admin'
 
-
 const App = () => {
   useReloadIfBlank();
   const routes = useRoutes([
     {
-      path: "/", element: <ClientLayout />, children: [
-        { path: '/', element: <Home /> },
-        { path: 'login', element: <Login /> },
-        { path: 'register', element: <Register /> },
-        { path: 'about', element: <About /> },
-        { path: 'contact', element: <Contact /> },
-        { path: 'cart', element: <Cart /> },
-        { path: 'detail', element: <Details /> },
-        { path: 'categorys', element: <Categorys /> },
+      path: "/",
+      element: <ClientLayout />,
+      children: [
+        { path: "/", element: <Home /> },
+        { path: "login", element: <Login /> },
+        { path: "register", element: <Register /> },
+        { path: "about", element: <About /> },
+        { path: "contact", element: <Contact /> },
+        { path: "cart", element: <Cart /> },
+        { path: "detail", element: <Details /> },
+        { path: "categorys", element: <Categorys /> },
         // { path: 'account',  element: <Account /> },
         {
-          path: 'accounts',
+          path: "accounts",
           element: <AccountSibaLayout />,
           children: [
             { index: true, element: <Account /> }, // ✅ Đây là mặc định
-            { path: 'account', element: <Account /> },
-            { path: 'addaccountadmin', element: <AddAccountAdmin /> }, // nếu có
+            { path: "account", element: <Account /> },
+            { path: "addaccountadmin", element: <AddAccountAdmin /> }, // nếu có
           ],
         },
-        { path: 'product', element: <Product /> },
-
-      ]
+        { path: "product", element: <Product /> },
+      ],
     },
     {
       path: "/admin/login",
@@ -108,10 +106,10 @@ const App = () => {
         { path: "category/:id/edit", element: <PutEditCategory /> },
 
         //Router Sản phẩm
-        { path: 'phone/list', element: <GetList /> },
-        { path: 'phone/add', element: <PostAdd /> },
-        { path: 'phone/:id', element: <ProductDetail /> },
-        { path: 'phone/:id/edit', element: <PutEdit /> },
+        { path: "phone/list", element: <GetList /> },
+        { path: "phone/add", element: <PostAdd /> },
+        { path: "phone/:id", element: <ProductDetail /> },
+        { path: "phone/:id/edit", element: <PutEdit /> },
 
         //Router Đăng ký, Đăng nhập
         { path: "comment/list", element: <CommentAdmin /> },
@@ -124,19 +122,10 @@ const App = () => {
         { path: "user/listclient", element: <GetClient /> },
 
         //Router Order
-        {
-          path: "orders", element: <OrderList />,
-          
-        },
-        {
-          path: "orders/:id", element: <OrderDetail />,
-        },
-
-
-        //Router Albums ảnh
-        { path: "album/list", element: <GetListAlbum /> },
-        { path: "album/add", element: <PostAddAlbum /> },
-        { path: "album/edit/:id", element: <PutEditAlbum /> },
+        //admin
+        { path: "orders", element: <OrderList /> },
+        { path: "orders/:id", element: <OrderDetail /> },
+        // client
 
         /// Router quản lý Khuyễn mãi
         { path: "promotion/list", element: <GetPromotion /> },

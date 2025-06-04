@@ -189,9 +189,10 @@ const Categorys = () => {
               </span>
 
               {/* Nút thêm vào giỏ hàng */}
-              <button className="text-xs sm:text-sm px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <a href="/cart"><button className="text-xs sm:text-sm px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 Thêm vào giỏ
-              </button>
+              </button></a>
+              
             </div>
           </div>
         ))}

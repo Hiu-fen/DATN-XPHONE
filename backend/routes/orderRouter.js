@@ -13,7 +13,7 @@ router.patch('/:id', orderController.updateOrderStatus);
 
 // Xử lý yêu cầu trả hàng
 router.patch('/:id/return', orderController.updateOrderReturn);
+ 
 
-// Thêm đơn hàng 
-router.post('/', orderController.createOrder);
+
 module.exports = router;

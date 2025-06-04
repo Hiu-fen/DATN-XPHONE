@@ -1,22 +1,37 @@
 import React, { useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import axios from "axios";
-import { message, Form, Input, Button, Select, Upload, Spin } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  message,
+  Form,
+  Input,
+  Button,
+  Select,
+  Upload,
+  Spin,
+  Space,
+  InputNumber,
+} from "antd";
+import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RcFile } from "antd/lib/upload";
 
-const { TextArea } = Input;
+interface VariantInput {
+  color: string;
+  ram: string;
+  price: number;
+}
 
-interface IProduct {
+interface IProductForm {
   name: string;
   image: string;
   albumImages: string[];
   price: number;
   soluong: number;
   mota: string;
-  danhmuc: string; // tên danh mục
+  danhmuc: string; // name of category
   trangthai: string;
+  variants: VariantInput[];
 }
 
 interface ICategory {
@@ -24,7 +39,9 @@ interface ICategory {
   name: string;
 }
 
-const PutEdit = () => {
+const { TextArea } = Input;
+
+const PutEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
 
@@ -35,10 +52,17 @@ const PutEdit = () => {
     reset,
     setValue,
     watch,
-  } = useForm<IProduct>({
+  } = useForm<IProductForm>({
     defaultValues: {
+      name: "",
       image: "",
       albumImages: [],
+      price: 0,
+      soluong: 0,
+      mota: "",
+      danhmuc: "",
+      trangthai: "còn bán",
+      variants: [],
     },
   });
 
@@ -48,6 +72,17 @@ const PutEdit = () => {
 
   const image = watch("image");
   const albumImages = watch("albumImages");
+  const variants = watch("variants") || [];
+
+  // useFieldArray cho biến thể
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({
+    control,
+    name: "variants",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -62,11 +97,14 @@ const PutEdit = () => {
 
         const product = productRes.data;
 
-        // Tìm category theo tên hoặc id, ưu tiên lấy tên danh mục
-        const matchedCategory = categoryList.find(
-          (cat: ICategory) =>
-            cat.name === product.danhmuc || cat._id === product.danhmuc
-        );
+        // map variants từ product
+        const loadedVariants: VariantInput[] = product.variants || [];
+
+        // tìm category theo name hoặc id
+       const matchedCategory = categoryList.find((cat: ICategory) =>
+  cat.name === product.danhmuc || cat._id === product.danhmuc
+);
+
 
         reset({
           name: product.name || "",
@@ -76,7 +114,8 @@ const PutEdit = () => {
           soluong: product.soluong || 0,
           mota: product.mota || "",
           danhmuc: matchedCategory ? matchedCategory.name : "",
-          trangthai: product.trangthai || "",
+          trangthai: product.trangthai || "còn bán",
+          variants: loadedVariants,
         });
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
@@ -86,7 +125,7 @@ const PutEdit = () => {
     if (id) fetchData();
   }, [id, reset]);
 
-  // Upload ảnh chính (file đầu tiên)
+  // Upload ảnh chính
   const uploadImage = async (file: RcFile | null) => {
     if (!file) return;
     setLoading(true);
@@ -107,7 +146,7 @@ const PutEdit = () => {
     }
   };
 
-  // Upload ảnh phụ nhận File[]
+  // Upload ảnh phụ
   const uploadAlbumImages = async (files: RcFile[] | null) => {
     if (!files || files.length === 0) return;
     setAlbumLoading(true);
@@ -140,9 +179,47 @@ const PutEdit = () => {
     setValue("albumImages", updated, { shouldValidate: true });
   };
 
-  const onSubmit = async (data: IProduct) => {
+  const onSubmit = async (data: IProductForm) => {
     try {
-      await axios.put(`http://localhost:5000/api/products/${id}`, data);
+      // Kiểm tra category
+      const selectedCategory = categories.find((c) => c.name === data.danhmuc);
+      if (!selectedCategory) {
+        message.error("Không tìm thấy danh mục đã chọn");
+        return;
+      }
+      // Kiểm tra ảnh chính, ảnh phụ
+      if (!data.image) {
+        message.error("Vui lòng chọn ảnh chính");
+        return;
+      }
+      if (!data.albumImages.length) {
+        message.error("Vui lòng chọn ít nhất một ảnh phụ");
+        return;
+      }
+      // Kiểm tra biến thể nếu có
+      for (let i = 0; i < data.variants.length; i++) {
+        const v = data.variants[i];
+        if (!v.color || !v.ram || v.price == null) {
+          message.error(`Biến thể thứ ${i + 1} thiếu thông tin`);
+          return;
+        }
+      }
+
+      // Tạo payload
+      const updatedData = {
+        name: data.name,
+        image: data.image,
+        albumImages: data.albumImages,
+        price: data.price,
+        soluong: data.soluong,
+        mota: data.mota,
+        danhmuc: selectedCategory._id, // dùng _id của category
+        trangthai: data.trangthai,
+        status: true,
+        variants: data.variants, // gửi mảng biến thể
+      };
+
+      await axios.put(`http://localhost:5000/api/products/${id}`, updatedData);
       message.success("Cập nhật sản phẩm thành công");
       nav("/admin/phone/list", { state: { forceReload: true } });
     } catch (err) {
@@ -186,7 +263,7 @@ const PutEdit = () => {
           showUploadList={false}
           beforeUpload={(file) => {
             uploadImage(file);
-            return false; // prevent auto upload
+            return false;
           }}
         >
           <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
@@ -196,7 +273,12 @@ const PutEdit = () => {
           <img
             src={image}
             alt="Ảnh chính"
-            style={{ marginTop: 8, maxWidth: 150, maxHeight: 150, borderRadius: 6 }}
+            style={{
+              marginTop: 8,
+              maxWidth: 150,
+              maxHeight: 150,
+              borderRadius: 6,
+            }}
           />
         )}
       </Form.Item>
@@ -213,26 +295,45 @@ const PutEdit = () => {
           multiple
           showUploadList={false}
           beforeUpload={(fileList) => {
-            uploadAlbumImages(Array.isArray(fileList) ? fileList : [fileList]);
-            return false; // prevent auto upload
+            uploadAlbumImages(
+              Array.isArray(fileList) ? fileList : [fileList]
+            );
+            return false;
           }}
         >
           <Button icon={<UploadOutlined />}>Chọn ảnh phụ</Button>
         </Upload>
         {albumLoading && <Spin style={{ marginLeft: 10 }} />}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            marginTop: 8,
+          }}
+        >
           {albumImages?.map((img, index) => (
             <div key={index} style={{ position: "relative" }}>
               <img
                 src={img}
                 alt={`Ảnh phụ ${index + 1}`}
-                style={{ width: 100, height: 100, objectFit: "cover", borderRadius: 6 }}
+                style={{
+                  width: 100,
+                  height: 100,
+                  objectFit: "cover",
+                  borderRadius: 6,
+                }}
               />
               <Button
                 type="primary"
                 danger
                 size="small"
-                style={{ position: "absolute", top: 0, right: 0, padding: "0 6px" }}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  right: 0,
+                  padding: "0 6px",
+                }}
                 onClick={() => removeImage(index)}
               >
                 ✕
@@ -305,7 +406,7 @@ const PutEdit = () => {
               value={field.value}
               options={categories.map((cat) => ({
                 label: cat.name,
-                value: cat.name, // gửi name thay vì id
+                value: cat.name,
               }))}
             />
           )}
@@ -337,9 +438,59 @@ const PutEdit = () => {
         />
       </Form.Item>
 
+      {/* Biến thể */}
+      <Form.Item label="Biến thể">
+        {variantFields.map((field, index) => (
+          <Space key={field.id} align="baseline" style={{ marginBottom: 8 }}>
+            <Controller
+              name={`variants.${index}.color`}
+              control={control}
+              rules={{ required: "Nhập màu" }}
+              render={({ field }) => <Input placeholder="Color" {...field} />}
+            />
+            <Controller
+              name={`variants.${index}.ram`}
+              control={control}
+              rules={{ required: "Nhập RAM" }}
+              render={({ field }) => <Input placeholder="RAM" {...field} />}
+            />
+            <Controller
+              name={`variants.${index}.price`}
+              control={control}
+              rules={{ required: "Nhập giá biến thể" }}
+              render={({ field }) => (
+                <InputNumber<number>
+                  min={0}
+                  formatter={(val) =>
+                    `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
+                  placeholder="Giá"
+                  {...field}
+                />
+              )}
+            />
+            <MinusCircleOutlined onClick={() => removeVariant(index)} />
+          </Space>
+        ))}
+        <Button
+          type="dashed"
+          onClick={() => appendVariant({ color: "", ram: "", price: 0 })}
+          block
+          icon={<PlusOutlined />}
+        >
+          Thêm biến thể
+        </Button>
+      </Form.Item>
+
       {/* Nút submit */}
       <Form.Item>
-        <Button type="primary" htmlType="submit" block loading={loading || albumLoading}>
+        <Button
+          type="primary"
+          htmlType="submit"
+          block
+          loading={loading || albumLoading}
+        >
           Cập nhật sản phẩm
         </Button>
       </Form.Item>
