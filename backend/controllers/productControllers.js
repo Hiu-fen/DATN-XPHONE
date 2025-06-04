@@ -1,4 +1,5 @@
 const Product = require('../models/productModels');
+const Order = require('../models/orderModel');
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -11,7 +12,7 @@ exports.getAllProducts = async (req, res) => {
 
 exports.createProduct = async (req, res) => {
   try {
-    const productData = req.body; // lấy dữ liệu từ FE
+    const productData = req.body;
     const product = new Product(productData);
     await product.save();
     res.status(201).json(product);
@@ -19,13 +20,12 @@ exports.createProduct = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi tạo sản phẩm' });
   }
 };
-// Sửa sản phẩm theo id
+
 exports.updateProduct = async (req, res) => {
   try {
-    const { id } = req.params; // lấy id từ params
-    const updatedData = req.body; // dữ liệu cập nhật từ FE
+    const { id } = req.params;
+    const updatedData = req.body;
 
-    // Tìm và cập nhật sản phẩm, trả về document mới sau khi cập nhật
     const updatedProduct = await Product.findByIdAndUpdate(id, updatedData, { new: true });
 
     if (!updatedProduct) {
@@ -38,11 +38,19 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Xóa sản phẩm theo id
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Kiểm tra sản phẩm có trong đơn hàng đang xử lý
+    const orders = await Order.find({
+      'items.productId': id,
+      status: { $nin: ['Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'] },
+    });
+
+    if (orders.length > 0) {
+      return res.status(400).json({ message: 'Không thể xóa sản phẩm vì đang liên kết với đơn hàng hiện tại' });
+    }
     const deletedProduct = await Product.findByIdAndDelete(id);
 
     if (!deletedProduct) {
@@ -57,8 +65,6 @@ exports.deleteProduct = async (req, res) => {
 exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Tìm sản phẩm theo id
     const product = await Product.findById(id);
 
     if (!product) {
@@ -71,3 +77,25 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+// API để trừ số lượng sản phẩm
+exports.updateProductQuantity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { soluong } = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+    }
+
+    product.soluong += soluong;
+    if (product.soluong < 0) {
+      return res.status(400).json({ message: 'Số lượng không đủ trong kho' });
+    }
+
+    await product.save();
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi cập nhật số lượng sản phẩm' });
+  }
+};

@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { Table, Select, message, Tag, Input } from "antd";
+import { Table, Select, message, Tag, Input, Button, Popconfirm, Space } from "antd";
 import { useNavigate } from "react-router-dom";
 
 interface OrderItem {
   productId: string;
   productName: string;
-  quantity: number;
+  soluong: number;
   price: number;
+  snapshot?: { name: string; price: number; image?: string }; // THÊM: Snapshot
 }
 
 interface Order {
@@ -22,31 +23,56 @@ interface Order {
   items: OrderItem[];
   total: number;
   isPaid: boolean;
+  paymentMethod?: string; // THÊM
+  shippingProvider?: string; // THÊM
+  trackingNumber?: string; // THÊM
+  estimatedDeliveryDate?: string; // THÊM
+  notes?: string; // THÊM
+  returnStatus?: string; // THÊM
+  returnReason?: string; // THÊM
+  statusHistory?: { status: string; timestamp: string }[]; // THÊM
 }
 
-// Danh sách trạng thái hợp lệ
 const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
   "Đã giao",
   "Hoàn thành",
   "Đã huỷ",
+  "Trả hàng/Hoàn tiền", // THÊM: Trạng thái trả hàng
 ];
 
 const OrderList = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
 
-  const {
-    data: orders,
-    refetch,
-    isLoading,
-  } = useQuery<Order[]>({
+  // Hàm lọc trạng thái hợp lệ
+  const getValidStatusOptions = (currentStatus: string) => {
+    if (currentStatus === "Hoàn thành" || currentStatus === "Đã huỷ" || currentStatus === "Trả hàng/Hoàn tiền") {
+      return [{ label: currentStatus, value: currentStatus }];
+    }
+    if (currentStatus === "Đã giao") {
+      return [
+        { label: "Đã giao", value: "Đã giao" },
+        { label: "Hoàn thành", value: "Hoàn thành" },
+        { label: "Trả hàng/Hoàn tiền", value: "Trả hàng/Hoàn tiền" },
+      ];
+    }
+    if (currentStatus === "Chờ xác nhận" || currentStatus === "Đang xử lý") {
+      const currentIndex = statusOptions.indexOf(currentStatus);
+      const nextStatus = statusOptions[currentIndex + 1];
+      return [
+        { label: currentStatus, value: currentStatus },
+        { label: nextStatus, value: nextStatus },
+        { label: "Đã huỷ", value: "Đã huỷ" },
+      ];
+    }
+    return [{ label: currentStatus, value: currentStatus }];
+  };
+
+  const { data: orders, refetch, isLoading } = useQuery<Order[]>({
     queryKey: ["orders"],
-    queryFn: async () => {
-      const res = await axios.get("http://localhost:5000/api/orders");
-      return res.data;
-    },
+    queryFn: async () => (await axios.get("http://localhost:5000/api/orders")).data,
   });
 
   const mutation = useMutation({
@@ -57,40 +83,69 @@ const OrderList = () => {
       message.success("Cập nhật trạng thái thành công");
       refetch();
     },
-    onError: () => {
-      message.error("Lỗi khi cập nhật trạng thái");
+    onError: (error: any) => {
+      message.error(error.response?.data?.message || "Lỗi khi cập nhật trạng thái");
     },
   });
 
-  const handleStatusChange = (
-    id: string,
-    currentStatus: string,
-    newStatus: string
-  ) => {
-    const currentIndex = statusOptions.indexOf(currentStatus);
-    const newIndex = statusOptions.indexOf(newStatus);
+  // THÊM: Mutation xử lý trả hàng
+  const returnMutation = useMutation({
+    mutationFn: async ({ id, returnStatus }: { id: string; returnStatus: string }) => {
+      await axios.patch(`http://localhost:5000/api/orders/${id}/return`, { returnStatus });
+    },
+    onSuccess: () => {
+      message.success("Cập nhật trạng thái trả hàng thành công");
+      refetch();
+    },
+    onError: (error: any) => {
+      message.error(error.response?.data?.message || "Lỗi khi xử lý trả hàng");
+    },
+  });
 
-    if (newStatus === "Đã huỷ") {
-      mutation.mutate({ id, status: newStatus });
-      return;
-    }
+  // THÊM: Mutation xóa đơn hàng
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => await axios.delete(`http://localhost:5000/api/orders/${id}`),
+    onSuccess: () => {
+      message.success("Xóa đơn hàng thành công");
+      refetch();
+    },
+    onError: (error: any) => {
+      message.error(error.response?.data?.message || "Lỗi khi xóa đơn hàng");
+    },
+  });
 
-    if (newIndex <= currentIndex) {
-      message.warning("Không thể quay lại trạng thái trước!");
-      return;
-    }
-
-    if (newIndex === -1) {
+  const handleStatusChange = (id: string, currentStatus: string, newStatus: string) => {
+    if (!statusOptions.includes(newStatus)) {
       message.error("Trạng thái không hợp lệ");
       return;
     }
-
+    if (currentStatus === "Hoàn thành" || currentStatus === "Đã huỷ" || currentStatus === "Trả hàng/Hoàn tiền") {
+      message.warning(`Không thể thay đổi từ trạng thái "${currentStatus}"`);
+      return;
+    }
+    if (currentStatus === "Đã giao" && newStatus === "Đã huỷ") {
+      message.warning("Không thể hủy đơn hàng đã giao");
+      return;
+    }
+    const currentIndex = statusOptions.indexOf(currentStatus);
+    const newIndex = statusOptions.indexOf(newStatus);
+    if (newStatus !== "Đã huỷ" && newStatus !== "Trả hàng/Hoàn tiền" && newIndex !== currentIndex + 1) {
+      message.warning("Chỉ có thể chuyển sang trạng thái tiếp theo");
+      return;
+    }
     mutation.mutate({ id, status: newStatus });
   };
 
+  const handleReturnAction = (id: string, returnStatus: string) => {
+    returnMutation.mutate({ id, returnStatus });
+  };
+
+  const handleDeleteOrder = (id: string) => {
+    deleteMutation.mutate(id);
+  };
+
   const filteredOrders = orders?.filter((o) => {
-    const text =
-      `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+    const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
 
@@ -100,10 +155,7 @@ const OrderList = () => {
       dataIndex: "orderCode",
       key: "orderCode",
       render: (_: any, record: Order) => (
-        <a
-          style={{ cursor: "pointer", color: "#1890ff" }}
-          onClick={() => navigate(`/admin/orders/${record._id}`)}
-        >
+        <a style={{ cursor: "pointer", color: "#1890ff" }} onClick={() => navigate(`/admin/orders/${record._id}`)}>
           {record.orderCode}
         </a>
       ),
@@ -126,7 +178,7 @@ const OrderList = () => {
         <ul style={{ paddingLeft: 20 }}>
           {record.items.map((item) => (
             <li key={item.productId}>
-              {item.productName} x {item.quantity} -{" "}
+              {item.snapshot?.name || item.productName || "Sản phẩm không còn tồn tại"} x {item.soluong} -{" "}
               {item.price.toLocaleString()} VND
             </li>
           ))}
@@ -142,30 +194,61 @@ const OrderList = () => {
     {
       title: "Thanh toán",
       key: "isPaid",
-      render: (_: any, record: Order) =>
-        record.isPaid ? (
-          <Tag color="green">Đã thanh toán</Tag>
-        ) : (
-          <Tag color="red">Chưa thanh toán</Tag>
-        ),
+      render: (_: any, record: Order) => (
+        <Tag color={record.isPaid ? "green" : "red"}>
+          {record.isPaid ? "Đã thanh toán" : "Chưa thanh toán"}
+        </Tag>
+      ),
+    },
+    {
+      title: "Phương thức thanh toán",
+      dataIndex: "paymentMethod",
+      key: "paymentMethod",
+      render: (method: string) => method || "Chưa xác định",
+    },
+    {
+      title: "Đơn vị vận chuyển",
+      dataIndex: "shippingProvider",
+      key: "shippingProvider",
+      render: (provider: string) => provider || "Chưa chọn",
+    },
+    {
+      title: "Ghi chú",
+      dataIndex: "notes",
+      key: "notes",
+      render: (notes: string) => notes || "-",
+    },
+    {
+      title: "Trạng thái trả hàng",
+      dataIndex: "returnStatus",
+      key: "returnStatus",
+      render: (status: string, record: Order) => (
+        <Space>
+          <span>{status || "-"}</span>
+          {status === "Đang chờ duyệt" && (
+            <>
+              <Button size="small" onClick={() => handleReturnAction(record._id, "Đã duyệt")}>
+                Duyệt
+              </Button>
+              <Button size="small" danger onClick={() => handleReturnAction(record._id, "Từ chối")}>
+                Từ chối
+              </Button>
+            </>
+          )}
+        </Space>
+      ),
     },
     {
       title: "Trạng thái",
       key: "status",
       render: (_: any, record: Order) => (
         <Select
-          value={
-            statusOptions.includes(record.status) ? record.status : undefined
-          }
-          onChange={(value) =>
-            handleStatusChange(record._id, record.status, value)
-          }
+          value={statusOptions.includes(record.status) ? record.status : undefined}
+          onChange={(value) => handleStatusChange(record._id, record.status, value)}
           style={{ width: 160 }}
-          options={statusOptions.map((status) => ({
-            label: status,
-            value: status,
-          }))}
+          options={getValidStatusOptions(record.status)}
           placeholder="Chọn trạng thái"
+          disabled={record.status === "Hoàn thành" || record.status === "Đã huỷ" || record.status === "Trả hàng/Hoàn tiền"}
         />
       ),
     },
@@ -194,6 +277,7 @@ const OrderList = () => {
           showSizeChanger: false,
           pageSizeOptions: ["5", "10", "20"],
         }}
+        scroll={{ x: 'max-content' }}  
       />
     </div>
   );

@@ -1,142 +1,171 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import { Button, Form, Input, message, Select, Spin, Table } from 'antd';
 
-const Cart = () => {
-    const [cartItems, setCartItems] = useState([
+interface OrderItem {
+  productId: string;
+  productName: string;
+  soluong: number;
+  price: number;
+}
+
+interface IProduct {
+  _id: string;
+  name: string;
+  price: number;
+  soluong: number;
+  image: string;
+}
+
+const PlaceOrder = () => {
+  const [form] = Form.useForm();
+  const [cart, setCart] = useState<OrderItem[]>([]);
+
+  // Lấy danh sách sản phẩm
+  const { data: products, isLoading } = useQuery<IProduct[]>({
+    queryKey: ['products'],
+    queryFn: async () => (await axios.get('http://localhost:5000/api/products')).data,
+  });
+
+  // Mutation tạo đơn hàng
+  const mutation = useMutation({
+    mutationFn: async (orderData: any) => {
+      return await axios.post('http://localhost:5000/api/orders', orderData);
+    },
+    onSuccess: () => {
+      message.success('Đặt hàng thành công!');
+      form.resetFields();
+      setCart([]);
+    },
+    onError: (error: any) => {
+      message.error(error.response?.data?.message || 'Lỗi khi đặt hàng');
+    },
+  });
+
+  // Thêm sản phẩm vào giỏ hàng
+  const addToCart = (product: IProduct, soluong: number) => {
+    const existingItem = cart.find((item) => item.productId === product._id);
+    if (existingItem) {
+      setCart(
+        cart.map((item) =>
+          item.productId === product._id
+            ? { ...item, soluong: item.soluong + soluong }
+            : item
+        )
+      );
+    } else {
+      setCart([
+        ...cart,
         {
-            id: 1,
-            name: 'iPhone 15 Pro Max',
-            price: 34990000,
-            image: 'https://clickbuy.com.vn/uploads/pro/iphone-15-pro-max-1tb-cu-dep-99-sm-197629.png',
-            quantity: 1,
-            color: 'Titan Xanh',
-            storage: '256GB',
+          productId: product._id,
+          productName: product.name,
+          soluong,
+          price: product.price,
         },
-        {
-            id: 2,
-            name: 'Samsung Galaxy S24 Ultra',
-            price: 29990000,
-            image: 'https://product.hstatic.net/200000409445/product/12_40822dafb8654a558df09c7e5307f69e_master.jpg',
-            quantity: 2,
-            color: 'Đen Bóng',
-            storage: '512GB',
-        },
-    ]);
+      ]);
+    }
+  };
 
-    const formatPrice = (price: number) =>
-        price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+  // Xử lý submit form
+  const onFinish = (values: any) => {
+    if (cart.length === 0) {
+      message.error('Vui lòng chọn ít nhất một sản phẩm');
+      return;
+    }
 
-    const handleQuantityChange = (id: number, delta: number) => {
-        setCartItems((prev) =>
-            prev.map((item) =>
-                item.id === id
-                    ? {
-                        ...item,
-                        quantity: Math.max(1, item.quantity + delta),
-                    }
-                    : item
-            )
-        );
+    const total = cart.reduce((sum, item) => sum + item.price * item.soluong, 0) + 35000; // Phí vận chuyển cố định
+
+    const orderData = {
+      customerName: values.customerName,
+      phone: values.phone,
+      address: values.address,
+      items: cart,
+      total,
+      paymentMethod: values.paymentMethod,
+      shippingProvider: values.shippingProvider,
+      notes: values.notes,
     };
 
-    const handleRemove = (id: number) => {
-        setCartItems((prev) => prev.filter((item) => item.id !== id));
-    };
+    mutation.mutate(orderData);
+  };
 
-    const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  // Cột bảng giỏ hàng
+  const columns = [
+    { title: 'Sản phẩm', dataIndex: 'productName', key: 'productName' },
+    { title: 'Số lượng', dataIndex: 'soluong', key: 'soluong' },
+    {
+      title: 'Giá', dataIndex: 'price', key: 'price',
+      render: (price: number) => price.toLocaleString() + ' VND',
+    },
+    {
+      title: 'Thành tiền', key: 'total',
+      render: (_: any, record: OrderItem) => (record.soluong * record.price).toLocaleString() + ' VND',
+    },
+  ];
 
-    return (
-        <div className="container mx-auto px-4 py-10 ">
-            <h1 className="text-3xl font-bold mb-8 ">Giỏ Hàng Của Bạn</h1>
+  if (isLoading) return <Spin tip="Đang tải sản phẩm..." />;
 
-            {cartItems.length === 0 ? (
-                <p className="text-center text-gray-500 text-lg">Giỏ hàng của bạn đang trống.</p>
-            ) : (
-                <div className="overflow-x-auto rounded-lg shadow-lg">
-                    <table className="w-full bg-white text-sm">
-                        <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-                            <tr>
-                                <th className="p-4 text-center">STT</th>
-                                <th className="p-4 text-left">Sản phẩm</th>
-                                <th className="p-4 text-center">Màu sắc</th>
-                                <th className="p-4 text-center">Dung lượng</th>
-                                <th className="p-4 text-center">Đơn giá</th>
-                                <th className="p-4 text-center">Số lượng</th>
-                                <th className="p-4 text-center">Thành tiền</th>
-                                <th className="p-4 text-center">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {cartItems.map((item, index) => (
-                                <tr key={item.id} className="border-t hover:bg-gray-50 transition-all">
-                                    <td className="text-center p-4 font-semibold">{index + 1}</td>
-                                    <td className="p-4 flex items-center gap-4">
-                                        <img
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="w-16 h-16 rounded-lg border object-cover"
-                                        />
-                                        <span className="font-medium text-gray-800">{item.name}</span>
-                                    </td>
-                                    <td className="text-center p-4">{item.color}</td>
-                                    <td className="text-center p-4">{item.storage}</td>
-                                    <td className="text-center p-4 text-red-500 font-medium">
-                                        {formatPrice(item.price)}
-                                    </td>
-                                    <td className="text-center p-4">
-                                        <div className="flex justify-center items-center gap-2">
-                                            <button
-                                                onClick={() => handleQuantityChange(item.id, -1)}
-                                                className="w-7 h-7 text-lg border rounded hover:bg-gray-100"
-                                            >
-                                                −
-                                            </button>
-                                            <span className="w-6 text-center">{item.quantity}</span>
-                                            <button
-                                                onClick={() => handleQuantityChange(item.id, 1)}
-                                                className="w-7 h-7 text-lg border rounded hover:bg-gray-100"
-                                            >
-                                                ＋
-                                            </button>
-                                        </div>
-                                    </td>
-                                    <td className="text-center p-4 font-semibold text-red-600">
-                                        {formatPrice(item.price * item.quantity)}
-                                    </td>
-                                    <td className="text-center p-4">
-                                        <button
-                                            onClick={() => handleRemove(item.id)}
-                                            className="text-sm text-red-500 hover:underline"
-                                        >
-                                            Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+  return (
+    <div>
+      <h2>Đặt hàng</h2>
+      <Form form={form} onFinish={onFinish} layout="vertical">
+        <Form.Item
+          name="customerName"
+          label="Họ tên"
+          rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="phone"
+          label="Số điện thoại"
+          rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item
+          name="address"
+          label="Địa chỉ"
+          rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
+        >
+          <Input />
+        </Form.Item>
+        <Form.Item name="paymentMethod" label="Phương thức thanh toán">
+          <Select>
+            <Select.Option value="cod">Thanh toán khi nhận hàng</Select.Option>
+          </Select>
+        </Form.Item>
+        <Form.Item name="shippingProvider" label="Đơn vị vận chuyển">
+          <Select>
+            <Select.Option value="ghn">Giao Hàng Nhanh</Select.Option>
+            <Select.Option value="ghtk">Giao Hàng Tiết Kiệm</Select.Option>
+          </Select>
+        </Form.Item>
+        <Form.Item name="notes" label="Ghi chú">
+          <Input.TextArea />
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={mutation.isLoading}>
+            Đặt hàng
+          </Button>
+        </Form.Item>
+      </Form>
 
-                    <div className="flex flex-col md:flex-row justify-between items-center mt-6 border-t pt-6 px-4 pb-6">
-                        <Link
-                            to="/home"
-                            className="text-blue-600 hover:underline text-sm mb-4 md:mb-0"
-                        >
-                            ← Quay lại tiếp tục mua sắm
-                        </Link>
-                        <div className="text-right space-y-2">
-                            <p className="text-xl font-bold">
-                                Tổng Tiền:{' '}
-                                <span className="text-red-600">{formatPrice(total)}</span>
-                            </p>
-                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg">
-                                Thanh toán ngay
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+      <h3>Giỏ hàng</h3>
+      <Table dataSource={cart} columns={columns} rowKey="productId" pagination={false} />
+
+      <h3>Chọn sản phẩm</h3>
+      {products?.map((product) => (
+        <div key={product._id} style={{ marginBottom: 10 }}>
+          <span>{product.name} - {product.price.toLocaleString()} VND (Tồn: {product.soluong})</span>
+          <Button onClick={() => addToCart(product, 1)} style={{ marginLeft: 10 }}>
+            Thêm
+          </Button>
         </div>
-    );
+      ))}
+    </div>
+  );
 };
 
-export default Cart;
+export default PlaceOrder;
