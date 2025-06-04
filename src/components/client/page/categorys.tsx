@@ -4,6 +4,7 @@ import React from 'react'
 import { IProduct } from '../../../interface/product'
 import { ICategory } from '../../../interface/category'
 import '../../../style/global.css'
+import BannerClient from "../componentChild/Home/banner"
 
 const Categorys = () => {
   const [selectedCategoryId, setSelectedCategoryId] = React.useState<string | null>(null)
@@ -70,15 +71,8 @@ const Categorys = () => {
 
   return (
     <div className="w-full">
-      {/* Banner */}
-      <div className="w-full border h-[200px] md:h-[400px] flex justify-center items-center overflow-hidden">
-        <img
-          src="https://img.pikbest.com/origin/10/01/53/35bpIkbEsTBzN.png!w700wp"
-          alt=""
-          className="w-full h-full object-cover"
-        />
-      </div>
-
+       {/* Banner */}
+        <BannerClient />
       {/* Danh mục */}
       <div className="w-full flex flex-col items-center">
         <h2 className="text-xl md:text-2xl font-bold my-4 text-center">Danh mục</h2>
