@@ -17,4 +17,14 @@ router.patch('/:id', orderController.updateOrderStatus);
 
 
 
+// Thêm đơn hàng mới
+// router.post('/', orderController.createOrder);
+
+
+// Cập nhật trạng thái đơn hàng
+router.patch('/:id', orderController.updateOrderStatus);
+
+
+
+
 module.exports = router;

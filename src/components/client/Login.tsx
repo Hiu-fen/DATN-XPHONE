@@ -34,6 +34,8 @@ const Login = () => {
 
       message.success("Đăng nhập thành công");
       nav("/"); // 👉 điều hướng về trang chính sau khi đăng nhập
+      location.reload()
+
     } catch (error: any) {
       const errMsg = error.response?.data?.message || "Đăng nhập thất bại";
       message.error(errMsg);

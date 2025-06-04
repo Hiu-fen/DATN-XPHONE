@@ -24,13 +24,13 @@ interface Order {
   isPaid: boolean;
 }
 
-// Danh sách trạng thái hợp lệ
+// Thứ tự trạng thái đúng theo luồng xử lý
 const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
   "Đã giao",
   "Hoàn thành",
-  "Đã huỷ",
+  "Đã huỷ"
 ];
 
 const OrderList = () => {
@@ -89,8 +89,7 @@ const OrderList = () => {
   };
 
   const filteredOrders = orders?.filter((o) => {
-    const text =
-      `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+    const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
 
@@ -154,19 +153,18 @@ const OrderList = () => {
       key: "status",
       render: (_: any, record: Order) => (
         <Select
-          value={
-            statusOptions.includes(record.status) ? record.status : undefined
-          }
+          value={record.status}
           onChange={(value) =>
             handleStatusChange(record._id, record.status, value)
           }
           style={{ width: 160 }}
-          options={statusOptions.map((status) => ({
-            label: status,
-            value: status,
-          }))}
-          placeholder="Chọn trạng thái"
-        />
+        >
+          {statusOptions.map((status) => (
+            <Select.Option key={status} value={status}>
+              {status}
+            </Select.Option>
+          ))}
+        </Select>
       ),
     },
   ];

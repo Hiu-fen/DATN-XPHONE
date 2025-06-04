@@ -3,7 +3,7 @@ export interface IProduct {
   name: string;
   image: string;
   albumImages: string[];
-  price: number;       // bạn vẫn giữ nếu cần
+  price: string;       // bạn vẫn giữ nếu cần
   soluong: number;
   mota?: string;
   danhmuc: string;

@@ -2,7 +2,9 @@ import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { IProduct } from '../../../interface/product';
 import { ICategory } from '../../../interface/category';
+
 import { Card, Row, Col, Typography, Tag, Spin, Select, Input, Space, Divider, InputNumber, Button, Dropdown } from 'antd';
+
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { FilterOutlined } from '@ant-design/icons';
@@ -253,7 +255,7 @@ if (selectedRams.length > 0) {
       <Row gutter={[24, 24]}>
         {filteredProducts.map((product: IProduct) => (
           <Col xs={24} sm={12} md={8} lg={6} key={product._id}>
-            <Link to={`/product/${product._id}`}>
+            <Link to={`/detail/${product._id}`}>
               <Card
                 hoverable
                 className="h-full transition-all duration-300 hover:shadow-xl"

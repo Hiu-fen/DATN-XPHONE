@@ -2,6 +2,7 @@ import {
   BarChartOutlined,
   CommentOutlined,
   DatabaseOutlined,
+  FolderOpenOutlined,
   GiftOutlined,
   PhoneOutlined,
   PictureOutlined,
@@ -84,6 +85,17 @@ const AdminSidebar = () => {
       label: 'Quản lý đơn hàng',
       icon: <ShoppingCartOutlined />,
       children: [{ key: 'order/list', label: 'Đơn hàng', path: '/admin/orders' }],
+
+    },
+    {
+      key: 'album',
+      label: 'Quản lý Album ảnh',
+      icon: <FolderOpenOutlined />,
+      children: [
+        { key: 'album/list', label: 'Album ảnh', path: '/admin/album/list' },
+        { key: 'album-add', label: 'Thêm Album ảnh', path: '/admin/album/add' },
+      ],
+
     },
     
     {
