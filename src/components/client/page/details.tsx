@@ -27,9 +27,9 @@ const Details = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<{ color: string; ram: string } | null>(null);
-  const [quantity, setQuantity] = useState<number>(1); // State cho số lượng
+  const [quantity, setQuantity] = useState<number>(1);
   const navigate = useNavigate();
-  const relatedProductsRef = useRef<HTMLDivElement>(null); // Ref cho cuộn sản phẩm liên quan
+  const relatedProductsRef = useRef<HTMLDivElement>(null);
 
   // Fetch related products
   useEffect(() => {
@@ -174,10 +174,11 @@ const Details = () => {
   // Handle select variant
   const handleSelectVariant = (color: string, ram: string) => {
     setSelectedVariant({ color, ram });
+    setQuantity(1); // Reset quantity when changing variant
     console.log("Selected variant:", { color, ram });
   };
 
-  // Lấy giá của biến thể được chọn hoặc giá gốc
+  // Get selected variant price
   const getSelectedVariantPrice = () => {
     if (!selectedVariant) {
       return product?.price ? `${product.price} VNĐ` : "Liên hệ";
@@ -191,7 +192,15 @@ const Details = () => {
   // Handle quantity change
   const handleQuantityChange = (value: number) => {
     if (value < 1) return;
-    if (product && value > product.soluong) {
+    if (selectedVariant) {
+      const variant = product?.variants?.find(
+        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+      );
+      if (variant && value > variant.soluong) {
+        message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+        return;
+      }
+    } else if (product && value > product.soluong) {
       message.warning("Số lượng vượt quá tồn kho!");
       return;
     }
@@ -199,77 +208,109 @@ const Details = () => {
   };
 
   const handleAddToCart = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user?._id) {
-        message.warning("Bạn cần đăng nhập để mua hàng.");
-        navigate("/login");
-        return;
-      }
-      if (!product?._id) {
-        message.warning("Không tìm thấy sản phẩm.");
-        return;
-      }
-      if (product.soluong <= 0) {
-        message.warning("Sản phẩm đã hết hàng.");
-        return;
-      }
-      if (!selectedVariant) {
-        message.warning("Vui lòng chọn biến thể.");
-        return;
-      }
-      await addToCart({
-        userId: user._id,
-        productId: product._id,
-        quantity: quantity,
-        color: selectedVariant.color,
-        storage: selectedVariant.ram,
-      });
-      message.success("Đã thêm vào giỏ hàng!");
-    } catch (error) {
-      console.error("Lỗi thêm giỏ hàng:", error);
-      message.error("Thêm vào giỏ hàng thất bại.");
+  if (!product) {
+    message.error("Không tìm thấy sản phẩm.");
+    return;
+  }
+  if (!product.status) {
+    message.error("Sản phẩm này không còn được bán.");
+    return;
+  }
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user?._id) {
+      message.warning("Bạn cần đăng nhập để mua hàng.");
+      navigate("/login");
+      return;
     }
-  };
-
-  const handleAddToCart1 = async () => {
-    try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user?._id) {
-        message.warning("Bạn cần đăng nhập để mua hàng.");
-        navigate("/login");
-        return;
-      }
-      if (!product?._id) {
-        message.warning("Không tìm thấy sản phẩm.");
-        return;
-      }
-      if (product.soluong <= 0) {
-        message.warning("Sản phẩm đã hết hàng.");
-        return;
-      }
-      if (!selectedVariant) {
-        message.warning("Vui lòng chọn biến thể.");
-        return;
-      }
-      await addToCart({
-        userId: user._id,
-        productId: product._id,
-        quantity: quantity,
-        color: selectedVariant.color,
-        storage: selectedVariant.ram,
-      });
-      navigate(`/cart/${user._id}`);
-    } catch (error) {
-      console.error("Lỗi mua hàng:", error);
-      message.error("Mua hàng thất bại.");
+    if (!product._id) {
+      message.warning("Không tìm thấy sản phẩm.");
+      return;
     }
-  };
+    if (product.soluong <= 0) {
+      message.warning("Sản phẩm đã hết hàng.");
+      return;
+    }
+    if (!selectedVariant) {
+      message.warning("Vui lòng chọn biến thể.");
+      return;
+    }
+    // Kiểm tra số lượng biến thể
+    const variant = product.variants?.find(
+      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+    );
+    if (variant && quantity > variant.soluong) {
+      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+      return;
+    }
+    await addToCart({
+      userId: user._id,
+      productId: product._id,
+      quantity: quantity,
+      color: selectedVariant.color,
+      storage: selectedVariant.ram,
+    });
+    message.success("Đã thêm vào giỏ hàng!");
+  } catch (error) {
+    console.error("Lỗi thêm giỏ hàng:", error);
+    message.error("Thêm vào giỏ hàng thất bại.");
+  }
+};
 
-  // Cuộn sản phẩm liên quan
+const handleAddToCart1 = async () => {
+  if (!product) {
+    message.error("Không tìm thấy sản phẩm.");
+    return;
+  }
+  if (!product.status) {
+    message.error("Sản phẩm này không còn được bán.");
+    return;
+  }
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user?._id) {
+      message.warning("Bạn cần đăng nhập để mua hàng.");
+      navigate("/login");
+      return;
+    }
+    if (!product._id) {
+      message.warning("Không tìm thấy sản phẩm.");
+      return;
+    }
+    if (product.soluong <= 0) {
+      message.warning("Sản phẩm đã hết hàng.");
+      return;
+    }
+    if (!selectedVariant) {
+      message.warning("Vui lòng chọn biến thể.");
+      return;
+    }
+    // Kiểm tra số lượng biến thể
+    const variant = product.variants?.find(
+      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+    );
+    if (variant && quantity > variant.soluong) {
+      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+      return;
+    }
+    await addToCart({
+      userId: user._id,
+      productId: product._id,
+      quantity: quantity,
+      color: selectedVariant.color,
+      storage: selectedVariant.ram,
+    });
+    navigate(`/cart/${user._id}`);
+  } catch (error) {
+    console.error("Lỗi mua hàng:", error);
+    message.error("Mua hàng thất bại.");
+  }
+};
+
+  // Scroll related products
   const scrollRelatedProducts = (direction: "left" | "right") => {
     if (relatedProductsRef.current) {
-      const scrollAmount = 300; // Khoảng cách cuộn mỗi lần
+      const scrollAmount = 300;
       relatedProductsRef.current.scrollBy({
         left: direction === "left" ? -scrollAmount : scrollAmount,
         behavior: "smooth",
@@ -301,13 +342,11 @@ const Details = () => {
 
   if (!product) return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
 
-  // Lấy danh sách biến thể duy nhất
   const uniqueVariants = product.variants || [];
+
   return (
     <div className="w-full h-full bg-white p-4 md:p-8">
-      {/* Main Layout */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
-        {/* Ảnh sản phẩm - giữ nguyên kích thước */}
         <div className="col-span-12 lg:col-span-4">
           <div className="flex flex-col items-center">
             <img
@@ -323,7 +362,8 @@ const Details = () => {
                     src={img}
                     alt={`variant-${idx}`}
                     onClick={() => setMainImage(img)}
-                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${mainImage === img ? "border-blue-600" : "border-gray-300 hover:border-gray-500"}`}
+                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${mainImage === img ? "border-blue-600" : "border-gray-300 hover:border-gray-500"
+                      }`}
                   />
                 ))
               ) : (
@@ -332,10 +372,12 @@ const Details = () => {
             </div>
           </div>
         </div>
-        {/* Thông tin sản phẩm - Ở giữa */}
         <div className="col-span-12 lg:col-span-5 flex flex-col justify-between">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+            {!product.status && (
+              <p className="text-red-600 font-semibold mb-3">Hàng không còn bán</p>
+            )}
             <p className="text-gray-600 mb-3">
               Thương hiệu: <span className="font-semibold">{categoryNames?.join(", ") || "Không xác định"}</span> | Trạng thái:{" "}
               <span className="text-green-600 font-semibold">{product.trangthai || "Không xác định"}</span>
@@ -368,20 +410,6 @@ const Details = () => {
                 )}
               </div>
             </div>
-            <div className="space-y-2 text-gray-700 mb-6">
-              <div className="flex items-center gap-2">
-                <CheckOutlined className="text-green-600 text-xl" />
-                <p>Sản phẩm chính hãng, nguyên seal</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckOutlined className="text-green-600 text-xl" />
-                <p>Đổi trả trong 7 ngày nếu lỗi kỹ thuật</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckOutlined className="text-green-600 text-xl" />
-                <p>Bảo hành theo chính sách của hãng</p>
-              </div>
-            </div>
             <div className="mb-6">
               <label className="block text-lg font-semibold text-gray-800 mb-2">Số lượng:</label>
               <div className="flex items-center gap-2">
@@ -397,7 +425,13 @@ const Details = () => {
                   onChange={(e) => handleQuantityChange(Number(e.target.value))}
                   className="w-16 text-center border border-gray-300 rounded-md p-1 focus:outline-none focus:border-blue-600"
                   min={1}
-                  max={product.soluong}
+                  max={
+                    selectedVariant
+                      ? product?.variants?.find(
+                        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+                      )?.soluong || 1
+                      : product.soluong
+                  }
                 />
                 <button
                   className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300"
@@ -406,34 +440,51 @@ const Details = () => {
                   +
                 </button>
               </div>
+              <p className="mt-2 text-gray-700">
+                Số lượng tồn kho: {selectedVariant
+                  ? product?.variants?.find(
+                    (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+                  )?.soluong || 0
+                  : product.soluong}
+              </p>
+            </div>
+            <div className="space-y-2 text-gray-700 mb-6">
+              <div className="flex items-center gap-2">
+                <CheckOutlined className="text-green-600 text-xl" />
+                <p>Sản phẩm chính hãng, nguyên seal</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckOutlined className="text-green-600 text-xl" />
+                <p>Đổi trả trong 7 ngày nếu lỗi kỹ thuật</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckOutlined className="text-green-600 text-xl" />
+                <p>Bảo hành theo chính sách của hãng</p>
+              </div>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mt-4 max-w-md w-full">
-            {/* Nút MUA NGAY */}
             <button
-              className="flex-1 bg-black text-white py-2 px-6 rounded-lg font-semibold text-sm md:text-base hover:bg-gray-800 transition-all duration-200 flex flex-col items-center leading-snug"
+              className="flex-1 bg-black text-white py-2 px-6 rounded-lg font-semibold text-sm md:text-base hover:bg-gray-800 transition-all duration-200 flex flex-col items-center leading-snug disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleAddToCart1}
+              disabled={!product.status}
             >
               MUA NGAY
               <span className="text-[11px] text-gray-300 mt-0.5 text-center">
                 Nhận tại nhà hoặc cửa hàng
               </span>
             </button>
-
-            {/* Nút THÊM VÀO GIỎ */}
             <button
-              className="flex-1 flex flex-col items-center justify-center gap-1 border-2 border-red-600 text-red-600 py-2 px-6 rounded-lg font-semibold text-sm md:text-base hover:bg-red-50 transition-all duration-200"
+              className="flex-1 flex flex-col items-center justify-center gap-1 border-2 border-red-600 text-red-600 py-2 px-6 rounded-lg font-semibold text-sm md:text-base hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleAddToCart}
+              disabled={!product.status}
             >
               <ShoppingCartOutlined className="text-base" />
               Thêm vào giỏ hàng
             </button>
-
           </div>
         </div>
-        {/* Khuyến mãi và Chính sách hỗ trợ - Bên phải */}
         <div className="col-span-12 lg:col-span-3 space-y-3">
-          {/* Khuyến mãi */}
           <div className="bg-white rounded-md shadow-sm border border-red-400">
             <div className="bg-red-500 text-white px-3 py-1.5 flex items-center gap-2 font-semibold text-base justify-center rounded-t-md">
               <GiftOutlined className="text-lg" />
@@ -445,7 +496,6 @@ const Details = () => {
               <p>- Hỗ trợ trả góp 0% chỉ cần CCCD gắn chip hoặc 0% qua thẻ tín dụng.</p>
             </div>
           </div>
-          {/* Chính sách hỗ trợ */}
           <div className="bg-white rounded-md shadow-sm border border-gray-800">
             <div className="bg-gray-900 text-white px-3 py-1.5 flex items-center gap-2 font-semibold text-base justify-center rounded-t-md">
               <StarOutlined className="text-lg" />
@@ -490,7 +540,6 @@ const Details = () => {
           </div>
         </div>
       </div>
-      {/* Mô tả */}
       <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0">
         <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-8 border-b-4 border-gray-300 pb-3">
           MÔ TẢ SẢN PHẨM
@@ -499,7 +548,6 @@ const Details = () => {
           <p>{product.mota || "Không có mô tả."}</p>
         </div>
       </section>
-      {/* Bình Luận */}
       <section className="max-w-3xl mx-auto mt-12 px-4 md:px-0">
         <div className="flex items-center gap-2">
           <h6 className="text-black-500 font-semibold text-sm md:text-base">Bình luận sản phẩm</h6>
@@ -518,7 +566,6 @@ const Details = () => {
         >
           {loading ? "Đang gửi..." : "Gửi bình luận"}
         </button>
-
         <div className="mt-5 space-y-3">
           {comments
             .filter((comment) => comment.status)
@@ -591,7 +638,6 @@ const Details = () => {
             ))}
         </div>
       </section>
-      {/* Sản phẩm liên quan */}
       <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0 relative">
         <div className="flex items-center gap-3">
           <div className=" bg-red-500 w-[30px] rounded-lg h-[50px]" />
@@ -604,7 +650,6 @@ const Details = () => {
         >
           <LeftOutlined className="text-3xl" />
         </button>
-
         <div className="relative">
           <div
             ref={relatedProductsRef}
@@ -640,7 +685,6 @@ const Details = () => {
             )}
           </div>
         </div>
-
         <button
           onClick={() => scrollRelatedProducts("right")}
           className="hidden md:flex absolute -right-16 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 hover:bg-gray-300 z-10 shadow"
