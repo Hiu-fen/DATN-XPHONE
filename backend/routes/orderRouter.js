@@ -18,5 +18,6 @@ router.post('/', orderController.createOrder);
 // Cập nhật trạng thái thanh toán
 router.patch('/:id/paid', orderController.markAsPaid);
 
+//aloaloaloa nhwos đay nhé 
 
 module.exports = router;
