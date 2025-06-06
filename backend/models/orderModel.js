@@ -22,6 +22,7 @@ const OrderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   isPaid: { type: Boolean, default: false },
 });
+// alo
 
 module.exports = mongoose.model('Order', OrderSchema);
  
