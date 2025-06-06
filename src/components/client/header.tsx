@@ -7,7 +7,8 @@ const ClientHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-    const timeoutRef = useRef<number | null>(null);
+    // const timeoutRef = useRef<number | null>(null);
+    const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [user, setUser] = useState<{ name?: string; email?: string; avatar?: string; _id?:string } | null>(null);
   const nav = useNavigate();
 
@@ -36,7 +37,7 @@ const ClientHeader = () => {
     setUser(null);
     setIsUserMenuOpen(false);
     nav("/login");
-  };
+  };  
 
   return (
     <header className="bg-white shadow">

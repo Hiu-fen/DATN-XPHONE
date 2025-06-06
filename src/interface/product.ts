@@ -3,11 +3,11 @@ export interface IProduct {
   name: string;
   image: string;
   albumImages: string[];
-<<<<<<< HEAD
+
   price: number;      
-=======
-  price: string;       // bạn vẫn giữ nếu cần
->>>>>>> DATN
+
+  // price: string;       // bạn vẫn giữ nếu cần
+
   soluong: number;
   mota?: string;
   danhmuc: string;
