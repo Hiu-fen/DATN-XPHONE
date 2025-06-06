@@ -4,12 +4,14 @@ export const addToCart = async ({
   userId,
   productId,
   quantity,
+  price,
   color,
   storage,
 }: {
   userId: string;
   productId: string;
   quantity: number;
+  price: number;
   color?: string;
   storage?: string;
 }) => {
@@ -19,6 +21,7 @@ export const addToCart = async ({
       {
         productId,
         quantity,
+        price,
         color,
         storage,
       },

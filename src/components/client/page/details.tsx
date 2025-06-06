@@ -247,6 +247,7 @@ const Details = () => {
       userId: user._id,
       productId: product._id,
       quantity: quantity,
+      price: product.price,
       color: selectedVariant.color,
       storage: selectedVariant.ram,
     });
@@ -297,6 +298,7 @@ const handleAddToCart1 = async () => {
       userId: user._id,
       productId: product._id,
       quantity: quantity,
+      price: product.price,
       color: selectedVariant.color,
       storage: selectedVariant.ram,
     });

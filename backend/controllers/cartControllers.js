@@ -1,5 +1,4 @@
 const Cart = require('../models/cartModels');
-
 exports.getCart = async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.params.userId });
@@ -9,7 +8,6 @@ exports.getCart = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
-
 exports.updateCart = async (req, res) => {
     const { items } = req.body;
     try {
@@ -26,7 +24,6 @@ exports.updateCart = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
-
 exports.deleteCart = async (req, res) => {
     try {
         await Cart.findOneAndDelete({ userId: req.params.userId });
@@ -38,22 +35,19 @@ exports.deleteCart = async (req, res) => {
 exports.addToCart = async (req, res) => {
   try {
     const { userId, items } = req.body;
-
     if (!userId || !items || !Array.isArray(items)) {
       return res.status(400).json({ message: "Invalid data" });
     }
-
     let cart = await Cart.findOne({ userId });
-
     if (!cart) {
-
       cart = new Cart({ userId, items });
     } else {
       items.forEach(newItem => {
         const existingItem = cart.items.find(item =>
           item.productId.toString() === newItem.productId.toString() &&
           item.color === newItem.color &&
-          item.storage === newItem.storage
+          item.storage === newItem.storage &&
+          item.price === newItem.price
         );
         if (existingItem) {
           existingItem.quantity += newItem.quantity;
@@ -62,13 +56,10 @@ exports.addToCart = async (req, res) => {
         }
       });
     }
-
     await cart.save();
-
     res.status(200).json(cart);
   } catch (error) {
     console.error("Lỗi addToCart:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-

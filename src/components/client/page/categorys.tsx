@@ -1,42 +1,50 @@
+import React, { useState, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
-// import "../../styles/global.css";
+import BannerClient from "../componentChild/Home/banner";
 import { IProduct } from "../../../interface/product";
 import { ICategory } from "../../../interface/category";
 import { useCart } from "../context/CartContext";
-import BannerClient from "../componentChild/Home/banner"
+
 interface CartItem {
   productId: string;
   productName: string;
-  price: number;
+  price: number;   // Kiểu string, vì addToCart định nghĩa price là string
   soluong: number;
   image: string;
 }
 
-
-
-const Categorys = () => {
+const Categorys: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { addToCart } = useCart();
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery({
+  // Fetch danh sách danh mục
+  const { data: categories, isLoading: categoriesLoading } = useQuery<ICategory[]>({
     queryKey: ["categories"],
-    queryFn: async () => (await axios.get("http://localhost:5000/api/category")).data,
+    queryFn: async () => {
+      const res = await axios.get("http://localhost:5000/api/category");
+      return res.data;
+    },
   });
 
-  const { data: products, isLoading: productsLoading } = useQuery({
+  // Fetch danh sách sản phẩm
+  const { data: products, isLoading: productsLoading } = useQuery<IProduct[]>({
     queryKey: ["products"],
-    queryFn: async () => (await axios.get("http://localhost:5000/api/products")).data,
+    queryFn: async () => {
+      const res = await axios.get("http://localhost:5000/api/products");
+      return res.data;
+    },
   });
 
+  // Thêm sản phẩm vào giỏ hàng
   const handleAddToCart = async (product: IProduct) => {
     try {
+      // Lấy lại dữ liệu chi tiết để kiểm tra tồn kho mới nhất
       const response = await axios.get(`http://localhost:5000/api/products/${product._id}`);
-      const productData = response.data;
+      const productData: IProduct = response.data;
 
       if (productData.soluong < 1) {
         message.error(`${product.name} đã hết hàng!`);
@@ -60,6 +68,7 @@ const Categorys = () => {
     }
   };
 
+  // Scroll container cho slider danh mục
   const scrollLeft = () => {
     const container = document.getElementById("scroll-container");
     if (container) container.scrollLeft -= 200;
@@ -70,15 +79,17 @@ const Categorys = () => {
     if (container) container.scrollLeft += 200;
   };
 
-  const filteredProducts = React.useMemo(() => {
+  // Lọc sản phẩm theo danh mục đã chọn
+  const filteredProducts = useMemo(() => {
     if (!products) return [];
     if (!selectedCategoryId) return products;
-    return products.filter((product: IProduct) => product.danhmuc === selectedCategoryId);
+    return products.filter((product) => product.danhmuc === selectedCategoryId);
   }, [products, selectedCategoryId]);
 
-  const selectedCategoryName = React.useMemo(() => {
+  // Lấy tên danh mục đã chọn
+  const selectedCategoryName = useMemo(() => {
     if (!selectedCategoryId || !categories) return "";
-    const category = categories.find((cat: ICategory) => cat._id === selectedCategoryId);
+    const category = categories.find((cat) => cat._id === selectedCategoryId);
     return category ? category.name : "";
   }, [selectedCategoryId, categories]);
 
@@ -92,9 +103,10 @@ const Categorys = () => {
 
   return (
     <div className="w-full">
-       {/* Banner */}
-        <BannerClient />
-      {/* Danh mục */}
+      {/* Banner */}
+      <BannerClient />
+
+      {/* Slider danh mục */}
       <div className="w-full flex flex-col items-center">
         <h2 className="text-xl md:text-2xl font-bold my-4 text-center">Danh mục</h2>
         <div className="relative w-full px-4 overflow-hidden">
@@ -108,7 +120,7 @@ const Categorys = () => {
             id="scroll-container"
             className="flex gap-3 overflow-x-auto scroll-smooth px-10 py-2 no-scrollbar"
           >
-            {categories?.map((cat: ICategory) => (
+            {categories?.map((cat) => (
               <div
                 key={cat._id}
                 className="flex flex-col items-center cursor-pointer"
@@ -134,6 +146,7 @@ const Categorys = () => {
         </div>
       </div>
 
+      {/* Nút hiển thị tất cả khi đang lọc */}
       {selectedCategoryId && (
         <div className="mt-2 text-center">
           <button
@@ -145,9 +158,12 @@ const Categorys = () => {
         </div>
       )}
 
+      {/* Tiêu đề và số lượng sản phẩm */}
       <div className="mb-2 text-center">
         <h2 className="text-xl md:text-2xl font-bold my-4">
-          {selectedCategoryId ? `Sản phẩm ${selectedCategoryName}` : "Tất cả sản phẩm"}
+          {selectedCategoryId
+            ? `Sản phẩm ${selectedCategoryName}`
+            : "Tất cả sản phẩm"}
         </h2>
         <p className="text-gray-600">
           {selectedCategoryId
@@ -156,8 +172,9 @@ const Categorys = () => {
         </p>
       </div>
 
+      {/* Lưới sản phẩm */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-[1400px] mx-auto p-4">
-        {filteredProducts?.map((product: IProduct) => (
+        {filteredProducts.map((product) => (
           <div
             key={product._id}
             className="group bg-white rounded-lg shadow-sm border overflow-hidden flex flex-col justify-between transition-transform hover:-translate-y-1"
@@ -176,7 +193,9 @@ const Categorys = () => {
               </p>
               <span
                 className={`text-sm px-2 py-1 rounded-full ${
-                  product.trangthai === "còn hàng" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                  product.trangthai === "còn hàng"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
                 }`}
               >
                 {product.trangthai}
@@ -192,7 +211,8 @@ const Categorys = () => {
         ))}
       </div>
 
-      {filteredProducts?.length === 0 && (
+      {/* Thông báo nếu không có sản phẩm */}
+      {filteredProducts.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500">
             {selectedCategoryId
