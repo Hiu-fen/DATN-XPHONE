@@ -1,171 +1,163 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import axios from 'axios';
-import { Button, Form, Input, message, Select, Spin, Table } from 'antd';
+import { message } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 
-interface OrderItem {
-  productId: string;
-  productName: string;
-  soluong: number;
-  price: number;
-}
+const Cart = () => {
+  const { cart, updateQuantity, removeFromCart } = useCart();
+  const navigate = useNavigate();
+  const SHIPPING_FEE = 35000;
 
-interface IProduct {
-  _id: string;
-  name: string;
-  price: number;
-  soluong: number;
-  image: string;
-}
-
-const PlaceOrder = () => {
-  const [form] = Form.useForm();
-  const [cart, setCart] = useState<OrderItem[]>([]);
-
-  // Lấy danh sách sản phẩm
-  const { data: products, isLoading } = useQuery<IProduct[]>({
-    queryKey: ['products'],
-    queryFn: async () => (await axios.get('http://localhost:5000/api/products')).data,
-  });
-
-  // Mutation tạo đơn hàng
-  const mutation = useMutation({
-    mutationFn: async (orderData: any) => {
-      return await axios.post('http://localhost:5000/api/orders', orderData);
-    },
-    onSuccess: () => {
-      message.success('Đặt hàng thành công!');
-      form.resetFields();
-      setCart([]);
-    },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || 'Lỗi khi đặt hàng');
-    },
-  });
-
-  // Thêm sản phẩm vào giỏ hàng
-  const addToCart = (product: IProduct, soluong: number) => {
-    const existingItem = cart.find((item) => item.productId === product._id);
-    if (existingItem) {
-      setCart(
-        cart.map((item) =>
-          item.productId === product._id
-            ? { ...item, soluong: item.soluong + soluong }
-            : item
-        )
-      );
-    } else {
-      setCart([
-        ...cart,
-        {
-          productId: product._id,
-          productName: product.name,
-          soluong,
-          price: product.price,
-        },
-      ]);
-    }
-  };
-
-  // Xử lý submit form
-  const onFinish = (values: any) => {
-    if (cart.length === 0) {
-      message.error('Vui lòng chọn ít nhất một sản phẩm');
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity < 1) {
+      message.error("Số lượng phải lớn hơn 0");
       return;
     }
-
-    const total = cart.reduce((sum, item) => sum + item.price * item.soluong, 0) + 35000; // Phí vận chuyển cố định
-
-    const orderData = {
-      customerName: values.customerName,
-      phone: values.phone,
-      address: values.address,
-      items: cart,
-      total,
-      paymentMethod: values.paymentMethod,
-      shippingProvider: values.shippingProvider,
-      notes: values.notes,
-    };
-
-    mutation.mutate(orderData);
+    updateQuantity(productId, newQuantity);
   };
 
-  // Cột bảng giỏ hàng
-  const columns = [
-    { title: 'Sản phẩm', dataIndex: 'productName', key: 'productName' },
-    { title: 'Số lượng', dataIndex: 'soluong', key: 'soluong' },
-    {
-      title: 'Giá', dataIndex: 'price', key: 'price',
-      render: (price: number) => price.toLocaleString() + ' VND',
-    },
-    {
-      title: 'Thành tiền', key: 'total',
-      render: (_: any, record: OrderItem) => (record.soluong * record.price).toLocaleString() + ' VND',
-    },
-  ];
-
-  if (isLoading) return <Spin tip="Đang tải sản phẩm..." />;
+  const totalPrice = cart.reduce(
+    (total, item) => total + item.price * item.soluong,
+    0
+  );
+  const totalWithShipping = totalPrice + SHIPPING_FEE;
 
   return (
-    <div>
-      <h2>Đặt hàng</h2>
-      <Form form={form} onFinish={onFinish} layout="vertical">
-        <Form.Item
-          name="customerName"
-          label="Họ tên"
-          rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="phone"
-          label="Số điện thoại"
-          rules={[{ required: true, message: 'Vui lòng nhập số điện thoại' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item
-          name="address"
-          label="Địa chỉ"
-          rules={[{ required: true, message: 'Vui lòng nhập địa chỉ' }]}
-        >
-          <Input />
-        </Form.Item>
-        <Form.Item name="paymentMethod" label="Phương thức thanh toán">
-          <Select>
-            <Select.Option value="cod">Thanh toán khi nhận hàng</Select.Option>
-          </Select>
-        </Form.Item>
-        <Form.Item name="shippingProvider" label="Đơn vị vận chuyển">
-          <Select>
-            <Select.Option value="ghn">Giao Hàng Nhanh</Select.Option>
-            <Select.Option value="ghtk">Giao Hàng Tiết Kiệm</Select.Option>
-          </Select>
-        </Form.Item>
-        <Form.Item name="notes" label="Ghi chú">
-          <Input.TextArea />
-        </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit" loading={mutation.isLoading}>
-            Đặt hàng
-          </Button>
-        </Form.Item>
-      </Form>
+    <section className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-4xl font-bold text-gray-800 mb-10 text-center">
+          Giỏ hàng của bạn
+        </h1>
 
-      <h3>Giỏ hàng</h3>
-      <Table dataSource={cart} columns={columns} rowKey="productId" pagination={false} />
+        {cart.length === 0 ? (
+          <p className="text-center text-gray-500 text-lg">
+            Giỏ hàng trống, bạn hãy thêm sản phẩm vào giỏ hàng
+          </p>
+        ) : (
+          <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-100 text-gray-700 text-sm">
+                  <th className="py-3 px-2 text-left">STT</th>
+                  <th className="py-3 px-2 text-left">Ảnh</th>
+                  <th className="py-3 px-2 text-left">Tên sản phẩm</th>
+                  <th className="py-3 px-2 text-left">Đơn giá</th>
+                  <th className="py-3 px-2 text-left">Số lượng</th>
+                  <th className="py-3 px-2 text-left">Thành tiền</th>
+                  <th className="py-3 px-2 text-left">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map((item, index) => (
+                  <tr
+                    key={item.productId}
+                    className="border-b border-gray-200 hover:bg-gray-50 transition text-sm"
+                  >
+                    <td className="py-4 px-2">{index + 1}</td>
 
-      <h3>Chọn sản phẩm</h3>
-      {products?.map((product) => (
-        <div key={product._id} style={{ marginBottom: 10 }}>
-          <span>{product.name} - {product.price.toLocaleString()} VND (Tồn: {product.soluong})</span>
-          <Button onClick={() => addToCart(product, 1)} style={{ marginLeft: 10 }}>
-            Thêm
-          </Button>
-        </div>
-      ))}
-    </div>
+                    <td className="py-4 px-2">
+                      <img
+                        src={item.image}
+                        alt={item.productName}
+                        className="w-20 h-20 object-cover rounded border border-gray-200"
+                      />
+                    </td>
+
+                    <td className="py-4 px-2">
+                      <p className="font-semibold text-base text-gray-800">
+                        {item.productName}
+                      </p>
+                    </td>
+
+                    <td className="py-4 px-2">
+                      {item.price.toLocaleString()} VND
+                    </td>
+
+                    <td className="py-4 px-2">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.productId,
+                              item.soluong - 1
+                            )
+                          }
+                          className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                        >
+                          -
+                        </button>
+                        <span className="font-medium">{item.soluong}</span>
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(
+                              item.productId,
+                              item.soluong + 1
+                            )
+                          }
+                          className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
+
+                    <td className="py-4 px-2">
+                      {(item.price * item.soluong).toLocaleString()} VND
+                    </td>
+
+                    <td className="py-4 px-2">
+                      <button
+                        onClick={() => removeFromCart(item.productId)}
+                        className="text-red-500 hover:text-red-600 font-medium transition"
+                      >
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="mt-6">
+              <div className="flex justify-end">
+                <div className="text-right">
+                  <p className="text-lg font-semibold">
+                    Tổng tiền sản phẩm: {totalPrice.toLocaleString()} VND
+                  </p>
+                  <p className="text-lg font-semibold">
+                    Phí ship: {SHIPPING_FEE.toLocaleString()} VND
+                  </p>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Tổng cộng: {totalWithShipping.toLocaleString()} VND
+                  </h2>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-between items-center">
+                <button
+                  onClick={() => navigate("/categorys")}
+                  className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-900 font-semibold transition-all duration-300 group"
+                >
+                  <span className="text-2xl transition-transform group-hover:-translate-x-1">
+                    ←
+                  </span>
+                  <span className="text-blue-700 group-hover:text-blue-900 font-semibold transition-all duration-300">
+                    Quay lại mua sắm
+                  </span>
+                </button>
+
+                <button
+                  onClick={() => navigate("/checkout")}
+                  className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition font-semibold"
+                >
+                  Đặt hàng
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 };
 
-export default PlaceOrder;
+export default Cart;

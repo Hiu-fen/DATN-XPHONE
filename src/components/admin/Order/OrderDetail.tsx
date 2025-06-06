@@ -53,6 +53,7 @@ interface IOrder {
 const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
+  "Đang giao",
   "Đã giao",
   "Hoàn thành",
   "Đã huỷ",
@@ -236,17 +237,6 @@ const OrderDetail = () => {
           <Descriptions.Item label="Trạng thái đơn hàng">
             <Space>
               <span>{order.status}</span>
-              <Select
-                value={order.status}
-                onChange={handleStatusChange}
-                style={{ width: 160 }}
-                options={getValidStatusOptions(order.status)}
-                disabled={
-                  order.status === "Hoàn thành" ||
-                  order.status === "Đã huỷ" ||
-                  order.status === "Trả hàng/Hoàn tiền"
-                }
-              />
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label="Trạng thái trả hàng">

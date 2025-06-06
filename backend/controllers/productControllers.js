@@ -101,7 +101,7 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// API để trừ số lượng sản phẩm
+// API để trừ số lượng sản phẩm - Order
 exports.updateProductQuantity = async (req, res) => {
   try {
     const { id } = req.params;

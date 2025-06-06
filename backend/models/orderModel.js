@@ -20,12 +20,13 @@ const OrderSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
   status: { 
     type: String, 
-    enum: ['Chờ xác nhận', 'Đang xử lý', 'Đã giao', 'Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'], // SỬA: Thêm trạng thái trả hàng
+    enum: ['Chờ xác nhận', 'Đang xử lý','Đang giao', 'Giao thành công', 'Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'], // Thêm trạng thái trả hàng
     default: 'Chờ xác nhận' 
   },
   items: [OrderItemSchema],
   total: { type: Number, required: true },
   isPaid: { type: Boolean, default: false },
+  refunded: { type: Boolean, default: false },
   paymentMethod: { type: String }, // Phương thức thanh toán
   shippingProvider: { type: String }, // Đơn vị vận chuyển
   trackingNumber: { type: String }, // Mã vận đơn

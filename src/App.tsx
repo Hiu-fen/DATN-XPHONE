@@ -7,53 +7,54 @@ import PutEdit from './components/admin/Product/PutEdit';
 import Register from './components/client/Register';
 import Login from './components/client/Login';
 
-import CommentAdd from './components/admin/Comment/CommentAdd'
-import CommentAdmin from './components/admin/Comment/CommentList'
+import CommentAdd from './components/admin/Comment/CommentAdd';
+import CommentAdmin from './components/admin/Comment/CommentList';
 
-import GetListCategory from './components/admin/Category/GetListCategory'
-import PostAddCategory from './components/admin/Category/PostAddCategory'
-import PutEditCategory from './components/admin/Category/PutEditCategory'
-import PostAdd from './components/admin/Product/PostAdd'
+import GetListCategory from './components/admin/Category/GetListCategory';
+import PostAddCategory from './components/admin/Category/PostAddCategory';
+import PutEditCategory from './components/admin/Category/PutEditCategory';
+import PostAdd from './components/admin/Product/PostAdd';
 
+import GetPromotion from './components/admin/Promotion/PromotionList';
+import PostAddPromotion from './components/admin/Promotion/PromotionAdd';
+import PutEditPromotion from './components/admin/Promotion/PromotionEdit';
+import OrderList from './components/admin/Order/ListOrder';
+import OrderDetail from './components/admin/Order/OrderDetail';
 
+import ContactAdd from './components/admin/Contact/ContactAdd';
+import ContactList from './components/admin/Contact/ContactList';
+import BannerAdd from './components/admin/Banner/BannerAdd';
+import BannerList from './components/admin/Banner/BannerList';
+import BannerEdit from './components/admin/Banner/BannerEdit';
 
-import GetPromotion from './components/admin/Promotion/PromotionList'
-import PostAddPromotion from './components/admin/Promotion/PromotionAdd'
-import PutEditPromotion from './components/admin/Promotion/PromotionEdit'
-import OrderList from './components/admin/Order/ListOrder'
-import OrderDetail from './components/admin/Order/OrderDetail'
+import PrivateRouteAdmin from './components/PrivateRouteAdmin';
+import LoginAdmin from './components/admin/User/Login';
+import RegisterAdmin from './components/admin/User/Register';
+import GetAdmin from './components/admin/User/ListUserAdmin';
+import ProfileAdmin from './components/admin/User/ProfileAdmin';
+import GetClient from './components/admin/User/ListUserClient';
 
-import ContactAdd from './components/admin/Contact/ContactAdd'
-import ContactList from './components/admin/Contact/ContactList'
-import BannerAdd from './components/admin/Banner/BannerAdd'
-import BannerList from './components/admin/Banner/BannerList'
-import BannerEdit from './components/admin/Banner/BannerEdit'
+import DetailPromotion from './components/admin/Promotion/PromotionDetail';
 
-import PrivateRouteAdmin from './components/PrivateRouteAdmin'
-import LoginAdmin from './components/admin/User/Login'
-import RegisterAdmin from './components/admin/User/Register'
-import GetAdmin from './components/admin/User/ListUserAdmin'
-import ProfileAdmin from './components/admin/User/ProfileAdmin'
-import GetClient from './components/admin/User/ListUserClient'
+import AdminDashboard from './components/admin/Aside/AdminDashboard';
 
-import DetailPromotion from './components/admin/Promotion/PromotionDetail'
+import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank';
+import About from './components/client/page/about';
+import Home from './components/client/page/home';
+import Contact from './components/client/page/contact';
+import Product from './components/client/page/product';
 
-import AdminDashboard from './components/admin/Aside/AdminDashboard'
-
-import useReloadIfBlank from './components/admin/Aside/useReloadIfBlank'
-import About from './components/client/page/about'
-import Home from './components/client/page/home'
-import Contact from './components/client/page/contact'
-import Product from './components/client/page/product'
-
-import Categorys from './components/client/page/categorys'
-import Cart from './components/client/page/cart'
-import Account from './components/client/page/account/account'
-import Details from './components/client/page/details'
-import ProductDetail from './components/admin/Product/Detail'
-import AccountSibaLayout from './components/AccountSibaLayout'
-import AccountSiba from './components/client/page/account/siba'
-import AddAccountAdmin from './components/client/page/account/add-admin'
+import Categorys from './components/client/page/categorys';
+import Cart from './components/client/page/cart';
+import Account from './components/client/page/account/account';
+import Details from './components/client/page/details';
+import ProductDetail from './components/admin/Product/Detail';
+import AccountSibaLayout from './components/AccountSibaLayout';
+import AccountSiba from './components/client/page/account/siba';
+import AddAccountAdmin from './components/client/page/account/add-admin';
+import { CartProvider } from './components/client/context/CartContext';
+import Checkout from './components/client/page/checkoutCart';
+import { UserProvider } from './components/client/context/UserContext';
 
 const App = () => {
   useReloadIfBlank();
@@ -68,6 +69,7 @@ const App = () => {
         { path: "about", element: <About /> },
         { path: "contact", element: <Contact /> },
         { path: "cart", element: <Cart /> },
+        { path: "checkout", element: <Checkout /> },
         { path: "detail", element: <Details /> },
         { path: "categorys", element: <Categorys /> },
         // { path: 'account',  element: <Account /> },
@@ -125,8 +127,7 @@ const App = () => {
         //admin
         { path: "orders", element: <OrderList /> },
         { path: "orders/:id", element: <OrderDetail /> },
-        // client
-
+   
         /// Router quản lý Khuyễn mãi
         { path: "promotion/list", element: <GetPromotion /> },
         { path: "promotion/add", element: <PostAddPromotion /> },
@@ -144,7 +145,11 @@ const App = () => {
       ],
     },
   ]);
-  return routes;
+  return (
+  <UserProvider>
+    <CartProvider>{routes}</CartProvider>
+  </UserProvider>
+);
 };
 
 export default App;

@@ -1,7 +1,7 @@
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
 
-// Hiển thị list Order
+// Danh sách đơn hàng
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find();
@@ -15,8 +15,7 @@ exports.getAllOrders = async (req, res) => {
 exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order)
-      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
     res.json(order);
   } catch (error) {
     res.status(500).json({ message: "Lỗi server" });
@@ -28,72 +27,106 @@ exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const order = await Order.findById(req.params.id);
-    if (!order)
-      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
-    // Trừ số lượng sản phẩm khi chuyển sang "Đang xử lý"
-    if (status === "Đang xử lý" && order.status !== "Đang xử lý") {
+    const statusOrder = [
+      "Chờ xác nhận",
+      "Đang xử lý",
+      "Đang giao",
+      "Giao thành công",
+      "Đã huỷ",
+      "Trả hàng/Hoàn tiền",
+    ];
+
+    if (!statusOrder.includes(status)) {
+      return res.status(400).json({ message: "Trạng thái không hợp lệ" });
+    }
+
+    const currentStatus = order.status;
+
+    if (["Giao thành công", "Đã huỷ", "Trả hàng/Hoàn tiền"].includes(currentStatus)) {
+      return res.status(400).json({ message: `Không thể thay đổi từ trạng thái "${currentStatus}"` });
+    }
+
+    const currentIndex = statusOrder.indexOf(currentStatus);
+    const newIndex = statusOrder.indexOf(status);
+
+    if (
+      status !== "Đã huỷ" &&
+      status !== "Trả hàng/Hoàn tiền" &&
+      newIndex !== currentIndex + 1
+    ) {
+      return res.status(400).json({ message: "Chỉ được chuyển sang trạng thái tiếp theo" });
+    }
+
+    if (status === "Đang giao" && currentStatus !== "Đang giao") {
+      if (["Bank", "Momo"].includes(order.paymentMethod) && !order.isPaid) {
+        return res.status(400).json({ message: "Chưa thanh toán, không thể giao hàng" });
+      }
       for (const item of order.items) {
         const product = await Product.findById(item.productId);
-        if (!product) {
-          return res
-            .status(404)
-            .json({ message: `Sản phẩm ${item.productName} không tồn tại` });
-        }
+        if (!product) return res.status(404).json({ message: `Không tìm thấy sản phẩm ${item.productName}` });
         if (product.soluong < item.soluong) {
-          return res
-            .status(400)
-            .json({
-              message: `Số lượng không đủ cho sản phẩm ${item.productName}`,
-            });
+          return res.status(400).json({ message: `Không đủ hàng cho sản phẩm ${item.productName}` });
         }
         product.soluong -= item.soluong;
         await product.save();
       }
     }
 
-    // Cập nhật statusHistory
+    if (
+      (status === "Đã huỷ" || status === "Trả hàng/Hoàn tiền") &&
+      !["Đã huỷ", "Trả hàng/Hoàn tiền"].includes(currentStatus)
+    ) {
+      for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          product.soluong += item.soluong;
+          await product.save();
+        }
+      }
+    }
+
+    if (status === "Giao thành công" && order.paymentMethod === "COD") {
+      order.isPaid = true;
+    }
+
+    if (status === "Trả hàng/Hoàn tiền" && order.isPaid) {
+      order.refunded = true;
+    }
+
     order.status = status;
-    order.statusHistory = [
-      ...(order.statusHistory || []),
-      { status, timestamp: new Date() },
-    ];
+    order.statusHistory = [...(order.statusHistory || []), { status, timestamp: new Date() }];
 
     await order.save();
     res.json(order);
   } catch (error) {
-    res.status(500).json({ message: "Lỗi khi cập nhật đơn hàng" });
+    res.status(500).json({ message: "Lỗi khi cập nhật trạng thái đơn hàng" });
   }
 };
 
-// Xử lý yêu cầu trả hàng
+// Yêu cầu trả hàng
 exports.updateOrderReturn = async (req, res) => {
   try {
     const { returnStatus, returnReason } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
 
-    // Cập nhật trạng thái trả hàng và lý do
     order.returnStatus = returnStatus;
     if (returnReason) order.returnReason = returnReason;
 
-    // Nếu duyệt trả hàng, trả số lượng sản phẩm vào kho
     if (returnStatus === 'Đã duyệt') {
       for (const item of order.items) {
         const product = await Product.findById(item.productId);
         if (product) {
-          product.soluong += item.soluong; // Cộng lại số lượng vào kho
+          product.soluong += item.soluong;
           await product.save();
-        } else {
-          // Ghi log hoặc thông báo nếu sản phẩm không tồn tại
-          console.warn(`Sản phẩm ${item.productName} (ID: ${item.productId}) không tồn tại khi hoàn kho`);
         }
       }
+
       order.status = 'Trả hàng/Hoàn tiền';
-      order.statusHistory = [
-        ...(order.statusHistory || []),
-        { status: 'Trả hàng/Hoàn tiền', timestamp: new Date() },
-      ];
+      order.statusHistory = [...(order.statusHistory || []), { status: 'Trả hàng/Hoàn tiền', timestamp: new Date() }];
+      if (order.isPaid) order.refunded = true;
     }
 
     await order.save();
@@ -103,7 +136,6 @@ exports.updateOrderReturn = async (req, res) => {
   }
 };
 
-// Client 
 // Tạo đơn hàng mới
 exports.createOrder = async (req, res) => {
   try {
@@ -116,37 +148,34 @@ exports.createOrder = async (req, res) => {
       paymentMethod,
       shippingProvider,
       notes,
+      isPaid = false,
+      userId = null,
     } = req.body;
 
-    // Kiểm tra dữ liệu đầu vào
     if (!customerName || !phone || !address || !items || !total) {
       return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
     }
 
-    // Tạo mã đơn hàng
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let randomCode = '';
-    for (let i = 0; i < 5; i++) {
-      randomCode += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    const orderCode = `ORD-${randomCode}`;
+    const generateOrderCode = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 5; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return `ORD-${code}`;
+    };
 
-    // Kiểm tra mã đơn hàng duy nhất
-    const existingOrder = await Order.findOne({ orderCode });
-    if (existingOrder) {
-      return res.status(400).json({ message: 'Mã đơn hàng đã tồn tại, thử lại' });
+    let orderCode = generateOrderCode();
+    while (await Order.findOne({ orderCode })) {
+      orderCode = generateOrderCode();
     }
 
-    // Kiểm tra số lượng sản phẩm trong kho
     for (const item of items) {
       const product = await Product.findById(item.productId);
-      if (!product) {
-        return res.status(404).json({ message: `Sản phẩm ${item.productName} không tồn tại` });
-      }
+      if (!product) return res.status(404).json({ message: `Sản phẩm ${item.productName} không tồn tại` });
       if (product.soluong < item.soluong) {
-        return res.status(400).json({ message: `Số lượng không đủ cho sản phẩm ${item.productName}` });
+        return res.status(400).json({ message: `Không đủ hàng cho sản phẩm ${item.productName}` });
       }
-      // Lưu snapshot sản phẩm
       item.snapshot = {
         name: product.name,
         price: product.price,
@@ -154,7 +183,6 @@ exports.createOrder = async (req, res) => {
       };
     }
 
-    // Tạo đơn hàng
     const order = new Order({
       orderCode,
       customerName,
@@ -165,6 +193,8 @@ exports.createOrder = async (req, res) => {
       paymentMethod,
       shippingProvider,
       notes,
+      isPaid,
+      userId,
       status: 'Chờ xác nhận',
       statusHistory: [{ status: 'Chờ xác nhận', timestamp: new Date() }],
     });
@@ -174,5 +204,32 @@ exports.createOrder = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi khi tạo đơn hàng' });
+  }
+};
+
+// Cập nhật thanh toán
+exports.markAsPaid = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+
+    if (order.isPaid) {
+      return res.status(400).json({ message: "Đơn hàng đã được thanh toán" });
+    }
+
+    if (order.paymentMethod === "COD") {
+      return res.status(400).json({ message: "COD chỉ được thanh toán khi giao hàng" });
+    }
+
+    if (["Giao thành công", "Đã huỷ", "Trả hàng/Hoàn tiền"].includes(order.status)) {
+      return res.status(400).json({ message: "Không thể thanh toán ở trạng thái hiện tại" });
+    }
+
+    order.isPaid = true;
+    await order.save();
+
+    res.json({ message: "Thanh toán thành công", order });
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi khi cập nhật thanh toán" });
   }
 };
