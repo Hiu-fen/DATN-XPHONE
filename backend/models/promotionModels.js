@@ -6,13 +6,15 @@ const promotionSchema = new mongoose.Schema({
   discountType: {
     type: String,
     required: true,
-    enum: ['giam_10%', 'giam_50k', 'free_ship'], 
-    default: 'giam_10%' 
+    enum: ['percent', 'fixed', 'free_ship'], 
+    default: 'free_ship'
   },
+  discountValue: { type: Number },
   description: { type: String },
-  applicableCategories : [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
+  applicableCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   condition: { type: String },
   quantity: { type: Number, required: true },
+  usageCount: { type: Number, default: 0 }, // Số lần đã sử dụng
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   status: { type: Boolean, default: true },
