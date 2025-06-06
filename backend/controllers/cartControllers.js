@@ -53,8 +53,7 @@ exports.addToCart = async (req, res) => {
         const existingItem = cart.items.find(item =>
           item.productId.toString() === newItem.productId.toString() &&
           item.color === newItem.color &&
-          item.storage === newItem.storage &&
-          item.price === newItem.price
+          item.storage === newItem.storage
         );
         if (existingItem) {
           existingItem.quantity += newItem.quantity;

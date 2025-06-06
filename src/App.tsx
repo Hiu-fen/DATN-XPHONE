@@ -70,7 +70,7 @@ const App = () => {
         { path: "register", element: <Register /> },
         { path: "about", element: <About /> },
         { path: "contact", element: <Contact /> },
-        { path: "cart/:id", element: <Cart /> },
+        { path: "cart", element: <Cart /> },
         { path: "checkout", element: <Checkout /> },
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
