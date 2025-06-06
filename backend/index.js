@@ -54,6 +54,7 @@ app.use('/api/contacts', contactRoutes);
 
 app.use('/api/comments', commentRoutes);
 app.use('/api/promotions', promotionRoutes);
+require('./cron'); // Gọi file cron
 app.use('/api/banners', bannerRouter);
 
 app.use('/api/banners', bannerRouter);
