@@ -91,12 +91,6 @@ const Checkout = () => {
         ? JSON.parse(localStorage.getItem("user")!).token
         : null;
 
-      if (!token) {
-        message.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
-        navigate("/login");
-        return;
-      }
-
       await axios.post("http://localhost:5000/api/orders", newOrder, {
         headers: {
           Authorization: `Bearer ${token}`,

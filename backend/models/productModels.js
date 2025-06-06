@@ -4,6 +4,8 @@ const variantSubSchema = new mongoose.Schema({
   color: { type: String, required: true },
   ram: { type: String, required: true },
   price: { type: Number, required: true },
+  soluong: { type: Number, required: true },
+
 });
 
 

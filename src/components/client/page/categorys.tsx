@@ -7,7 +7,7 @@ import { message } from "antd";
 import { IProduct } from "../../../interface/product";
 import { ICategory } from "../../../interface/category";
 import { useCart } from "../context/CartContext";
-
+import BannerClient from "../componentChild/Home/banner"
 interface CartItem {
   productId: string;
   productName: string;
@@ -15,6 +15,8 @@ interface CartItem {
   soluong: number;
   image: string;
 }
+
+
 
 const Categorys = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
@@ -90,14 +92,9 @@ const Categorys = () => {
 
   return (
     <div className="w-full">
-      <div className="w-full border h-[200px] md:h-[400px] flex justify-center items-center overflow-hidden">
-        <img
-          src="https://img.pikbest.com/origin/10/01/53/35bpIkbEsTBzN.png!w700wp"
-          alt=""
-          className="w-full h-full object-cover"
-        />
-      </div>
-
+       {/* Banner */}
+        <BannerClient />
+      {/* Danh mục */}
       <div className="w-full flex flex-col items-center">
         <h2 className="text-xl md:text-2xl font-bold my-4 text-center">Danh mục</h2>
         <div className="relative w-full px-4 overflow-hidden">

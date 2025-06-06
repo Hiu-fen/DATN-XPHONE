@@ -43,6 +43,7 @@ interface Order {
   statusHistory?: { status: string; timestamp: string }[];
 }
 
+// Thứ tự trạng thái đúng theo luồng xử lý
 const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
@@ -50,7 +51,7 @@ const statusOptions = [
   "Giao thành công",
   "Hoàn thành",
   "Đã huỷ",
-  "Trả hàng/Hoàn tiền", // THÊM: Trạng thái trả hàng
+  "Trả hàng/Hoàn tiền", // Trạng thái trả hàng
 ];
 
 const OrderList = () => {
@@ -213,8 +214,7 @@ const OrderList = () => {
   };
 
   const filteredOrders = orders?.filter((o) => {
-    const text =
-      `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+    const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
 
@@ -343,9 +343,7 @@ const OrderList = () => {
       key: "status",
       render: (_: any, record: Order) => (
         <Select
-          value={
-            statusOptions.includes(record.status) ? record.status : undefined
-          }
+          value={record.status}
           onChange={(value) =>
             handleStatusChange(record._id, record.status, value)
           }

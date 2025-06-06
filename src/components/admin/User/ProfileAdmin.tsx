@@ -47,7 +47,9 @@ const updatedFields: Partial<User> = {};
 
 
     try {
-      const res = await axios.put(`http://localhost:5000/api/user/profile/${originalData._id}`, updatedFields);
+      console.log("originalData._id:", originalData._id);
+console.log("updatedFields:", updatedFields);
+      const res = await axios.put(`http://localhost:5000/api/users/profile/${originalData._id}`, updatedFields);
       localStorage.setItem("admin", JSON.stringify(res.data.user));
       addNotification(`Nhắc nhở: \"${res.data.user.notification || "Không có"}\"`);
       message.success("Cập nhật thành công!");

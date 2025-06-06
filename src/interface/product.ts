@@ -3,7 +3,11 @@ export interface IProduct {
   name: string;
   image: string;
   albumImages: string[];
+<<<<<<< HEAD
   price: number;      
+=======
+  price: string;       // bạn vẫn giữ nếu cần
+>>>>>>> DATN
   soluong: number;
   mota?: string;
   danhmuc: string;
@@ -15,5 +19,6 @@ export interface IProduct {
     color: string;
     ram: string;
     price: number;
+    soluong: number;
   }[];
 }

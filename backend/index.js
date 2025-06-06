@@ -11,14 +11,18 @@ const orderRoutes = require('./routes/orderRouter');
 const promotionRoutes = require('./routes/promotionRouter');
 const bannerRouter = require('./routes/bannerRouter');
 const userRouter = require('./routes/userRouter');
+const cartRouter = require('./routes/cartRouter');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: 'http://localhost:5173',
+credentials: true, 
+
+ }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 
 // Kết nối MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -32,8 +36,16 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/promotions', promotionRoutes);
 app.use('/api/banners', bannerRouter);
+
+app.use('/api/banners', bannerRouter);
 app.use('/api/users', userRouter);
 app.use('/api/orders', orderRoutes);
+// app.use('/api/variants', variantRoutes);
+
+app.use('/api/carts', cartRouter);
+
+
+
 
 // Chạy server
 app.listen(PORT, () => {
