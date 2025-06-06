@@ -15,5 +15,6 @@ export interface IProduct {
     color: string;
     ram: string;
     price: number;
+    soluong: number;
   }[];
 }

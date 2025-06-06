@@ -21,32 +21,31 @@ const ProductDetail = () => {
   const [album, setAlbum] = useState<string[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
 
-  // ✅ Lấy tên danh mục dựa theo ID
+  // Lấy tên danh mục dựa theo ID
+  const { data: categoryNames } = useQuery<string[]>({
+    queryKey: ['category-names', product?.danhmuc],
+    queryFn: async () => {
+      if (!product?.danhmuc) return ['Không xác định'];
 
-const { data: categoryNames } = useQuery<string[]>({
-  queryKey: ['category-names', product?.danhmuc],
-  queryFn: async () => {
-    if (!product?.danhmuc) return ['Không xác định'];
+      const categoryIds = Array.isArray(product.danhmuc)
+        ? product.danhmuc
+        : [product.danhmuc];
 
-    const categoryIds = Array.isArray(product.danhmuc)
-      ? product.danhmuc
-      : [product.danhmuc];
+      const names = await Promise.all(
+        categoryIds.map(async (id) => {
+          try {
+            const res = await axios.get(`http://localhost:5000/api/category/${id}`);
+            return res.data.name;
+          } catch (error) {
+            return 'Không xác định';
+          }
+        })
+      );
 
-    const names = await Promise.all(
-      categoryIds.map(async (id) => {
-        try {
-          const res = await axios.get(`http://localhost:5000/api/category/${id}`);
-          return res.data.name;
-        } catch (error) {
-          return 'Không xác định';
-        }
-      })
-    );
-
-    return names;
-  },
-  enabled: !!product?.danhmuc,
-});
+      return names;
+    },
+    enabled: !!product?.danhmuc,
+  });
 
   useEffect(() => {
     if (!product) return;
@@ -137,15 +136,28 @@ const { data: categoryNames } = useQuery<string[]>({
             <strong>Mô tả:</strong> {product.mota || 'Chưa có mô tả'}
           </p>
           <p style={{ marginBottom: 10 }}>
-  <strong>Danh mục:</strong> {categoryNames?.join(', ') || 'Không xác định'}
-</p>
+            <strong>Danh mục:</strong> {categoryNames?.join(', ') || 'Không xác định'}
+          </p>
           <p style={{ marginBottom: 10 }}>
             <strong>Trạng thái:</strong> {product.trangthai || 'Không rõ'}
           </p>
-          <p>
+          <p style={{ marginBottom: 10 }}>
             <strong>Số lượng:</strong>{' '}
-            <span style={{ color: product.soluong > 0 ? '#389e0d' : '#cf1322' }}>
-              {product.soluong > 0 ? product.soluong : 'Hết hàng'}
+            <span
+              style={{
+                color:
+                  (selectedVariant ? selectedVariant.soluong : product.soluong) > 0
+                    ? '#389e0d'
+                    : '#cf1322',
+              }}
+            >
+              {(selectedVariant
+                ? selectedVariant.soluong
+                : product.soluong) > 0
+                ? (selectedVariant
+                    ? selectedVariant.soluong
+                    : product.soluong)
+                : 'Hết hàng'}
             </span>
           </p>
 
