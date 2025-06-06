@@ -20,29 +20,29 @@ interface VariantInput {
   color: string;
   ram: string;
   price: number;
+  soluong: number; // Số lượng cho từng biến thể
 }
 
 interface IProductForm {
   name: string;
   image: string;
   albumImages: string[];
-  soluong: number;
-  mota?: string;
-  danhmuc: number;    // đổi sang số
+  soluong: number;       // Tổng số lượng (auto-disabled, tính từ biến thể)
+  mota?: string;         // Không bắt buộc
+  danhmuc: number;
   price: number;
   trangthai: string;
   variants: VariantInput[];
 }
 
 interface ICategory {
-  _id: number;        // đổi sang số
+  _id: number;
   name: string;
 }
 
 const { TextArea } = Input;
 
 const AddProduct: React.FC = () => {
-  // Khởi tạo react-hook-form, set default values
   const {
     control,
     handleSubmit,
@@ -57,7 +57,7 @@ const AddProduct: React.FC = () => {
       albumImages: [],
       soluong: 0,
       mota: "",
-      danhmuc: 0,       // giá trị mặc định
+      danhmuc: 0,
       price: 0,
       trangthai: "còn bán",
       variants: [],
@@ -69,7 +69,7 @@ const AddProduct: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [albumLoading, setAlbumLoading] = useState(false);
 
-  // useFieldArray để quản lý mảng variants
+  // Quản lý mảng variants
   const {
     fields: variantFields,
     append: appendVariant,
@@ -79,19 +79,24 @@ const AddProduct: React.FC = () => {
     name: "variants",
   });
 
-  // Lấy dữ liệu categories khi component mount
+  // Lấy danh sách category khi component mount
   useEffect(() => {
     axios.get("http://localhost:5000/api/category").then((res) => {
-      // Giả sử res.data trả về mảng ICategory[] với _id là number
       setCategories(res.data);
     });
   }, []);
 
-  // Lấy giá trị đang watch
   const image = watch("image");
   const albumImages = watch("albumImages");
+  const watchedVariants = watch("variants") || [];
 
-  // Hàm upload ảnh chính
+  // Tự động tính tổng soluong từ mảng variants
+  useEffect(() => {
+    const total = watchedVariants.reduce((sum, v) => sum + (v.soluong || 0), 0);
+    setValue("soluong", total);
+  }, [watchedVariants, setValue]);
+
+  // Upload ảnh chính
   const uploadImage = async (fileList: RcFile[]) => {
     if (!fileList.length) return;
     setLoading(true);
@@ -114,7 +119,7 @@ const AddProduct: React.FC = () => {
     }
   };
 
-  // Hàm upload album images
+  // Upload ảnh phụ (album)
   const uploadAlbumImages = async (fileList: RcFile[]) => {
     if (!fileList.length) return;
     setAlbumLoading(true);
@@ -148,43 +153,64 @@ const AddProduct: React.FC = () => {
     setValue("albumImages", updated, { shouldValidate: true });
   };
 
-  // Hàm xử lý submit form
+  // Xử lý submit form
   const onSubmit = async (data: IProductForm) => {
     try {
-      // 1. Kiểm tra các trường bắt buộc
+      // 1. Kiểm tra category đã chọn
       const selectedCategory = categories.find((c) => c._id === data.danhmuc);
       if (!selectedCategory) {
         message.error("Không tìm thấy danh mục đã chọn");
         return;
       }
+      // 2. Kiểm tra ảnh chính
       if (!data.image) {
         message.error("Vui lòng chọn ảnh chính");
         return;
       }
+      // 3. Kiểm tra ảnh phụ
       if (!data.albumImages.length) {
         message.error("Vui lòng chọn ít nhất một ảnh phụ");
         return;
       }
+      // 4. Kiểm tra biến thể: mỗi biến thể phải có color, ram, price và soluong
+      for (let i = 0; i < data.variants.length; i++) {
+        const v = data.variants[i];
+        if (!v.color) {
+          message.error(`Biến thể thứ ${i + 1} thiếu Màu`);
+          return;
+        }
+        if (!v.ram) {
+          message.error(`Biến thể thứ ${i + 1} thiếu RAM`);
+          return;
+        }
+        if (v.price == null) {
+          message.error(`Biến thể thứ ${i + 1} thiếu Giá`);
+          return;
+        }
+        if (v.soluong == null) {
+          message.error(`Biến thể thứ ${i + 1} thiếu Số lượng`);
+          return;
+        }
+      }
 
-      // 2. Tạo payload gửi lên server
+      // 5. Tạo payload gửi lên server
       const payload: IProductForm = {
         name: data.name,
         image: data.image,
         albumImages: data.albumImages,
         soluong: data.soluong,
         mota: data.mota,
-        danhmuc: selectedCategory._id, // gửi số
+        danhmuc: selectedCategory._id,
         price: data.price,
         trangthai: data.trangthai,
         variants: data.variants,
       };
 
-      // 3. Gọi API POST /api/products
       await axios.post("http://localhost:5000/api/products", payload);
       message.success("Thêm sản phẩm thành công");
       navigate("/admin/phone/list", { state: { forceReload: true } });
 
-      // 4. Reset lại form
+      // 6. Reset lại form
       reset({
         name: "",
         image: "",
@@ -206,7 +232,7 @@ const AddProduct: React.FC = () => {
     <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
       <h2 className="text-xl font-semibold text-center mb-4">Thêm sản phẩm</h2>
 
-      {/* Tên sản phẩm */}
+      {/* Tên sản phẩm (required) */}
       <Form.Item
         label="Tên sản phẩm"
         validateStatus={errors.name ? "error" : ""}
@@ -221,7 +247,7 @@ const AddProduct: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Ảnh chính */}
+      {/* Ảnh chính (required) */}
       <Form.Item
         label="Hình ảnh chính"
         required
@@ -253,7 +279,7 @@ const AddProduct: React.FC = () => {
         )}
       </Form.Item>
 
-      {/* Ảnh phụ (albumImages) */}
+      {/* Ảnh phụ (albumImages) (required) */}
       <Form.Item
         label="Hình ảnh phụ"
         required
@@ -265,7 +291,9 @@ const AddProduct: React.FC = () => {
           multiple
           showUploadList={false}
           beforeUpload={(fileList) => {
-            uploadAlbumImages(Array.isArray(fileList) ? fileList : [fileList]);
+            uploadAlbumImages(
+              Array.isArray(fileList) ? fileList : [fileList]
+            );
             return false;
           }}
         >
@@ -273,7 +301,7 @@ const AddProduct: React.FC = () => {
         </Upload>
         {albumLoading && <Spin style={{ marginLeft: 10 }} />}
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-          {watch("albumImages")?.map((url, idx) => (
+          {albumImages.map((url, idx) => (
             <div key={idx} style={{ position: "relative" }}>
               <img
                 src={url}
@@ -304,7 +332,7 @@ const AddProduct: React.FC = () => {
         </div>
       </Form.Item>
 
-      {/* Giá gốc */}
+      {/* Giá gốc (required) */}
       <Form.Item
         label="Giá gốc"
         validateStatus={errors.price ? "error" : ""}
@@ -314,7 +342,10 @@ const AddProduct: React.FC = () => {
         <Controller
           name="price"
           control={control}
-          rules={{ required: "Nhập giá gốc" }}
+          rules={{
+            required: "Nhập giá gốc",
+            min: { value: 1, message: "Giá phải lớn hơn 0" },
+          }}
           render={({ field }) => (
             <InputNumber<number>
               min={0}
@@ -329,7 +360,7 @@ const AddProduct: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Trạng thái */}
+      {/* Trạng thái (required) */}
       <Form.Item
         label="Trạng thái"
         validateStatus={errors.trangthai ? "error" : ""}
@@ -344,9 +375,9 @@ const AddProduct: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Số lượng */}
+      {/* Số lượng tổng (auto-calculated, read-only) */}
       <Form.Item
-        label="Số lượng"
+        label="Số lượng tổng"
         validateStatus={errors.soluong ? "error" : ""}
         help={errors.soluong?.message}
         required
@@ -354,12 +385,21 @@ const AddProduct: React.FC = () => {
         <Controller
           name="soluong"
           control={control}
-          rules={{ required: "Nhập số lượng" }}
-          render={({ field }) => <InputNumber<number> min={0} {...field} />}
+          rules={{
+            required: "Số lượng tổng phải có giá trị (tính từ biến thể)",
+          }}
+          render={({ field }) => (
+            <InputNumber<number>
+              {...field}
+              min={0}
+              style={{ width: "100%" }}
+              disabled
+            />
+          )}
         />
       </Form.Item>
 
-      {/* Mô tả */}
+      {/* Mô tả (không required) */}
       <Form.Item label="Mô tả">
         <Controller
           name="mota"
@@ -368,7 +408,7 @@ const AddProduct: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Danh mục */}
+      {/* Danh mục (required) */}
       <Form.Item
         label="Danh mục"
         validateStatus={errors.danhmuc ? "error" : ""}
@@ -391,22 +431,54 @@ const AddProduct: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Mảng biến thể (variants) */}
-      <Form.Item label="Biến thể">
+      {/* Mảng biến thể (variants). Mỗi trường color, ram, price, soluong đều required */}
+      <Form.Item label="Biến thể (Màu; RAM; Số lượng; Giá)">
         {variantFields.map((field, index) => (
-          <Space key={field.id} align="baseline" style={{ marginBottom: 8 }}>
+          <Space
+            key={field.id}
+            align="baseline"
+            style={{ marginBottom: 8, display: "flex", width: "100%", flexWrap: "wrap" }}
+          >
+            {/* Ô nhập màu sắc (required) */}
             <Controller
               name={`variants.${index}.color`}
               control={control}
-              rules={{ required: "Nhập màu" }}
-              render={({ field }) => <Input placeholder="Color" {...field} />}
+              rules={{ required: "Nhập màu sắc" }}
+              render={({ field }) => (
+                <Input
+                  placeholder="Màu sắc"
+                  {...field}
+                  style={{ width: 150 }}
+                />
+              )}
             />
+
+            {/* Ô nhập RAM (required) */}
             <Controller
               name={`variants.${index}.ram`}
               control={control}
               rules={{ required: "Nhập RAM" }}
-              render={({ field }) => <Input placeholder="RAM" {...field} />}
+              render={({ field }) => (
+                <Input placeholder="RAM" {...field} style={{ width: 100 }} />
+              )}
             />
+
+            {/* Ô nhập số lượng biến thể (required) */}
+            <Controller
+              name={`variants.${index}.soluong`}
+              control={control}
+              rules={{ required: "Nhập số lượng biến thể" }}
+              render={({ field }) => (
+                <InputNumber<number>
+                  min={0}
+                  placeholder="Số lượng"
+                  style={{ width: 120 }}
+                  {...field}
+                />
+              )}
+            />
+
+            {/* Ô nhập giá biến thể (required) */}
             <Controller
               name={`variants.${index}.price`}
               control={control}
@@ -414,22 +486,25 @@ const AddProduct: React.FC = () => {
               render={({ field }) => (
                 <InputNumber<number>
                   min={0}
+                  placeholder="Giá"
+                  style={{ width: 120 }}
                   formatter={(val) =>
                     `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                   }
                   parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
-                  placeholder="Giá"
                   {...field}
                 />
               )}
             />
+
+            {/* Nút xóa biến thể */}
             <MinusCircleOutlined onClick={() => removeVariant(index)} />
           </Space>
         ))}
 
         <Button
           type="dashed"
-          onClick={() => appendVariant({ color: "", ram: "", price: 0 })}
+          onClick={() => appendVariant({ color: "", ram: "", soluong: 0, price: 0 })}
           block
           icon={<PlusOutlined />}
         >
@@ -437,7 +512,7 @@ const AddProduct: React.FC = () => {
         </Button>
       </Form.Item>
 
-      {/* Cuối cùng: nút submit */}
+      {/* Nút submit */}
       <Form.Item>
         <Button type="primary" htmlType="submit" block>
           Thêm sản phẩm

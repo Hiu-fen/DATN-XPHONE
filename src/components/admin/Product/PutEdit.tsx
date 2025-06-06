@@ -20,6 +20,7 @@ interface VariantInput {
   color: string;
   ram: string;
   price: number;
+  soluong: number; // Số lượng cho từng biến thể
 }
 
 interface IProductForm {
@@ -27,9 +28,9 @@ interface IProductForm {
   image: string;
   albumImages: string[];
   price: number;
-  soluong: number;
+  soluong: number;       // Tổng số lượng (auto tính từ biến thể)
   mota: string;
-  danhmuc: string; // name of category
+  danhmuc: string;       // name of category
   trangthai: string;
   variants: VariantInput[];
 }
@@ -72,18 +73,9 @@ const PutEdit: React.FC = () => {
 
   const image = watch("image");
   const albumImages = watch("albumImages");
-  const variants = watch("variants") || [];
+  const watchedVariants = watch("variants") || [];
 
-  // useFieldArray cho biến thể
-  const {
-    fields: variantFields,
-    append: appendVariant,
-    remove: removeVariant,
-  } = useFieldArray({
-    control,
-    name: "variants",
-  });
-
+  // Khi load trang, lấy danh sách category và thông tin sản phẩm
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -92,19 +84,23 @@ const PutEdit: React.FC = () => {
           axios.get(`http://localhost:5000/api/products/${id}`),
         ]);
 
-        const categoryList = categoryRes.data;
+        const categoryList = categoryRes.data as ICategory[];
         setCategories(categoryList);
 
-        const product = productRes.data;
+        const product = productRes.data as any;
 
-        // map variants từ product
-        const loadedVariants: VariantInput[] = product.variants || [];
+        // Chuyển variants từ product (nếu có)
+        const loadedVariants: VariantInput[] = (product.variants || []).map((v: any) => ({
+          color: v.color || "",
+          ram: v.ram || "",
+          price: v.price || 0,
+          soluong: v.soluong || 0,
+        }));
 
-        // tìm category theo name hoặc id
-       const matchedCategory = categoryList.find((cat: ICategory) =>
-  cat.name === product.danhmuc || cat._id === product.danhmuc
-);
-
+        // Tìm category phù hợp: theo name hoặc _id
+        const matchedCategory = categoryList.find(
+          (cat) => cat.name === product.danhmuc || cat._id === product.danhmuc
+        );
 
         reset({
           name: product.name || "",
@@ -124,6 +120,12 @@ const PutEdit: React.FC = () => {
 
     if (id) fetchData();
   }, [id, reset]);
+
+  // Khi variants thay đổi, tự tính tổng soluong và gán vào form
+  useEffect(() => {
+    const total = watchedVariants.reduce((sum, v) => sum + (v.soluong || 0), 0);
+    setValue("soluong", total);
+  }, [watchedVariants, setValue]);
 
   // Upload ảnh chính
   const uploadImage = async (file: RcFile | null) => {
@@ -173,50 +175,80 @@ const PutEdit: React.FC = () => {
     }
   };
 
+  // Xóa 1 ảnh trong album
   const removeImage = (index: number) => {
     const updated = [...albumImages];
     updated.splice(index, 1);
     setValue("albumImages", updated, { shouldValidate: true });
   };
 
+  // useFieldArray cho biến thể
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({
+    control,
+    name: "variants",
+  });
+
+  // Xử lý submit form
   const onSubmit = async (data: IProductForm) => {
     try {
-      // Kiểm tra category
+      // Kiểm tra category đã chọn
       const selectedCategory = categories.find((c) => c.name === data.danhmuc);
       if (!selectedCategory) {
         message.error("Không tìm thấy danh mục đã chọn");
         return;
       }
-      // Kiểm tra ảnh chính, ảnh phụ
+      // Kiểm tra ảnh chính
       if (!data.image) {
         message.error("Vui lòng chọn ảnh chính");
         return;
       }
+      // Kiểm tra ảnh phụ
       if (!data.albumImages.length) {
         message.error("Vui lòng chọn ít nhất một ảnh phụ");
         return;
       }
-      // Kiểm tra biến thể nếu có
+      // Kiểm tra biến thể
       for (let i = 0; i < data.variants.length; i++) {
         const v = data.variants[i];
-        if (!v.color || !v.ram || v.price == null) {
-          message.error(`Biến thể thứ ${i + 1} thiếu thông tin`);
+        if (!v.color) {
+          message.error(`Biến thể thứ ${i + 1} thiếu Màu`);
+          return;
+        }
+        if (!v.ram) {
+          message.error(`Biến thể thứ ${i + 1} thiếu RAM`);
+          return;
+        }
+        if (v.price == null) {
+          message.error(`Biến thể thứ ${i + 1} thiếu Giá`);
+          return;
+        }
+        if (v.soluong == null) {
+          message.error(`Biến thể thứ ${i + 1} thiếu Số lượng`);
           return;
         }
       }
 
-      // Tạo payload
+      // Tạo payload gửi lên server
       const updatedData = {
         name: data.name,
         image: data.image,
         albumImages: data.albumImages,
         price: data.price,
-        soluong: data.soluong,
+        soluong: data.soluong,          // đã do useEffect tính
         mota: data.mota,
-        danhmuc: selectedCategory._id, // dùng _id của category
+        danhmuc: selectedCategory._id,  // dùng _id của category
         trangthai: data.trangthai,
         status: true,
-        variants: data.variants, // gửi mảng biến thể
+        variants: data.variants.map((v) => ({
+          color: v.color,
+          ram: v.ram,
+          price: v.price,
+          soluong: v.soluong,
+        })),
       };
 
       await axios.put(`http://localhost:5000/api/products/${id}`, updatedData);
@@ -295,9 +327,7 @@ const PutEdit: React.FC = () => {
           multiple
           showUploadList={false}
           beforeUpload={(fileList) => {
-            uploadAlbumImages(
-              Array.isArray(fileList) ? fileList : [fileList]
-            );
+            uploadAlbumImages(Array.isArray(fileList) ? fileList : [fileList]);
             return false;
           }}
         >
@@ -361,9 +391,9 @@ const PutEdit: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Số lượng */}
+      {/* Số lượng tổng (readonly, do useEffect tính) */}
       <Form.Item
-        label="Số lượng"
+        label="Số lượng tổng"
         validateStatus={errors.soluong ? "error" : ""}
         help={errors.soluong?.message}
         required
@@ -372,10 +402,16 @@ const PutEdit: React.FC = () => {
           name="soluong"
           control={control}
           rules={{
-            required: "Vui lòng nhập số lượng",
-            min: { value: 1, message: "Số lượng phải lớn hơn 0" },
+            required: "Số lượng tổng phải có giá trị (tính từ biến thể)",
           }}
-          render={({ field }) => <Input type="number" {...field} />}
+          render={({ field }) => (
+            <InputNumber<number>
+              {...field}
+              min={0}
+              style={{ width: "100%" }}
+              disabled
+            />
+          )}
         />
       </Form.Item>
 
@@ -439,21 +475,53 @@ const PutEdit: React.FC = () => {
       </Form.Item>
 
       {/* Biến thể */}
-      <Form.Item label="Biến thể">
+      <Form.Item label="Biến thể (Màu; RAM; Số lượng; Giá)">
         {variantFields.map((field, index) => (
-          <Space key={field.id} align="baseline" style={{ marginBottom: 8 }}>
+          <Space
+            key={field.id}
+            align="baseline"
+            style={{ marginBottom: 8, display: "flex", width: "100%", flexWrap: "wrap" }}
+          >
+            {/* Ô nhập màu sắc */}
             <Controller
               name={`variants.${index}.color`}
               control={control}
-              rules={{ required: "Nhập màu" }}
-              render={({ field }) => <Input placeholder="Color" {...field} />}
+              rules={{ required: "Nhập màu sắc" }}
+              render={({ field }) => (
+                <Input
+                  placeholder="Màu sắc"
+                  {...field}
+                  style={{ width: 150 }}
+                />
+              )}
             />
+
+            {/* Ô nhập RAM */}
             <Controller
               name={`variants.${index}.ram`}
               control={control}
               rules={{ required: "Nhập RAM" }}
-              render={({ field }) => <Input placeholder="RAM" {...field} />}
+              render={({ field }) => (
+                <Input placeholder="RAM" {...field} style={{ width: 100 }} />
+              )}
             />
+
+            {/* Ô nhập số lượng biến thể */}
+            <Controller
+              name={`variants.${index}.soluong`}
+              control={control}
+              rules={{ required: "Nhập số lượng biến thể" }}
+              render={({ field }) => (
+                <InputNumber<number>
+                  min={0}
+                  placeholder="Số lượng"
+                  style={{ width: 120 }}
+                  {...field}
+                />
+              )}
+            />
+
+            {/* Ô nhập giá biến thể */}
             <Controller
               name={`variants.${index}.price`}
               control={control}
@@ -461,21 +529,23 @@ const PutEdit: React.FC = () => {
               render={({ field }) => (
                 <InputNumber<number>
                   min={0}
-                  formatter={(val) =>
-                    `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
-                  parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
                   placeholder="Giá"
+                  style={{ width: 120 }}
+                  formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                  parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
                   {...field}
                 />
               )}
             />
+
+            {/* Nút xóa biến thể */}
             <MinusCircleOutlined onClick={() => removeVariant(index)} />
           </Space>
         ))}
+
         <Button
           type="dashed"
-          onClick={() => appendVariant({ color: "", ram: "", price: 0 })}
+          onClick={() => appendVariant({ color: "", ram: "", price: 0, soluong: 0 })}
           block
           icon={<PlusOutlined />}
         >
