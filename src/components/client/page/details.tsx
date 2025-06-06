@@ -296,6 +296,10 @@ const handleAddToCart1 = async () => {
     await addToCart({
       userId: user._id,
       productId: product._id,
+      quantity: 1,  
+      price:'',
+      color: "",    
+      storage: "",  
       quantity: quantity,
       color: selectedVariant.color,
       storage: selectedVariant.ram,
