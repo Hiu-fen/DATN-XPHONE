@@ -1,26 +1,35 @@
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Promotion } from "../../../interface/promotion";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { message } from "antd";
-import {
-  addPromotion,
-  getAllCategory,
-  getRandomCode,
-} from "../../../api/promotionApi";
+import { message, Switch } from "antd";
+import { addPromotion, getAllCategory, getRandomCode} from "../../../api/promotionApi";
 import { useState } from "react";
 import { ICategory } from "../../../interface/category";
+import Select from "react-select";
+import { DatePicker } from "antd";
+import moment, { Moment } from "moment";
 
 const PostAddPromotion = () => {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
     setValue,
     getValues,
+    control
   } = useForm<Promotion>();
 
   const [code, setCode] = useState<string>("");
+  const discountType = watch("discountType")
+
+  // Các tùy chọn loại giảm giá
+  const discountTypeOptions = [
+    { value: "free_ship", label: "Miễn phí ship" },
+    { value: "percent", label: "Giảm phần trăm" },
+    { value: "fixed", label: "Giảm giá cố định" },
+  ];
 
   const nav = useNavigate();
 
@@ -46,14 +55,16 @@ const PostAddPromotion = () => {
 
   // Gửi dữ liệu từ form
   const onSubmit = (data: Promotion) => {
-    const selectedCategories = Array.isArray(data.applicableCategories)
-      ? data.applicableCategories
-      : [data.applicableCategories];
+    let discountValueToSend: number | undefined = undefined;
+
+    if (data.discountType === "percent" || data.discountType === "fixed") {
+      discountValueToSend = data.discountValue;
+    }
 
     mutation.mutate({
       ...data,
       code,
-      applicableCategories: selectedCategories,
+      discountValue: discountValueToSend,
     });
   };
 
@@ -73,6 +84,12 @@ const PostAddPromotion = () => {
     queryKey: ["category"],
     queryFn: getAllCategory,
   })
+
+  // Chuyển đổi danh mục thành định dạng phù hợp với react-select
+  const categoryOptions = categories?.data.map((cat: ICategory) => ({
+    label: cat.name,
+    value: cat._id,
+  })) || [];
 
   return (
     <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
@@ -119,40 +136,75 @@ const PostAddPromotion = () => {
 
         {/* Loại giảm giá */}
         <div>
-          <label className="block text-sm font-medium mb-1">Loại giảm giá</label>
-          <select
-            className="w-full px-4 py-2 border rounded-md"
-            {...register("discountType", {
-              required: "Loại giảm giá không được để trống",
-            })}
-          >
-            <option value="">-- Chọn loại giảm giá --</option>
-            <option value="free_ship">Miễn phí ship</option>
-            <option value="giam_10%">Khuyến mãi 10%</option>
-            <option value="giam_50k">Khuyến mãi 50k</option>
-          </select>
-          <span className="text-red-500">{errors.discountType?.message}</span>
-        </div>
-
-        {/* Chọn nhiều danh mục áp dụng */}
-        <label className="block mb-1 font-medium">Sản phẩm áp dụng</label>
-        <select
-          {...register("applicableCategories", { required: "Vui lòng chọn danh mục" })}
-          className="w-full p-2 border border-gray-300 rounded-md"
-          defaultValue=""
-        >
-          <option value="">-- Chọn loại sản phẩm --</option>
-          {categories?.data.map((category: ICategory) => (
-            <option key={category._id} value={category._id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        {errors.applicableCategories && (
-          <span className="text-red-500 text-sm mt-1 block">
-            {errors.applicableCategories.message}
-          </span>
+        <label className="block text-sm font-medium mb-1">Loại giảm giá</label>
+        <Controller
+          name="discountType"
+          control={control}
+          rules={{ required: "Vui lòng chọn loại giảm giá" }}
+          render={({ field }) => (
+            <Select
+              {...field}
+              options={discountTypeOptions}
+              value={discountTypeOptions.find(option => option.value === field.value) || null}
+              onChange={(option) => field.onChange(option?.value || null)}
+              placeholder="-- Chọn loại giảm giá --"
+              className="text-black"
+              classNamePrefix="select"
+              isClearable
+            />
+          )}
+        />
+        {errors.discountType && (
+          <span className="text-red-500">{errors.discountType.message}</span>
         )}
+      </div>
+
+        {/* Input nhập phần trăm nếu chọn percent */}
+        {discountType === "percent" && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Nhập phần trăm giảm phần trăm</label>
+            <input
+              type="number"
+              className="w-full px-4 py-2 border rounded-md"
+              {...register("discountValue", {
+                required: "Vui lòng nhập % giảm",
+                min: { value: 1, message: "Tối thiểu là 1%" },
+                max: { value: 100, message: "Tối đa là 100%" },
+                valueAsNumber: true,
+              })}
+            />
+            <span className="text-red-500">{errors.discountValue?.message}</span>
+          </div>
+        )}
+
+        {/* Chọn nhiều danh mục cho sản phẩm áp dụng */}
+        <div>
+          <label className="block mb-1 font-medium">Sản phẩm áp dụng</label>
+          <Controller
+            name="applicableCategories"
+            control={control}
+            rules={{ required: "Vui lòng chọn ít nhất 1 danh mục" }}
+            render={({ field }) => (
+              <Select
+                {...field}
+                options={categoryOptions}
+                isMulti
+                value={categoryOptions.filter((option:any) => field.value?.includes(option.value)) || []}
+                onChange={(options) => field.onChange(options ? options.map(option => option.value) : [])}
+                placeholder="-- Chọn danh mục --"
+                className="text-black"
+                classNamePrefix="select"
+                isClearable
+              />
+            )}
+          />
+          {errors.applicableCategories && (
+            <span className="text-red-500">
+              {errors.applicableCategories.message}
+            </span>
+          )}
+
+        </div>
 
         {/* Điều kiện áp dụng (không bắt buộc) */}
         <div>
@@ -186,28 +238,57 @@ const PostAddPromotion = () => {
         <div className="flex space-x-4">
           <div className="w-1/2">
             <label className="block text-sm font-medium mb-1">Ngày bắt đầu</label>
-            <input
-              type="date"
-              className="w-full px-4 py-2 border rounded-md"
-              {...register("startDate", { required: "Không được để trống" })}
+            <Controller
+              name="startDate"
+              control={control}
+              rules={{ required: "Không được để trống" }}
+              render={({ field }) => (
+                <DatePicker
+                  placeholder="Chọn ngày bắt đầu"
+                  showTime
+                  format="DD/MM/YYYY HH:mm:ss"
+                  // field.value có thể là string hoặc Moment, nên convert về Moment nếu có giá trị
+                  value={field.value ? moment(field.value) : null}
+                  onChange={(value: Moment | null) => {
+                    // Chuyển Moment sang chuỗi ISO để lưu form
+                    field.onChange(value ? value.toISOString() : null);
+                  }}
+                  className="w-full"
+                />
+              )}
             />
             <span className="text-red-500">{errors.startDate?.message}</span>
           </div>
           <div className="w-1/2">
             <label className="block text-sm font-medium mb-1">Ngày kết thúc</label>
-            <input
-              type="date"
-              className="w-full px-4 py-2 border rounded-md"
-              {...register("endDate", {
+            <Controller
+              name="endDate"
+              control={control}
+              rules={{
                 required: "Không được để trống",
                 validate: (value) => {
                   const start = getValues("startDate");
-                  return (
-                    new Date(value) >= new Date(start) ||
-                    "Ngày kết thúc phải sau ngày bắt đầu"
-                  );
+                  // So sánh thời gian, nếu null hoặc undefined thì báo lỗi
+                  if (!value) return "Không được để trống";
+                  if (!start) return true; // Nếu chưa có ngày bắt đầu thì không kiểm tra
+                  // Chuyển về moment để so sánh
+                  const startMoment = moment(start);
+                  const endMoment = moment(value);
+                  return endMoment.isSameOrAfter(startMoment) || "Ngày kết thúc phải sau ngày bắt đầu";
                 },
-              })}
+              }}
+              render={({ field }) => (
+                <DatePicker
+                  placeholder="Chọn ngày kết thúc"
+                  showTime
+                  format="DD/MM/YYYY HH:mm:ss"
+                  value={field.value ? moment(field.value) : null}
+                  onChange={(value: Moment | null) => {
+                    field.onChange(value ? value.toISOString() : null);
+                  }}
+                  className="w-full"
+                />
+              )}
             />
             <span className="text-red-500">{errors.endDate?.message}</span>
           </div>
@@ -228,12 +309,21 @@ const PostAddPromotion = () => {
         {/* Trạng thái hoạt động */}
         <div>
           <label className="block text-sm font-medium mb-1">Trạng thái</label>
-          <label className="inline-flex items-center space-x-2">
-            <input type="checkbox" {...register("status")} />
-            <span>Hoạt động</span>
-          </label>
+          <Controller
+            name="status"
+            control={control}
+            defaultValue={false}
+            render={({ field }) => (
+              <Switch
+                checked={field.value}
+                onChange={field.onChange}
+                checkedChildren="Hoạt động"
+                unCheckedChildren="Không hoạt động"
+                className="mb-4 rounded-full shadow-sm hover:shadow-md transition-shadow duration-300"
+              />
+            )}
+          />
         </div>
-
         {/* Nút thêm */}
         <button
           type="submit"

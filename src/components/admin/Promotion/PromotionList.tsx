@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, message, Popconfirm, Table, Tag } from "antd";
+import { Button, message, Popconfirm, Switch, Table } from "antd";
 import { Promotion } from "../../../interface/promotion";
 import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { deletePromotion, getAllPromotions } from "../../../api/promotionApi";
+import { deletePromotion, getAllPromotions, updatePromotionStatus } from "../../../api/promotionApi";
 
 const GetPromotion = () => {
   const navigate = useNavigate();
@@ -22,6 +22,20 @@ const GetPromotion = () => {
       }
     }
   })
+
+  // Mutation cập nhật trạng thái khuyến mãi
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: boolean }) => {
+      return await updatePromotionStatus(id, status);
+    },
+    onSuccess: () => {
+      message.success("Cập nhật trạng thái thành công");
+      queryClient.invalidateQueries({ queryKey: ['promotions'] });
+    },
+    onError: () => {
+      message.error("Cập nhật trạng thái thất bại");
+    },
+  });
 
   // Mutation xóa khuyến mãi
   const mutation = useMutation({
@@ -75,14 +89,17 @@ const GetPromotion = () => {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (status: boolean) => {
-        const isActive = status
-        return (
-          <Tag color={isActive ? "green" : "red"}>
-            {isActive ? 'Hoạt động' : 'Hết hạn'}
-          </Tag>
-        );
-      }
+        render: (status: boolean, record: Promotion) => (
+        <Switch
+          checked={status}
+          onChange={(checked) => {
+            updateStatusMutation.mutate({ id: record._id, status: checked });
+          }}
+          checkedChildren="Hoạt động"
+          unCheckedChildren="Hết hạn"
+          className="mb-4 rounded-full shadow-sm hover:shadow-md transition-shadow duration-300"
+        />
+      )
     },
     {
       title: 'Thao tác',
