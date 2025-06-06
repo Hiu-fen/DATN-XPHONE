@@ -243,15 +243,13 @@ const Details = () => {
       message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
       return;
     }
-        await addToCart({
+    await addToCart({
       userId: user._id,
       productId: product._id,
       quantity: quantity,
-      price: product.price,
       color: selectedVariant.color,
       storage: selectedVariant.ram,
     });
-
     message.success("Đã thêm vào giỏ hàng!");
   } catch (error) {
     console.error("Lỗi thêm giỏ hàng:", error);
@@ -295,15 +293,13 @@ const handleAddToCart1 = async () => {
       message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
       return;
     }
-  await addToCart({
-  userId: user._id,
-  productId: product._id,
-  quantity: quantity,
-  price: product.price,
-  color: selectedVariant.color,
-  storage: selectedVariant.ram,
-});
-
+    await addToCart({
+      userId: user._id,
+      productId: product._id,
+      quantity: quantity,
+      color: selectedVariant.color,
+      storage: selectedVariant.ram,
+    });
     navigate(`/cart/${user._id}`);
   } catch (error) {
     console.error("Lỗi mua hàng:", error);
