@@ -13,7 +13,7 @@ type Props = {
   totalProducts: number;
 };
 
-const AppleWatch: React.FC<Props> = ({
+const SamSung: React.FC<Props> = ({
   products,
   isLoading,
   showAll,
@@ -23,7 +23,7 @@ const AppleWatch: React.FC<Props> = ({
 
   return (
     <div className="mx-20 py-4">
-      <h3 className="text-center text-3xl font-semibold mb-2">AppleWatch</h3>
+      <h3 className="text-center text-3xl font-semibold mb-2">SamSung</h3>
 
       <Spin spinning={isLoading} size="large" tip="Đang tải sản phẩm...">
         {!isLoading && products.length === 0 && (
@@ -99,4 +99,4 @@ const AppleWatch: React.FC<Props> = ({
   );
 };
 
-export default AppleWatch;
+export default SamSung;
