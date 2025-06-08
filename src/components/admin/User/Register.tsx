@@ -115,6 +115,7 @@ const RegisterAdmin = () => {
               Đăng ký ngay
             </button>
           </div>
+          
         </form>
       </div>
     </div>

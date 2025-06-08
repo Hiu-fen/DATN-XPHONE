@@ -4,6 +4,7 @@ import { message } from "antd";
 import { Mail, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 interface LoginForm {
   email: string;
@@ -108,6 +109,10 @@ const Login = () => {
               Đăng ký ngay
             </a>
           </p>
+           <p className="text-center text-gray-500 text-sm mt-2">
+             <GoogleLoginButton mode="login" />
+
+            </p>
         </form>
       </div>
     </div>

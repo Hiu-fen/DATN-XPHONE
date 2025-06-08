@@ -3,6 +3,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const SECRET_KEY = 'your_secret_key_here';
+const { OAuth2Client } = require('google-auth-library');
+const client = new OAuth2Client('104260804254-l5u6m93mdepqjvt00oqj0fimtpmj3eg6.apps.googleusercontent.com'); // bạn phải thay đúng Client ID
+
 
 // Đăng ký người dùng mới
 exports.register = async (req, res) => {
@@ -120,6 +123,55 @@ exports.updateProfile = async (req, res) => {
     res.json({ message: "Cập nhật thành công", user });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+exports.registerWithGoogle = async (req, res) => {
+  const { name, email, avatar } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Tài khoản đã tồn tại. Vui lòng đăng nhập.' });
+    }
+
+    const user = new User({
+      name,
+      email,
+      avatar,
+      password: '',
+      provider: 'google',
+      role: 'user',
+      active: true,
+    });
+
+    await user.save();
+
+    return res.status(201).json({ message: 'Đăng ký Google thành công' });
+  } catch (err) {
+    console.error('Lỗi đăng ký Google:', err);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+exports.loginWithGoogle = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Tài khoản chưa tồn tại. Vui lòng đăng ký.' });
+    }
+
+    if (!user.active) {
+      return res.status(403).json({ message: 'Tài khoản đã bị khóa' });
+    }
+
+    const token = jwt.sign({ id: user._id, role: user.role }, SECRET_KEY, { expiresIn: '1d' });
+
+    return res.json({ token, user });
+  } catch (err) {
+    console.error('Lỗi đăng nhập Google:', err);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };

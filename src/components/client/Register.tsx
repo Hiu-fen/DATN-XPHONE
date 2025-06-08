@@ -4,6 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { message } from "antd";
 import { MailOutlined, LockOutlined, UserOutlined } from "@ant-design/icons";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 interface UserForm {
   name: string;
@@ -125,8 +126,14 @@ const Register = () => {
             >
               Đăng ký ngay
             </button>
+            <p className="text-center">Hoặc</p>
 
-            <p className="text-center text-gray-500 text-sm mt-4">
+           
+            <p className="text-center text-gray-500 text-sm mt-2">
+               <GoogleLoginButton mode="register"/>
+
+            </p>
+             <p className="text-center text-gray-500 text-sm mt-4">
               Đã có tài khoản?{" "}
               <a href="/login" className="text-blue-500 hover:underline">
                 Đăng nhập ngay
