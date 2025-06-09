@@ -55,6 +55,7 @@ const PutEdit: React.FC = () => {
     setValue,
     watch,
   } = useForm<IProductForm>({
+    mode: "onBlur",
     defaultValues: {
       name: "",
       image: "",
@@ -200,71 +201,88 @@ const PutEdit: React.FC = () => {
 
   // Xử lý submit form
   const onSubmit = async (data: IProductForm) => {
-    try {
-      // Kiểm tra category đã chọn
-      const selectedCategory = categories.find((c) => c.name === data.danhmuc);
-      if (!selectedCategory) {
-        message.error("Không tìm thấy danh mục đã chọn");
-        return;
-      }
-      // Kiểm tra ảnh chính
-      if (!data.image) {
-        message.error("Vui lòng chọn ảnh chính");
-        return;
-      }
-      // Kiểm tra ảnh phụ
-      if (!data.albumImages.length) {
-        message.error("Vui lòng chọn ít nhất một ảnh phụ");
-        return;
-      }
-      // Kiểm tra biến thể
-      for (let i = 0; i < data.variants.length; i++) {
-        const v = data.variants[i];
-        if (!v.color) {
-          message.error(`Biến thể thứ ${i + 1} thiếu Màu`);
-          return;
-        }
-        if (!v.ram) {
-          message.error(`Biến thể thứ ${i + 1} thiếu RAM`);
-          return;
-        }
-        if (v.price == null) {
-          message.error(`Biến thể thứ ${i + 1} thiếu Giá`);
-          return;
-        }
-        if (v.soluong == null) {
-          message.error(`Biến thể thứ ${i + 1} thiếu Số lượng`);
-          return;
-        }
-      }
-
-      // Tạo payload gửi lên server
-      const updatedData = {
-        name: data.name,
-        image: data.image,
-        albumImages: data.albumImages,
-        price: data.price,
-        soluong: data.soluong,          // đã do useEffect tính
-        mota: data.mota,
-        danhmuc: selectedCategory._id,  // dùng _id của category
-        trangthai: data.trangthai,
-        status: true,
-        variants: data.variants.map((v) => ({
-          color: v.color,
-          ram: v.ram,
-          price: v.price,
-          soluong: v.soluong,
-        })),
-      };
-
-      await axios.put(`http://localhost:5000/api/products/${id}`, updatedData);
-      message.success("Cập nhật sản phẩm thành công");
-      nav("/admin/phone/list", { state: { forceReload: true } });
-    } catch (err) {
-      console.error(err);
-      message.error("Cập nhật thất bại");
+  try {
+    // Kiểm tra danh mục
+    const selectedCategory = categories.find((c) => c.name === data.danhmuc);
+    if (!selectedCategory) {
+      message.error("Không tìm thấy danh mục đã chọn");
+      return;
     }
-  };
+
+    // Kiểm tra ảnh chính
+    if (!data.image) {
+      message.error("Vui lòng chọn ảnh chính");
+      return;
+    }
+
+    // Kiểm tra ảnh phụ
+    if (!data.albumImages.length) {
+      message.error("Vui lòng chọn ít nhất một ảnh phụ");
+      return;
+    }
+
+    // Kiểm tra biến thể
+    const variantSet = new Set();
+    for (let i = 0; i < data.variants.length; i++) {
+      const v = data.variants[i];
+
+      if (!v.color) {
+        message.error(`Biến thể thứ ${i + 1} chưa chọn màu`);
+        return;
+      }
+
+      if (!v.ram) {
+        message.error(`Biến thể thứ ${i + 1} chưa chọn RAM`);
+        return;
+      }
+
+      if (v.price === undefined || v.price === null || v.price === 0) {
+        message.error(`Biến thể thứ ${i + 1} chưa nhập giá`);
+        return;
+      }
+
+      if (v.soluong === undefined || v.soluong === null || v.soluong === 0) {
+        message.error(`Biến thể thứ ${i + 1} chưa nhập số lượng`);
+        return;
+      }
+
+      // Kiểm tra trùng
+      const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
+      if (variantSet.has(key)) {
+        message.error(`Biến thể thứ ${i + 1} trùng màu + RAM với biến thể khác. Vui lòng sửa lại.`);
+        return;
+      }
+      variantSet.add(key);
+    }
+
+    // Tạo payload
+    const updatedData = {
+      name: data.name,
+      image: data.image,
+      albumImages: data.albumImages,
+      price: data.price,
+      soluong: data.soluong,
+      mota: data.mota,
+      danhmuc: selectedCategory._id,
+      trangthai: data.trangthai,
+      status: true,
+      variants: data.variants.map((v) => ({
+        color: v.color,
+        ram: v.ram,
+        price: v.price,
+        soluong: v.soluong,
+      })),
+    };
+
+    await axios.put(`http://localhost:5000/api/products/${id}`, updatedData);
+    message.success("Cập nhật sản phẩm thành công");
+    nav("/admin/phone/list", { state: { forceReload: true } });
+  } catch (err) {
+    console.error(err);
+    message.error("Cập nhật thất bại");
+  }
+};
+
 
   return (
     <Form

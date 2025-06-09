@@ -23,3 +23,12 @@ exports.delete   = async (req,res) => {
     res.json({message:'Xóa thành công'});
   } catch(e){ res.status(500).json({message:'Lỗi xóa màu'}) }
 };
+exports.getDetail = async (req, res) => {
+  try {
+    const r = await Color.findById(req.params.id);
+    if (!r) return res.status(404).json({ message: 'Không tìm thấy Color' });
+    res.json(r);
+  } catch (e) {
+    res.status(500).json({ message: 'Lỗi lấy chi tiết Color' });
+  }
+};
