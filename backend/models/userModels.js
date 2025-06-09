@@ -1,10 +1,9 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String }, // ❗ Không required vì Google không dùng mật khẩu
   sdt: { type: String },
   gender: { type: String },
   address: { type: String },
@@ -13,6 +12,7 @@ const userSchema = new mongoose.Schema({
   dob: { type: String },
   role: { type: String, enum: ['admin', 'user'], default: 'user' },
   notification: { type: String },
+  provider: { type: String, default: 'google' },
 }, {
   timestamps: true,
 });

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 // <<<<<<< Updated upstream
-const { register, login, listAdmins, listClients,getProfile,  updateUserStatus, updateProfile } = require('../controllers/userControllers');
+const { register, login, listAdmins, listClients,getProfile,  updateUserStatus, updateProfile,registerWithGoogle,loginWithGoogle } = require('../controllers/userControllers');
 // =======
 const User = require('../models/userModels'); // Đường dẫn đúng
 
@@ -20,6 +20,10 @@ router.post('/register', register);
 router.post('/login', login);
 router.get('/admins', listAdmins);
 router.get('/clients', listClients);
+router.post('/google-register', registerWithGoogle);
+
+// Route đăng nhập Google
+router.post('/google-login', loginWithGoogle);;
 
 // router.get('/profile/:id', getProfile);
 router.patch('/:id', updateUserStatus); 
@@ -27,6 +31,7 @@ router.put('/profile/:id', updateProfile);
 
 router.get('/profile/:id', getProfile);
 router.patch('/:id', updateUserStatus);
+
 
 
 // Route lấy user theo email
