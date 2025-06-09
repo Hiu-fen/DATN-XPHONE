@@ -15,6 +15,7 @@ import {
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RcFile } from "antd/lib/upload";
+import { IColor, IRam } from "../../../interface/variant";
 
 interface VariantInput {
   color: string;
@@ -74,22 +75,27 @@ const PutEdit: React.FC = () => {
   const image = watch("image");
   const albumImages = watch("albumImages");
   const watchedVariants = watch("variants") || [];
+  const [colors, setColors] = useState<IColor[]>([]);
+  const [rams, setRams] = useState<IRam[]>([]);
 
   // Khi load trang, lấy danh sách category và thông tin sản phẩm
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoryRes, productRes] = await Promise.all([
+        const [categoryRes, productRes, colorRes, ramRes] = await Promise.all([
           axios.get("http://localhost:5000/api/category"),
           axios.get(`http://localhost:5000/api/products/${id}`),
+          axios.get("http://localhost:5000/api/colors"),
+          axios.get("http://localhost:5000/api/rams"),
         ]);
 
         const categoryList = categoryRes.data as ICategory[];
         setCategories(categoryList);
+        setColors(colorRes.data as IColor[]);
+        setRams(ramRes.data as IRam[]);
 
-        const product = productRes.data as any;
+        const product = productRes.data;
 
-        // Chuyển variants từ product (nếu có)
         const loadedVariants: VariantInput[] = (product.variants || []).map((v: any) => ({
           color: v.color || "",
           ram: v.ram || "",
@@ -97,7 +103,6 @@ const PutEdit: React.FC = () => {
           soluong: v.soluong || 0,
         }));
 
-        // Tìm category phù hợp: theo name hoặc _id
         const matchedCategory = categoryList.find(
           (cat) => cat.name === product.danhmuc || cat._id === product.danhmuc
         );
@@ -120,6 +125,7 @@ const PutEdit: React.FC = () => {
 
     if (id) fetchData();
   }, [id, reset]);
+
 
   // Khi variants thay đổi, tự tính tổng soluong và gán vào form
   useEffect(() => {
@@ -486,23 +492,43 @@ const PutEdit: React.FC = () => {
             <Controller
               name={`variants.${index}.color`}
               control={control}
-              rules={{ required: "Nhập màu sắc" }}
+              rules={{ required: "Chọn màu sắc" }}
               render={({ field }) => (
-                <Input
-                  placeholder="Màu sắc"
+                <Select
                   {...field}
+                  placeholder="Chọn màu"
                   style={{ width: 150 }}
-                />
+                  onChange={field.onChange}
+                  value={field.value}
+                >
+                  {colors.map((color) => (
+                    <Select.Option key={color._id} value={color.name}>
+                      {color.name}
+                    </Select.Option>
+                  ))}
+                </Select>
               )}
             />
 
-            {/* Ô nhập RAM */}
+            {/* Chọn RAM từ API */}
             <Controller
               name={`variants.${index}.ram`}
               control={control}
-              rules={{ required: "Nhập RAM" }}
+              rules={{ required: "Chọn RAM" }}
               render={({ field }) => (
-                <Input placeholder="RAM" {...field} style={{ width: 100 }} />
+                <Select
+                  {...field}
+                  placeholder="Chọn RAM"
+                  style={{ width: 100 }}
+                  onChange={field.onChange}
+                  value={field.value}
+                >
+                  {rams.map((ram) => (
+                    <Select.Option key={ram._id} value={ram.size}>
+                      {ram.size}
+                    </Select.Option>
+                  ))}
+                </Select>
               )}
             />
 

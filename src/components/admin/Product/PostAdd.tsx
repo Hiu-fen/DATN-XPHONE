@@ -15,6 +15,7 @@ import {
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import type { RcFile } from "antd/lib/upload";
+import { IColor, IRam } from "../../../interface/variant";
 
 interface VariantInput {
   color: string;
@@ -68,6 +69,8 @@ const AddProduct: React.FC = () => {
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [albumLoading, setAlbumLoading] = useState(false);
+  const [colors, setColors] = useState<IColor[]>([]);
+const [rams, setRams] = useState<IRam[]>([]);
 
   // Quản lý mảng variants
   const {
@@ -85,6 +88,25 @@ const AddProduct: React.FC = () => {
       setCategories(res.data);
     });
   }, []);
+  useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [categoryRes, colorRes, ramRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/category"),
+        axios.get("http://localhost:5000/api/colors"),
+        axios.get("http://localhost:5000/api/rams"),
+      ]);
+      setCategories(categoryRes.data);
+      setColors(colorRes.data);
+      setRams(ramRes.data);
+    } catch (err) {
+      console.error("Lỗi khi tải dữ liệu danh mục, màu sắc hoặc RAM", err);
+    }
+  };
+
+  fetchData();
+}, []);
+
 
   const image = watch("image");
   const albumImages = watch("albumImages");
@@ -441,27 +463,45 @@ const AddProduct: React.FC = () => {
           >
             {/* Ô nhập màu sắc (required) */}
             <Controller
-              name={`variants.${index}.color`}
-              control={control}
-              rules={{ required: "Nhập màu sắc" }}
-              render={({ field }) => (
-                <Input
-                  placeholder="Màu sắc"
-                  {...field}
-                  style={{ width: 150 }}
-                />
-              )}
-            />
+  name={`variants.${index}.color`}
+  control={control}
+  rules={{ required: "Chọn màu sắc" }}
+  render={({ field }) => (
+    <Select
+      {...field}
+      placeholder="Chọn màu"
+      style={{ width: 150 }}
+      onChange={(value) => field.onChange(value)}
+    >
+      {colors.map((color) => (
+        <Select.Option key={color._id} value={color.name}>
+          {color.name}
+        </Select.Option>
+      ))}
+    </Select>
+  )}
+/>
 
-            {/* Ô nhập RAM (required) */}
-            <Controller
-              name={`variants.${index}.ram`}
-              control={control}
-              rules={{ required: "Nhập RAM" }}
-              render={({ field }) => (
-                <Input placeholder="RAM" {...field} style={{ width: 100 }} />
-              )}
-            />
+{/* Biến thể ram: Select từ API */}
+<Controller
+  name={`variants.${index}.ram`}
+  control={control}
+  rules={{ required: "Chọn RAM" }}
+  render={({ field }) => (
+    <Select
+      {...field}
+      placeholder="Chọn RAM"
+      style={{ width: 100 }}
+      onChange={(value) => field.onChange(value)}
+    >
+      {rams.map((ram) => (
+        <Select.Option key={ram._id} value={ram.size}>
+          {ram.size}
+        </Select.Option>
+      ))}
+    </Select>
+  )}
+/>
 
             {/* Ô nhập số lượng biến thể (required) */}
             <Controller

@@ -12,7 +12,9 @@ const promotionRoutes = require('./routes/promotionRouter');
 const bannerRouter = require('./routes/bannerRouter');
 const userRouter = require('./routes/userRouter');
 const cartRouter = require('./routes/cartRouter');
-// const variantRoutes = require('./routes/variantRouter'); // Nếu bạn có route này thì bỏ comment
+// const variantRouter = require('./routes/variant/ramRouter');
+const colorRouter = require('./routes/variant/colorRouter');
+const ramRouter   = require('./routes/variant/ramRouter');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -29,8 +31,8 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ✅ Kết nối MongoDB
 mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true,
 })
 .then(() => console.log('✅ Kết nối MongoDB thành công'))
 .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
@@ -45,6 +47,8 @@ app.use('/api/banners', bannerRouter);
 app.use('/api/users', userRouter);
 app.use('/api/orders', orderRoutes);
 app.use('/api/carts', cartRouter);
+app.use('/api/colors', colorRouter);
+app.use('/api/rams',   ramRouter);
 // app.use('/api/variants', variantRoutes); // Uncomment nếu bạn có route này
 
 // ✅ Cron job (nếu có file cron.js)

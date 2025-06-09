@@ -97,6 +97,16 @@ const AdminSidebar = () => {
       ],
 
     },
+    {
+      key: 'Biến thể',
+      label: 'Quản lý Biến thể',
+      icon: <FolderOpenOutlined />,
+      children: [
+        { key: 'variant/list', label: 'Biến thể sản phẩm', path: '/admin/variant/list' },
+
+      ],
+
+    },
     
     {
       key: 'promotion',

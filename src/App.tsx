@@ -52,11 +52,18 @@ import Account from './components/client/page/account/account';
 import Details from './components/client/page/details';
 import ProductDetail from './components/admin/Product/Detail';
 import AccountSibaLayout from './components/AccountSibaLayout';
-import AccountSiba from './components/client/page/account/siba';
+// import AccountSiba from './components/client/page/account/siba';
 import AddAccountAdmin from './components/client/page/account/add-admin';
 import { CartProvider } from './components/client/context/CartContext';
 import Checkout from './components/client/page/checkoutCart';
 import { UserProvider } from './components/client/context/UserContext';
+
+
+import ColorAdd from './components/admin/Variant/color/ColorAdd';
+import ColorEdit from './components/admin/Variant/color/ColorEdit';
+import RamAdd from './components/admin/Variant/ram/RamAdd';
+import RamEdit from './components/admin/Variant/ram/RamEdit';
+import VariantList from './components/admin/Variant/VariantList';
 
 const App = () => {
   useReloadIfBlank();
@@ -143,6 +150,18 @@ const App = () => {
         { path: "banner/add", element: <BannerAdd /> },
         { path: "banner/list", element: <BannerList /> },
         { path: "banner/edit/:id", element: <BannerEdit /> },
+
+
+        // Router quản lý Color
+        
+        { path: 'color/add',       element: <ColorAdd />   },
+        { path: 'color/:id',  element: <ColorEdit />  },
+
+        // Router quản lý RAM
+       
+        { path: 'variant/list',        element: <VariantList />   },
+        { path: 'ram/add',         element: <RamAdd />       },
+        { path: 'ram/:id',    element: <RamEdit />      },
       ],
     },
   ]);
