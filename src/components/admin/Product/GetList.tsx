@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button, Input, message, Popconfirm, Space, Table } from "antd";
+import { Button, Input, message, Popconfirm, Space, Table ,Tooltip } from "antd";
 import axios from "axios";
 import { IProduct } from "../../../interface/product";
 import { useNavigate, useLocation } from "react-router-dom";
 import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
+
+import type { ColumnsType } from 'antd/es/table';
 
 interface ICategory {
   _id: string;
@@ -109,11 +111,16 @@ const GetList: React.FC = () => {
         <span>{soluong ? soluong.toLocaleString() : "Không còn sản phẩm"}</span>
       ),
     },
-    {
-      title: "Mô tả",
-      key: "mota",
-      dataIndex: "mota",
-    },
+{
+  title: "Mô tả",
+  key: "mota",
+  dataIndex: "mota",
+  render: (text: string) => (
+    <Tooltip title={text}>
+      {text.length > 50 ? text.slice(0, 50) + '...' : text}
+    </Tooltip>
+  ),
+},
     {
       title: "Danh mục",
       key: "danhmuc",

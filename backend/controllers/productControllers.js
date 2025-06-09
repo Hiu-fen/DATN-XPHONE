@@ -163,7 +163,11 @@ exports.deleteProduct = async (req, res) => {
     if (orders.length > 0) {
       return res.status(400).json({ message: 'Không thể xóa sản phẩm vì đang liên kết với đơn hàng hiện tại' });
     }
-    const deletedProduct = await Product.findByIdAndDelete(id);
+    const deletedProduct = await Product.findByIdAndUpdate(
+  id,
+  { status: false },
+  { new: true }
+);
 
     if (!deletedProduct) {
       return res.status(404).json({ message: 'Không tìm thấy sản phẩm để xóa' });

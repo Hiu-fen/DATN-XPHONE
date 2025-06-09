@@ -23,3 +23,12 @@ exports.delete = async (req,res) => {
     res.json({message:'Xóa thành công'});
   } catch(e){ res.status(500).json({message:'Lỗi xóa RAM'}) }
 };
+exports.getDetail = async (req, res) => {
+  try {
+    const r = await Ram.findById(req.params.id);
+    if (!r) return res.status(404).json({ message: 'Không tìm thấy RAM' });
+    res.json(r);
+  } catch (e) {
+    res.status(500).json({ message: 'Lỗi lấy chi tiết RAM' });
+  }
+};
