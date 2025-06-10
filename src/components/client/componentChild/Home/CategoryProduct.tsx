@@ -34,9 +34,9 @@ const ProductCategory = () => {
 
   return (
     <div className="py-4 mx-24">
-      <h3 className="text-center text-3xl font-semibold my-6">Danh mục nổi bật</h3>
+      <h3 className="text-center text-3xl font-semibold my-6">Danh mục sản phẩm</h3>
 
-      <Spin spinning={isLoading} size="large" tip="Đang tải danh mục nổi bật...">
+      <Spin spinning={isLoading} size="large" tip="Đang tải danh mục sản phẩm...">
         {isLoading ? (
           <div className="flex overflow-x-auto gap-6 pb-4 custom-scrollbar">
             {Array(6)

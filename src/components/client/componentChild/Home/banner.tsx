@@ -1,68 +1,56 @@
-import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { IBanner } from '../../../../interface/banner';
-
-
+import { Skeleton, Carousel } from 'antd';
+import { getAllBanners } from '../../../../api/client/bannerApiClient';
+import { Link } from 'react-router-dom';
+import type { CarouselProps } from 'antd';
 
 const BannerClient = () => {
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-
-
+  // Lấy danh sách banner từ API
   const { data: banners, isLoading } = useQuery({
     queryKey: ['banners'],
     queryFn: async () => {
-      const response = await axios.get('http://localhost:5000/api/banners');
+      const response = await getAllBanners();
       return response.data.filter((banner: IBanner) => banner.status === true);
-    }
+    },
+    refetchOnWindowFocus: false,
   });
 
-  useEffect(() => {
-    if (!banners || banners.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [banners]);
-
+  // Nếu đang loading hoặc không có banner
   if (isLoading || !banners || banners.length === 0) {
     return (
-      <div className="mx-4 overflow-hidden relative h-[400px] bg-gray-100 animate-pulse">
-        <div className="w-full h-full flex items-center justify-center">
-          <span className="text-gray-400">Loading banner...</span>
-        </div>
+      <div className="relative w-screen left-1/2 -translate-x-1/2 overflow-hidden">
+        <Skeleton.Image
+          active
+          style={{ width: '100vw', height: 600, objectFit: 'cover' }}
+        />
       </div>
     );
   }
 
-  const currentBanner = banners[currentBannerIndex];
+  // Cấu hình Carousel
+  const settings: CarouselProps = {
+    autoplay: true,
+    autoplaySpeed: 8000,
+    dots: true,
+    effect: 'scrollx', 
+  };
 
   return (
-    <div className="mx-4 overflow-hidden relative">
-      <a href={currentBanner.link} target="_blank" rel="noopener noreferrer">
-        <img
-          src={currentBanner.image}
-          alt={currentBanner.name}
-          className="w-full h-[400px] object-cover transition-opacity duration-500"
-        />
-      </a>
-      
-     
-      {banners.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {banners.map((_: IBanner, index: number) => (
-            <button
-              key={index}
-              onClick={() => setCurrentBannerIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentBannerIndex ? 'bg-white scale-125' : 'bg-white/50'
-              }`}
-            />
-          ))}
-        </div>
-      )}
+    <div className="relative left-1/2 -translate-x-1/2 overflow-hidden px-4">
+      <Carousel {...settings}>
+        {banners.map((banner: IBanner) => (
+          <div key={banner.id} className="w-full h-[600px]">
+            <Link to="#" rel="noopener noreferrer">
+              <img
+                src={banner.image}
+                alt={banner.name}
+                className="w-full h-full object-cover"
+              />
+            </Link>
+          </div>
+        ))}
+      </Carousel>
     </div>
   );
 };
