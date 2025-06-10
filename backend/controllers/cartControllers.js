@@ -8,6 +8,16 @@ exports.getCart = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+exports.getCartById = async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.params.userId });
+    if (!cart) return res.status(200).json({ userId: req.params.userId, items: [] });
+    res.json(cart);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.updateCart = async (req, res) => {
     const { items } = req.body;
     try {
@@ -32,6 +42,7 @@ exports.deleteCart = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
 exports.addToCart = async (req, res) => {
   try {
     const { userId, items } = req.body;
@@ -46,8 +57,7 @@ exports.addToCart = async (req, res) => {
         const existingItem = cart.items.find(item =>
           item.productId.toString() === newItem.productId.toString() &&
           item.color === newItem.color &&
-          item.storage === newItem.storage &&
-          item.price === newItem.price
+          item.storage === newItem.storage 
         );
         if (existingItem) {
           existingItem.quantity += newItem.quantity;

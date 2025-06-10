@@ -5,13 +5,14 @@ import ButtonFilter from "../componentChild/Home/ButtonFilter";
 import SmallBanner from "../componentChild/Home/SmallBanner";
 import ProductInfo from "../componentChild/Home/ProductInfo";
 import NewsletterForm from "../componentChild/Home/NewsletterForm";
-import News from "../componentChild/Home/News";
+// import News from "../componentChild/Home/News";
 import { useQuery } from "@tanstack/react-query";
 import { getAllProducts } from "../../../api/client/productApiClient";
 import { useEffect, useState } from "react";
 import AppleWatch from "../componentChild/Home/ApwProduct ";
 import IphoneProducts from "../componentChild/Home/iPhoneProduct";
 import SamSung from "../componentChild/Home/SamSungProducts";
+import News from "../componentChild/Home/news";
 
 const Home = () => {
   // Sử dụng useQuery để lấy danh sách sản phẩm
