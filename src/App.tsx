@@ -57,6 +57,7 @@ import AddAccountAdmin from './components/client/page/account/add-admin';
 import { CartProvider } from './components/client/context/CartContext';
 import Checkout from './components/client/page/checkoutCart';
 import { UserProvider } from './components/client/context/UserContext';
+import NewsClient from './components/client/page/news';
 
 
 import ColorAdd from './components/admin/Variant/color/ColorAdd';
@@ -81,6 +82,7 @@ const App = () => {
         { path: "checkout", element: <Checkout /> },
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
+        { path: "news", element: <NewsClient /> },
         {
           path: "accounts",
           element: <AccountSibaLayout />,

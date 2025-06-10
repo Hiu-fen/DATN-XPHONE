@@ -87,8 +87,8 @@ const Home = () => {
         {/* Banner */}
         <BannerClient />
 
-        {/* Các chính sách */}
-        <ButtonFilter />
+        {/* Category Product */}
+        <ProductCategory />
 
         {/* Banner phụ */}
         <SmallBanner />
@@ -96,8 +96,6 @@ const Home = () => {
         {/* Hot Sale  */}
         <HotSaleSection />
 
-        {/* Category Product */}
-        <ProductCategory />
 
         {/* iPhone */}
         <IphoneProducts 
@@ -131,6 +129,9 @@ const Home = () => {
 
         {/* Tin tức */}
         <News />
+
+        {/* Các chính sách */}
+        <ButtonFilter />
 
         {/* Form đăng ký nhận tin */}
         <NewsletterForm />
