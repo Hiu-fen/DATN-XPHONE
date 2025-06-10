@@ -1,18 +1,61 @@
-// components/client/page/checkoutCart.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
-import { useCart } from "../context/CartContext";
-import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
 import { useUser } from "../context/UserContext";
+import axios from "axios";
+
+interface CartItem {
+  productId: string;
+  productName: string;
+  price: number;
+  soluong: number;
+  image: string;
+  color?: string;
+  storage?: string;
+}
 
 const Checkout = () => {
-  const { cart, clearCart } = useCart();
   const navigate = useNavigate();
   const { user } = useUser();
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   const SHIPPING_FEE = 35000;
+
+  // Lấy giỏ hàng và sản phẩm từ server
+  useEffect(() => {
+    if (user?._id) {
+      const fetchCartAndProducts = async () => {
+        try {
+          const [cartResponse, productsResponse] = await Promise.all([
+            axios.get(`http://localhost:5000/api/carts/${user._id}`),
+            axios.get("http://localhost:5000/api/products"),
+          ]);
+
+          const cartItems = cartResponse.data.items || [];
+          const productsData = productsResponse.data;
+
+          const enrichedCartItems = cartItems.map((item: any) => {
+            const product = productsData.find((p: any) => p._id === item.productId);
+            return {
+              productId: item.productId,
+              productName: product ? product.name : "Sản phẩm không tồn tại",
+              price: item.price || (product ? product.price : 0),
+              soluong: item.quantity, 
+              image: product?.image,
+              color: item.color,
+              storage: item.storage,
+            };
+          });
+
+          setCart(enrichedCartItems);
+        } catch (error) {
+          console.error("Lỗi khi lấy giỏ hàng từ server:", error);
+          message.error("Không thể tải giỏ hàng.");
+        }
+      };
+      fetchCartAndProducts();
+    }
+  }, [user]);
 
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.soluong,
@@ -21,10 +64,10 @@ const Checkout = () => {
   const totalWithShipping = totalPrice + SHIPPING_FEE;
 
   const [form, setForm] = useState({
-    name: user?.name || "", // Tự điền nếu đã đăng nhập
+    name: user?.name || "",
     phone: "",
     address: "",
-    email: user?.email || "", // Tự điền nếu đã đăng nhập
+    email: user?.email || "",
     note: "",
     paymentMethod: "COD",
     shippingProvider: "Giao hàng tiêu chuẩn",
@@ -40,7 +83,6 @@ const Checkout = () => {
   };
 
   const handleOrder = async () => {
-    // Kiểm tra đăng nhập
     if (!user) {
       message.error("Vui lòng đăng nhập để đặt hàng");
       navigate("/login");
@@ -59,7 +101,7 @@ const Checkout = () => {
     }
 
     const newOrder = {
-      orderCode: uuidv4().slice(0, 8).toUpperCase(),
+      orderCode: `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
       customerName: form.name,
       phone: form.phone,
       address: form.address,
@@ -70,7 +112,7 @@ const Checkout = () => {
       total: totalWithShipping,
       status: "Chờ xác nhận",
       date: new Date().toISOString(),
-      isPaid: false,
+      isPaid: form.paymentMethod !== "COD",
       refunded: false,
       items: cart.map((item) => ({
         productId: item.productId,
@@ -81,38 +123,60 @@ const Checkout = () => {
           name: item.productName,
           price: item.price,
           image: item.image,
+          color: item.color || "",
+          storage: item.storage || "",
         },
       })),
-      userId: user._id, // Bắt buộc userId từ user đã đăng nhập
+      userId: user._id,
     };
 
     try {
-      const token = localStorage.getItem("user")
-        ? JSON.parse(localStorage.getItem("user")!).token
-        : null;
+      const token = localStorage.getItem("token");
+      if (!token) {
+        message.error("Không tìm thấy token xác thực. Vui lòng đăng nhập lại.");
+        navigate("/login");
+        return;
+      }
 
+      // Gửi đơn hàng lên server
       await axios.post("http://localhost:5000/api/orders", newOrder, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // Trừ kho
+      // Trừ số lượng sản phẩm trong kho
       for (const item of cart) {
         await axios.patch(
           `http://localhost:5000/api/products/${item.productId}/update-quantity`,
-          { soluong: -item.soluong }
+          { soluong: -item.soluong },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
         );
       }
 
+      // Xóa giỏ hàng trên server
+      await axios.delete(`http://localhost:5000/api/carts/${user._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       message.success("Đặt hàng thành công!");
-      clearCart();
+      setCart([]);
       navigate("/");
     } catch (err: any) {
       console.error("Lỗi khi đặt hàng:", err);
-      message.error(err.response?.data?.message || "Đặt hàng thất bại");
+      message.error(err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại.");
     }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-xl text-gray-500">
+        Vui lòng <a href="/login" className="text-blue-600 hover:underline">đăng nhập</a> để thanh toán.
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -226,9 +290,9 @@ const Checkout = () => {
           </h2>
           <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
             {cart.map((item) => (
-              <li key={item.productId} className="flex items-center py-4">
+              <li key={`${item.productId}-${item.color || ''}-${item.storage || ''}`} className="flex items-center py-4">
                 <img
-                  src={item.image || "https://via.placeholder.com/60"}
+                  src={item.image}
                   alt={item.productName}
                   className="w-16 h-16 rounded-lg object-cover mr-4 border border-gray-300"
                 />
@@ -237,6 +301,8 @@ const Checkout = () => {
                   <p className="text-sm text-gray-500">
                     Số lượng: {item.soluong}
                   </p>
+                  {item.color && <p className="text-sm text-gray-500">Màu: {item.color}</p>}
+                  {item.storage && <p className="text-sm text-gray-500">Dung lượng: {item.storage}</p>}
                 </div>
                 <div className="font-semibold text-gray-900">
                   {(item.price * item.soluong).toLocaleString("vi-VN")} VND
