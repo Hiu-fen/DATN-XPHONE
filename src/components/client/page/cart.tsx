@@ -4,6 +4,7 @@ import axios from 'axios'
 import { IProduct } from '../../../interface/product';
 import { ICartItem } from '../../../interface/cart';
 import { message } from 'antd';
+import { useUser } from '../context/UserContext';
 
 
 const Cart = () => {
@@ -13,7 +14,7 @@ const navigate = useNavigate();
   const [cartItems, setCartItems] = useState<ICartItem[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { user } = useUser();
     const userId = user?._id || null;
 
 
