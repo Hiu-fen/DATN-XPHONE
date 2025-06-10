@@ -65,6 +65,7 @@ import ColorEdit from './components/admin/Variant/color/ColorEdit';
 import RamAdd from './components/admin/Variant/ram/RamAdd';
 import RamEdit from './components/admin/Variant/ram/RamEdit';
 import VariantList from './components/admin/Variant/variantList';
+// import VariantList from './components/admin/Variant/VariantList';
 
 const App = () => {
   useReloadIfBlank();

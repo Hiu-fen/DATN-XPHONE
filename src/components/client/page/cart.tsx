@@ -39,19 +39,24 @@ const navigate = useNavigate();
     }
   };
   const handleCheckout = async () => {
-  // 1. Gọi API lưu cart hiện tại lên server
+  if (!userId) {
+    message.error("Bạn chưa đăng nhập");
+    return;
+  }
+
   try {
+    // Gửi cartItems hiện tại lên server lưu lại
     await axios.put(`http://localhost:5000/api/carts/${userId}`, {
-      items: cartItems, // cartItems là mảng ICartItem hiện tại
+      items: cartItems,
     });
+    // Sau khi lưu thành công thì chuyển trang checkout
+    navigate("/checkout");
   } catch (error) {
     console.error("Lỗi khi lưu giỏ hàng trước khi checkout:", error);
     message.error("Không thể lưu giỏ hàng. Vui lòng thử lại.");
-    return;
   }
-  // 2. Sau khi lưu xong, điều hướng qua trang /checkout
-  navigate("/checkout");
 };
+
 
   useEffect(() => {
     if (userId) getProductCart();
@@ -68,22 +73,35 @@ const navigate = useNavigate();
       console.error('Lỗi cập nhật giỏ hàng:', error);
     }
   };
+  const updateCartItems = (updatedItems: ICartItem[]) => {
+  setCartItems(updatedItems);
+  localStorage.setItem('cartItems', JSON.stringify(updatedItems));
+};
 
-  const handleQuantityChange = (productId: string, delta: number) => {
-    const updatedItems = cartItems.map((item) =>
-      item.productId === productId
-        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-        : item
-    );
-    setCartItems(updatedItems);
-    updateCartOnServer(updatedItems);
-  };
+  const handleQuantityChange = (
+  productId: string,
+  color: string,
+  storage: string,
+  delta: number
+) => {
+  const updatedItems = cartItems.map((item) =>
+    item.productId === productId &&
+    item.color === color &&
+    item.storage === storage
+      ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+      : item
+  );
+  updateCartItems(updatedItems);
+  updateCartOnServer(updatedItems); // nếu bạn vẫn muốn cập nhật server
+};
 
-  const handleRemove = (productId: string) => {
-    const updatedItems = cartItems.filter((item) => item.productId !== productId);
-    setCartItems(updatedItems);
-    updateCartOnServer(updatedItems);
-  };
+// Sửa lại handleRemove
+const handleRemove = (itemId: string) => {
+  const updatedItems = cartItems.filter(item => item._id !== itemId);
+  updateCartItems(updatedItems);
+  updateCartOnServer(updatedItems);
+  message.success('Xóa thành công');
+};
 
   const total = cartItems.reduce((acc, item) => {
     const product = getProductById(item.productId);
@@ -121,7 +139,11 @@ const navigate = useNavigate();
                 if (!product) return null; 
 
                 return (
-                  <tr key={item.productId} className="border-t hover:bg-gray-50 transition-all">
+                  <tr
+                    key={`${item.productId}-${item.color}-${item.storage}-${item.price}`}
+                    className="border-t hover:bg-gray-50 transition-all"
+                  >
+
                     <td className="p-4 text-center"><input type="checkbox" className='w-4'/></td>
 
                     <td className="text-center p-4 font-semibold">{index + 1}</td>
@@ -136,20 +158,20 @@ const navigate = useNavigate();
                     <td className="text-center p-4">{item.color || '-'}</td>
                     <td className="text-center p-4">{item.storage || '-'}</td>
                    <td className="text-center p-4 text-red-500 font-medium">
-  {formatPrice(`${product.price}`)}
-</td>
+                      {formatPrice(`${product.price}`)}
+                    </td>
 
                     <td className="text-center p-4">
                       <div className="flex justify-center items-center gap-2">
                         <button
-                          onClick={() => handleQuantityChange(item.productId, -1)}
+                          onClick={() => handleQuantityChange(item.productId, item.color, item.storage, -1)}
                           className="w-7 h-7 text-lg border rounded hover:bg-gray-100"
                         >
                           −
                         </button>
                         <span className="w-6 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => handleQuantityChange(item.productId, 1)}
+                         onClick={() => handleQuantityChange(item.productId, item.color, item.storage, 1)}
                           className="w-7 h-7 text-lg border rounded hover:bg-gray-100"
                         >
                           ＋
@@ -159,14 +181,17 @@ const navigate = useNavigate();
                     <td className="text-center p-4 font-semibold text-red-600">
                       {formatPrice(String(Number(product.price) * item.quantity))}
                     </td>
-                    <td className="text-center p-4">
-                      <button
-                        onClick={() => handleRemove(item.productId)}
-                        className="text-sm text-red-500 hover:underline"
-                      >
-                        Xóa
-                      </button>
-                    </td>
+                   <td className="text-center p-4  gap-2 items-center justify-center">
+                    <button
+                      onClick={() => handleRemove(item._id)}
+                      className="text-sm text-red-600 font-semibold px-3 py-1 rounded border border-red-600 hover:bg-red-600 hover:text-white transition-colors duration-200 focus:outline-none"
+                    >
+                      Xóa
+                    </button>
+  
+                  </td>
+
+
                   </tr>
                 );
               })}
@@ -177,6 +202,7 @@ const navigate = useNavigate();
             <Link to="/home" className="text-blue-600 hover:underline text-sm mb-4 md:mb-0">
               ← Quay lại tiếp tục mua sắm
             </Link>
+           
             <div className="text-right space-y-2">
               <p className="text-xl font-bold">
                 Tổng Tiền: <span className="text-red-600">{formatPrice(String(total))}</span>

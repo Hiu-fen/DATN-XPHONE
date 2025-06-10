@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import BannerClient from "../componentChild/Home/banner";
 import { IProduct } from "../../../interface/product";
@@ -39,35 +39,7 @@ const Categorys: React.FC = () => {
     },
   });
 
-  // Thêm sản phẩm vào giỏ hàng
-  const handleAddToCart = async (product: IProduct) => {
-    try {
-      // Lấy lại dữ liệu chi tiết để kiểm tra tồn kho mới nhất
-      const response = await axios.get(`http://localhost:5000/api/products/${product._id}`);
-      const productData: IProduct = response.data;
-
-      if (productData.soluong < 1) {
-        message.error(`${product.name} đã hết hàng!`);
-        return;
-      }
-
-      const newItem: CartItem = {
-        productId: product._id as string,
-        productName: product.name,
-        price: product.price,
-        soluong: 1,
-        image: product.image,
-      };
-
-      addToCart(newItem);
-      message.success(`${product.name} đã được thêm vào giỏ hàng!`);
-      navigate("/cart");
-    } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error);
-      message.error("Không thể thêm sản phẩm vào giỏ hàng.");
-    }
-  };
-
+  
   // Scroll container cho slider danh mục
   const scrollLeft = () => {
     const container = document.getElementById("scroll-container");
@@ -174,42 +146,37 @@ const Categorys: React.FC = () => {
 
       {/* Lưới sản phẩm */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-[1400px] mx-auto p-4">
-        {filteredProducts.map((product) => (
-          <div
-            key={product._id}
-            className="group bg-white rounded-lg shadow-sm border overflow-hidden flex flex-col justify-between transition-transform hover:-translate-y-1"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-[120px] sm:h-[160px] md:h-[200px] object-cover"
-            />
-            <div className="p-3 flex flex-col gap-2">
-              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 line-clamp-2">
-                {product.name}
-              </h3>
-              <p className="text-sm sm:text-lg md:text-xl text-red-600 font-bold">
-                {product.price.toLocaleString()} VND
-              </p>
-              <span
-                className={`text-sm px-2 py-1 rounded-full ${
-                  product.trangthai === "còn hàng"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-red-100 text-red-800"
-                }`}
-              >
-                {product.trangthai}
-              </span>
-              <button
-                className="text-xs sm:text-sm px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                onClick={() => handleAddToCart(product)}
-              >
-                Thêm vào giỏ
-              </button>
-            </div>
-          </div>
-        ))}
+  {filteredProducts.map((product) => (
+    <Link
+      to={`/detail/${product._id}`}
+      key={product._id}
+      className="group bg-white rounded-lg shadow-sm border overflow-hidden flex flex-col justify-between transition-transform hover:-translate-y-1"
+    >
+      <img
+        src={product.image}
+        alt={product.name}
+        className="w-full h-[120px] sm:h-[160px] md:h-[200px] object-cover"
+      />
+      <div className="p-3 flex flex-col gap-2">
+        <h3 className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 line-clamp-2">
+          {product.name}
+        </h3>
+        <p className="text-sm sm:text-lg md:text-xl text-red-600 font-bold">
+          {product.price.toLocaleString()} VND
+        </p>
+        <span
+          className={`text-sm px-2 py-1 rounded-full ${
+            product.trangthai === "còn hàng"
+              ? "bg-green-100 text-green-800"
+              : "bg-red-100 text-red-800"
+          }`}
+        >
+          {product.trangthai}
+        </span>
       </div>
+    </Link>
+  ))}
+</div>
 
       {/* Thông báo nếu không có sản phẩm */}
       {filteredProducts.length === 0 && (
