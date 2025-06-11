@@ -143,6 +143,7 @@ exports.createOrder = async (req, res) => {
       customerName,
       phone,
       address,
+      email,
       items,
       total,
       paymentMethod,
@@ -152,7 +153,7 @@ exports.createOrder = async (req, res) => {
       userId = null,
     } = req.body;
 
-    if (!customerName || !phone || !address || !items || !total) {
+    if (!customerName || !phone || !address || !items || !total || !email) {
       return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
     }
 
@@ -176,10 +177,13 @@ exports.createOrder = async (req, res) => {
       if (product.soluong < item.soluong) {
         return res.status(400).json({ message: `Không đủ hàng cho sản phẩm ${item.productName}` });
       }
+      // Tạo snapshot từ dữ liệu client
       item.snapshot = {
-        name: product.name,
-        price: product.price,
+        name: item.productName,
+        price: item.price,
         image: product.image,
+        color: item.color || '',
+        storage: item.storage || '',
       };
     }
 
@@ -188,6 +192,7 @@ exports.createOrder = async (req, res) => {
       customerName,
       phone,
       address,
+      email,
       items,
       total,
       paymentMethod,
@@ -202,7 +207,7 @@ exports.createOrder = async (req, res) => {
     await order.save();
     res.status(201).json(order);
   } catch (error) {
-    console.error(error);
+    console.error("Lỗi khi tạo đơn hàng:", error);
     res.status(500).json({ message: 'Lỗi khi tạo đơn hàng' });
   }
 };

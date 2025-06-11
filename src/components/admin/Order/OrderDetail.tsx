@@ -18,16 +18,20 @@ import {
 
 const { Title } = Typography;
 
-// Interface cho OrderItem
 interface OrderItem {
   productId: string;
   productName: string;
   soluong: number;
   price: number;
-  snapshot?: { name: string; price: number; image?: string };
+  snapshot?: {
+    name: string;
+    price: number;
+    image?: string;
+    color?: string;
+    storage?: string;
+  };
 }
 
-// Interface cho IOrder
 interface IOrder {
   _id: string;
   orderCode: string;
@@ -49,7 +53,6 @@ interface IOrder {
   statusHistory?: { status: string; timestamp: string }[];
 }
 
-// Danh sách trạng thái hợp lệ
 const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
@@ -64,7 +67,6 @@ const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Hàm lấy danh sách trạng thái hợp lệ
   const getValidStatusOptions = (currentStatus: string) => {
     if (
       currentStatus === "Giao thành công" ||
@@ -92,17 +94,16 @@ const OrderDetail = () => {
     return [{ label: currentStatus, value: currentStatus }];
   };
 
-  // Query lấy chi tiết đơn hàng
-  const { data: order, isPending: isLoading, isError, refetch } = useQuery<IOrder>({
+  const { data: order, isLoading, isError, refetch } = useQuery<IOrder>({
     queryKey: ["order", id],
     queryFn: async () => {
       const res = await axios.get(`http://localhost:5000/api/orders/${id}`);
+      console.log("Order detail from server:", res.data); // Debug dữ liệu server
       return res.data;
     },
     enabled: !!id,
   });
 
-  // Mutation cập nhật trạng thái đơn hàng
   const statusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       return await axios.patch(`http://localhost:5000/api/orders/${id}`, { status });
@@ -116,7 +117,6 @@ const OrderDetail = () => {
     },
   });
 
-  // Mutation xử lý trả hàng
   const returnMutation = useMutation({
     mutationFn: async ({ id, returnStatus }: { id: string; returnStatus: string }) => {
       return await axios.patch(`http://localhost:5000/api/orders/${id}/return`, { returnStatus });
@@ -130,7 +130,6 @@ const OrderDetail = () => {
     },
   });
 
-  // Xử lý thay đổi trạng thái
   const handleStatusChange = (status: string) => {
     if (!statusOptions.includes(status)) {
       message.error("Trạng thái không hợp lệ");
@@ -161,47 +160,59 @@ const OrderDetail = () => {
     statusMutation.mutate({ id: id!, status });
   };
 
-  // Xử lý duyệt/từ chối trả hàng
   const handleReturnAction = (returnStatus: string) => {
     returnMutation.mutate({ id: id!, returnStatus });
   };
 
-  // Phí vận chuyển
   const shippingFee = 35000;
 
-  // Cột cho bảng sản phẩm
   const columns = [
     {
       title: "Tên sản phẩm",
       key: "productName",
+      width: 200,
       render: (_: any, record: OrderItem) =>
         record.snapshot?.name || record.productName || "Sản phẩm không còn tồn tại",
+    },
+    {
+      title: "Màu sắc",
+      key: "color",
+      width: 150,
+      render: (_: any, record: OrderItem) => record.snapshot?.color || "-",
+    },
+    {
+      title: "Dung lượng",
+      key: "storage",
+      width: 120,
+      render: (_: any, record: OrderItem) => record.snapshot?.storage || "-",
     },
     {
       title: "Số lượng",
       dataIndex: "soluong",
       key: "soluong",
+      width: 100,
     },
     {
       title: "Đơn giá",
       dataIndex: "price",
       key: "price",
+      width: 150,
       render: (price: number) => price?.toLocaleString() + " VND",
     },
     {
       title: "Thành tiền",
+      key: "total",
+      width: 150,
       render: (_: any, record: OrderItem) =>
         (record.soluong * record.price).toLocaleString() + " VND",
     },
   ];
 
-  // Xử lý loading và error
   if (isLoading) return <Spin tip="Đang tải chi tiết đơn hàng..." />;
   if (isError || !order) {
     return <Alert message="Không tìm thấy đơn hàng" type="error" showIcon />;
   }
 
-  // Tính tổng tiền sản phẩm
   const totalItemsPrice =
     order.items?.reduce(
       (sum: number, item: OrderItem) => sum + item.price * item.soluong,

@@ -17,14 +17,20 @@ interface OrderItem {
   productName: string;
   soluong: number;
   price: number;
-  snapshot?: { name: string; price: number; image?: string }; // THÊM: Snapshot
+  snapshot?: {
+    name: string;
+    price: number;
+    image?: string;
+    color?: string;
+    storage?: string;
+  };
 }
 
 interface Order {
   _id: string;
   orderCode: string;
   customerName: string;
-  phone: string;
+  phone: number;
   address: string;
   date: string;
   status: string;
@@ -42,7 +48,6 @@ interface Order {
   statusHistory?: { status: string; timestamp: string }[];
 }
 
-// Thứ tự trạng thái đúng theo luồng xử lý
 const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
@@ -50,14 +55,13 @@ const statusOptions = [
   "Giao thành công",
   "Hoàn thành",
   "Đã huỷ",
-  "Trả hàng/Hoàn tiền", // Trạng thái trả hàng
+  "Trả hàng/Hoàn tiền",
 ];
 
 const OrderList = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
 
-  // Hàm lọc trạng thái hợp lệ
   const getValidStatusOptions = (currentStatus: string) => {
     if (
       currentStatus === "Giao thành công" ||
@@ -91,8 +95,11 @@ const OrderList = () => {
     isLoading,
   } = useQuery<Order[]>({
     queryKey: ["orders"],
-    queryFn: async () =>
-      (await axios.get("http://localhost:5000/api/orders")).data,
+    queryFn: async () => {
+      const response = await axios.get("http://localhost:5000/api/orders");
+      console.log("Orders data from server:", response.data); // Debug dữ liệu server
+      return response.data;
+    },
   });
 
   const mutation = useMutation({
@@ -110,7 +117,6 @@ const OrderList = () => {
     },
   });
 
-  // THÊM: Mutation xử lý trả hàng
   const returnMutation = useMutation({
     mutationFn: async ({
       id,
@@ -132,18 +138,6 @@ const OrderList = () => {
     },
   });
 
-  // THÊM: Mutation xóa đơn hàng
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) =>
-      await axios.delete(`http://localhost:5000/api/orders/${id}`),
-    onSuccess: () => {
-      message.success("Xóa đơn hàng thành công");
-      refetch();
-    },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || "Lỗi khi xóa đơn hàng");
-    },
-  });
   const markAsPaidMutation = useMutation({
     mutationFn: async (id: string) => {
       await axios.patch(`http://localhost:5000/api/orders/${id}/paid`);
@@ -166,15 +160,6 @@ const OrderList = () => {
     currentStatus: string,
     newStatus: string
   ) => {
-    const statusOptions = [
-      "Chờ xác nhận",
-      "Đang xử lý",
-      "Đang giao",
-      "Giao thành công",
-      "Đã huỷ",
-      "Trả hàng/Hoàn tiền",
-    ];
-
     if (!statusOptions.includes(newStatus)) {
       message.error("Trạng thái không hợp lệ");
       return;
@@ -208,20 +193,18 @@ const OrderList = () => {
     returnMutation.mutate({ id, returnStatus });
   };
 
-  const handleDeleteOrder = (id: string) => {
-    deleteMutation.mutate(id);
-  };
-
   const filteredOrders = orders?.filter((o) => {
     const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
+
 
   const columns = [
     {
       title: "Mã đơn hàng",
       dataIndex: "orderCode",
       key: "orderCode",
+      width: 150,
       render: (_: any, record: Order) => (
         <a
           style={{ cursor: "pointer", color: "#1890ff" }}
@@ -235,85 +218,66 @@ const OrderList = () => {
       title: "Khách hàng",
       dataIndex: "customerName",
       key: "customerName",
+      width: 150,
     },
     {
       title: "Ngày đặt",
       dataIndex: "date",
       key: "date",
+      width: 180,
       render: (date: string) => new Date(date).toLocaleString(),
-    },
-    {
-      title: "Sản phẩm",
-      key: "items",
-      render: (_: any, record: Order) => (
-        <ul style={{ paddingLeft: 20 }}>
-          {record.items.map((item) => (
-            <li key={item.productId}>
-              {item.snapshot?.name ||
-                item.productName ||
-                "Sản phẩm không còn tồn tại"}{" "}
-              x {item.soluong} - {item.price.toLocaleString()} VND
-            </li>
-          ))}
-        </ul>
-      ),
     },
     {
       title: "Tổng tiền",
       dataIndex: "total",
       key: "total",
+      width: 150,
       render: (total: number) => total.toLocaleString() + " VND",
     },
-    {
-      title: "Thanh toán",
-      key: "isPaid",
-      render: (_: any, record: Order) => {
-        if (record.isPaid) {
-          return <Tag color="green">Đã thanh toán</Tag>;
+{
+  title: "Thanh toán",
+  key: "isPaid",
+  width: 160,
+  render: (_: any, record: Order) => {
+    if (record.refunded) {
+      return <Tag color="red">Đã hoàn tiền</Tag>;
+    }
+    if (record.isPaid) {
+      return <Tag color="green">
+        {record.paymentMethod === "COD" ? "COD - Đã thanh toán" : "Đã thanh toán"}
+      </Tag>;
+    }
+    return (
+      <Select
+        value={
+          record.paymentMethod === "COD"
+            ? "COD - Chưa thanh toán"
+            : "Chưa thanh toán"
         }
-        if (record.refunded) {
-          return <Tag color="red">Đã hoàn tiền</Tag>;
-        }
-        if (record.paymentMethod === "COD") {
-          return <Tag color="blue">COD - Thanh toán khi nhận</Tag>;
-        }
-        return (
-          <Select
-            value="Chưa thanh toán"
-            style={{ width: 140 }}
-            onChange={() => handleMarkAsPaid(record._id)}
-            options={[{ label: "Đã thanh toán", value: "paid" }]}
-            disabled={[
-              "Giao thành công",
-              "Đã huỷ",
-              "Trả hàng/Hoàn tiền",
-            ].includes(record.status)}
-          />
-        );
-      },
-    },
+        style={{ width: 140 }}
+        onChange={() => handleMarkAsPaid(record._id)}
+        options={[{ label: "Đã thanh toán", value: "paid" }]}
+        disabled={[
+          "Giao thành công",
+          "Đã huỷ",
+          "Trả hàng/Hoàn tiền",
+        ].includes(record.status)}
+      />
+    );
+  },
+},
     {
       title: "Phương thức thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
+      width: 160,
       render: (method: string) => method || "Chưa xác định",
-    },
-    {
-      title: "Đơn vị vận chuyển",
-      dataIndex: "shippingProvider",
-      key: "shippingProvider",
-      render: (provider: string) => provider || "Chưa chọn",
-    },
-    {
-      title: "Ghi chú",
-      dataIndex: "notes",
-      key: "notes",
-      render: (notes: string) => notes || "-",
     },
     {
       title: "Trạng thái trả hàng",
       dataIndex: "returnStatus",
       key: "returnStatus",
+      width: 200,
       render: (status: string, record: Order) => (
         <Space>
           <span>{status || "-"}</span>
@@ -340,6 +304,7 @@ const OrderList = () => {
     {
       title: "Trạng thái đơn hàng",
       key: "status",
+      width: 180,
       render: (_: any, record: Order) => (
         <Select
           value={record.status}

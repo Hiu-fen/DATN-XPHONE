@@ -34,18 +34,30 @@ const Checkout = () => {
           const cartItems = cartResponse.data.items || [];
           const productsData = productsResponse.data;
 
+          console.log("Cart items from server:", cartItems); // Debug dữ liệu giỏ hàng
+
           const enrichedCartItems = cartItems.map((item: any) => {
             const product = productsData.find(
               (p: any) => p._id === item.productId
             );
+            let price = item.price || (product ? product.price : 0);
+
+            // Lấy giá từ biến thể nếu có
+            if (product?.variants && item.color && item.storage) {
+              const variant = product.variants.find(
+                (v: any) => v.color === item.color && v.ram === item.storage
+              );
+              price = variant ? Number(variant.price) : price;
+            }
+
             return {
               productId: item.productId,
               productName: product ? product.name : "Sản phẩm không tồn tại",
-              price: item.price || (product ? product.price : 0),
+              price,
               soluong: item.quantity,
               image: product?.image,
-              color: item.color,
-              storage: item.storage,
+              color: item.color || "",
+              storage: item.storage || "",
             };
           });
 
@@ -118,20 +130,15 @@ const Checkout = () => {
       total: totalWithShipping,
       status: "Chờ xác nhận",
       date: new Date().toISOString(),
-      isPaid: false, // Chưa thanh toán cho tất cả phương thức
+      isPaid: false,
       refunded: false,
       items: cart.map((item) => ({
         productId: item.productId,
         productName: item.productName,
         soluong: item.soluong,
         price: item.price,
-        snapshot: {
-          name: item.productName,
-          price: item.price,
-          image: item.image,
-          color: item.color || "",
-          storage: item.storage || "",
-        },
+        color: item.color || "",
+        storage: item.storage || "",
       })),
       userId: user._id,
     };
@@ -144,10 +151,14 @@ const Checkout = () => {
         return;
       }
 
+      console.log("Order data to send:", newOrder); // Debug dữ liệu gửi
+
       // Lưu đơn hàng lên server
-      await axios.post("http://localhost:5000/api/orders", newOrder, {
+      const response = await axios.post("http://localhost:5000/api/orders", newOrder, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("Order response from server:", response.data); // Debug phản hồi
 
       // Thông báo theo phương thức thanh toán
       if (form.paymentMethod === "Momo") {
@@ -160,7 +171,7 @@ const Checkout = () => {
         );
       } else if (form.paymentMethod === "COD") {
         message.info(
-          "Đơn hàng COD đã được tạo. Bạn sẽ thanh toán khi nhận hàng."
+          "Bạn sẽ thanh toán khi nhận hàng."
         );
       }
 
@@ -270,8 +281,7 @@ const Checkout = () => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-4 py-3"
             >
-              <option value="Giao hàng tiêu chuẩn">Giao hàng tiêu chuẩn</option>
-              <option value="Giao hàng nhanh">Giao hàng nhanh</option>
+              <option value="Giao hàng tiêu chuẩn">Giao Hàng Tiêu Chuẩn</option>
               <option value="J&T Express">J&T Express</option>
               <option value="GHN">Giao Hàng Nhanh</option>
             </select>
@@ -319,9 +329,7 @@ const Checkout = () => {
           <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
             {cart.map((item) => (
               <li
-                key={`${item.productId}-${item.color || ""}-${
-                  item.storage || ""
-                }`}
+                key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
                 className="flex items-center py-4"
               >
                 <img
