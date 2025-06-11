@@ -76,6 +76,8 @@ import NewsAdd from './components/admin/News/NewsAdd';
 import NewsEdit from './components/admin/News/NewsEdit';
 import NewsClient from './components/client/page/news';
 import NewsDetail from './components/client/page/NewsDetail';
+import Notification from './components/client/page/Notification';
+import Wishlist from './components/client/page/Wishlist';
 
 
 const App = () => {
@@ -106,6 +108,9 @@ const App = () => {
             { path: "addaccountadmin", element: <AddAccountAdmin /> }, // nếu có
           ],
         },
+        { path : "notification" , element : <Notification/>},
+        { path : "wishlist" , element : <Wishlist/>},
+
         { path: "product", element: <Product /> },
       ],
     },

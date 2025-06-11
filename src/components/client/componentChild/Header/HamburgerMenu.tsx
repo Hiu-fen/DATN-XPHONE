@@ -11,7 +11,7 @@ const HamburgerMenu = ({ userId }: { userId?: string }) => {
       {
         key: 'wishlist',
         label: (
-          <Link to="#" className="flex items-center gap-2 hover:text-red-500">
+          <Link to="/wishlist" className="flex items-center gap-2 hover:text-red-500">
             <FaHeart /> <span>Yêu thích</span>
           </Link>
         ),
@@ -19,7 +19,7 @@ const HamburgerMenu = ({ userId }: { userId?: string }) => {
       {
         key: 'notifications',
         label: (
-          <Link to="#" className="flex items-center gap-2">
+          <Link to="/notification" className="flex items-center gap-2">
             <FaBell /> <span>Thông báo</span>
           </Link>
         ),

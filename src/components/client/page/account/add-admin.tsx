@@ -1,113 +1,139 @@
-import React, { useState } from 'react';
-import AccountSiba from './siba';
-import { message } from 'antd'; // import message từ antd
-// import axios from 'axios'; // nếu bạn cần gửi lên server thì bật lại
+import React, { useState, useEffect } from 'react'
+import { Form, Input, Button, message, Card, Typography } from 'antd'
+import { UserAddOutlined } from '@ant-design/icons'
+import AccountSiba from './siba'
+
+const { Title, Text } = Typography
+const { TextArea } = Input
 
 const AddAccountAdmin = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-  });
+  const [loading, setLoading] = useState(false)
+  const [form] = Form.useForm()
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('admin') || '{}')
+    if (user && user.email) {
+      form.setFieldsValue({
+        email: user.email,
+        name: user.name,
+        phone: user.sdt,
+        address: user.address,
+      })
+    }
+  }, [form])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onFinish = (values: {
+    name: string
+    email: string
+    phone: string
+    address: string
+    description: string
+  }) => {
+    setLoading(true)
+
     try {
-      // Gửi yêu cầu lên server (comment nếu chưa có backend)
-      // await axios.post('http://localhost:5000/api/notifications', {
-      //   message: `Yêu cầu phê duyệt tài khoản admin mới: ${formData.email}`,
-      //   time: new Date().toLocaleString(),
-      //   type: 'admin-register',
-      //   createdBy: formData.name,
-      //   data: formData,
-      // });
-
-      // Thêm thông báo vào localStorage để hiển thị bên header
       const newNotification = {
-        message: `Yêu cầu đăng ký tài khoản bán hàng với Tài khoản: ${formData.email}`,
+        message: `Yêu cầu đăng ký tài khoản bán hàng từ ${values.email}`,
         time: new Date().toLocaleString(),
         type: 'admin-register',
-      };
+        createdBy: values.name,
+        data: values,
+      }
 
-      const existing = JSON.parse(localStorage.getItem('notifications') || '[]');
-      const updatedNotifications = [...existing, newNotification];
-      localStorage.setItem('notifications', JSON.stringify(updatedNotifications));
+      const existing = JSON.parse(localStorage.getItem('notifications') || '[]')
+      const updatedNotifications = [...existing, newNotification]
+      localStorage.setItem('notifications', JSON.stringify(updatedNotifications))
 
-      // Hiện thông báo thành công dùng antd message
-      message.success('Đã gửi yêu cầu tạo tài khoản bán hàng đến admin.');
-
-      setFormData({ name: '', email: '' });
+      message.success('Đã gửi yêu cầu tạo tài khoản bán hàng đến admin.')
     } catch (error) {
-      console.error('Lỗi gửi yêu cầu:', error);
-      message.error('Gửi yêu cầu thất bại.');
+      console.error('Lỗi gửi yêu cầu:', error)
+      message.error('Gửi yêu cầu thất bại.')
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="flex font-sans text-gray-800 bg-gray-100 p-10 min-h-screen">
+    <div className="flex font-sans text-gray-800 bg-gray-100 min-h-screen p-10">
       <AccountSiba />
 
-      <div className="flex-grow p-10 bg-white rounded-r-lg shadow-md">
-        <h1 className="text-3xl font-bold mb-1">Thêm tài khoản bán hàng</h1>
-        <p className="text-gray-600 text-sm mb-8">
-          Thông tin này sẽ gửi đến admin để xem xét
-        </p>
+      <div className="flex-grow p-6">
+        <Card className="max-w-xl mx-auto shadow-md rounded-xl">
+          <Title level={3} className="flex items-center gap-2">
+            <UserAddOutlined /> Đăng ký tài khoản bán hàng
+          </Title>
+          <Text type="secondary">
+            Điền thông tin bên dưới để gửi yêu cầu đến admin.
+          </Text>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <InfoInput
-            label="Tên bạn là"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-          />
-          <InfoInput
-            label="Email bán hàng"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            type="email"
-          />
-
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+          <Form
+            form={form}
+            layout="vertical"
+            className="mt-6"
+            onFinish={onFinish}
+            autoComplete="off"
           >
-            Gửi yêu cầu tạo tài khoản
-          </button>
-        </form>
+            <Form.Item
+              label="Họ và tên"
+              name="name"
+              rules={[{ required: true, message: 'Vui lòng nhập họ tên.' }]}
+            >
+              <Input placeholder="Nhập tên đầy đủ của bạn" />
+            </Form.Item>
+
+            <Form.Item
+              label="Email bán hàng"
+              name="email"
+              rules={[
+                { required: true, message: 'Email không được để trống.' },
+                { type: 'email', message: 'Email không hợp lệ.' },
+              ]}
+            >
+              <Input disabled />
+            </Form.Item>
+
+            <Form.Item
+              label="Số điện thoại"
+              name="phone"
+              rules={[{ required: true, message: 'Vui lòng nhập số điện thoại.' }]}
+            >
+              <Input placeholder="Nhập số điện thoại của bạn" />
+            </Form.Item>
+
+            <Form.Item
+              label="Địa chỉ"
+              name="address"
+              rules={[{ required: true, message: 'Vui lòng nhập địa chỉ.' }]}
+            >
+              <Input placeholder="Nhập địa chỉ hiện tại" />
+            </Form.Item>
+
+            <Form.Item
+              label="Mô tả yêu cầu"
+              name="description"
+              rules={[{ required: true, message: 'Vui lòng nhập mô tả yêu cầu.' }]}
+            >
+              <TextArea
+                rows={4}
+                placeholder="Lý do bạn muốn bán hàng, loại sản phẩm bạn bán, kinh nghiệm,..."
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                className="w-full"
+              >
+                Gửi yêu cầu đăng ký
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
       </div>
     </div>
-  );
-};
+  )
+}
 
-const InfoInput = ({
-  label,
-  value,
-  name,
-  onChange,
-  type = 'text',
-}: {
-  label: string;
-  value: string;
-  name: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  type?: string;
-}) => (
-  <div className="flex items-center">
-    <label className="w-32 font-bold text-gray-700 text-right mr-4">{label}</label>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      required
-      className="flex-grow p-2 border border-gray-300 rounded"
-    />
-  </div>
-);
-
-export default AddAccountAdmin;
+export default AddAccountAdmin
