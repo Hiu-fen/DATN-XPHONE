@@ -34,16 +34,30 @@ const Checkout = () => {
           const cartItems = cartResponse.data.items || [];
           const productsData = productsResponse.data;
 
+          console.log("Cart items from server:", cartItems); // Debug dữ liệu giỏ hàng
+
           const enrichedCartItems = cartItems.map((item: any) => {
-            const product = productsData.find((p: any) => p._id === item.productId);
+            const product = productsData.find(
+              (p: any) => p._id === item.productId
+            );
+            let price = item.price || (product ? product.price : 0);
+
+            // Lấy giá từ biến thể nếu có
+            if (product?.variants && item.color && item.storage) {
+              const variant = product.variants.find(
+                (v: any) => v.color === item.color && v.ram === item.storage
+              );
+              price = variant ? Number(variant.price) : price;
+            }
+
             return {
               productId: item.productId,
               productName: product ? product.name : "Sản phẩm không tồn tại",
-              price: item.price || (product ? product.price : 0),
-              soluong: item.quantity, 
+              price,
+              soluong: item.quantity,
               image: product?.image,
-              color: item.color,
-              storage: item.storage,
+              color: item.color || "",
+              storage: item.storage || "",
             };
           });
 
@@ -100,8 +114,12 @@ const Checkout = () => {
       return;
     }
 
+    const orderCode = `ORD-${Math.random()
+      .toString(36)
+      .substr(2, 5)
+      .toUpperCase()}`;
     const newOrder = {
-      orderCode: `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+      orderCode,
       customerName: form.name,
       phone: form.phone,
       address: form.address,
@@ -112,20 +130,15 @@ const Checkout = () => {
       total: totalWithShipping,
       status: "Chờ xác nhận",
       date: new Date().toISOString(),
-      isPaid: form.paymentMethod !== "COD",
+      isPaid: false,
       refunded: false,
       items: cart.map((item) => ({
         productId: item.productId,
         productName: item.productName,
         soluong: item.soluong,
         price: item.price,
-        snapshot: {
-          name: item.productName,
-          price: item.price,
-          image: item.image,
-          color: item.color || "",
-          storage: item.storage || "",
-        },
+        color: item.color || "",
+        storage: item.storage || "",
       })),
       userId: user._id,
     };
@@ -138,21 +151,36 @@ const Checkout = () => {
         return;
       }
 
-      // Gửi đơn hàng lên server
-      await axios.post("http://localhost:5000/api/orders", newOrder, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      console.log("Order data to send:", newOrder); // Debug dữ liệu gửi
+
+      // Lưu đơn hàng lên server
+      const response = await axios.post("http://localhost:5000/api/orders", newOrder, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      console.log("Order response from server:", response.data); // Debug phản hồi
+
+      // Thông báo theo phương thức thanh toán
+      if (form.paymentMethod === "Momo") {
+        message.info(
+          "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
+        );
+      } else if (form.paymentMethod === "Bank") {
+        message.info(
+          "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"
+        );
+      } else if (form.paymentMethod === "COD") {
+        message.info(
+          "Bạn sẽ thanh toán khi nhận hàng."
+        );
+      }
 
       // Trừ số lượng sản phẩm trong kho
       for (const item of cart) {
         await axios.patch(
           `http://localhost:5000/api/products/${item.productId}/update-quantity`,
           { soluong: -item.soluong },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
       }
 
@@ -161,19 +189,28 @@ const Checkout = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Xóa localStorage (nếu có dữ liệu giỏ hàng cũ)
+      localStorage.removeItem("cartItems");
+
       message.success("Đặt hàng thành công!");
       setCart([]);
       navigate("/");
     } catch (err: any) {
       console.error("Lỗi khi đặt hàng:", err);
-      message.error(err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại.");
+      message.error(
+        err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
+      );
     }
   };
 
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center text-xl text-gray-500">
-        Vui lòng <a href="/login" className="text-blue-600 hover:underline">đăng nhập</a> để thanh toán.
+        Vui lòng{" "}
+        <a href="/login" className="text-blue-600 hover:underline">
+          đăng nhập
+        </a>{" "}
+        để thanh toán.
       </div>
     );
   }
@@ -244,15 +281,16 @@ const Checkout = () => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-4 py-3"
             >
-              <option value="Giao hàng tiêu chuẩn">Giao hàng tiêu chuẩn</option>
-              <option value="Giao hàng nhanh">Giao hàng nhanh</option>
+              <option value="Giao hàng tiêu chuẩn">Giao Hàng Tiêu Chuẩn</option>
               <option value="J&T Express">J&T Express</option>
               <option value="GHN">Giao Hàng Nhanh</option>
             </select>
           </div>
 
           <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-4">Phương thức thanh toán</h3>
+            <h3 className="text-xl font-semibold mb-4">
+              Phương thức thanh toán
+            </h3>
             <div className="flex flex-col space-y-3">
               {["COD", "Momo", "Bank"].map((method) => (
                 <label key={method} className="inline-flex items-center">
@@ -290,19 +328,30 @@ const Checkout = () => {
           </h2>
           <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
             {cart.map((item) => (
-              <li key={`${item.productId}-${item.color || ''}-${item.storage || ''}`} className="flex items-center py-4">
+              <li
+                key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
+                className="flex items-center py-4"
+              >
                 <img
                   src={item.image}
                   alt={item.productName}
                   className="w-16 h-16 rounded-lg object-cover mr-4 border border-gray-300"
                 />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-800">{item.productName}</p>
+                  <p className="font-medium text-gray-800">
+                    {item.productName}
+                  </p>
                   <p className="text-sm text-gray-500">
                     Số lượng: {item.soluong}
                   </p>
-                  {item.color && <p className="text-sm text-gray-500">Màu: {item.color}</p>}
-                  {item.storage && <p className="text-sm text-gray-500">Dung lượng: {item.storage}</p>}
+                  {item.color && (
+                    <p className="text-sm text-gray-500">Màu: {item.color}</p>
+                  )}
+                  {item.storage && (
+                    <p className="text-sm text-gray-500">
+                      Dung lượng: {item.storage}
+                    </p>
+                  )}
                 </div>
                 <div className="font-semibold text-gray-900">
                   {(item.price * item.soluong).toLocaleString("vi-VN")} VND
@@ -327,12 +376,11 @@ const Checkout = () => {
           </div>
 
           <div className="mt-6 bg-blue-50 p-4 rounded-lg text-blue-900 text-sm">
-            {form.paymentMethod === "COD" &&
-              "Bạn sẽ thanh toán khi nhận hàng."}
+            {form.paymentMethod === "COD" && "Bạn sẽ thanh toán khi nhận hàng."}
             {form.paymentMethod === "Momo" &&
-              "Chuyển khoản đến ví Momo: 0866423127 (Hoang The Anh)"}
+              "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"}
             {form.paymentMethod === "Bank" &&
-              "Chuyển khoản đến tài khoản ngân hàng: MBBank - 0866423127 - Hoang The Anh)"}
+              "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"}
           </div>
         </div>
       </div>

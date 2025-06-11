@@ -9,6 +9,8 @@ const OrderItemSchema = new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
     image: { type: String },
+    color: { type: String },
+    storage: { type: String },
   },
 });
 
@@ -17,27 +19,29 @@ const OrderSchema = new mongoose.Schema({
   customerName: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String, required: true },
+  email: { type: String, required: true },
   date: { type: Date, default: Date.now },
   status: { 
     type: String, 
-    enum: ['Chờ xác nhận', 'Đang xử lý','Đang giao', 'Giao thành công', 'Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'], // Thêm trạng thái trả hàng
+    enum: ['Chờ xác nhận', 'Đang xử lý', 'Đang giao', 'Giao thành công', 'Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'],
     default: 'Chờ xác nhận' 
   },
   items: [OrderItemSchema],
   total: { type: Number, required: true },
   isPaid: { type: Boolean, default: false },
   refunded: { type: Boolean, default: false },
-  paymentMethod: { type: String }, // Phương thức thanh toán
-  shippingProvider: { type: String }, // Đơn vị vận chuyển
-  trackingNumber: { type: String }, // Mã vận đơn
-  estimatedDeliveryDate: { type: String }, // Thời gian giao dự kiến
-  notes: { type: String }, // Ghi chú đơn hàng
-  returnStatus: { type: String }, // Trạng thái trả hàng
-  returnReason: { type: String }, // Lý do trả hàng
-  statusHistory: [{ // Lịch sử trạng thái
+  paymentMethod: { type: String },
+  shippingProvider: { type: String },
+  trackingNumber: { type: String },
+  estimatedDeliveryDate: { type: String },
+  notes: { type: String },
+  returnStatus: { type: String },
+  returnReason: { type: String },
+  statusHistory: [{
     status: { type: String, required: true },
     timestamp: { type: Date, default: Date.now },
   }],
+  userId: { type: String },
 });
 
 module.exports = mongoose.model('Order', OrderSchema);
