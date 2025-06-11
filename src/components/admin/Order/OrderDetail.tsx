@@ -1,4 +1,4 @@
-// import React from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
@@ -13,7 +13,7 @@ import {
   Button,
   Space,
   message,
-  // Select,
+  Select,
 } from "antd";
 
 const { Title } = Typography;
@@ -27,7 +27,7 @@ interface OrderItem {
   snapshot?: { name: string; price: number; image?: string };
 }
 
-// Interface cho IOrder (đổi tên từ Order để tránh xung đột)
+// Interface cho IOrder
 interface IOrder {
   _id: string;
   orderCode: string;
@@ -54,7 +54,7 @@ const statusOptions = [
   "Chờ xác nhận",
   "Đang xử lý",
   "Đang giao",
-  "Đã giao",
+  "Giao thành công",
   "Hoàn thành",
   "Đã huỷ",
   "Trả hàng/Hoàn tiền",
@@ -66,13 +66,17 @@ const OrderDetail = () => {
 
   // Hàm lấy danh sách trạng thái hợp lệ
   const getValidStatusOptions = (currentStatus: string) => {
-    if (currentStatus === "Hoàn thành" || currentStatus === "Đã huỷ" || currentStatus === "Trả hàng/Hoàn tiền") {
+    if (
+      currentStatus === "Giao thành công" ||
+      currentStatus === "Đã huỷ" ||
+      currentStatus === "Trả hàng/Hoàn tiền"
+    ) {
       return [{ label: currentStatus, value: currentStatus }];
     }
-    if (currentStatus === "Đã giao") {
+    if (currentStatus === "Đang giao") {
       return [
-        { label: "Đã giao", value: "Đã giao" },
-        { label: "Hoàn thành", value: "Hoàn thành" },
+        { label: "Đang giao", value: "Đang giao" },
+        { label: "Giao thành công", value: "Giao thành công" },
         { label: "Trả hàng/Hoàn tiền", value: "Trả hàng/Hoàn tiền" },
       ];
     }
@@ -101,7 +105,7 @@ const OrderDetail = () => {
   // Mutation cập nhật trạng thái đơn hàng
   const statusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return await axios.patch(`http://localhost:5000/api/orders/${id}`, { status }); // SỬA: Dùng status thay vì status: value
+      return await axios.patch(`http://localhost:5000/api/orders/${id}`, { status });
     },
     onSuccess: () => {
       message.success("Cập nhật trạng thái thành công");
@@ -127,26 +131,34 @@ const OrderDetail = () => {
   });
 
   // Xử lý thay đổi trạng thái
-  const handleStatusChange = (status: string) => { // SỬA: Dùng status thay vì value
+  const handleStatusChange = (status: string) => {
     if (!statusOptions.includes(status)) {
       message.error("Trạng thái không hợp lệ");
       return;
     }
-    if (order?.status === "Hoàn thành" || order?.status === "Đã huỷ" || order?.status === "Trả hàng/Hoàn tiền") {
+    if (
+      order?.status === "Giao thành công" ||
+      order?.status === "Đã huỷ" ||
+      order?.status === "Trả hàng/Hoàn tiền"
+    ) {
       message.warning(`Không thể thay đổi từ trạng thái "${order.status}"`);
       return;
     }
-    if (order?.status === "Đã giao" && status === "Đã huỷ") {
+    if (order?.status === "Đang giao" && status === "Đã huỷ") {
       message.warning("Không thể hủy đơn hàng đã giao");
       return;
     }
     const currentIndex = statusOptions.indexOf(order?.status || "");
     const newIndex = statusOptions.indexOf(status);
-    if (status !== "Đã huỷ" && status !== "Trả hàng/Hoàn tiền" && newIndex !== currentIndex + 1) {
+    if (
+      status !== "Đã huỷ" &&
+      status !== "Trả hàng/Hoàn tiền" &&
+      newIndex !== currentIndex + 1
+    ) {
       message.warning("Chỉ có thể chuyển sang trạng thái tiếp theo");
       return;
     }
-    statusMutation.mutate({ id: id!, status }); // SỬA: Truyền status thay vì status: value
+    statusMutation.mutate({ id: id!, status });
   };
 
   // Xử lý duyệt/từ chối trả hàng
@@ -178,9 +190,8 @@ const OrderDetail = () => {
     },
     {
       title: "Thành tiền",
-      render: (_: any, record: OrderItem) => (
-        (record.soluong * record.price).toLocaleString() + " VND"
-      ),
+      render: (_: any, record: OrderItem) =>
+        (record.soluong * record.price).toLocaleString() + " VND",
     },
   ];
 
@@ -225,18 +236,21 @@ const OrderDetail = () => {
           <Descriptions.Item label="Đơn vị vận chuyển">
             {order.shippingProvider || "Chưa chọn"}
           </Descriptions.Item>
-          <Descriptions.Item label="Mã vận đơn">
-            {order.trackingNumber || "Chưa có"}
-          </Descriptions.Item>
-          <Descriptions.Item label="Giao hàng dự kiến">
-            {order.estimatedDeliveryDate
-              ? new Date(order.estimatedDeliveryDate).toLocaleDateString()
-              : "Chưa xác định"}
-          </Descriptions.Item>
           <Descriptions.Item label="Ghi chú">{order.notes || "Không có"}</Descriptions.Item>
           <Descriptions.Item label="Trạng thái đơn hàng">
             <Space>
-              <span>{order.status}</span>
+              <Select
+                value={order.status}
+                onChange={(value) => handleStatusChange(value)}
+                style={{ width: 160 }}
+                options={getValidStatusOptions(order.status)}
+                placeholder="Chọn trạng thái"
+                disabled={
+                  order.status === "Giao thành công" ||
+                  order.status === "Đã huỷ" ||
+                  order.status === "Trả hàng/Hoàn tiền"
+                }
+              />
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label="Trạng thái trả hàng">
