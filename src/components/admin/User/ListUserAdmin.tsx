@@ -169,11 +169,15 @@ const GetAdmin = () => {
   ];
 
   const filteredUsers = users
-    ?.filter((user: User) => user.role === 'admin')
-    ?.filter((u: User) => {
-      const text = `${u._id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
-      return text.includes(searchText.toLowerCase());
-    });
+  ?.filter((user: User) => user.role === 'admin')
+  ?.filter((u: User) => {
+    const text = `${u._id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
+    return text.includes(searchText.toLowerCase());
+  })
+  ?.sort((a: User, b: User) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Mới nhất lên đầu
+  });
+
 
   return (
     <div>

@@ -167,10 +167,15 @@ const GetClient = () => {
     },
   ];
 
-  const filteredUsers = users?.filter((u: User) => {
+ const filteredUsers = users
+  ?.filter((u: User) => {
     const text = `${u._id} ${u.email} ${u.address ?? ''} ${u.sdt ?? ''}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
+  })
+  ?.sort((a: User, b: User) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Sắp xếp mới -> cũ
   });
+
 
   return (
     <div>
