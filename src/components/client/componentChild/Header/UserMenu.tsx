@@ -75,14 +75,13 @@ const UserMenu = () => {
         onClick={e => e.preventDefault()}
       >
         {user?.avatar ? (
-          <img
-            src={user.avatar}
-            alt="Avatar"
-            className="w-10 h-10 rounded-full object-cover border-2 border-green-500 dark:border-green-400"
-            onError={(e) => {
-              e.currentTarget.src = '/path/to/fallback-avatar.png'; // Fallback avatar
-            }}
-          />
+          <a href={user.avatar} target="_blank" rel="noopener noreferrer">
+            <img
+              src={user.avatar}
+              alt="Avatar"
+              className="w-10 h-10 rounded-full object-cover border-2 border-green-500 dark:border-green-400"
+            />
+          </a>
         ) : (
           <div className="bg-green-100 dark:bg-green-900 w-10 h-10 rounded-full flex items-center justify-center text-green-600 dark:text-green-300">
             <UserOutlined style={{ fontSize: 20 }} />

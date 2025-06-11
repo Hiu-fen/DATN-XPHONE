@@ -199,7 +199,7 @@ const handleRemove = (itemId: string) => {
           </table>
 
           <div className="flex flex-col md:flex-row justify-between items-center mt-6 border-t pt-6 px-4 pb-6">
-            <Link to="/home" className="text-blue-600 hover:underline text-sm mb-4 md:mb-0">
+            <Link to="/" className="text-blue-600 hover:underline text-sm mb-4 md:mb-0">
               ← Quay lại tiếp tục mua sắm
             </Link>
            
