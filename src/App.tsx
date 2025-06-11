@@ -1,4 +1,6 @@
 import { useRoutes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ClientLayout from './layout/client';
 import AdminLayout from './layout/admin';
 import GetList from './components/admin/Product/GetList';
@@ -57,7 +59,7 @@ import AddAccountAdmin from './components/client/page/account/add-admin';
 import { CartProvider } from './components/client/context/CartContext';
 import Checkout from './components/client/page/checkoutCart';
 import { UserProvider } from './components/client/context/UserContext';
-import NewsClient from './components/client/page/news';
+
 
 
 import ColorAdd from './components/admin/Variant/color/ColorAdd';
@@ -65,7 +67,16 @@ import ColorEdit from './components/admin/Variant/color/ColorEdit';
 import RamAdd from './components/admin/Variant/ram/RamAdd';
 import RamEdit from './components/admin/Variant/ram/RamEdit';
 import VariantList from './components/admin/Variant/variantList';
+import NotFound from './components/client/page/notfound';
 // import VariantList from './components/admin/Variant/VariantList';
+
+
+import NewsList from './components/admin/News/NewsList';
+import NewsAdd from './components/admin/News/NewsAdd';
+import NewsEdit from './components/admin/News/NewsEdit';
+import NewsClient from './components/client/page/news';
+import NewsDetail from './components/client/page/NewsDetail';
+
 
 const App = () => {
   useReloadIfBlank();
@@ -84,6 +95,8 @@ const App = () => {
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
         { path: "news", element: <NewsClient /> },
+        { path: "news/:id", element: <NewsDetail /> },
+        { path: "*", element: <NotFound /> },
         {
           path: "accounts",
           element: <AccountSibaLayout />,
@@ -138,7 +151,7 @@ const App = () => {
         //admin
         { path: "orders", element: <OrderList /> },
         { path: "orders/:id", element: <OrderDetail /> },
-   
+
         /// Router quản lý Khuyễn mãi
         { path: "promotion/list", element: <GetPromotion /> },
         { path: "promotion/add", element: <PostAddPromotion /> },
@@ -156,23 +169,32 @@ const App = () => {
 
 
         // Router quản lý Color
-        
-        { path: 'color/add',       element: <ColorAdd />   },
-        { path: 'color/:id',  element: <ColorEdit />  },
+
+        { path: 'color/add', element: <ColorAdd /> },
+        { path: 'color/:id', element: <ColorEdit /> },
 
         // Router quản lý RAM
-       
-        { path: 'variant/list',        element: <VariantList />   },
-        { path: 'ram/add',         element: <RamAdd />       },
-        { path: 'ram/:id',    element: <RamEdit />      },
+
+        { path: 'variant/list', element: <VariantList /> },
+        { path: 'ram/add', element: <RamAdd /> },
+        { path: 'ram/:id', element: <RamEdit /> },
+        { path: "news", children: [
+          { path: "list", element: <NewsList /> },
+          { path: "add", element: <NewsAdd /> },
+          { path: "edit/:id", element: <NewsEdit /> }
+        ] },
       ],
     },
+    
   ]);
   return (
-  <UserProvider>
-    <CartProvider>{routes}</CartProvider>
-  </UserProvider>
-);
+    <UserProvider>
+      <CartProvider>
+        {routes}
+        <ToastContainer />
+      </CartProvider>
+    </UserProvider>
+  );
 };
 
 export default App;

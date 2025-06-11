@@ -10,4 +10,5 @@ export interface User {
   dob?: string;
   role: 'admin' | 'user';
   notification?: string;
+  createdAt: string; 
 }

@@ -1,4 +1,3 @@
-// components/client/User/Login.tsx
 import axios from "axios";
 import { message } from "antd";
 import { Mail, Lock } from "lucide-react";
@@ -17,7 +16,6 @@ const Login = () => {
 
   const onSubmit = async (data: LoginForm) => {
     try {
-      // Gửi POST request tới server thật (MongoDB)
       const res = await axios.post("http://localhost:5000/api/users/login", {
         email: data.email,
         password: data.password,
@@ -29,13 +27,12 @@ const Login = () => {
         return message.error("Tài khoản đã bị tạm dừng");
       }
 
-      // Lưu vào localStorage
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
 
       message.success("Đăng nhập thành công");
-      nav("/"); // 👉 điều hướng về trang chính sau khi đăng nhập
-      location.reload()
+      nav("/");
+      location.reload();
 
     } catch (error: any) {
       const errMsg = error.response?.data?.message || "Đăng nhập thất bại";
@@ -44,24 +41,16 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Phần ảnh bên trái */}
-      <div className="hidden md:flex w-1/2 bg-gradient-to-tr from-red-400 via-pink-500 to-red-600 items-center justify-center">
-        <img 
-          src="./src/assets/bannerlogin.png" 
-          alt="Login banner" 
-          className="object-cover max-h-[650px] rounded-l-lg"
-        />
-      </div>
+    <div
+      className=" w-[100%] h-[600px] bg-cover bg-center flex items-center justify-center"
+      style={{ backgroundImage: `url('/login.png')` }}
+    >
+      <div className="w-[300px] h-[400px] sm:w-[550px] bg-white bg-opacity-0 rounded-xl p-6 shadow-xl backdrop-blur-md ml-[650px] mt-[-50px]">
+        <h2 className="text-3xl font-extrabold mb-6 text-gray-800 text-center">Đăng nhập tài khoản</h2>
 
-      {/* Phần form bên phải */}
-      <div className="flex flex-col justify-center items-center w-full md:w-1/2 p-8 md:p-16 bg-white rounded-r-lg shadow-lg">
-        <h2 className="text-4xl font-extrabold mb-8 text-gray-800 text-center">Đăng nhập tài khoản</h2>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-md space-y-8">
-          {/* Email */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="relative">
-            <label htmlFor="email" className="block text-sm font-semibold mb-2 text-gray-700">
+            <label htmlFor="email" className="block text-sm font-semibold  text-gray-700">
               Email
             </label>
             <input
@@ -77,9 +66,8 @@ const Login = () => {
             {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>}
           </div>
 
-          {/* Password */}
           <div className="relative">
-            <label htmlFor="password" className="block text-sm font-semibold mb-2 text-gray-700">
+            <label htmlFor="password" className="block text-sm font-semibold  text-gray-700">
               Mật khẩu
             </label>
             <input
@@ -95,7 +83,6 @@ const Login = () => {
             {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>}
           </div>
 
-          {/* Button submit */}
           <button
             type="submit"
             className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg shadow-md transition"
@@ -103,16 +90,18 @@ const Login = () => {
             Đăng nhập
           </button>
 
-          <p className="text-center text-gray-600 mt-4">
-            Chưa có tài khoản?{" "}
+         <div className="flex items-center justify-between">
+           <p className="text-center text-gray-600 ">
+            Chưa có tài khoản?{' '}
             <a href="/register" className="text-red-500 font-semibold hover:underline">
               Đăng ký ngay
             </a>
           </p>
-           <p className="text-center text-gray-500 text-sm mt-2">
-             <GoogleLoginButton mode="login" />
 
-            </p>
+ <div className="text-center text-gray-500 text-xs mt-2 scale-90">
+            <GoogleLoginButton mode="login" />
+          </div>
+         </div>
         </form>
       </div>
     </div>

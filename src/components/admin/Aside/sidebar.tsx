@@ -98,6 +98,16 @@ const AdminSidebar = () => {
 
     },
     {
+      key: 'news',
+      label: 'Quản lý tin tức',
+      icon: <FolderOpenOutlined />,
+      children: [
+        { key: 'news/list', label: 'Tin tức', path: '/admin/news/list' },
+        { key: 'news/add', label: 'Thêm tin tức', path: '/admin/news/add' },
+      ],
+
+    },
+    {
       key: 'Biến thể',
       label: 'Quản lý Biến thể',
       icon: <FolderOpenOutlined />,
