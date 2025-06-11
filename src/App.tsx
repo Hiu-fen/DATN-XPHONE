@@ -65,6 +65,7 @@ import ColorEdit from './components/admin/Variant/color/ColorEdit';
 import RamAdd from './components/admin/Variant/ram/RamAdd';
 import RamEdit from './components/admin/Variant/ram/RamEdit';
 import VariantList from './components/admin/Variant/variantList';
+import NotFound from './components/client/page/notfound';
 // import VariantList from './components/admin/Variant/VariantList';
 
 const App = () => {
@@ -84,6 +85,7 @@ const App = () => {
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
         { path: "news", element: <NewsClient /> },
+        { path: "*", element: <NotFound /> },
         {
           path: "accounts",
           element: <AccountSibaLayout />,
@@ -138,7 +140,7 @@ const App = () => {
         //admin
         { path: "orders", element: <OrderList /> },
         { path: "orders/:id", element: <OrderDetail /> },
-   
+
         /// Router quản lý Khuyễn mãi
         { path: "promotion/list", element: <GetPromotion /> },
         { path: "promotion/add", element: <PostAddPromotion /> },
@@ -156,23 +158,23 @@ const App = () => {
 
 
         // Router quản lý Color
-        
-        { path: 'color/add',       element: <ColorAdd />   },
-        { path: 'color/:id',  element: <ColorEdit />  },
+
+        { path: 'color/add', element: <ColorAdd /> },
+        { path: 'color/:id', element: <ColorEdit /> },
 
         // Router quản lý RAM
-       
-        { path: 'variant/list',        element: <VariantList />   },
-        { path: 'ram/add',         element: <RamAdd />       },
-        { path: 'ram/:id',    element: <RamEdit />      },
+
+        { path: 'variant/list', element: <VariantList /> },
+        { path: 'ram/add', element: <RamAdd /> },
+        { path: 'ram/:id', element: <RamEdit /> },
       ],
     },
   ]);
   return (
-  <UserProvider>
-    <CartProvider>{routes}</CartProvider>
-  </UserProvider>
-);
+    <UserProvider>
+      <CartProvider>{routes}</CartProvider>
+    </UserProvider>
+  );
 };
 
 export default App;
