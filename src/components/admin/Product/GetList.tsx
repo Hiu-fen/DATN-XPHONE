@@ -6,7 +6,6 @@ import { IProduct } from "../../../interface/product";
 import { useNavigate, useLocation } from "react-router-dom";
 import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 
-import type { ColumnsType } from 'antd/es/table';
 
 interface ICategory {
   _id: string;
