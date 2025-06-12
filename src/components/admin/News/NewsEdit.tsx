@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { newsApi } from '../../../api/newsApi';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
+import type { RcFile } from 'antd/es/upload/interface';
 
-interface FormData {
+interface NewsFormData {
     title: string;
     content: string;
     image: string;
@@ -16,7 +18,7 @@ interface FormData {
 const NewsEdit = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
-    const [formData, setFormData] = useState<FormData>({
+    const [formData, setFormData] = useState<NewsFormData>({
         title: '',
         content: '',
         image: '',
@@ -24,6 +26,7 @@ const NewsEdit = () => {
         status: 'draft',
         category: ''
     });
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         const fetchNews = async () => {
@@ -54,6 +57,30 @@ const NewsEdit = () => {
             navigate('/admin/news/list');
         } catch (error) {
             toast.error('Cập nhật tin tức thất bại');
+        }
+    };
+
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        setUploading(true);
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", file);
+        uploadFormData.append("upload_preset", "datn-xphone");
+
+        try {
+            const { data } = await axios.post(
+                "https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload",
+                uploadFormData
+            );
+            setFormData({ ...formData, image: data.url });
+            toast.success("Tải ảnh lên thành công!");
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            toast.error("Lỗi upload ảnh!");
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -97,14 +124,18 @@ const NewsEdit = () => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">URL hình ảnh</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
                             <input
-                                type="text"
-                                value={formData.image}
-                                onChange={(e) => setFormData({...formData, image: e.target.value})}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageChange}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                required
+                                disabled={uploading}
                             />
+                            {uploading && <p className="text-blue-500 text-sm mt-1">Đang tải ảnh lên...</p>}
+                            {formData.image && (
+                                <img src={formData.image} alt="Preview" className="mt-2 h-24 object-contain rounded" />
+                            )}
                         </div>
 
                         <div>
@@ -163,4 +194,4 @@ const NewsEdit = () => {
     );
 };
 
-export default NewsEdit; 
+export default NewsEdit;

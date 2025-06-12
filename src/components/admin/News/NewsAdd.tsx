@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { message, Form, Input, Select, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { INews } from '../../../interface/News';
+import type { RcFile } from 'antd/es/upload/interface';
 
 const { TextArea } = Input;
 
@@ -21,7 +22,9 @@ const categories = [
 
 const NewsAdd = () => {
     const navigate = useNavigate();
-    const { control, handleSubmit, formState: { errors } } = useForm<Omit<INews, '_id' | 'createdAt' | 'updatedAt'>>();
+    const { control, handleSubmit, formState: { errors }, setValue } = useForm<Omit<INews, '_id' | 'createdAt' | 'updatedAt'>>();
+    const [imageUrl, setImageUrl] = useState<string>('');
+    const [uploading, setUploading] = useState<boolean>(false);
 
     const mutation = useMutation({
         mutationFn: async (data: Omit<INews, '_id' | 'createdAt' | 'updatedAt'>) => {
@@ -42,8 +45,37 @@ const NewsAdd = () => {
         },
     });
 
+    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        
+        setUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "datn-xphone");
+
+        try {
+            const { data } = await axios.post(
+                "https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload",
+                formData
+            );
+            setImageUrl(data.url);
+            setValue("image", data.url, { shouldValidate: true });
+            message.success("Tải ảnh lên thành công!");
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            message.error("Lỗi upload ảnh!");
+        } finally {
+            setUploading(false);
+        }
+    };
+
     const onSubmit = (data: Omit<INews, '_id' | 'createdAt' | 'updatedAt'>) => {
-        mutation.mutate(data);
+        if (!imageUrl) {
+            message.error('Vui lòng tải lên hình ảnh!');
+            return;
+        }
+        mutation.mutate({ ...data, image: imageUrl });
     };
 
     return (
@@ -86,15 +118,17 @@ const NewsAdd = () => {
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
-                    <Controller
-                        name="image"
-                        control={control}
-                        rules={{ required: 'Vui lòng nhập URL hình ảnh' }}
-                        render={({ field }) => (
-                            <Input {...field} placeholder="Nhập URL hình ảnh" />
-                        )}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="block w-full text-sm text-gray-700"
+                        disabled={uploading}
                     />
-                    {errors.image && <p className="text-red-500 text-sm mt-1">{errors.image.message}</p>}
+                    {uploading && <p className="text-blue-500 text-sm mt-1">Đang tải ảnh lên...</p>}
+                    {imageUrl && (
+                        <img src={imageUrl} alt="Preview" className="mt-2 h-24 object-contain rounded" />
+                    )}
                 </div>
 
                 <div>

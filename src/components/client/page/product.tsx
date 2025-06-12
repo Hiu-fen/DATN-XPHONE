@@ -84,7 +84,13 @@ if (selectedRams.length > 0) {
 
     // Lọc theo trạng thái còn hàng
     if (showInStockOnly) {
-      filtered = filtered.filter((product: IProduct) => product.trangthai === 'còn hàng');
+      filtered = filtered.filter((product: IProduct) => {
+        // Kiểm tra cả trạng thái và số lượng
+        const hasStock = product.trangthai.toLowerCase() === 'còn hàng' || 
+                        product.trangthai.toLowerCase() === 'con hang' ||
+                        product.soluong > 0;
+        return hasStock;
+      });
     }
 
     return filtered;
