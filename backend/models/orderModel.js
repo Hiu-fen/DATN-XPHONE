@@ -1,11 +1,16 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const OrderItemSchema = new mongoose.Schema({
-  productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",
+    required: true,
+  },
   productName: { type: String, required: true },
   soluong: { type: Number, required: true },
   price: { type: Number, required: true },
-  snapshot: { // Lưu thông tin sản phẩm tại thời điểm đặt hàng
+  snapshot: {
+    // Lưu thông tin sản phẩm tại thời điểm đặt hàng
     name: { type: String, required: true },
     price: { type: Number, required: true },
     image: { type: String },
@@ -21,10 +26,18 @@ const OrderSchema = new mongoose.Schema({
   address: { type: String, required: true },
   email: { type: String, required: true },
   date: { type: Date, default: Date.now },
-  status: { 
-    type: String, 
-    enum: ['Chờ xác nhận', 'Đang xử lý', 'Đang giao', 'Giao thành công', 'Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'],
-    default: 'Chờ xác nhận' 
+  status: {
+    type: String,
+    enum: [
+      "Chờ xác nhận",
+      "Đang xử lý",
+      "Đang giao",
+      "Giao thành công",
+      "Hoàn thành",
+      "Đã huỷ",
+      "Trả hàng/Hoàn tiền",
+    ],
+    default: "Chờ xác nhận",
   },
   items: [OrderItemSchema],
   total: { type: Number, required: true },
@@ -37,11 +50,13 @@ const OrderSchema = new mongoose.Schema({
   notes: { type: String },
   returnStatus: { type: String },
   returnReason: { type: String },
-  statusHistory: [{
-    status: { type: String, required: true },
-    timestamp: { type: Date, default: Date.now },
-  }],
+  statusHistory: [
+    {
+      status: { type: String, required: true },
+      timestamp: { type: Date, default: Date.now },
+    },
+  ],
   userId: { type: String },
 });
 
-module.exports = mongoose.model('Order', OrderSchema);
+module.exports = mongoose.model("Order", OrderSchema);

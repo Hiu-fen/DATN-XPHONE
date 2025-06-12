@@ -154,9 +154,13 @@ const Checkout = () => {
       console.log("Order data to send:", newOrder); // Debug dữ liệu gửi
 
       // Lưu đơn hàng lên server
-      const response = await axios.post("http://localhost:5000/api/orders", newOrder, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(
+        "http://localhost:5000/api/orders",
+        newOrder,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       console.log("Order response from server:", response.data); // Debug phản hồi
 
@@ -170,9 +174,7 @@ const Checkout = () => {
           "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"
         );
       } else if (form.paymentMethod === "COD") {
-        message.info(
-          "Bạn sẽ thanh toán khi nhận hàng."
-        );
+        message.info("Bạn sẽ thanh toán khi nhận hàng.");
       }
 
       // Trừ số lượng sản phẩm trong kho
@@ -329,7 +331,9 @@ const Checkout = () => {
           <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
             {cart.map((item) => (
               <li
-                key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
+                key={`${item.productId}-${item.color || ""}-${
+                  item.storage || ""
+                }`}
                 className="flex items-center py-4"
               >
                 <img

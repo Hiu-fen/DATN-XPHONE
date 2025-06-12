@@ -14,13 +14,14 @@ interface CartContextType {
   addToCart: (item: CartItem) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
-  clearCart: () => void; 
-  
+  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [cart, setCart] = useState<CartItem[]>([]);
 
   useEffect(() => {
@@ -36,7 +37,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const addToCart = (item: CartItem) => {
-    const existingItem = cart.find((cartItem) => cartItem.productId === item.productId);
+    const existingItem = cart.find(
+      (cartItem) => cartItem.productId === item.productId
+    );
     let updatedCart: CartItem[];
 
     if (existingItem) {
@@ -65,15 +68,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     message.success("Đã xóa sản phẩm khỏi giỏ hàng.");
   };
   const clearCart = () => {
-  saveCartToLocalStorage([]);
-};
+    saveCartToLocalStorage([]);
+  };
 
   return (
     <CartContext.Provider
-    value={{ cart, addToCart, updateQuantity, removeFromCart, clearCart }}
-  >
-    {children}
-  </CartContext.Provider>
+      value={{ cart, addToCart, updateQuantity, removeFromCart, clearCart }}
+    >
+      {children}
+    </CartContext.Provider>
   );
 };
 
