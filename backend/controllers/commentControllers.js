@@ -1,5 +1,4 @@
 const Comment = require('../models/commentModels');
-
 exports.getAllComment = async (req, res) =>{
     try {
         const comments = await Comment.find()
@@ -19,8 +18,6 @@ exports.createComment = async (req, res) =>{
         res.status(500).json({message:'Lỗi khi tạo liên hệ'})   
     }
 }
-
-
 exports.updateComment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -29,20 +26,15 @@ exports.updateComment = async (req, res) => {
     const updatedComment = await Comment.findByIdAndUpdate(id, updateData, {
       new: true,
     });
-
     if (!updatedComment) {
       return res.status(404).json({ message: 'Không tìm thấy bình luận' });
     }
-
     res.json(updatedComment);
   } catch (error) {
     console.error('Lỗi cập nhật bình luận:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 };
-
-
-
 exports.deleteComment = async (req, res) => {
   try {
     const { id } = req.params;
