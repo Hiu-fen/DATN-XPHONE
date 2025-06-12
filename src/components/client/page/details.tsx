@@ -22,6 +22,7 @@ const Details = () => {
   const { id } = useParams();
   const [product, setProduct] = useState<IProduct | null>(null);
   const [mainImage, setMainImage] = useState<string>("");
+  // Danh Sách Bình Luận
   const [comments, setComments] = useState<IComment[]>([]);
   const [newComment, setNewComment] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -55,7 +56,6 @@ const Details = () => {
       isMounted = false;
     };
   }, [product]);
-
   // Fetch product details
   useEffect(() => {
     let isMounted = true;
@@ -77,8 +77,7 @@ const Details = () => {
       isMounted = false;
     };
   }, [id]);
-
-  // Fetch comments
+  // Lấy toàn bộ danh sách bình luận
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -90,26 +89,34 @@ const Details = () => {
     };
     fetchComments();
   }, [id]);
-
-  // Handle add comment
+  // Thêm bình luận
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
     setLoading(true);
     try {
+      // Lấy user từ localStorage nếu có
+      const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
+      const userName = userInfo?.name || "Khách hàng";
+
       const res = await axios.post("http://localhost:5000/api/comments", {
         sanpham: product?._id,
-        user: "Khách hàng",
+        user: userName,
         content: newComment.trim(),
+        date: new Date().toISOString(),
+        status: false,
+        likes: 0
       });
+
       setComments([res.data, ...comments]);
       setNewComment("");
+      message.success("Bình luận của bạn đã được gửi thành công, chờ phê duyệt!");
     } catch (error) {
       console.error("Lỗi gửi bình luận:", error);
+      message.error("Gửi bình luận thất bại!");
     }
     setLoading(false);
   };
-
-  // Handle like comment
+  // Like Bình Luận
   const handleLike = async (commentId: string) => {
     try {
       const res = await axios.post(`http://localhost:5000/api/comments/${commentId}/like`);
@@ -122,28 +129,24 @@ const Details = () => {
       console.error("Lỗi khi tăng like:", error);
     }
   };
-
   // Comment menu states and functions
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>("");
-
   const toggleMenu = (commentId: string) => {
     if (activeMenuId === commentId) setActiveMenuId(null);
     else setActiveMenuId(commentId);
   };
-
   const startEdit = (comment: IComment) => {
     setEditingId(comment._id);
     setEditContent(comment.content);
     setActiveMenuId(null);
   };
-
   const cancelEdit = () => {
     setEditingId(null);
     setEditContent("");
   };
-
+  // Sửa bình luận
   const saveEdit = async () => {
     if (!editContent.trim()) return alert("Nội dung không được để trống");
     try {
@@ -159,7 +162,7 @@ const Details = () => {
       console.error("Lỗi cập nhật bình luận:", error);
     }
   };
-
+  // Xóa bình luận
   const deleteComment = async (commentId: string) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa bình luận này?")) return;
     try {
@@ -170,14 +173,12 @@ const Details = () => {
       console.error("Lỗi xóa bình luận:", error);
     }
   };
-
   // Handle select variant
   const handleSelectVariant = (color: string, ram: string) => {
     setSelectedVariant({ color, ram });
     setQuantity(1); // Reset quantity when changing variant
     console.log("Selected variant:", { color, ram });
   };
-
   // Get selected variant price
   const getSelectedVariantPrice = () => {
     if (!selectedVariant) {
@@ -188,7 +189,6 @@ const Details = () => {
     );
     return variant?.price ? `${variant.price} VNĐ` : product?.price || "Liên hệ";
   };
-
   // Handle quantity change
   const handleQuantityChange = (value: number) => {
     if (value < 1) return;
@@ -206,109 +206,106 @@ const Details = () => {
     }
     setQuantity(value);
   };
-
   const handleAddToCart = async () => {
-  if (!product) {
-    message.error("Không tìm thấy sản phẩm.");
-    return;
-  }
-  if (!product.status) {
-    message.error("Sản phẩm này không còn được bán.");
-    return;
-  }
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user?._id) {
-      message.warning("Bạn cần đăng nhập để mua hàng.");
-      navigate("/login");
+    if (!product) {
+      message.error("Không tìm thấy sản phẩm.");
       return;
     }
-    if (!product._id) {
-      message.warning("Không tìm thấy sản phẩm.");
+    if (!product.status) {
+      message.error("Sản phẩm này không còn được bán.");
       return;
     }
-    if (product.soluong <= 0) {
-      message.warning("Sản phẩm đã hết hàng.");
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!user?._id) {
+        message.warning("Bạn cần đăng nhập để mua hàng.");
+        navigate("/login");
+        return;
+      }
+      if (!product._id) {
+        message.warning("Không tìm thấy sản phẩm.");
+        return;
+      }
+      if (product.soluong <= 0) {
+        message.warning("Sản phẩm đã hết hàng.");
+        return;
+      }
+      if (!selectedVariant) {
+        message.warning("Vui lòng chọn biến thể.");
+        return;
+      }
+      // Kiểm tra số lượng biến thể
+      const variant = product.variants?.find(
+        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+      );
+      if (variant && quantity > variant.soluong) {
+        message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+        return;
+      }
+      await addToCart({
+        userId: user._id,
+        productId: product._id,
+        quantity: quantity,
+        price: product.price,
+        color: selectedVariant.color,
+        storage: selectedVariant.ram,
+      });
+      message.success("Đã thêm vào giỏ hàng!");
+    } catch (error) {
+      console.error("Lỗi thêm giỏ hàng:", error);
+      message.error("Thêm vào giỏ hàng thất bại.");
+    }
+  };
+  const handleAddToCart1 = async () => {
+    if (!product) {
+      message.error("Không tìm thấy sản phẩm.");
       return;
     }
-    if (!selectedVariant) {
-      message.warning("Vui lòng chọn biến thể.");
+    if (!product.status) {
+      message.error("Sản phẩm này không còn được bán.");
       return;
     }
-    // Kiểm tra số lượng biến thể
-    const variant = product.variants?.find(
-      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-    );
-    if (variant && quantity > variant.soluong) {
-      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
-      return;
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!user?._id) {
+        message.warning("Bạn cần đăng nhập để mua hàng.");
+        navigate("/login");
+        return;
+      }
+      if (!product._id) {
+        message.warning("Không tìm thấy sản phẩm.");
+        return;
+      }
+      if (product.soluong <= 0) {
+        message.warning("Sản phẩm đã hết hàng.");
+        return;
+      }
+      if (!selectedVariant) {
+        message.warning("Vui lòng chọn biến thể.");
+        return;
+      }
+      // Kiểm tra số lượng biến thể
+      const variant = product.variants?.find(
+        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+      );
+      if (variant && quantity > variant.soluong) {
+        message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+        return;
+      }
+      await addToCart({
+        userId: user._id,
+        productId: product._id,
+        quantity: quantity,
+        price: product.price,
+        color: selectedVariant.color,
+        storage: selectedVariant.ram,
+      });
+      navigate(`/cart/${user._id}`);
+    } catch (error) {
+      console.error("Lỗi mua hàng:", error);
+      message.error("Mua hàng thất bại.");
     }
-    await addToCart({
-      userId: user._id,
-      productId: product._id,
-      quantity: quantity,
-      price: product.price,
-      color: selectedVariant.color,
-      storage: selectedVariant.ram,
-    });
-    message.success("Đã thêm vào giỏ hàng!");
-  } catch (error) {
-    console.error("Lỗi thêm giỏ hàng:", error);
-    message.error("Thêm vào giỏ hàng thất bại.");
-  }
-};
-
-const handleAddToCart1 = async () => {
-  if (!product) {
-    message.error("Không tìm thấy sản phẩm.");
-    return;
-  }
-  if (!product.status) {
-    message.error("Sản phẩm này không còn được bán.");
-    return;
-  }
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user?._id) {
-      message.warning("Bạn cần đăng nhập để mua hàng.");
-      navigate("/login");
-      return;
-    }
-    if (!product._id) {
-      message.warning("Không tìm thấy sản phẩm.");
-      return;
-    }
-    if (product.soluong <= 0) {
-      message.warning("Sản phẩm đã hết hàng.");
-      return;
-    }
-    if (!selectedVariant) {
-      message.warning("Vui lòng chọn biến thể.");
-      return;
-    }
-    // Kiểm tra số lượng biến thể
-    const variant = product.variants?.find(
-      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-    );
-    if (variant && quantity > variant.soluong) {
-      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
-      return;
-    }
-    await addToCart({
-      userId: user._id,
-      productId: product._id,
-      quantity: quantity,
-      price: product.price,
-      color: selectedVariant.color,
-      storage: selectedVariant.ram,
-    });
-    navigate(`/cart/${user._id}`);
-  } catch (error) {
-    console.error("Lỗi mua hàng:", error);
-    message.error("Mua hàng thất bại.");
-  }
-};
-
+  };
   // Scroll related products
   const scrollRelatedProducts = (direction: "left" | "right") => {
     if (relatedProductsRef.current) {
@@ -319,7 +316,6 @@ const handleAddToCart1 = async () => {
       });
     }
   };
-
   const { data: categoryNames } = useQuery<string[]>({
     queryKey: ["category-names", product?.danhmuc],
     queryFn: async () => {
@@ -341,13 +337,11 @@ const handleAddToCart1 = async () => {
     },
     enabled: !!product?.danhmuc,
   });
-
   if (!product) return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
-
   const uniqueVariants = product.variants || [];
-
   return (
     <div className="w-full h-full bg-white p-4 md:p-8">
+      {/* Thông tin */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="col-span-12 lg:col-span-4">
           <div className="flex flex-col items-center">
@@ -542,6 +536,7 @@ const handleAddToCart1 = async () => {
           </div>
         </div>
       </div>
+      {/* Mô tả */}
       <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0">
         <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-8 border-b-4 border-gray-300 pb-3">
           MÔ TẢ SẢN PHẨM
@@ -550,6 +545,7 @@ const handleAddToCart1 = async () => {
           <p>{product.mota || "Không có mô tả."}</p>
         </div>
       </section>
+      {/* Bình Luận */}
       <section className="max-w-3xl mx-auto mt-12 px-4 md:px-0">
         <div className="flex items-center gap-2">
           <h6 className="text-black-500 font-semibold text-sm md:text-base">Bình luận sản phẩm</h6>
@@ -640,6 +636,7 @@ const handleAddToCart1 = async () => {
             ))}
         </div>
       </section>
+      {/* Sản phẩm liên quan */}
       <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0 relative">
         <div className="flex items-center gap-3">
           <div className=" bg-red-500 w-[30px] rounded-lg h-[50px]" />

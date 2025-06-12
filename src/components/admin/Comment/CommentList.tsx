@@ -26,10 +26,10 @@ const CommentAdmin = () => {
       (await axios.get(`http://localhost:5000/api/products`)).data,
   });
 
-const getProductName = (_id: string) => {
-  const product = products?.find((pro: IProduct) => pro._id === _id);
-  return product ? product.name : 'Không có sản phẩm';
-};
+  const getProductName = (_id: string) => {
+    const product = products?.find((pro: IProduct) => pro._id === _id);
+    return product ? product.name : 'Không có sản phẩm';
+  };
 
 
   const toggleStatus = async (_id: string, currentStatus: boolean) => {
@@ -76,20 +76,16 @@ const getProductName = (_id: string) => {
     mutation.mutate(_id);
   };
 
-const search = comments?.filter((c: IComment) => {
-  const productName = getProductName((c.sanpham));
-  const Text = ` ${c.user} ${c.content} ${c.date} ${productName}`.toLowerCase();
-  return Text.includes(searchText.toLowerCase());
-});
+  const search = comments?.filter((c: IComment) => {
+    const productName = getProductName((c.sanpham));
+    const Text = ` ${c.user} ${c.content} ${c.date} ${productName}`.toLowerCase();
+    return Text.includes(searchText.toLowerCase());
+  });
 
   const columns = [
-    { title: 'ID',
-      dataIndex: 'id' 
-    },
-
-    { 
-      title: 'Người dùng', 
-      dataIndex: 'user' 
+    {
+      title: 'Người dùng',
+      dataIndex: 'user'
     },
     {
       title: 'Sản phẩm',
@@ -138,7 +134,7 @@ const search = comments?.filter((c: IComment) => {
           description="Bạn chắc chắn muốn xóa?"
           icon={<DeleteOutlined />}
           onConfirm={() => {
-            console.log('Xóa id:', record._id); 
+            console.log('Xóa id:', record._id);
             onDelete(record._id);
           }}
           okText="OK"
@@ -148,33 +144,33 @@ const search = comments?.filter((c: IComment) => {
             <DeleteOutlined />
           </Button>
         </Popconfirm>
-  ),
-}
+      ),
+    }
 
   ];
 
   return (
     <div>
-     <h2 className="text-2xl font-bold ">Danh sách bình luận</h2>
-       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <h2 className="text-2xl font-bold ">Danh sách bình luận</h2>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Input.Search
-        placeholder=""
-        className="mb-4"
-         style={{ width: 300 }} 
-        onChange={(e) => setSearchText(e.target.value)}
-        allowClear
+          placeholder=""
+          className="mb-4"
+          style={{ width: 300 }}
+          onChange={(e) => setSearchText(e.target.value)}
+          allowClear
+        />
+      </div>
+      <Table
+        columns={columns}
+        dataSource={search}
+        rowKey="_id"
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: false,
+          pageSizeOptions: ['10', '20', '30'],
+        }}
       />
-       </div>
-     <Table
-            columns={columns}
-            dataSource={search}
-            rowKey="_id"
-            pagination={{
-            pageSize: 10, 
-            showSizeChanger: false,
-            pageSizeOptions: ['10', '20', '30'],
-          }}
-          />
     </div>
   );
 };
