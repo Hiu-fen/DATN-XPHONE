@@ -94,7 +94,12 @@ const OrderDetail = () => {
     return [{ label: currentStatus, value: currentStatus }];
   };
 
-  const { data: order, isLoading, isError, refetch } = useQuery<IOrder>({
+  const {
+    data: order,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery<IOrder>({
     queryKey: ["order", id],
     queryFn: async () => {
       const res = await axios.get(`http://localhost:5000/api/orders/${id}`);
@@ -106,20 +111,33 @@ const OrderDetail = () => {
 
   const statusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return await axios.patch(`http://localhost:5000/api/orders/${id}`, { status });
+      return await axios.patch(`http://localhost:5000/api/orders/${id}`, {
+        status,
+      });
     },
     onSuccess: () => {
       message.success("Cập nhật trạng thái thành công");
       refetch();
     },
     onError: (error: any) => {
-      message.error(error.response?.data?.message || "Lỗi khi cập nhật trạng thái");
+      message.error(
+        error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
+      );
     },
   });
 
   const returnMutation = useMutation({
-    mutationFn: async ({ id, returnStatus }: { id: string; returnStatus: string }) => {
-      return await axios.patch(`http://localhost:5000/api/orders/${id}/return`, { returnStatus });
+    mutationFn: async ({
+      id,
+      returnStatus,
+    }: {
+      id: string;
+      returnStatus: string;
+    }) => {
+      return await axios.patch(
+        `http://localhost:5000/api/orders/${id}/return`,
+        { returnStatus }
+      );
     },
     onSuccess: () => {
       message.success("Cập nhật trạng thái trả hàng thành công");
@@ -172,7 +190,9 @@ const OrderDetail = () => {
       key: "productName",
       width: 200,
       render: (_: any, record: OrderItem) =>
-        record.snapshot?.name || record.productName || "Sản phẩm không còn tồn tại",
+        record.snapshot?.name ||
+        record.productName ||
+        "Sản phẩm không còn tồn tại",
     },
     {
       title: "Màu sắc",
@@ -234,10 +254,21 @@ const OrderDetail = () => {
       <Title level={3}>Chi tiết đơn hàng #{order.orderCode}</Title>
 
       <Card style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={1} size="middle" title="Thông tin người nhận">
-          <Descriptions.Item label="Họ tên">{order.customerName}</Descriptions.Item>
-          <Descriptions.Item label="Số điện thoại">{order.phone}</Descriptions.Item>
-          <Descriptions.Item label="Địa chỉ giao hàng">{order.address}</Descriptions.Item>
+        <Descriptions
+          bordered
+          column={1}
+          size="middle"
+          title="Thông tin người nhận"
+        >
+          <Descriptions.Item label="Họ tên">
+            {order.customerName}
+          </Descriptions.Item>
+          <Descriptions.Item label="Số điện thoại">
+            {order.phone}
+          </Descriptions.Item>
+          <Descriptions.Item label="Địa chỉ giao hàng">
+            {order.address}
+          </Descriptions.Item>
           <Descriptions.Item label="Ngày đặt hàng">
             {new Date(order.date).toLocaleString()}
           </Descriptions.Item>
@@ -247,7 +278,9 @@ const OrderDetail = () => {
           <Descriptions.Item label="Đơn vị vận chuyển">
             {order.shippingProvider || "Chưa chọn"}
           </Descriptions.Item>
-          <Descriptions.Item label="Ghi chú">{order.notes || "Không có"}</Descriptions.Item>
+          <Descriptions.Item label="Ghi chú">
+            {order.notes || "Không có"}
+          </Descriptions.Item>
           <Descriptions.Item label="Trạng thái đơn hàng">
             <Space>
               <Select
@@ -302,7 +335,9 @@ const OrderDetail = () => {
           </p>
           <p>
             <b>Tổng thanh toán:</b>{" "}
-            <span style={{ color: "#e53935" }}>{totalPayment.toLocaleString()} VND</span>
+            <span style={{ color: "#e53935" }}>
+              {totalPayment.toLocaleString()} VND
+            </span>
           </p>
         </div>
       </Card>

@@ -26,7 +26,10 @@ const Details = () => {
   const [newComment, setNewComment] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
-  const [selectedVariant, setSelectedVariant] = useState<{ color: string; ram: string } | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<{
+    color: string;
+    ram: string;
+  } | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const navigate = useNavigate();
   const relatedProductsRef = useRef<HTMLDivElement>(null);
@@ -40,7 +43,8 @@ const Details = () => {
           const res = await axios.get(`http://localhost:5000/api/products`);
           if (isMounted) {
             const filtered = res.data.filter(
-              (p: IProduct) => p._id !== product._id && p.danhmuc === product.danhmuc
+              (p: IProduct) =>
+                p._id !== product._id && p.danhmuc === product.danhmuc
             );
             setRelatedProducts(filtered.slice(0, 4));
           }
@@ -112,7 +116,9 @@ const Details = () => {
   // Handle like comment
   const handleLike = async (commentId: string) => {
     try {
-      const res = await axios.post(`http://localhost:5000/api/comments/${commentId}/like`);
+      const res = await axios.post(
+        `http://localhost:5000/api/comments/${commentId}/like`
+      );
       setComments((prevComments) =>
         prevComments.map((comment) =>
           comment._id === commentId ? res.data : comment
@@ -147,9 +153,12 @@ const Details = () => {
   const saveEdit = async () => {
     if (!editContent.trim()) return alert("Nội dung không được để trống");
     try {
-      const res = await axios.put(`http://localhost:5000/api/comments/${editingId}`, {
-        content: editContent.trim(),
-      });
+      const res = await axios.put(
+        `http://localhost:5000/api/comments/${editingId}`,
+        {
+          content: editContent.trim(),
+        }
+      );
       setComments((prev) =>
         prev.map((c) => (c._id === editingId ? res.data : c))
       );
@@ -186,7 +195,9 @@ const Details = () => {
     const variant = product?.variants?.find(
       (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
     );
-    return variant?.price ? `${variant.price} VNĐ` : product?.price || "Liên hệ";
+    return variant?.price
+      ? `${variant.price} VNĐ`
+      : product?.price || "Liên hệ";
   };
 
   // Handle quantity change
@@ -194,10 +205,13 @@ const Details = () => {
     if (value < 1) return;
     if (selectedVariant) {
       const variant = product?.variants?.find(
-        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+        (v) =>
+          v.color === selectedVariant.color && v.ram === selectedVariant.ram
       );
       if (variant && value > variant.soluong) {
-        message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+        message.warning(
+          `Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`
+        );
         return;
       }
     } else if (product && value > product.soluong) {
@@ -208,106 +222,112 @@ const Details = () => {
   };
 
   const handleAddToCart = async () => {
-  if (!product) {
-    message.error("Không tìm thấy sản phẩm.");
-    return;
-  }
-  if (!product.status) {
-    message.error("Sản phẩm này không còn được bán.");
-    return;
-  }
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user?._id) {
-      message.warning("Bạn cần đăng nhập để mua hàng.");
-      navigate("/login");
+    if (!product) {
+      message.error("Không tìm thấy sản phẩm.");
       return;
     }
-    if (!product._id) {
-      message.warning("Không tìm thấy sản phẩm.");
+    if (!product.status) {
+      message.error("Sản phẩm này không còn được bán.");
       return;
     }
-    if (product.soluong <= 0) {
-      message.warning("Sản phẩm đã hết hàng.");
-      return;
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!user?._id) {
+        message.warning("Bạn cần đăng nhập để mua hàng.");
+        navigate("/login");
+        return;
+      }
+      if (!product._id) {
+        message.warning("Không tìm thấy sản phẩm.");
+        return;
+      }
+      if (product.soluong <= 0) {
+        message.warning("Sản phẩm đã hết hàng.");
+        return;
+      }
+      if (!selectedVariant) {
+        message.warning("Vui lòng chọn biến thể.");
+        return;
+      }
+      // Kiểm tra số lượng biến thể
+      const variant = product.variants?.find(
+        (v) =>
+          v.color === selectedVariant.color && v.ram === selectedVariant.ram
+      );
+      if (variant && quantity > variant.soluong) {
+        message.warning(
+          `Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`
+        );
+        return;
+      }
+      await addToCart({
+        userId: user._id,
+        productId: product._id,
+        quantity: quantity,
+        price: product.price,
+        color: selectedVariant.color,
+        storage: selectedVariant.ram,
+      });
+      message.success("Đã thêm vào giỏ hàng!");
+    } catch (error) {
+      console.error("Lỗi thêm giỏ hàng:", error);
+      message.error("Thêm vào giỏ hàng thất bại.");
     }
-    if (!selectedVariant) {
-      message.warning("Vui lòng chọn biến thể.");
-      return;
-    }
-    // Kiểm tra số lượng biến thể
-    const variant = product.variants?.find(
-      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-    );
-    if (variant && quantity > variant.soluong) {
-      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
-      return;
-    }
-    await addToCart({
-      userId: user._id,
-      productId: product._id,
-      quantity: quantity,
-      price: product.price,
-      color: selectedVariant.color,
-      storage: selectedVariant.ram,
-    });
-    message.success("Đã thêm vào giỏ hàng!");
-  } catch (error) {
-    console.error("Lỗi thêm giỏ hàng:", error);
-    message.error("Thêm vào giỏ hàng thất bại.");
-  }
-};
+  };
 
-const handleAddToCart1 = async () => {
-  if (!product) {
-    message.error("Không tìm thấy sản phẩm.");
-    return;
-  }
-  if (!product.status) {
-    message.error("Sản phẩm này không còn được bán.");
-    return;
-  }
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user?._id) {
-      message.warning("Bạn cần đăng nhập để mua hàng.");
-      navigate("/login");
+  const handleAddToCart1 = async () => {
+    if (!product) {
+      message.error("Không tìm thấy sản phẩm.");
       return;
     }
-    if (!product._id) {
-      message.warning("Không tìm thấy sản phẩm.");
+    if (!product.status) {
+      message.error("Sản phẩm này không còn được bán.");
       return;
     }
-    if (product.soluong <= 0) {
-      message.warning("Sản phẩm đã hết hàng.");
-      return;
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!user?._id) {
+        message.warning("Bạn cần đăng nhập để mua hàng.");
+        navigate("/login");
+        return;
+      }
+      if (!product._id) {
+        message.warning("Không tìm thấy sản phẩm.");
+        return;
+      }
+      if (product.soluong <= 0) {
+        message.warning("Sản phẩm đã hết hàng.");
+        return;
+      }
+      if (!selectedVariant) {
+        message.warning("Vui lòng chọn biến thể.");
+        return;
+      }
+      // Kiểm tra số lượng biến thể
+      const variant = product.variants?.find(
+        (v) =>
+          v.color === selectedVariant.color && v.ram === selectedVariant.ram
+      );
+      if (variant && quantity > variant.soluong) {
+        message.warning(
+          `Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`
+        );
+        return;
+      }
+      await addToCart({
+        userId: user._id,
+        productId: product._id,
+        quantity: quantity,
+        price: product.price,
+        color: selectedVariant.color,
+        storage: selectedVariant.ram,
+      });
+      navigate(`/checkout`);
+    } catch (error) {
+      console.error("Lỗi mua hàng:", error);
+      message.error("Mua hàng thất bại.");
     }
-    if (!selectedVariant) {
-      message.warning("Vui lòng chọn biến thể.");
-      return;
-    }
-    // Kiểm tra số lượng biến thể
-    const variant = product.variants?.find(
-      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-    );
-    if (variant && quantity > variant.soluong) {
-      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
-      return;
-    }
-    await addToCart({
-      userId: user._id,
-      productId: product._id,
-      quantity: quantity,
-      price: product.price,
-      color: selectedVariant.color,
-      storage: selectedVariant.ram,
-    });
-    navigate(`/cart/${user._id}`);
-  } catch (error) {
-    console.error("Lỗi mua hàng:", error);
-    message.error("Mua hàng thất bại.");
-  }
-};
+  };
 
   // Scroll related products
   const scrollRelatedProducts = (direction: "left" | "right") => {
@@ -330,7 +350,9 @@ const handleAddToCart1 = async () => {
       const names = await Promise.all(
         categoryIds.map(async (id) => {
           try {
-            const res = await axios.get(`http://localhost:5000/api/category/${id}`);
+            const res = await axios.get(
+              `http://localhost:5000/api/category/${id}`
+            );
             return res.data.name || "Không xác định";
           } catch (error) {
             return "Không xác định";
@@ -342,7 +364,8 @@ const handleAddToCart1 = async () => {
     enabled: !!product?.danhmuc,
   });
 
-  if (!product) return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
+  if (!product)
+    return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
 
   const uniqueVariants = product.variants || [];
 
@@ -364,8 +387,11 @@ const handleAddToCart1 = async () => {
                     src={img}
                     alt={`variant-${idx}`}
                     onClick={() => setMainImage(img)}
-                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${mainImage === img ? "border-blue-600" : "border-gray-300 hover:border-gray-500"
-                      }`}
+                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${
+                      mainImage === img
+                        ? "border-blue-600"
+                        : "border-gray-300 hover:border-gray-500"
+                    }`}
                   />
                 ))
               ) : (
@@ -376,33 +402,51 @@ const handleAddToCart1 = async () => {
         </div>
         <div className="col-span-12 lg:col-span-5 flex flex-col justify-between">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              {product.name}
+            </h1>
             {!product.status && (
-              <p className="text-red-600 font-semibold mb-3">Hàng không còn bán</p>
+              <p className="text-red-600 font-semibold mb-3">
+                Hàng không còn bán
+              </p>
             )}
             <p className="text-gray-600 mb-3">
-              Thương hiệu: <span className="font-semibold">{categoryNames?.join(", ") || "Không xác định"}</span> | Trạng thái:{" "}
-              <span className="text-green-600 font-semibold">{product.trangthai || "Không xác định"}</span>
+              Thương hiệu:{" "}
+              <span className="font-semibold">
+                {categoryNames?.join(", ") || "Không xác định"}
+              </span>{" "}
+              | Trạng thái:{" "}
+              <span className="text-green-600 font-semibold">
+                {product.trangthai || "Không xác định"}
+              </span>
             </p>
             <div className="flex items-center gap-1 mb-4">
               <span className="text-gray-700 ">Số lượng:</span>
               <span>{product.soluong || 0}</span>
             </div>
             <div className="mb-4">
-              <p className="text-2xl md:text-3xl font-bold text-red-600">{getSelectedVariantPrice()}</p>
+              <p className="text-2xl md:text-3xl font-bold text-red-600">
+                {getSelectedVariantPrice()}
+              </p>
             </div>
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">Màu sắc và dung lượng:</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                Màu sắc và dung lượng:
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {uniqueVariants.length > 0 ? (
                   uniqueVariants.map((variant, idx) => (
                     <button
                       key={idx}
-                      className={`px-4 py-2 border rounded-md font-semibold transition-all duration-200 ${selectedVariant?.color === variant.color && selectedVariant?.ram === variant.ram
-                        ? "border-blue-600 bg-blue-50 text-blue-600"
-                        : "border-gray-300 hover:border-gray-500 text-gray-700"
-                        }`}
-                      onClick={() => handleSelectVariant(variant.color, variant.ram)}
+                      className={`px-4 py-2 border rounded-md font-semibold transition-all duration-200 ${
+                        selectedVariant?.color === variant.color &&
+                        selectedVariant?.ram === variant.ram
+                          ? "border-blue-600 bg-blue-50 text-blue-600"
+                          : "border-gray-300 hover:border-gray-500 text-gray-700"
+                      }`}
+                      onClick={() =>
+                        handleSelectVariant(variant.color, variant.ram)
+                      }
                     >
                       {`${variant.color} - ${variant.ram}`}
                     </button>
@@ -413,7 +457,9 @@ const handleAddToCart1 = async () => {
               </div>
             </div>
             <div className="mb-6">
-              <label className="block text-lg font-semibold text-gray-800 mb-2">Số lượng:</label>
+              <label className="block text-lg font-semibold text-gray-800 mb-2">
+                Số lượng:
+              </label>
               <div className="flex items-center gap-2">
                 <button
                   className="px-3 py-1 bg-gray-200 rounded-md hover:bg-gray-300"
@@ -430,8 +476,10 @@ const handleAddToCart1 = async () => {
                   max={
                     selectedVariant
                       ? product?.variants?.find(
-                        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-                      )?.soluong || 1
+                          (v) =>
+                            v.color === selectedVariant.color &&
+                            v.ram === selectedVariant.ram
+                        )?.soluong || 1
                       : product.soluong
                   }
                 />
@@ -443,10 +491,13 @@ const handleAddToCart1 = async () => {
                 </button>
               </div>
               <p className="mt-2 text-gray-700">
-                Số lượng tồn kho: {selectedVariant
+                Số lượng tồn kho:{" "}
+                {selectedVariant
                   ? product?.variants?.find(
-                    (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-                  )?.soluong || 0
+                      (v) =>
+                        v.color === selectedVariant.color &&
+                        v.ram === selectedVariant.ram
+                    )?.soluong || 0
                   : product.soluong}
               </p>
             </div>
@@ -493,9 +544,19 @@ const handleAddToCart1 = async () => {
               <span>Khuyến mãi đặc biệt</span>
             </div>
             <div className="p-3 text-sm text-gray-700 space-y-1">
-              <p>- Giảm <span className="text-red-600 font-semibold">250.000đ</span> khi mua kèm gói bảo hành VIP 12 tháng 1 Đổi 1.</p>
-              <p>- Trả góp qua Home PayLater giảm thêm 5% tối đa <span className="text-red-600 font-semibold">500.000đ</span>.</p>
-              <p>- Hỗ trợ trả góp 0% chỉ cần CCCD gắn chip hoặc 0% qua thẻ tín dụng.</p>
+              <p>
+                - Giảm{" "}
+                <span className="text-red-600 font-semibold">250.000đ</span> khi
+                mua kèm gói bảo hành VIP 12 tháng 1 Đổi 1.
+              </p>
+              <p>
+                - Trả góp qua Home PayLater giảm thêm 5% tối đa{" "}
+                <span className="text-red-600 font-semibold">500.000đ</span>.
+              </p>
+              <p>
+                - Hỗ trợ trả góp 0% chỉ cần CCCD gắn chip hoặc 0% qua thẻ tín
+                dụng.
+              </p>
             </div>
           </div>
           <div className="bg-white rounded-md shadow-sm border border-gray-800">
@@ -528,11 +589,16 @@ const handleAddToCart1 = async () => {
                   },
                 ].map((item, idx) => (
                   <tr key={idx} className="bg-gray-50 rounded-md">
-                    <td className="w-10 text-center py-2 align-top">{item.icon}</td>
+                    <td className="w-10 text-center py-2 align-top">
+                      {item.icon}
+                    </td>
                     <td className="py-2 align-top">
                       <div>
-                        <span className="font-semibold">{item.title}</span><br />
-                        <span className="text-xs text-gray-500">{item.desc}</span>
+                        <span className="font-semibold">{item.title}</span>
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {item.desc}
+                        </span>
                       </div>
                     </td>
                   </tr>
@@ -552,7 +618,9 @@ const handleAddToCart1 = async () => {
       </section>
       <section className="max-w-3xl mx-auto mt-12 px-4 md:px-0">
         <div className="flex items-center gap-2">
-          <h6 className="text-black-500 font-semibold text-sm md:text-base">Bình luận sản phẩm</h6>
+          <h6 className="text-black-500 font-semibold text-sm md:text-base">
+            Bình luận sản phẩm
+          </h6>
         </div>
         <textarea
           rows={3}
@@ -572,7 +640,10 @@ const handleAddToCart1 = async () => {
           {comments
             .filter((comment) => comment.status)
             .map((comment) => (
-              <div key={comment._id} className="p-3 border border-gray-200 rounded-md relative text-sm">
+              <div
+                key={comment._id}
+                className="p-3 border border-gray-200 rounded-md relative text-sm"
+              >
                 <div className="flex justify-between items-center mb-1">
                   <span className="font-semibold">{comment.user}</span>
                   <span className="text-xs text-gray-500">
@@ -670,7 +741,9 @@ const handleAddToCart1 = async () => {
                     className="w-full h-40 object-cover"
                   />
                   <div className="p-3">
-                    <h3 className="font-semibold text-lg truncate">{item.name}</h3>
+                    <h3 className="font-semibold text-lg truncate">
+                      {item.name}
+                    </h3>
                     <div className="flex justify-between items-center">
                       <p className="text-red-600 font-bold">
                         {item.price || "Liên hệ"}

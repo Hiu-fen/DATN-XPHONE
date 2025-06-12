@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import {
-  Table,
-  Select,
-  message,
-  Tag,
-  Input,
-  Button,
-  Space,
-} from "antd";
+import { Table, Select, message, Tag, Input, Button, Space } from "antd";
 import { useNavigate } from "react-router-dom";
 
 interface OrderItem {
@@ -194,10 +186,10 @@ const OrderList = () => {
   };
 
   const filteredOrders = orders?.filter((o) => {
-    const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+    const text =
+      `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
   });
-
 
   const columns = [
     {
@@ -234,38 +226,42 @@ const OrderList = () => {
       width: 150,
       render: (total: number) => total.toLocaleString() + " VND",
     },
-{
-  title: "Thanh toán",
-  key: "isPaid",
-  width: 160,
-  render: (_: any, record: Order) => {
-    if (record.refunded) {
-      return <Tag color="red">Đã hoàn tiền</Tag>;
-    }
-    if (record.isPaid) {
-      return <Tag color="green">
-        {record.paymentMethod === "COD" ? "COD - Đã thanh toán" : "Đã thanh toán"}
-      </Tag>;
-    }
-    return (
-      <Select
-        value={
-          record.paymentMethod === "COD"
-            ? "COD - Chưa thanh toán"
-            : "Chưa thanh toán"
+    {
+      title: "Thanh toán",
+      key: "isPaid",
+      width: 160,
+      render: (_: any, record: Order) => {
+        if (record.refunded) {
+          return <Tag color="red">Đã hoàn tiền</Tag>;
         }
-        style={{ width: 140 }}
-        onChange={() => handleMarkAsPaid(record._id)}
-        options={[{ label: "Đã thanh toán", value: "paid" }]}
-        disabled={[
-          "Giao thành công",
-          "Đã huỷ",
-          "Trả hàng/Hoàn tiền",
-        ].includes(record.status)}
-      />
-    );
-  },
-},
+        if (record.isPaid) {
+          return (
+            <Tag color="green">
+              {record.paymentMethod === "COD"
+                ? "COD - Đã thanh toán"
+                : "Đã thanh toán"}
+            </Tag>
+          );
+        }
+        return (
+          <Select
+            value={
+              record.paymentMethod === "COD"
+                ? "COD - Chưa thanh toán"
+                : "Chưa thanh toán"
+            }
+            style={{ width: 140 }}
+            onChange={() => handleMarkAsPaid(record._id)}
+            options={[{ label: "Đã thanh toán", value: "paid" }]}
+            disabled={[
+              "Giao thành công",
+              "Đã huỷ",
+              "Trả hàng/Hoàn tiền",
+            ].includes(record.status)}
+          />
+        );
+      },
+    },
     {
       title: "Phương thức thanh toán",
       dataIndex: "paymentMethod",
