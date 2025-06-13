@@ -8,7 +8,7 @@ import {
   getPromotionById,
   getRandomCode,
   updatePromotion,
-} from "../../../api/promotionApi";
+} from "../../../api/admin/promotionApi";
 import { useEffect, useState } from "react";
 import { ICategory } from "../../../interface/category";
 import Select from "react-select";

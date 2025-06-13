@@ -3,7 +3,7 @@ import { Promotion } from "../../../interface/promotion";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { message, Switch } from "antd";
-import { addPromotion, getAllCategory, getRandomCode} from "../../../api/promotionApi";
+import { addPromotion, getAllCategory, getRandomCode} from "../../../api/admin/promotionApi";
 import { useState } from "react";
 import { ICategory } from "../../../interface/category";
 import Select from "react-select";

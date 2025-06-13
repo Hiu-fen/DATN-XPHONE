@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Promotion } from "../../../interface/promotion";
 import { useQuery } from "@tanstack/react-query";
-import { getPromotionById } from "../../../api/promotionApi";
+import { getPromotionById } from "../../../api/admin/promotionApi";
 import { FiCopy, FiCheck, FiCheckCircle, FiXCircle } from "react-icons/fi";
 import { message } from "antd";
 

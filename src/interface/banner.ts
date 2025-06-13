@@ -1,9 +1,11 @@
 export interface IBanner {
-    id: number;
+    _id: string;
     name: string;
-    image: string;
+    description: string;
+    imageUrl: string;
     link: string;
-    start_date: string;
-    end_date: string;
+    startDate: Date;
+    endDate: Date;
     status: boolean;
+    order: number;
 }
