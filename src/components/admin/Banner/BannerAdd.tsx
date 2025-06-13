@@ -1,28 +1,73 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
-import { message } from 'antd';
+import { Controller, useForm } from 'react-hook-form';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  Button,
+  DatePicker,
+  message,
+  Spin,
+  Switch,
+  Tooltip,
+  Upload,
+  Input,
+  Form,
+  AutoComplete
+} from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { IBanner } from '../../../interface/banner';
+import { addBanner, getAllBanners } from '../../../api/admin/banner';
+import { useState } from 'react';
+import axios from 'axios';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import { FiUpload } from 'react-icons/fi';
+import { ArrowLeftOutlined } from '@ant-design/icons';
 
+dayjs.extend(isSameOrAfter);
 
+const { TextArea } = Input;
 
 const BannerAdd = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<IBanner>();
-  const navigate = useNavigate();
+  const {
+    handleSubmit,
+    formState: { errors },
+    watch,
+    setValue,
+    control,
+    getValues,
+  } = useForm<IBanner>({
+    mode: 'onChange',
+  });
 
-  const getNextId = () => {
-    const currentId = localStorage.getItem('nextBannerId');
-    const nextId = currentId ? parseInt(currentId) + 1 : 1;
-    localStorage.setItem('nextBannerId', nextId.toString());
-    return nextId;
-  };
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const image = watch('imageUrl');
+
+  const { data: bannerList } = useQuery({
+    queryKey: ['banners'],
+    queryFn: async () => {
+      try {
+        const response = await getAllBanners();
+        return response.data;
+      } catch (error) {
+        message.error('Lỗi khi tải danh sách banner');
+      }
+    }
+  });
+
+  const currentId = getValues("_id");
+
+  const existingOrders = bannerList?.filter((banner: any) => banner._id !== currentId)
+  .map((banner: any) => Number(banner.order)) || [];
 
   const mutation = useMutation({
     mutationFn: async (data: IBanner) => {
-      const response = await axios.post('http://localhost:5000/api/banners', data);
-      return response.data;
+      try {
+        const response = await addBanner(data);
+        return response.data;
+      } catch (error) {
+        message.error('Gửi banner thất bại, vui lòng thử lại!');
+        throw error;
+      }
     },
     onSuccess: () => {
       message.success('Thêm banner thành công');
@@ -33,89 +78,269 @@ const BannerAdd = () => {
     },
   });
 
+  const uploadImage = async (fileList: File[]) => {
+    const name = watch('name');
+    if (!fileList || fileList.length === 0 || !name) {
+      message.warning('Vui lòng nhập tên banner trước khi tải ảnh');
+      return;
+    }
+
+    setLoading(true);
+    const formData = new FormData();
+    const publicId = `banner_${name.trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}`;
+    const renamedFile = new File([fileList[0]], publicId, { type: fileList[0].type });
+
+    formData.append('file', renamedFile);
+    formData.append('upload_preset', 'datn-xphone');
+
+    try {
+      const { data } = await axios.post('https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload', formData);
+      setValue('imageUrl', data.secure_url, { shouldValidate: true });
+      message.success('Tải ảnh thành công');
+    } catch (error) {
+      console.error(error);
+      message.error('Lỗi upload ảnh');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const onSubmit = (data: IBanner) => {
-    const bannerData: IBanner = {
+    const formattedData = {
       ...data,
-      id: getNextId(),
-      status: data.status ?? true
+      status: data.status ?? false,
     };
-    mutation.mutate(bannerData);
+    mutation.mutate(formattedData);
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Thêm Banner</h2>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tên banner</label>
-          <input
-            type="text"
-            {...register('name', { required: 'Không để trống tên banner' })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-            placeholder="Nhập tên banner"
-          />
-          <span className="text-red-700">{errors.name?.message}</span>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Link hình ảnh</label>
-          <input
-            type="text"
-            {...register('image', { required: 'Không để trống hình ảnh' })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-            placeholder="https://..."
-          />
-          <span className="text-red-700">{errors.image?.message}</span>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Link sự kiện</label>
-          <input
-            type="text"
-            {...register('link', { required: 'Không để trống link' })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-            placeholder="https://..."
-          />
-          <span className="text-red-700">{errors.link?.message}</span>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu</label>
-          <input
-            type="date"
-            {...register('start_date', { required: 'Chọn ngày bắt đầu' })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-          />
-          <span className="text-red-700">{errors.start_date?.message}</span>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Ngày kết thúc</label>
-          <input
-            type="date"
-            {...register('end_date', { required: 'Chọn ngày kết thúc' })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-md"
-          />
-          <span className="text-red-700">{errors.end_date?.message}</span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            {...register('status')}
-            defaultChecked
-          />
-          <label className="text-sm font-medium text-gray-700">Hiển thị</label>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+    <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-lg border-2">
+      <h2 className="text-3xl text-blue-500 font-bold mb-6 text-center">Thêm Banner</h2>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+        {/* Tên banner */}
+        <Controller
+          name="name"
+          control={control}
+          rules={{ required: 'Không để trống tên banner' }}
+          render={({ field }) => (
+            <Form.Item
+              label="Tên banner"
+              validateStatus={errors.name ? 'error' : ''}
+              help={errors.name?.message}
+            >
+              <Input {...field} placeholder="Nhập tên banner" />
+            </Form.Item>
+          )}
+          
+        />
+        
+        {/* Hình ảnh */}
+        <Form.Item
+          label="Hình ảnh"
+          validateStatus={errors.imageUrl ? 'error' : ''}
+          help={errors.imageUrl?.message}
         >
-          Thêm banner
-        </button>
-      </form>
+          <Controller
+            name="imageUrl"
+            control={control}
+            rules={{ required: 'Vui lòng tải ảnh lên' }}
+            render={({ field }) => (
+              <>
+                <Upload
+                  accept="image/*"
+                  showUploadList={false}
+                  beforeUpload={(file) => {
+                    uploadImage([file]);
+                    return false;
+                  }}
+                >
+                  <Button icon={<FiUpload />}>Chọn ảnh</Button>
+                </Upload>
+                {loading && <Spin className="ml-2" />}
+                {typeof image === 'string' && image && <img src={image} alt="Preview" className="mt-2 w-[150px] rounded" />}
+                <input type="hidden" {...field} />
+              </>
+            )}
+          />
+        </Form.Item>
+
+        {/* Link sự kiện */}
+        <Controller
+          name="link"
+          control={control}
+          rules={{
+            required: 'Không để trống link',
+            pattern: {
+              value: /^(https?:\/\/|\/)[\w.-]+.*$/i,
+              message: 'Link không hợp lệ. VD: /products hoặc https://example.com',
+            },
+          }}
+          render={({ field, fieldState }) => (
+            <Form.Item
+              label="Link sự kiện"
+              validateStatus={fieldState.error ? 'error' : ''}
+              help={fieldState.error?.message}
+            >
+              <AutoComplete
+                options={[
+                  { value: '/product', label: 'Trang sản phẩm' },
+                  { value: '/promotions', label: 'Trang khuyến mãi' },
+                  { value: '/about', label: 'Trang giới thiệu' },
+                ]}
+                placeholder="Nhập link hoặc chọn gợi ý"
+                onChange={(value) => field.onChange(value)}
+                onBlur={field.onBlur}
+                value={field.value}
+                filterOption={(inputValue, option) => {
+                  return (option?.value ?? '').toLowerCase().includes(inputValue.toLowerCase());
+                }}
+
+              />
+            </Form.Item>
+          )}
+        />
+
+
+        {/* Thời gian */}
+        <div className="flex gap-4">
+          <Form.Item
+            label="Ngày bắt đầu"
+            className="w-1/2"
+            validateStatus={errors.startDate ? 'error' : ''}
+            help={errors.startDate?.message}
+          >
+            <Controller
+              name="startDate"
+              control={control}
+              rules={{ required: 'Chọn ngày bắt đầu' }}
+              render={({ field }) => (
+              <DatePicker
+                className="w-full"
+                format="DD/MM/YYYY"
+                placeholder="Chọn ngày bắt đầu"
+                value={field.value ? dayjs(field.value) : null}
+                onChange={(date) => field.onChange(date ? date.toDate() : null)}
+              />
+              )}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Ngày kết thúc"
+            className="w-1/2"
+            validateStatus={errors.endDate ? 'error' : ''}
+            help={errors.endDate?.message}
+          >
+            <Controller
+              name="endDate"
+              control={control}
+              rules={{
+                required: 'Chọn ngày kết thúc',
+                validate: (value) => {
+                  const startDate = getValues('startDate');
+                  if (!startDate || !value) return true;
+                  return (
+                    dayjs(value).isSameOrAfter(dayjs(startDate)) ||
+                    'Ngày kết thúc phải sau ngày bắt đầu'
+                  );
+                }
+              }}
+              render={({ field }) => (
+                <DatePicker
+                  className="w-full"
+                  format="DD/MM/YYYY"
+                  value={field.value ? dayjs(field.value) : null}
+                  onChange={(date) => field.onChange(date ? date.toDate() : null)}
+                />
+              )}
+            />
+          </Form.Item>
+        </div>
+
+        {/* Thứ tự hiển thị */}
+        <Form.Item
+          label="Thứ tự hiển thị"
+          validateStatus={errors.order ? 'error' : ''}
+          help={
+            errors.order?.message ||
+            (existingOrders.length > 0 && (
+              <span>
+                Thứ tự đã có: {existingOrders.sort((a:any, b:any) => a - b).join(', ')}
+              </span>
+            ))
+          }
+        >
+          <Controller
+            name="order"
+            control={control}
+            rules={{
+              required: 'Không để trống thứ tự hiển thị',
+              min: { value: 1, message: 'Thứ tự hiển thị phải lớn hơn 0' },
+              validate: (value) =>
+                !existingOrders.includes(Number(value)) ||
+                'Thứ tự hiển thị đã tồn tại',
+            }}
+            render={({ field }) => (
+              <Input {...field} type="number" />
+            )}
+          />
+        </Form.Item>
+
+        {/* Mô tả banner */}
+        <Form.Item
+          label="Mô tả"
+          validateStatus={errors.description ? 'error' : ''}
+          help={errors.description?.message}
+        >
+          <Controller
+            name="description"
+            control={control}
+            rules={{ required: 'Vui lòng nhập mô tả cho banner' }}
+            render={({ field }) => (
+              <TextArea {...field} rows={3} placeholder="Nhập mô tả ngắn..." />
+            )}
+          />
+        </Form.Item>
+
+        {/* Trạng thái hiển thị */}
+        <Form.Item label="Trạng thái hiển thị">
+          <Controller
+            name="status"
+            control={control}
+            defaultValue={true}
+            render={({ field }) => (
+              <Switch
+                checked={field.value}
+                onChange={(val) => field.onChange(val)}
+                checkedChildren="Hiển thị"
+                unCheckedChildren="Ẩn"
+              />
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            block
+            loading={mutation.isPending}
+          >
+            Thêm banner
+          </Button>
+        </Form.Item>
+
+        <div className="flex justify-end mt-2">
+          <Tooltip title="Quay lại">
+            <Button
+              type="default"
+              shape="circle"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(-1)}
+            />
+          </Tooltip>
+        </div>
+      </Form>
     </div>
   );
 };

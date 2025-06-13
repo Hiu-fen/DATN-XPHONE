@@ -1,72 +1,73 @@
-import React, { useEffect, useState } from 'react';
-import { Table, Button, message, Input } from 'antd';
-import axios from 'axios';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Table, Button, message, Input, Popconfirm, Switch, Tooltip, Image
+} from 'antd';
+import {
+  EyeOutlined, EditOutlined, DeleteOutlined
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { IBanner } from '../../../interface/banner';  // Đảm bảo import interface đúng
-
-// Thêm dòng này để mở rộng IBanner nếu chưa có _id
-interface IBannerWithId extends IBanner {
-  _id: string;
-}
+import { useEffect, useState } from 'react';
+import { deleteBanner, getAllBanners, updateBannerStatus } from '../../../api/admin/banner';
+import { IBanner } from '../../../interface/banner';
 
 const BannerList = () => {
-  const [banners, setBanners] = useState<IBannerWithId[]>([]);  // State lưu trữ danh sách banner
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchText, setSearchText] = useState('');
 
-
-  // Hàm lấy danh sách banner từ API
-  const fetchBanners = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/banners');
-      setBanners(response.data);  // Lưu dữ liệu vào state
-    } catch (error) {
-      message.error('Không thể tải danh sách banner, vui lòng thử lại!');
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['banners'],
+    queryFn: async () => {
+      try {
+        const response = await getAllBanners();
+        return response.data;
+      } catch (error) {
+        message.error('Lỗi khi tải danh sách banner');
+      }
     }
-  };
-
-  // Sử dụng useEffect để gọi hàm fetch khi component được render
-  useEffect(() => {
-    fetchBanners();
-  }, []);
-
-  // Hàm xử lý thay đổi trạng thái banner
-  const toggleStatus = async (_id: string, currentStatus: boolean) => {
-    try {
-      const updatedStatus = !currentStatus;
-      await axios.put(`http://localhost:5000/api/banners/${_id}`, { status: updatedStatus });
-      // Cập nhật lại danh sách sau khi thay đổi trạng thái
-      setBanners((prevBanners) => prevBanners.map(banner => 
-        banner._id === _id ? { ...banner, status: updatedStatus } : banner
-      ));
-      message.success('Thay đổi trạng thái thành công!');
-    } catch (error) {
-      message.error('Không thể thay đổi trạng thái, vui lòng thử lại!');
-    }
-  };
-
-  // Hàm xử lý xóa banner
-  const deleteBanner = async (_id: string) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/banners/${_id}`);
-      // Xoá banner khỏi danh sách trong state
-      setBanners((prevBanners) => prevBanners.filter(banner => banner._id !== _id));
-      message.success('Xoá banner thành công!');
-    } catch (error) {
-      message.error('Không thể xoá banner, vui lòng thử lại!');
-    }
-  };
-  const search = banners?.filter((c: IBannerWithId) => {
-    const Text = `${c._id} ${c.name}  `.toLowerCase();
-    return Text.includes(searchText.toLowerCase());
   });
 
-  // Cấu hình các cột trong bảng
+  useEffect(() => {
+    if (isError) {
+      message.error('Lỗi khi tải danh sách banner');
+    }
+  }, [isError]);
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: boolean }) => {
+      return await updateBannerStatus(id, status);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['banners'] });
+      message.success('Cập nhật trạng thái thành công!');
+    },
+    onError: () => {
+      message.error('Không thể cập nhật trạng thái!');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await deleteBanner(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['banners'] });
+      message.success('Xoá banner thành công!');
+    },
+    onError: () => {
+      message.error('Không thể xoá banner!');
+    },
+  });
+
+  const filteredData = data?.filter((banner: IBanner) =>
+    banner.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
   const columns = [
     {
       title: 'STT',
-      key: 'stt',
-      render: (_: any, __: any, index: number) => index + 1,
+      key: 'index',
+      render: (_: any, __: IBanner, index: number) => index + 1,
     },
     {
       title: 'Tên Banner',
@@ -75,76 +76,99 @@ const BannerList = () => {
     },
     {
       title: 'Ảnh',
-      dataIndex: 'image',
-      key: 'image',
-      render: (image: string) => <img src={image} alt="banner" style={{ width: 100, height: 60 }} />
+      dataIndex: 'imageUrl',
+      key: 'imageUrl',
+      render: (imageUrl: string) => (
+        <Image
+          src={imageUrl}
+          alt="banner"
+          width={400}
+          height={120}
+          style={{
+            objectFit: 'cover',
+            borderRadius: 8,
+            border: '1px solid #f0f0f0',
+          }}
+          preview={{ mask: <EyeOutlined style={{ fontSize: 24, color: 'white' }} /> }}
+        />
+      ),
     },
     {
-      title: 'Link sự kiện',
-      dataIndex: 'link',
-      key: 'link',
-      render: (link: string) => <a href={link} target="_blank" rel="noopener noreferrer">{link}</a>
-    },
-    {
-      title: 'Thời gian',
-      dataIndex: 'start_date',
-      key: 'start_date',
-      render: (start_date: string, record: IBannerWithId) => `${start_date} - ${record.end_date}`,
+      title: 'Hiển thị',
+      dataIndex: 'order',
+      key: 'order',
     },
     {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      render: (status: boolean) => (status ? 'Hiển thị' : 'Ẩn'),
+      render: (status: boolean, record: IBanner) => (
+        <Switch
+          checked={status}
+          onChange={(checked) =>
+            toggleStatusMutation.mutate({ id: record._id, status: checked })
+          }
+          checkedChildren="Hiển thị"
+          unCheckedChildren="Ẩn"
+        />
+      ),
     },
     {
       title: 'Thao tác',
-      key: 'action',
-      render: (_: any, record: IBannerWithId) => (
-        <span>
-          <Button 
-            onClick={() => toggleStatus(record._id, record.status)} 
-            style={{ marginRight: 8 }}
-          >
-            {record.status ? 'Ẩn ' : 'Hiển thị '}
-          </Button>
-          <Button 
-            onClick={() => navigate(`/admin/banner/edit/${record._id}`)} 
-            style={{ marginRight: 8 }}
-          >
-            Sửa
-          </Button>
-          <Button 
-            onClick={() => deleteBanner(record._id)} 
-            danger>
-            Xoá
-          </Button>
-        </span>
+      key: 'actions',
+      render: (_: any, record: IBanner) => (
+        <div className="flex items-center gap-2">
+          <Tooltip title="Chỉnh sửa" color="blue">
+            <Button type="primary" onClick={() => navigate(`/admin/banner/edit/${record._id}`)}>
+              <EditOutlined />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Chi tiết">
+            <Button onClick={() => navigate(`/admin/banner/detail/${record._id}`)}>
+              <EyeOutlined />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Xoá" color="red">
+            <Popconfirm
+              title="Bạn chắc chắn muốn xóa chứ?"
+              onConfirm={() => deleteMutation.mutate(record._id)}
+              okText="Đồng ý"
+              cancelText="Hủy"
+            >
+              <Button danger loading={deleteMutation.isPending} disabled={deleteMutation.isPending}>
+                <DeleteOutlined />
+              </Button>
+            </Popconfirm>
+          </Tooltip>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="container mt-10">
-      <h2 className="text-2xl font-bold ">Danh sách Banner</h2>
-       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-       <Input.Search
-        placeholder=""
-        className="mb-4"
-         style={{ width: 300 }} 
-        onChange={(e) => setSearchText(e.target.value)}
-        allowClear
-      />
+    <div className="p-5 font-sans text-base text-gray-700">
+      <h2 className="text-2xl font-bold mb-4">Danh sách Banner</h2>
+
+      <div className="flex justify-end items-center gap-2 mb-4">
+        <Input.Search
+          placeholder="Tìm theo tên..."
+          allowClear
+          style={{ width: 300 }}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
       </div>
+
       <Table
         columns={columns}
-        dataSource={search}
+        dataSource={filteredData}
+        loading={isLoading}
         rowKey="_id"
         pagination={{
-        pageSize: 10, 
-        showSizeChanger: false,
-        pageSizeOptions: ['10', '20', '30'],
-      }}
+          pageSize: 5,
+          showSizeChanger: false,
+          showTotal: (total) => `Tổng ${total} banner`,
+        }}
+        locale={{ emptyText: 'Chưa có banner nào' }}
       />
     </div>
   );

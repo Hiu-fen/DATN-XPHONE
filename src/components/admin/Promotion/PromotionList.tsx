@@ -3,7 +3,7 @@ import { Button, message, Popconfirm, Switch, Table } from "antd";
 import { Promotion } from "../../../interface/promotion";
 import { DeleteOutlined, EditOutlined, EyeOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import { deletePromotion, getAllPromotions, updatePromotionStatus } from "../../../api/promotionApi";
+import { deletePromotion, getAllPromotions, updatePromotionStatus } from "../../../api/admin/promotionApi";
 
 const GetPromotion = () => {
   const navigate = useNavigate();

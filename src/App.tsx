@@ -28,7 +28,7 @@ import ContactList from './components/admin/Contact/ContactList';
 import BannerAdd from './components/admin/Banner/BannerAdd';
 import BannerList from './components/admin/Banner/BannerList';
 import BannerEdit from './components/admin/Banner/BannerEdit';
-
+import BannerDetail from './components/admin/Banner/BannerDetail';
 
 import PrivateRouteAdmin from "./components/PrivateRouteAdmin";
 import LoginAdmin from "./components/admin/User/Login";
@@ -78,6 +78,7 @@ import NewsClient from './components/client/page/news';
 import NewsDetail from './components/client/page/NewsDetail';
 import Notification from './components/client/page/Notification';
 import Wishlist from './components/client/page/Wishlist';
+
 
 
 const App = () => {
@@ -171,7 +172,7 @@ const App = () => {
         { path: "banner/add", element: <BannerAdd /> },
         { path: "banner/list", element: <BannerList /> },
         { path: "banner/edit/:id", element: <BannerEdit /> },
-
+        { path: "banner/detail/:id", element: <BannerDetail /> },
 
         // Router quản lý Color
 
