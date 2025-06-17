@@ -3,17 +3,12 @@ export interface IProduct {
   name: string;
   image: string;
   albumImages: string[];
-
   price: number;      
-
-  // price: string;       // bạn vẫn giữ nếu cần
-
   soluong: number;
   mota?: string;
   danhmuc: string;
   trangthai: string;
   status: boolean;
-
   // Thêm mảng variants
   variants?: {
     color: string;
@@ -21,4 +16,6 @@ export interface IProduct {
     price: number;
     soluong: number;
   }[];
+  createdAt?: string; 
+  updatedAt?: string; 
 }

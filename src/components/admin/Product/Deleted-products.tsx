@@ -1,47 +1,33 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import {
-  Button,
-  Input,
-  message,
-  Modal,
-  Popconfirm,
-  Space,
-  Table,
-  Tooltip,
-} from "antd";
+import { Button, Input, message, Space, Table, Tooltip, Popconfirm } from "antd";
 import axios from "axios";
 import { IProduct } from "../../../interface/product";
-import { useNavigate, useLocation } from "react-router-dom";
-import {
-  DeleteOutlined,
-  EditOutlined,
-  EyeOutlined,
-} from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { EyeOutlined, RollbackOutlined } from "@ant-design/icons";
 
 interface ICategory {
   _id: string;
   name: string;
 }
 
-const GetList: React.FC = () => {
+const Deleted_products: React.FC = () => {
   const [searchText, setSearchText] = useState("");
-  const [inOrderMap, setInOrderMap] = useState<{ [key: string]: boolean }>({});
-
   const nav = useNavigate();
-  const location = useLocation();
 
+  // Lấy danh sách sản phẩm đã xóa
   const {
     data: products,
     isLoading: loadingProducts,
     error: errorProducts,
     refetch,
   } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["deletedProducts"],
     queryFn: async () =>
-      (await axios.get("http://localhost:5000/api/products")).data as IProduct[],
+      (await axios.get("http://localhost:5000/api/products/deleted")).data as IProduct[],
   });
 
+  // Lấy danh mục
   const {
     data: categories,
     isLoading: loadingCategories,
@@ -52,50 +38,42 @@ const GetList: React.FC = () => {
       (await axios.get("http://localhost:5000/api/category")).data as ICategory[],
   });
 
-  useEffect(() => {
-    if (location.state?.forceReload) {
-      refetch();
-    }
-  }, [location.state?.forceReload, refetch]);
-
-  // Mutation xóa mềm
-  const mutation = useMutation({
-    mutationFn: async (id: string) =>
-      await axios.delete(`http://localhost:5000/api/products/${id}`),
+  // Mutation khôi phục sản phẩm (cập nhật status: true)
+  const restoreMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.put(`http://localhost:5000/api/products/${id}`, {
+        status: true,
+      });
+    },
     onSuccess: () => {
-      message.success("Xóa thành công");
+      message.success("Khôi phục thành công");
       refetch();
     },
     onError: () => {
-      message.error("Xóa thất bại");
+      message.error("Khôi phục thất bại");
     },
   });
 
-  // Kiểm tra sản phẩm có nằm trong đơn hàng không
-  const checkInOrder = async (id: string) => {
-    if (inOrderMap[id] !== undefined) return;
-
-    try {
-      const { data } = await axios.get(
-        `http://localhost:5000/api/products/${id}/check-in-order`
-      );
-      setInOrderMap((prev) => ({ ...prev, [id]: data.inOrder }));
-    } catch {
-      message.error("Không thể kiểm tra đơn hàng.");
-    }
+  const handleRestore = (id: string) => {
+    restoreMutation.mutate(id);
   };
 
-  const search = products
-    ?.slice()
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt ?? "").getTime() -
-        new Date(a.createdAt ?? "").getTime()
-    )
-    .filter((p) => {
-      const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${p.danhmuc}`.toLowerCase();
-      return text.includes(searchText.toLowerCase());
-    });
+  // Lọc status === false
+ // Lọc và sắp xếp sản phẩm đã xóa theo thời gian mới nhất
+const deletedProducts = products
+  ?.filter((p) => p.status === false)
+  .sort(
+    (a, b) =>
+      new Date(b.createdAt ?? "").getTime() -
+      new Date(a.createdAt ?? "").getTime()
+  );
+
+// Tìm kiếm trong danh sách đã sắp xếp
+const filtered = deletedProducts?.filter((p) => {
+  const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${p.danhmuc}`.toLowerCase();
+  return text.includes(searchText.toLowerCase());
+});
+
 
   const columns = [
     {
@@ -180,33 +158,18 @@ const GetList: React.FC = () => {
       key: "actions",
       render: (_: any, record: IProduct) => (
         <Space>
-          <Button
-            type="default"
-            onClick={() => nav(`/admin/phone/${record._id}`)}
-          >
+          <Button type="default" onClick={() => nav(`/admin/phone/${record._id}`)}>
             <EyeOutlined />
           </Button>
-
-          <Button
-            type="primary"
-            onClick={() => nav(`/admin/phone/${record._id}/edit`)}
-          >
-            <EditOutlined />
-          </Button>
-
           <Popconfirm
-            title={
-              inOrderMap[record._id!]
-                ? "Sản phẩm đang nằm trong đơn hàng. Bạn có chắc chắn muốn xóa không?"
-                : "Bạn có chắc chắn muốn xóa sản phẩm này không?"
-            }
-            onConfirm={() => record._id && mutation.mutate(record._id!)}
-            okText="Xóa"
+            title="Khôi phục sản phẩm"
+            description="Bạn có chắc muốn khôi phục sản phẩm này?"
+            onConfirm={() => handleRestore(record._id!)}
+            okText="Đồng ý"
             cancelText="Hủy"
-            onOpenChange={() => checkInOrder(record._id!)}
           >
-            <Button danger>
-              <DeleteOutlined />
+            <Button type="primary" icon={<RollbackOutlined />}>
+              Khôi phục
             </Button>
           </Popconfirm>
         </Space>
@@ -219,22 +182,14 @@ const GetList: React.FC = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold">Danh sách sản phẩm</h2>
+      <h2 className="text-2xl font-bold mb-4">Danh sách sản phẩm đã xóa (Ngừng bán)</h2>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 8,
-          marginBottom: 16,
-        }}
-      >
-        <Button type="primary" onClick={() => nav("/admin/phone/deleted-products")}>
-          Sản phẩm xóa gần đây
-        </Button>
-
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
+        <Button type="primary" onClick={() => nav("/admin/phone/list")}>
+                  Quay lại
+                </Button>
         <Input.Search
-          placeholder="Tìm kiếm sản phẩm..."
+          placeholder="Tìm kiếm sản phẩm đã xóa..."
           style={{ width: 300 }}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
@@ -242,17 +197,16 @@ const GetList: React.FC = () => {
       </div>
 
       <Table
-        dataSource={search || []}
+        dataSource={filtered || []}
         columns={columns}
         rowKey="_id"
         pagination={{
           pageSize: 10,
           showSizeChanger: false,
-          pageSizeOptions: ["5", "10", "20"],
         }}
       />
     </div>
   );
 };
 
-export default GetList;
+export default Deleted_products;
