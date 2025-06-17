@@ -6,8 +6,6 @@ router.get('/', productController.getAllProducts);
 // Tìm kiếm sản phẩm theo từ khóa
 router.get('/search/keyword', productController.searchProducts);
 
-
-
 // Lấy tất cả sản phẩm đã xóa
 router.get('/deleted', productController.getAllDeleteProducts);
 router.get('/:id', productController.getProductById);
