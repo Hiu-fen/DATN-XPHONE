@@ -177,7 +177,7 @@ const Checkout = () => {
         message.info("Bạn sẽ thanh toán khi nhận hàng.");
       }
 
-      // Trừ số lượng sản phẩm trong kho
+     
       for (const item of cart) {
         await axios.patch(
           `http://localhost:5000/api/products/${item.productId}/update-quantity`,

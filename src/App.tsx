@@ -79,6 +79,9 @@ import NewsDetail from './components/client/page/NewsDetail';
 import Notification from './components/client/page/Notification';
 import Wishlist from './components/client/page/Wishlist';
 import Deleted_products from './components/admin/Product/Deleted-products';
+import PurchaseHistory from './components/client/page/history';
+import OrderHistory from './components/client/page/history';
+import OrderDetailClient from './components/client/page/orderDetailClient';
 
 
 
@@ -100,6 +103,9 @@ const App = () => {
         { path: "categorys", element: <Categorys /> },
         { path: "news", element: <NewsClient /> },
         { path: "news/:id", element: <NewsDetail /> },
+        { path: 'history', element: <OrderHistory /> },
+        { path: "history/:id", element: <OrderDetailClient /> },
+
         { path: "*", element: <NotFound /> },
         {
           path: "accounts",
