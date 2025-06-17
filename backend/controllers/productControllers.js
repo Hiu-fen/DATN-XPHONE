@@ -9,6 +9,14 @@ exports.getAllProducts = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi lấy sản phẩm' });
   }
 };
+exports.getAllDeleteProducts = async (req, res) => {
+  try {
+    const products = await Product.find({ status: false }); // chỉ lấy sản phẩm không còn bán
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy sản phẩm' });
+  }
+};
 
 exports.createProduct = async (req, res) => {
   try {
@@ -134,48 +142,54 @@ exports.updateProduct = async (req, res) => {
 };
 
 
-// Xóa sản phẩm theo id
+
 // exports.deleteProduct = async (req, res) => {
 //   try {
 //     const { id } = req.params;
 
-//     const deletedProduct = await Product.findByIdAndDelete(id);
+//     // Kiểm tra sản phẩm có trong đơn hàng đang xử lý
+//     const orders = await Order.find({
+//       'items.productId': id,
+//       status: { $nin: ['Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'] },
+//     });
+
+//     if (orders.length > 0) {
+//       return res.status(400).json({ message: 'Không thể xóa sản phẩm vì đang liên kết với đơn hàng hiện tại' });
+//     }
+//     const deletedProduct = await Product.findByIdAndUpdate(
+//   id,
+//   { status: false },
+//   { new: true }
+// );
 
 //     if (!deletedProduct) {
 //       return res.status(404).json({ message: 'Không tìm thấy sản phẩm để xóa' });
 //     }
 
-//     res.json({ message: 'Xóa sản phẩm thành công' });
+//     res.json({ message: 'Xóa mềm thành công (status = false)' });
 //   } catch (error) {
 //     res.status(500).json({ message: 'Lỗi khi xóa sản phẩm' });
 //   }
 // };
+
+
 exports.deleteProduct = async (req, res) => {
   try {
-    const { id } = req.params;
+    // Cho phép xóa mềm không kiểm tra đơn hàng
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { status: false },
+      { new: true }
+    );
 
-    // Kiểm tra sản phẩm có trong đơn hàng đang xử lý
-    const orders = await Order.find({
-      'items.productId': id,
-      status: { $nin: ['Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'] },
-    });
-
-    if (orders.length > 0) {
-      return res.status(400).json({ message: 'Không thể xóa sản phẩm vì đang liên kết với đơn hàng hiện tại' });
-    }
-    const deletedProduct = await Product.findByIdAndUpdate(
-  id,
-  { status: false },
-  { new: true }
-);
-
-    if (!deletedProduct) {
-      return res.status(404).json({ message: 'Không tìm thấy sản phẩm để xóa' });
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
     }
 
-    res.json({ message: 'Xóa mềm thành công (status = false)' });
+    res.json({ message: "Xóa mềm thành công", product });
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi xóa sản phẩm' });
+    console.error("Lỗi khi xóa mềm:", error);
+    res.status(500).json({ message: "Xóa thất bại", error });
   }
 };
 
@@ -212,3 +226,12 @@ exports.updateProductQuantity = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi cập nhật số lượng sản phẩm' });
   }
 };
+exports.checkProductInOrder = async (req, res) => {
+  try {
+    const found = await Order.findOne({ "items.productId": req.params.id });
+    res.json({ inOrder: !!found }); // trả về true/false
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi kiểm tra đơn hàng" });
+  }
+};
+

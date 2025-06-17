@@ -78,6 +78,7 @@ import NewsClient from './components/client/page/news';
 import NewsDetail from './components/client/page/NewsDetail';
 import Notification from './components/client/page/Notification';
 import Wishlist from './components/client/page/Wishlist';
+import Deleted_products from './components/admin/Product/Deleted-products';
 
 
 
@@ -142,6 +143,7 @@ const App = () => {
         { path: "phone/add", element: <PostAdd /> },
         { path: "phone/:id", element: <ProductDetail /> },
         { path: "phone/:id/edit", element: <PutEdit /> },
+        { path: "phone/deleted-products", element: <Deleted_products /> },
 
         //Router Đăng ký, Đăng nhập
         { path: "comment/list", element: <CommentAdmin /> },
