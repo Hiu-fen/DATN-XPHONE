@@ -67,7 +67,7 @@ const Wishlist = () => {
                 <p className="text-red-600 font-medium mb-2">
                   Giá: {item.price.toLocaleString('vi-VN')}₫
                 </p>
-                <Tag color="blue" className="mb-1">{item.danhmuc}</Tag>
+                {/* <Tag color="blue" className="mb-1">{item.danhmuc}</Tag> */}
                 <p className="text-sm text-gray-500">Còn lại: {item.soluong} sản phẩm</p>
                 <div className="mt-2">
                   <Rate disabled allowHalf value={item.rating || 4} />
