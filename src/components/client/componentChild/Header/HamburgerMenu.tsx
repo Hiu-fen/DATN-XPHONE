@@ -35,9 +35,9 @@ const HamburgerMenu = ({ userId }: { userId?: string }) => {
       {
         key: 'history',
         label: (
-          <Link to="#" className="flex items-center gap-2">
-            <FaHistory  /> <span>Lịch sử mua hàng</span>
-          </Link>
+         <Link to="/history" className="flex items-center gap-2">
+          <FaHistory /> <span>Lịch sử mua hàng</span>
+        </Link>
         ),
       },
     ],
