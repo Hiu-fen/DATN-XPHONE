@@ -1,10 +1,20 @@
 import React, { useState } from "react";
+import {
+  Button,
+  Input,
+  message,
+  Space,
+  Table,
+  Tooltip,
+  Popconfirm,
+  Select,
+} from "antd";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button, Input, message, Space, Table, Tooltip, Popconfirm } from "antd";
 import axios from "axios";
 import { IProduct } from "../../../interface/product";
 import { useNavigate } from "react-router-dom";
 import { EyeOutlined, RollbackOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 
 interface ICategory {
   _id: string;
@@ -13,6 +23,7 @@ interface ICategory {
 
 const Deleted_products: React.FC = () => {
   const [searchText, setSearchText] = useState("");
+  const [filterTime, setFilterTime] = useState("all");
   const nav = useNavigate();
 
   // Lấy danh sách sản phẩm đã xóa
@@ -38,13 +49,12 @@ const Deleted_products: React.FC = () => {
       (await axios.get("http://localhost:5000/api/category")).data as ICategory[],
   });
 
-  // Mutation khôi phục sản phẩm (cập nhật status: true)
+  // Mutation khôi phục sản phẩm
   const restoreMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (id: string) =>
       await axios.put(`http://localhost:5000/api/products/${id}`, {
         status: true,
-      });
-    },
+      }),
     onSuccess: () => {
       message.success("Khôi phục thành công");
       refetch();
@@ -58,22 +68,38 @@ const Deleted_products: React.FC = () => {
     restoreMutation.mutate(id);
   };
 
-  // Lọc status === false
- // Lọc và sắp xếp sản phẩm đã xóa theo thời gian mới nhất
-const deletedProducts = products
-  ?.filter((p) => p.status === false)
-  .sort(
-    (a, b) =>
-      new Date(b.createdAt ?? "").getTime() -
-      new Date(a.createdAt ?? "").getTime()
-  );
+  // Lọc sản phẩm đã xóa và theo thời gian
+  const deletedProducts = products
+    ?.filter((p) => p.status === false)
+    .filter((p) => {
+      if (!p.createdAt) return false;
 
-// Tìm kiếm trong danh sách đã sắp xếp
-const filtered = deletedProducts?.filter((p) => {
-  const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${p.danhmuc}`.toLowerCase();
-  return text.includes(searchText.toLowerCase());
-});
+      const created = dayjs(p.createdAt);
+      const now = dayjs();
 
+      switch (filterTime) {
+        case "today":
+          return created.isSame(now, "day");
+        case "7days":
+          return created.isAfter(now.subtract(7, "day"));
+        case "30days":
+          return created.isAfter(now.subtract(30, "day"));
+        case "all":
+        default:
+          return true;
+      }
+    })
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt ?? "").getTime() -
+        new Date(a.createdAt ?? "").getTime()
+    );
+
+  // Tìm kiếm
+  const filtered = deletedProducts?.filter((p) => {
+    const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${p.danhmuc}`.toLowerCase();
+    return text.includes(searchText.toLowerCase());
+  });
 
   const columns = [
     {
@@ -184,10 +210,25 @@ const filtered = deletedProducts?.filter((p) => {
     <div>
       <h2 className="text-2xl font-bold mb-4">Danh sách sản phẩm đã xóa (Ngừng bán)</h2>
 
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 16 }}>
-        <Button type="primary" onClick={() => nav("/admin/phone/list")}>
-                  Quay lại
-                </Button>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+        <Space>
+          <Button type="primary" onClick={() => nav("/admin/phone/list")}>
+            Quay lại
+          </Button>
+
+          <Select
+            defaultValue="all"
+            style={{ width: 200 }}
+            onChange={setFilterTime}
+            options={[
+              { label: "Tất cả", value: "all" },
+              { label: "Hôm nay", value: "today" },
+              { label: "7 ngày trước", value: "7days" },
+              { label: "30 ngày trước", value: "30days" },
+            ]}
+          />
+        </Space>
+
         <Input.Search
           placeholder="Tìm kiếm sản phẩm đã xóa..."
           style={{ width: 300 }}
