@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FaEye, FaHeart } from "react-icons/fa";
-import { Spin } from "antd";
+import { Spin, message } from "antd";
 import { IProduct } from "../../../../interface/product";
 import { Link } from "react-router-dom";
 import SkeletonCard from "./SkeletonCard";
+import axios from "axios";
 
 type Props = {
   products: IProduct[];
@@ -20,22 +21,63 @@ const SamSung: React.FC<Props> = ({
   onToggleShowAll,
   totalProducts,
 }) => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const userId: string | undefined = user._id;
+  const [likedProducts, setLikedProducts] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchLikedProducts = async () => {
+      if (!userId) return;
+
+      try {
+        const { data } = await axios.get(`http://localhost:5000/api/users/${userId}`);
+        setLikedProducts(data.like || []);
+      } catch (error) {
+        console.error("Không thể lấy danh sách like.");
+      }
+    };
+
+    fetchLikedProducts();
+  }, [userId]);
+
+  const handleLike = async (productId: string) => {
+    if (!userId) {
+      message.warning("Bạn cần đăng nhập để thích sản phẩm.");
+      return;
+    }
+
+    try {
+      const { data } = await axios.patch(
+        `http://localhost:5000/api/users/${userId}/like`,
+        { productId }
+      );
+
+      setLikedProducts(data.likeList);
+      if (data.likeList.includes(productId)) {
+        message.success("Đã thêm vào yêu thích");
+      } else {
+        message.success("Đã bỏ yêu thích");
+      }
+    } catch (error) {
+      message.error("Không thể cập nhật yêu thích.");
+    }
+  };
 
   return (
     <div className="mx-20 py-4">
       <h3 className="text-center text-3xl font-semibold mb-2">SamSung</h3>
 
       <Spin spinning={isLoading} size="large" tip="Đang tải sản phẩm...">
-        {!isLoading && products.length === 0 && (
+        {!isLoading && products.length === 0 ? (
           <p className="text-center text-gray-500 text-lg py-20">
             Không có sản phẩm nào để hiển thị.
           </p>
-        )}
-
-        <div>
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 p-4">
             {isLoading && products.length === 0
-              ? Array.from({ length: 4 }).map((_, idx) => <SkeletonCard key={idx} />)
+              ? Array.from({ length: 4 }).map((_, idx) => (
+                  <SkeletonCard key={idx} />
+                ))
               : products.map((product) => (
                   <div
                     key={product._id}
@@ -54,7 +96,14 @@ const SamSung: React.FC<Props> = ({
                         >
                           <FaEye size={16} />
                         </Link>
-                        <button className="w-8 h-8 flex items-center justify-center border rounded-full hover:bg-black hover:text-white transition">
+                        <button
+                          onClick={() => handleLike(product._id!)}
+                          className={`w-8 h-8 flex items-center justify-center border rounded-full transition ${
+                            likedProducts.includes(product._id!)
+                              ? "bg-red-200 text-red-600 border-red-400"
+                              : "hover:bg-black hover:text-white"
+                          }`}
+                        >
                           <FaHeart size={16} />
                         </button>
                       </div>
@@ -62,9 +111,12 @@ const SamSung: React.FC<Props> = ({
 
                     <div className="mt-2">
                       <h3 className="font-semibold text-lg">{product.name}</h3>
-                      <p className="text-sm text-gray-500 line-clamp-2">{product.mota}</p>
+                      <p className="text-sm text-gray-500 line-clamp-2">
+                        {product.mota}
+                      </p>
                       <p className="text-red-500 font-bold text-base mt-1">
-                        Giá từ: {product.variants?.[0]?.price?.toLocaleString()}₫
+                        Giá từ:{" "}
+                        {product.variants?.[0]?.price?.toLocaleString()}₫
                       </p>
                       {product.variants && product.variants.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
@@ -82,7 +134,7 @@ const SamSung: React.FC<Props> = ({
                   </div>
                 ))}
           </div>
-        </div>
+        )}
 
         {totalProducts > 8 && (
           <div className="flex justify-center mt-6">
