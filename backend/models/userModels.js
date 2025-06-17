@@ -13,6 +13,10 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'user'], default: 'user' },
   notification: { type: String },
   provider: { type: String, default: 'google' },
+  like: {
+  type: [String],
+  default: [],
+},
 }, {
   timestamps: true,
 });

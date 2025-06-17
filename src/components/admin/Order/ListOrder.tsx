@@ -185,11 +185,12 @@ const OrderList = () => {
     returnMutation.mutate({ id, returnStatus });
   };
 
-  const filteredOrders = orders?.filter((o) => {
-    const text =
-      `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
+ const filteredOrders = orders
+  ?.filter((o) => {
+    const text = `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
-  });
+  })
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sắp xếp mới nhất lên đầu
 
   const columns = [
     {

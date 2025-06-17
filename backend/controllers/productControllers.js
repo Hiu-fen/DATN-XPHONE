@@ -226,6 +226,25 @@ exports.updateProductQuantity = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi cập nhật số lượng sản phẩm' });
   }
 };
+
+// Tìm kiếm sản phẩm theo từ khoá (query string: ?keyword=...)
+exports.searchProducts = async (req, res) => {
+  try {
+    const keyword = req.query.keyword || "";
+    
+    // Tìm kiếm trong tên sản phẩm (không phân biệt hoa thường) và sản phẩm còn hoạt động
+    const products = await Product.find({
+      name: { $regex: keyword, $options: "i" },
+      status: true,
+    });
+
+    res.json(products);
+  } catch (error) {
+    console.error("❌ Lỗi khi tìm kiếm sản phẩm:", error);
+    res.status(500).json({ message: "Lỗi server khi tìm kiếm sản phẩm" });
+  }
+};
+
 exports.checkProductInOrder = async (req, res) => {
   try {
     const found = await Order.findOne({ "items.productId": req.params.id });
@@ -234,4 +253,3 @@ exports.checkProductInOrder = async (req, res) => {
     res.status(500).json({ message: "Lỗi kiểm tra đơn hàng" });
   }
 };
-
