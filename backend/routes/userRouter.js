@@ -1,51 +1,46 @@
 const express = require('express');
 const router = express.Router();
-// <<<<<<< Updated upstream
-const { register, login, listAdmins, listClients,getProfile,  updateUserStatus, updateProfile,registerWithGoogle,loginWithGoogle } = require('../controllers/userControllers');
-// =======
-const User = require('../models/userModels'); // Đường dẫn đúng
+const {
+  register,
+  login,
+  listAdmins,
+  listClients,
+  getProfile,
+  updateUserStatus,
+  updateProfile,
+  registerWithGoogle,
+  loginWithGoogle,
+  User_likeProduct, // like handler bạn đã định nghĩa
+  userController_getLikedProducts,
+} = require('../controllers/userControllers');
 
-// const {
-//   register,
-//   login,
-//   listAdmins,
-//   listClients,
-//   getProfile,
-//   updateUserStatus,
-//   updateProfile,
-// } = require('../controllers/userControllers');
+const User = require('../models/userModels');
 
-
+// Auth + profile
 router.post('/register', register);
 router.post('/login', login);
+router.post('/google-register', registerWithGoogle);
+router.post('/google-login', loginWithGoogle);
+
 router.get('/admins', listAdmins);
 router.get('/clients', listClients);
-router.post('/google-register', registerWithGoogle);
-
-// Route đăng nhập Google
-router.post('/google-login', loginWithGoogle);;
-
-// router.get('/profile/:id', getProfile);
-router.patch('/:id', updateUserStatus); 
-router.put('/profile/:id', updateProfile); 
-
 router.get('/profile/:id', getProfile);
+router.put('/profile/:id', updateProfile);
 router.patch('/:id', updateUserStatus);
 
+// ✅ Route like sản phẩm
+router.patch('/:id/like', User_likeProduct);
+router.get('/:id/liked-products', userController_getLikedProducts);
 
 
-// Route lấy user theo email
-router.get('/', async (req, res) => {  // <-- sửa thành '/'
+// ✅ Lấy user theo email
+router.get('/', async (req, res) => {
   try {
     const email = req.query.email;
-    if (!email) {
-      return res.status(400).json({ message: 'Thiếu email' });
-    }
+    if (!email) return res.status(400).json({ message: 'Thiếu email' });
 
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'Không tìm thấy user' });
-    }
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
 
     return res.json(user);
   } catch (error) {

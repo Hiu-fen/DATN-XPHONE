@@ -23,6 +23,7 @@ const productSchema = new mongoose.Schema({
       type: [variantSubSchema],
       default: [], // nếu không thêm biến thể thì là mảng rỗng
     },
+    
 }, {
   timestamps: true,
 });

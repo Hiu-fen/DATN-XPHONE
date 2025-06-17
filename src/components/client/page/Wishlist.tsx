@@ -1,40 +1,38 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { HeartFilled } from '@ant-design/icons'
-import { Card, Image, Tag, Rate } from 'antd'
+import { Card, Image, Tag, Rate, Spin, message } from 'antd'
+import axios from 'axios'
+import { IProduct } from '../../../interface/product'
+import { useNavigate } from 'react-router-dom'
 
 const Wishlist = () => {
-  const [wishlist, setWishlist] = useState([
-    {
-      id: 1,
-      image: 'https://via.placeholder.com/150',
-      name: 'Áo thun nam cotton',
-      price: 199000,
-      category: 'Thời trang nam',
-      quantity: 20,
-      sold: 150,
-      rating: 4.5,
-    },
-    {
-      id: 2,
-      image: 'https://via.placeholder.com/150',
-      name: 'Giày thể thao nữ',
-      price: 499000,
-      category: 'Thời trang nữ',
-      quantity: 12,
-      sold: 230,
-      rating: 4,
-    },
-    {
-      id: 3,
-      image: 'https://via.placeholder.com/150',
-      name: 'Tai nghe Bluetooth',
-      price: 299000,
-      category: 'Phụ kiện công nghệ',
-      quantity: 8,
-      sold: 90,
-      rating: 3.5,
-    },
-  ])
+  const [wishlist, setWishlist] = useState<IProduct[]>([])
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}")
+  const userId: string | undefined = user._id
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      if (!userId) {
+        message.warning("Bạn chưa đăng nhập!")
+        setLoading(false)
+        return
+      }
+
+      try {
+        const res = await axios.get(`http://localhost:5000/api/users/${userId}/liked-products`)
+        setWishlist(res.data)
+      } catch (err) {
+        message.error("Không thể lấy danh sách yêu thích.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchWishlist()
+  }, [userId])
 
   return (
     <div className="p-8 max-w-7xl mx-auto font-sans">
@@ -42,41 +40,43 @@ const Wishlist = () => {
         <HeartFilled className="text-red-500" /> Danh sách yêu thích
       </h1>
 
-      {wishlist.length === 0 ? (
-        <p className="text-center text-gray-500 text-lg">
-          Bạn chưa có sản phẩm yêu thích nào.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {wishlist.map((item) => (
-            <Card
-              key={item.id}
-              hoverable
-              className="rounded-xl shadow-md"
-              cover={
-                <Image
-                  alt={item.name}
-                  src={item.image}
-                  height={200}
-                  style={{ objectFit: 'cover', borderRadius: '0.5rem 0.5rem 0 0' }}
-                  preview={false}
-                />
-              }
-            >
-              <h2 className="text-lg font-semibold mb-1">{item.name}</h2>
-              <p className="text-red-600 font-medium mb-2">
-                Giá: {item.price.toLocaleString('vi-VN')}₫
-              </p>
-              <Tag color="blue" className="mb-1">{item.category}</Tag>
-              <p className="text-sm text-gray-500">Còn lại: {item.quantity} sản phẩm</p>
-              <p className="text-sm text-gray-500">Đã bán: {item.sold}</p>
-              <div className="mt-2">
-                <Rate disabled allowHalf value={item.rating} />
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
+      <Spin spinning={loading}>
+        {wishlist.length === 0 ? (
+          <p className="text-center text-gray-500 text-lg">
+            Bạn chưa có sản phẩm yêu thích nào.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {wishlist.map((item) => (
+              <Card
+                key={item._id}
+                hoverable
+                className="rounded-xl shadow-md cursor-pointer"
+                onClick={() => navigate(`/detail/${item._id}`)}
+                cover={
+                  <Image
+                    alt={item.name}
+                    src={item.image}
+                    height={200}
+                    style={{ objectFit: 'cover', borderRadius: '0.5rem 0.5rem 0 0' }}
+                    preview={false}
+                  />
+                }
+              >
+                <h2 className="text-lg font-semibold mb-1">{item.name}</h2>
+                <p className="text-red-600 font-medium mb-2">
+                  Giá: {item.price.toLocaleString('vi-VN')}₫
+                </p>
+                <Tag color="blue" className="mb-1">{item.danhmuc}</Tag>
+                <p className="text-sm text-gray-500">Còn lại: {item.soluong} sản phẩm</p>
+                <div className="mt-2">
+                  <Rate disabled allowHalf value={item.rating || 4} />
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </Spin>
     </div>
   )
 }
