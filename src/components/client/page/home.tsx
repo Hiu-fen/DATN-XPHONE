@@ -1,7 +1,6 @@
 import BannerClient from "../componentChild/Home/banner"
 import HotSaleSection from "../componentChild/Home/hotSale";
 import ProductCategory from "../componentChild/Home/CategoryProduct";
-import ButtonFilter from "../componentChild/Home/ButtonFilter";
 import SmallBanner from "../componentChild/Home/SmallBanner";
 import ProductInfo from "../componentChild/Home/ProductInfo";
 import NewsletterForm from "../componentChild/Home/NewsletterForm";
@@ -12,7 +11,6 @@ import { useEffect, useState } from "react";
 import AppleWatch from "../componentChild/Home/ApwProduct ";
 import IphoneProducts from "../componentChild/Home/iPhoneProduct";
 import SamSung from "../componentChild/Home/SamSungProducts";
-import News from "../componentChild/Home/news";
 
 const Home = () => {
   // Sử dụng useQuery để lấy danh sách sản phẩm
@@ -127,12 +125,6 @@ const Home = () => {
           onToggleShowAll={handleLoadMoreSamSung}
           totalProducts={SamSungProducts.length}
         />
-
-        {/* Tin tức */}
-        <News />
-
-        {/* Các chính sách */}
-        <ButtonFilter />
 
         {/* Form đăng ký nhận tin */}
         <NewsletterForm />
