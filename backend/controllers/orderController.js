@@ -278,3 +278,13 @@ exports.markAsPaid = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi cập nhật thanh toán" });
   }
 };
+
+exports.getOrdersByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const orders = await Order.find({ userId }).sort({ date: -1 });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi server khi lấy lịch sử đơn hàng' });
+  }
+};
