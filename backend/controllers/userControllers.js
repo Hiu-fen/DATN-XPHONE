@@ -175,3 +175,35 @@ exports.loginWithGoogle = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+// controllers/productController.js
+exports.User_likeProduct = async (req, res) => {
+  const { productId } = req.body;
+  const user = await User.findById(req.params.id);
+
+  if (!user) return res.status(404).json({ message: "Không tìm thấy user" });
+
+  const hasLiked = user.like.includes(productId);
+
+  user.like = hasLiked
+    ? user.like.filter((id) => id !== productId)
+    : [...user.like, productId];
+
+  await user.save();
+  res.json({ liked: !hasLiked, likeList: user.like });
+};
+// const User = require('../models/userModels');
+const Product = require('../models/productModels');
+exports.userController_getLikedProducts = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user || !user.like) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng hoặc danh sách yêu thích" });
+    }
+
+    const likedProducts = await Product.find({ _id: { $in: user.like } });
+    return res.json(likedProducts);
+  } catch (err) {
+    console.error("Lỗi khi lấy danh sách sản phẩm yêu thích:", err);
+    return res.status(500).json({ message: "Lỗi máy chủ" });
+  }
+};
