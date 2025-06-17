@@ -4,6 +4,7 @@ import MenuNgangHeader from "./componentChild/Header/MenuNgang";
 import SearchClient from "./componentChild/Header/SearchClient";
 import UserMenu from "./componentChild/Header/UserMenu";
 import TenThuongHieu from "./componentChild/Home/BrandTitle";
+import PromoNotice from "./componentChild/Header/ThongBaoKhuyenMai";
 
 const ClientHeader = () => {
   return (
@@ -18,15 +19,21 @@ const ClientHeader = () => {
             </Link>
           </div>
 
-          {/* Search */}
-          <div className="flex-1 flex justify-center">
-            <SearchClient />
+          <div className="flex-1 flex justify-center items-center">
+            <PromoNotice />
           </div>
 
-          {/* Hamburger + User Menu */}
-          <div className="flex-1 flex justify-end items-center">
-            <UserMenu />
-            <HamburgerMenu />
+          {/* Hamburger + User Menu + Search */}
+          <div className="flex-1 flex justify-end items-center gap-1">
+            <div className="flex items-center justify-center">
+              <UserMenu />
+            </div>
+            <div className="flex items-center justify-center">
+              <SearchClient />
+            </div>
+            <div className="flex items-center justify-center">
+              <HamburgerMenu />
+            </div>
           </div>
         </div>
       </div>
