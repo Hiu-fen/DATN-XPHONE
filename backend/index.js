@@ -16,6 +16,7 @@ const cartRouter = require('./routes/cartRouter');
 const colorRouter = require('./routes/variant/colorRouter');
 const ramRouter   = require('./routes/variant/ramRouter');
 const newsRoutes = require('./routes/newsRoutes');
+const statisticsRouter = require('./routes/statisticsRouter');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -48,6 +49,7 @@ app.use('/api/carts', cartRouter);
 app.use('/api/colors', colorRouter);
 app.use('/api/rams',   ramRouter);
 app.use('/api/news', newsRoutes);
+app.use('/api/statistics', statisticsRouter);
 // app.use('/api/variants', variantRoutes); // Uncomment nếu bạn có route này
 
 // ✅ Cron job (nếu có file cron.js)
