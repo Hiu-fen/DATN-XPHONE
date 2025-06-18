@@ -1,7 +1,9 @@
 // import React from 'react';
 
+import DashboardStats from '../Statistics/DashboardStats';
+
 const AdminDashboard = () => {
-  return <div className="p-4 text-xl">Chào mừng đến trang quản trị!</div>;
+  return <DashboardStats />;
 };
 
 export default AdminDashboard;
