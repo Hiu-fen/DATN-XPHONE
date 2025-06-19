@@ -389,8 +389,8 @@ const Details = () => {
                     alt={`variant-${idx}`}
                     onClick={() => setMainImage(img)}
                     className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${mainImage === img
-                        ? "border-blue-600"
-                        : "border-gray-300 hover:border-gray-500"
+                      ? "border-blue-600"
+                      : "border-gray-300 hover:border-gray-500"
                       }`}
                   />
                 ))
@@ -415,9 +415,8 @@ const Details = () => {
               <span className="font-semibold">
                 {categoryNames?.join(", ") || "Không xác định"}
               </span>{" "}
-              | Trạng thái:{" "}
-              <span className="text-green-600 font-semibold">
-                {product.trangthai || "Không xác định"}
+              | Trạng thái: <span className={`font-semibold ${product.soluong > 0 ? "text-green-600" : "text-red-600"}`}>
+                {product.soluong > 0 ? "Còn hàng" : "Hết hàng"}
               </span>
             </p>
             <div className="flex items-center gap-1 mb-4">
@@ -439,9 +438,9 @@ const Details = () => {
                     <button
                       key={idx}
                       className={`px-4 py-2 border rounded-md font-semibold transition-all duration-200 ${selectedVariant?.color === variant.color &&
-                          selectedVariant?.ram === variant.ram
-                          ? "border-blue-600 bg-blue-50 text-blue-600"
-                          : "border-gray-300 hover:border-gray-500 text-gray-700"
+                        selectedVariant?.ram === variant.ram
+                        ? "border-blue-600 bg-blue-50 text-blue-600"
+                        : "border-gray-300 hover:border-gray-500 text-gray-700"
                         }`}
                       onClick={() =>
                         handleSelectVariant(variant.color, variant.ram)
@@ -769,7 +768,7 @@ const Details = () => {
           <RightOutlined className="text-3xl" />
         </button>
       </section>
-    </div>
+    </div >
   );
 };
 
