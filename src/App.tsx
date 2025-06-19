@@ -138,6 +138,9 @@ const App = () => {
       ),
       children: [
         { index: true, element: <AdminDashboard /> },
+        //Router Thống kê
+        { path: "statistics", element: <AdminDashboard /> },
+        
         //Router Danh mục
         { path: "category/list", element: <GetListCategory /> },
         { path: "category/add", element: <PostAddCategory /> },

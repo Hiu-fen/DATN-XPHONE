@@ -364,7 +364,7 @@ const Details = () => {
     },
     enabled: !!product?.danhmuc,
   });
-  
+
   if (!product)
     return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
 
@@ -388,11 +388,10 @@ const Details = () => {
                     src={img}
                     alt={`variant-${idx}`}
                     onClick={() => setMainImage(img)}
-                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${
-                      mainImage === img
+                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${mainImage === img
                         ? "border-blue-600"
                         : "border-gray-300 hover:border-gray-500"
-                    }`}
+                      }`}
                   />
                 ))
               ) : (
@@ -439,12 +438,11 @@ const Details = () => {
                   uniqueVariants.map((variant, idx) => (
                     <button
                       key={idx}
-                      className={`px-4 py-2 border rounded-md font-semibold transition-all duration-200 ${
-                        selectedVariant?.color === variant.color &&
-                        selectedVariant?.ram === variant.ram
+                      className={`px-4 py-2 border rounded-md font-semibold transition-all duration-200 ${selectedVariant?.color === variant.color &&
+                          selectedVariant?.ram === variant.ram
                           ? "border-blue-600 bg-blue-50 text-blue-600"
                           : "border-gray-300 hover:border-gray-500 text-gray-700"
-                      }`}
+                        }`}
                       onClick={() =>
                         handleSelectVariant(variant.color, variant.ram)
                       }
@@ -477,10 +475,10 @@ const Details = () => {
                   max={
                     selectedVariant
                       ? product?.variants?.find(
-                          (v) =>
-                            v.color === selectedVariant.color &&
-                            v.ram === selectedVariant.ram
-                        )?.soluong || 1
+                        (v) =>
+                          v.color === selectedVariant.color &&
+                          v.ram === selectedVariant.ram
+                      )?.soluong || 1
                       : product.soluong
                   }
                 />
@@ -495,10 +493,10 @@ const Details = () => {
                 Số lượng tồn kho:{" "}
                 {selectedVariant
                   ? product?.variants?.find(
-                      (v) =>
-                        v.color === selectedVariant.color &&
-                        v.ram === selectedVariant.ram
-                    )?.soluong || 0
+                    (v) =>
+                      v.color === selectedVariant.color &&
+                      v.ram === selectedVariant.ram
+                  )?.soluong || 0
                   : product.soluong}
               </p>
             </div>
