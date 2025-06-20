@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http');
+const { initSocket } = require('./socket');
 
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRouter');
@@ -17,6 +19,7 @@ const colorRouter = require('./routes/variant/colorRouter');
 const ramRouter   = require('./routes/variant/ramRouter');
 const newsRoutes = require('./routes/newsRoutes');
 const statisticsRouter = require('./routes/statisticsRouter');
+const notificationRoutes = require('./routes/notificationRouters');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,12 +53,16 @@ app.use('/api/colors', colorRouter);
 app.use('/api/rams',   ramRouter);
 app.use('/api/news', newsRoutes);
 app.use('/api/statistics', statisticsRouter);
+app.use('/api/notifications', notificationRoutes);
 // app.use('/api/variants', variantRoutes); // Uncomment nếu bạn có route này
 
 // ✅ Cron job (nếu có file cron.js)
 require('./cron');
 
+const server = http.createServer(app);
+initSocket(server);
+
 // ✅ Lắng nghe server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
 });

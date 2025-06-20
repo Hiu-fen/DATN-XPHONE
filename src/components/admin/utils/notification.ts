@@ -5,6 +5,17 @@ export interface NotificationItem {
   time: string;
 }
 
+// Kiểu dữ liệu trả về
+export interface ApiNotificationItem {
+  _id: string;
+  message: string;
+  userId?: string;
+  isRead: boolean;
+  createdAt: string;
+  updatedAt: string;
+  relatedId: string;
+}
+
 // Hàm thêm thông báo vào localStorage và tự động sắp xếp
 export const addNotification = (message: string) => {
   const notifications: NotificationItem[] = JSON.parse(localStorage.getItem("notifications") || "[]");
