@@ -2,9 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { message } from "antd";
 import { useUser } from "../context/UserContext";
-import axios from "axios";
+import { ICartItem } from "../../../interface/cart";
+import { IProduct } from "../../../interface/product";
+import axios, { AxiosError } from "axios";
 
 interface CartItem {
+  _id: string;
   productId: string;
   productName: string;
   price: number;
@@ -18,20 +21,56 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
+  const selectedItems = location.state?.selectedItems as ICartItem[] | undefined;
   const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const SHIPPING_FEE = 35000;
-    // Lấy giỏ hàng và sản phẩm từ server
-  useEffect(() => {
-    if (buyNowItem) {
-      setCart([buyNowItem]);
-      return;
-    }
 
-    if (user?._id) {
-      const fetchCartAndProducts = async () => {
-        try {
+  // Lấy giỏ hàng và sản phẩm từ server
+  useEffect(() => {
+    const fetchCartAndProducts = async () => {
+      try {
+        if (buyNowItem) {
+          setCart([buyNowItem]);
+          return;
+        }
+
+        if (selectedItems && selectedItems.length > 0) {
+          // Nếu có selectedItems, lấy thông tin sản phẩm từ API để bổ sung dữ liệu
+          const productsResponse = await axios.get("http://localhost:5000/api/products");
+          const productsData = productsResponse.data;
+
+          const enrichedCartItems = selectedItems.map((item: ICartItem) => {
+            const product = productsData.find((p: IProduct) => p._id === item.productId);
+            let price = item.price || (product ? product.price : 0);
+
+            if (product?.variants && item.color && item.storage) {
+              const variant = product.variants.find(
+                (v: { color: string; ram: string; price: number; soluong: number }) =>
+                  v.color === item.color && v.ram === item.storage
+              );
+              price = variant ? Number(variant.price) : price;
+            }
+
+            return {
+              _id: item._id,
+              productId: item.productId,
+              productName: product ? product.name : "Sản phẩm không tồn tại",
+              price,
+              soluong: item.quantity,
+              image: product?.image || "",
+              color: item.color || "",
+              storage: item.storage || "",
+            };
+          });
+
+          setCart(enrichedCartItems);
+          return;
+        }
+
+        // Trường hợp mặc định: lấy toàn bộ giỏ hàng nếu không có selectedItems
+        if (user?._id) {
           const [cartResponse, productsResponse] = await Promise.all([
             axios.get(`http://localhost:5000/api/carts/${user._id}`),
             axios.get("http://localhost:5000/api/products"),
@@ -40,39 +79,40 @@ const Checkout = () => {
           const cartItems = cartResponse.data.items || [];
           const productsData = productsResponse.data;
 
-          const enrichedCartItems = cartItems.map((item: any) => {
-            const product = productsData.find(
-              (p: any) => p._id === item.productId
-            );
+          const enrichedCartItems = cartItems.map((item: ICartItem) => {
+            const product = productsData.find((p: IProduct) => p._id === item.productId);
             let price = item.price || (product ? product.price : 0);
 
             if (product?.variants && item.color && item.storage) {
               const variant = product.variants.find(
-                (v: any) => v.color === item.color && v.ram === item.storage
+                (v: { color: string; ram: string; price: number; soluong: number }) =>
+                  v.color === item.color && v.ram === item.storage
               );
               price = variant ? Number(variant.price) : price;
             }
 
             return {
+              _id: item._id,
               productId: item.productId,
               productName: product ? product.name : "Sản phẩm không tồn tại",
               price,
               soluong: item.quantity,
-              image: product?.image,
+              image: product?.image || "",
               color: item.color || "",
               storage: item.storage || "",
             };
           });
 
           setCart(enrichedCartItems);
-        } catch (error) {
-          console.error("Lỗi khi lấy giỏ hàng từ server:", error);
-          message.error("Không thể tải giỏ hàng.");
         }
-      };
-      fetchCartAndProducts();
-    }
-  }, [user, buyNowItem]);
+      } catch (error) {
+        console.error("Lỗi khi lấy giỏ hàng từ server:", error);
+        message.error("Không thể tải giỏ hàng.");
+      }
+    };
+
+    fetchCartAndProducts();
+  }, [user, buyNowItem, selectedItems]);
 
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.soluong,
@@ -154,13 +194,9 @@ const Checkout = () => {
         return;
       }
 
-      await axios.post(
-        "http://localhost:5000/api/orders",
-        newOrder,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.post("http://localhost:5000/api/orders", newOrder, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (form.paymentMethod === "Momo") {
         message.info(
@@ -182,7 +218,20 @@ const Checkout = () => {
         );
       }
 
-      if (!buyNowItem) {
+      if (!buyNowItem && selectedItems) {
+        // Xóa các mục đã chọn khỏi giỏ hàng
+        const cartResponse = await axios.get(`http://localhost:5000/api/carts/${user._id}`);
+        const remainingItems = cartResponse.data.items.filter(
+          (item: ICartItem) => !cart.some((selected) => selected._id === item._id)
+        );
+        await axios.put(
+          `http://localhost:5000/api/carts/${user._id}`,
+          { items: remainingItems },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        localStorage.setItem("cartItems", JSON.stringify(remainingItems));
+      } else if (!buyNowItem) {
+        // Xóa toàn bộ giỏ hàng nếu không có selectedItems
         await axios.delete(`http://localhost:5000/api/carts/${user._id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -192,10 +241,11 @@ const Checkout = () => {
       message.success("Đặt hàng thành công!");
       setCart([]);
       navigate("/");
-    } catch (err: any) {
-      console.error("Lỗi khi đặt hàng:", err);
+    } catch (err: unknown) {
+      const error = err as AxiosError<{ message: string }>;
+      console.error("Lỗi khi đặt hàng:", error);
       message.error(
-        err.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
+        error.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
       );
     }
   };
@@ -330,14 +380,12 @@ const Checkout = () => {
                 className="flex items-center py-4"
               >
                 <img
-                  src={item.image}
+                  src={item.image || "/placeholder-image.png"}
                   alt={item.productName}
                   className="w-16 h-16 rounded-lg object-cover mr-4 border border-gray-300"
                 />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-800">
-                    {item.productName}
-                  </p>
+                  <p className="font-medium text-gray-800">{item.productName}</p>
                   <p className="text-sm text-gray-500">
                     Số lượng: {item.soluong}
                   </p>
