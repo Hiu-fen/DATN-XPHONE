@@ -2,8 +2,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message } from "antd";
-import { addNotification } from "../utils/notification";
 import { User } from "../../../interface/user";
+import { createNotification } from "../../../api/admin/notificationApi";
 
 const LoginAdmin = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<User>();
@@ -29,9 +29,13 @@ const LoginAdmin = () => {
       localStorage.setItem("admin", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
 
-      addNotification(`Tài khoản "${user.email}" đã đăng nhập vào hệ thống`);
-      message.success("Đăng nhập thành công");
+      await createNotification({
+        userId: user._id,
+        message: `Xin chào tài khoản "${user.email}" đã đăng nhập vào admin hệ thống`,
+        type: "info", 
+      });
 
+      message.success("Đăng nhập thành công");
       navigate("/admin/category/list");
     } catch (error: any) {
       message.error(error.response?.data?.message || "Đăng nhập thất bại");
