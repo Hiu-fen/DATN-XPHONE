@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { message } from "antd";
 import { useUser } from "../context/UserContext";
 import axios from "axios";
@@ -16,13 +16,19 @@ interface CartItem {
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useUser();
+  const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
+
   const [cart, setCart] = useState<CartItem[]>([]);
-
   const SHIPPING_FEE = 35000;
-
-  // Lấy giỏ hàng và sản phẩm từ server
+    // Lấy giỏ hàng và sản phẩm từ server
   useEffect(() => {
+    if (buyNowItem) {
+      setCart([buyNowItem]);
+      return;
+    }
+
     if (user?._id) {
       const fetchCartAndProducts = async () => {
         try {
@@ -34,15 +40,12 @@ const Checkout = () => {
           const cartItems = cartResponse.data.items || [];
           const productsData = productsResponse.data;
 
-          console.log("Cart items from server:", cartItems); // Debug dữ liệu giỏ hàng
-
           const enrichedCartItems = cartItems.map((item: any) => {
             const product = productsData.find(
               (p: any) => p._id === item.productId
             );
             let price = item.price || (product ? product.price : 0);
 
-            // Lấy giá từ biến thể nếu có
             if (product?.variants && item.color && item.storage) {
               const variant = product.variants.find(
                 (v: any) => v.color === item.color && v.ram === item.storage
@@ -69,7 +72,7 @@ const Checkout = () => {
       };
       fetchCartAndProducts();
     }
-  }, [user]);
+  }, [user, buyNowItem]);
 
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.soluong,
@@ -151,10 +154,7 @@ const Checkout = () => {
         return;
       }
 
-      console.log("Order data to send:", newOrder); // Debug dữ liệu gửi
-
-      // Lưu đơn hàng lên server
-      const response = await axios.post(
+      await axios.post(
         "http://localhost:5000/api/orders",
         newOrder,
         {
@@ -162,9 +162,6 @@ const Checkout = () => {
         }
       );
 
-      console.log("Order response from server:", response.data); // Debug phản hồi
-
-      // Thông báo theo phương thức thanh toán
       if (form.paymentMethod === "Momo") {
         message.info(
           "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
@@ -177,7 +174,6 @@ const Checkout = () => {
         message.info("Bạn sẽ thanh toán khi nhận hàng.");
       }
 
-     
       for (const item of cart) {
         await axios.patch(
           `http://localhost:5000/api/products/${item.productId}/update-quantity`,
@@ -186,13 +182,12 @@ const Checkout = () => {
         );
       }
 
-      // Xóa giỏ hàng trên server
-      await axios.delete(`http://localhost:5000/api/carts/${user._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      // Xóa localStorage (nếu có dữ liệu giỏ hàng cũ)
-      localStorage.removeItem("cartItems");
+      if (!buyNowItem) {
+        await axios.delete(`http://localhost:5000/api/carts/${user._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        localStorage.removeItem("cartItems");
+      }
 
       message.success("Đặt hàng thành công!");
       setCart([]);
@@ -331,9 +326,7 @@ const Checkout = () => {
           <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
             {cart.map((item) => (
               <li
-                key={`${item.productId}-${item.color || ""}-${
-                  item.storage || ""
-                }`}
+                key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
                 className="flex items-center py-4"
               >
                 <img

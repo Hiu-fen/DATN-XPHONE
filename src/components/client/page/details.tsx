@@ -108,12 +108,14 @@ const Details = () => {
         content: newComment.trim(),
         date: new Date().toISOString(),
         status: false,
-        likes: 0
+        likes: 0,
       });
 
       setComments([res.data, ...comments]);
       setNewComment("");
-      message.success("Bình luận của bạn đã được gửi thành công, chờ phê duyệt!");
+      message.success(
+        "Bình luận của bạn đã được gửi thành công, chờ phê duyệt!"
+      );
     } catch (error) {
       console.error("Lỗi gửi bình luận:", error);
       message.error("Gửi bình luận thất bại!");
@@ -275,60 +277,34 @@ const Details = () => {
       message.error("Thêm vào giỏ hàng thất bại.");
     }
   };
-
-
-  const handleAddToCart1 = async () => {
-    if (!product) {
-      message.error("Không tìm thấy sản phẩm.");
+  // mua ngay
+  const handleBuyNow = () => {
+    if (!product || !selectedVariant?.color || !selectedVariant?.ram) {
+      message.warning("Vui lòng chọn biến thể");
       return;
     }
-    if (!product.status) {
-      message.error("Sản phẩm này không còn được bán.");
+    const variant = product.variants?.find(
+      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+    );
+    if (!variant || quantity > variant.soluong) {
+      return message.warning("Số lượng vượt quá tồn kho");
+    }
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user?._id) {
+      message.warning("Vui lòng đăng nhập để mua hàng");
+      navigate("/login");
       return;
     }
-    try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user?._id) {
-        message.warning("Bạn cần đăng nhập để mua hàng.");
-        navigate("/login");
-        return;
-      }
-      if (!product._id) {
-        message.warning("Không tìm thấy sản phẩm.");
-        return;
-      }
-      if (product.soluong <= 0) {
-        message.warning("Sản phẩm đã hết hàng.");
-        return;
-      }
-      if (!selectedVariant) {
-        message.warning("Vui lòng chọn biến thể.");
-        return;
-      }
-      // Kiểm tra số lượng biến thể
-      const variant = product.variants?.find(
-        (v) =>
-          v.color === selectedVariant.color && v.ram === selectedVariant.ram
-      );
-      if (variant && quantity > variant.soluong) {
-        message.warning(
-          `Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`
-        );
-        return;
-      }
-      await addToCart({
-        userId: user._id,
-        productId: product._id,
-        quantity: quantity,
-        price: product.price,
-        color: selectedVariant.color,
-        storage: selectedVariant.ram,
-      });
-      navigate(`/checkout`);
-    } catch (error) {
-      console.error("Lỗi mua hàng:", error);
-      message.error("Mua hàng thất bại.");
-    }
+    const buyNowItem = {
+      productId: product._id,
+      productName: product.name,
+      image: product.image,
+      price: variant.price || product.price,
+      soluong: quantity,
+      color: selectedVariant.color,
+      storage: selectedVariant.ram,
+    };
+    navigate("/checkout", { state: { buyNowItem } });
   };
 
   // Scroll related products
@@ -388,10 +364,11 @@ const Details = () => {
                     src={img}
                     alt={`variant-${idx}`}
                     onClick={() => setMainImage(img)}
-                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${mainImage === img
+                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${
+                      mainImage === img
                         ? "border-blue-600"
                         : "border-gray-300 hover:border-gray-500"
-                      }`}
+                    }`}
                   />
                 ))
               ) : (
@@ -438,11 +415,12 @@ const Details = () => {
                   uniqueVariants.map((variant, idx) => (
                     <button
                       key={idx}
-                      className={`px-4 py-2 border rounded-md font-semibold transition-all duration-200 ${selectedVariant?.color === variant.color &&
-                          selectedVariant?.ram === variant.ram
+                      className={`px-4 py-2 border rounded-md font-semibold transition-all duration-200 ${
+                        selectedVariant?.color === variant.color &&
+                        selectedVariant?.ram === variant.ram
                           ? "border-blue-600 bg-blue-50 text-blue-600"
                           : "border-gray-300 hover:border-gray-500 text-gray-700"
-                        }`}
+                      }`}
                       onClick={() =>
                         handleSelectVariant(variant.color, variant.ram)
                       }
@@ -475,10 +453,10 @@ const Details = () => {
                   max={
                     selectedVariant
                       ? product?.variants?.find(
-                        (v) =>
-                          v.color === selectedVariant.color &&
-                          v.ram === selectedVariant.ram
-                      )?.soluong || 1
+                          (v) =>
+                            v.color === selectedVariant.color &&
+                            v.ram === selectedVariant.ram
+                        )?.soluong || 1
                       : product.soluong
                   }
                 />
@@ -493,10 +471,10 @@ const Details = () => {
                 Số lượng tồn kho:{" "}
                 {selectedVariant
                   ? product?.variants?.find(
-                    (v) =>
-                      v.color === selectedVariant.color &&
-                      v.ram === selectedVariant.ram
-                  )?.soluong || 0
+                      (v) =>
+                        v.color === selectedVariant.color &&
+                        v.ram === selectedVariant.ram
+                    )?.soluong || 0
                   : product.soluong}
               </p>
             </div>
@@ -517,13 +495,13 @@ const Details = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mt-4 max-w-md w-full">
             <button
-              className="flex-1 bg-black text-white py-2 px-6 rounded-lg font-semibold text-sm md:text-base hover:bg-gray-800 transition-all duration-200 flex flex-col items-center leading-snug disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleAddToCart1}
+              className="flex-1 bg-black text-white py-2 px-6 rounded-lg font-semibold"
+              onClick={handleBuyNow} // 🔄 Thay vì handleAddToCart1
               disabled={!product.status}
             >
               MUA NGAY
               <span className="text-[11px] text-gray-300 mt-0.5 text-center">
-                Nhận tại nhà hoặc cửa hàng
+                không được freeShip
               </span>
             </button>
             <button
