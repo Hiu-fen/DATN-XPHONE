@@ -59,6 +59,7 @@ const Checkout = () => {
               productName: product ? product.name : "Sản phẩm không tồn tại",
               price,
               soluong: item.quantity,
+              quantity: item.quantity,
               image: product?.image || "",
               color: item.color || "",
               storage: item.storage || "",
@@ -213,9 +214,15 @@ const Checkout = () => {
       for (const item of cart) {
         await axios.patch(
           `http://localhost:5000/api/products/${item.productId}/update-quantity`,
-          { soluong: -item.soluong },
+          {
+            color: item.color,
+            ram: item.storage,
+            soluong: -Number(item.soluong), // ✅ đảm bảo là số
+          },
           { headers: { Authorization: `Bearer ${token}` } }
         );
+
+
       }
 
       if (!buyNowItem && selectedItems) {
@@ -353,8 +360,8 @@ const Checkout = () => {
                     {method === "COD"
                       ? "Thanh toán khi nhận hàng (COD)"
                       : method === "Momo"
-                      ? "Thanh toán qua Momo"
-                      : "Chuyển khoản ngân hàng"}
+                        ? "Thanh toán qua Momo"
+                        : "Chuyển khoản ngân hàng"}
                   </span>
                 </label>
               ))}

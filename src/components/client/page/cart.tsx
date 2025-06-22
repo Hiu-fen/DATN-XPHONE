@@ -66,13 +66,34 @@ const Cart = () => {
     storage: string,
     delta: number
   ) => {
-    const updatedItems = cartItems.map((item) =>
-      item.productId === productId &&
-      item.color === color &&
-      item.storage === storage
-        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-        : item
-    );
+    const updatedItems = cartItems.map((item) => {
+      if (
+        item.productId === productId &&
+        item.color === color &&
+        item.storage === storage
+      ) {
+        const product = getProductById(productId);
+        const variant = product?.variants?.find(
+          (v) => v.color === color && v.ram === storage
+        );
+        const maxStock = variant?.soluong || 1;
+        const newQuantity = item.quantity + delta;
+
+        if (newQuantity < 1) {
+          message.error("Số lượng không được nhỏ hơn 1");
+          return item;
+        }
+
+        if (newQuantity > maxStock) {
+          message.error("Số lượng sản phẩm không đủ trong kho");
+          return item;
+        }
+
+        return { ...item, quantity: newQuantity };
+      }
+      return item;
+    });
+
     updateCartItems(updatedItems);
     updateCartOnServer(updatedItems);
   };
@@ -112,13 +133,24 @@ const Cart = () => {
       return;
     }
 
+    const hasInvalidQuantity = selectedItems.some((itemId) => {
+      const item = cartItems.find((i) => i._id === itemId);
+      const product = getProductById(item?.productId || "");
+      const variant = product?.variants?.find(
+        (v) => v.color === item?.color && v.ram === item?.storage
+      );
+      return item && variant && item.quantity > (variant.soluong || 0);
+    });
+
+    if (hasInvalidQuantity) {
+      message.error("Một hoặc nhiều sản phẩm vượt quá số lượng tồn kho");
+      return;
+    }
+
     try {
-      // Lấy các mục đã chọn
       const selectedCartItems = cartItems.filter((item) =>
         selectedItems.includes(item._id)
       );
-
-      // Chuyển trang checkout với các mục đã chọn
       navigate("/checkout", { state: { selectedItems: selectedCartItems } });
     } catch (error) {
       console.error("Lỗi khi lưu giỏ hàng trước khi checkout:", error);
@@ -164,6 +196,11 @@ const Cart = () => {
                 const product = getProductById(item.productId);
                 if (!product) return null;
 
+                const variant = product.variants?.find(
+                  (v) => v.color === item.color && v.ram === item.storage
+                );
+                const maxStock = variant?.soluong || 1;
+
                 return (
                   <tr
                     key={`${item.productId}-${item.color}-${item.storage}-${item.price}`}
@@ -193,14 +230,7 @@ const Cart = () => {
                     <td className="text-center p-4">{item.color || "-"}</td>
                     <td className="text-center p-4">{item.storage || "-"}</td>
                     <td className="text-center p-4 text-red-500 font-medium">
-                      {formatPrice(
-                        `${
-                          product?.variants?.find(
-                            (v) =>
-                              v.color === item.color && v.ram === item.storage
-                          )?.price || product.price
-                        }`
-                      )}
+                      {formatPrice(`${variant?.price || product.price}`)}
                     </td>
                     <td className="text-center p-4">
                       <div className="flex justify-center items-center gap-2">
@@ -227,21 +257,20 @@ const Cart = () => {
                               1
                             )
                           }
-                          className="w-7 h-7 text-lg border rounded hover:bg-gray-100"
+                          className="w-7 h-7 text-lg border rounded hover:bg-gray-100 disabled:opacity-50"
+                          disabled={item.quantity >= maxStock}
                         >
                           ＋
                         </button>
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Tồn kho: {maxStock}
                       </div>
                     </td>
                     <td className="text-center p-4 font-semibold text-red-600">
                       {formatPrice(
                         String(
-                          Number(
-                            product?.variants?.find(
-                              (v) =>
-                                v.color === item.color && v.ram === item.storage
-                            )?.price || product.price
-                          ) * item.quantity
+                          Number(variant?.price || product.price) * item.quantity
                         )
                       )}
                     </td>
