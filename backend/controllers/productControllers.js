@@ -205,27 +205,40 @@ exports.getProductById = async (req, res) => {
 };
 
 // API để trừ số lượng sản phẩm - Order
-exports.updateProductQuantity = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { soluong } = req.body;
+// Controller: updateVariantQuantity
+// exports.updateVariantQuantity = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { color, ram, quantity } = req.body;
 
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
-    }
+//     const product = await Product.findById(id);
+//     if (!product) {
+//       return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+//     }
 
-    product.soluong += soluong;
-    if (product.soluong < 0) {
-      return res.status(400).json({ message: 'Số lượng không đủ trong kho' });
-    }
+//     const variant = product.variants.find(
+//       (v) => v.color === color && v.ram === ram
+//     );
 
-    await product.save();
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ message: 'Lỗi khi cập nhật số lượng sản phẩm' });
-  }
-};
+//     if (!variant) {
+//       return res.status(404).json({ message: 'Không tìm thấy biến thể sản phẩm' });
+//     }
+
+//     if (variant.soluong < quantity) {
+//       return res.status(400).json({ message: 'Không đủ số lượng trong kho' });
+//     }
+
+//     variant.soluong -= quantity;
+//     await product.save();
+
+//     res.json({ message: 'Cập nhật số lượng thành công', product });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: 'Lỗi khi cập nhật số lượng sản phẩm' });
+//   }
+// };
+
+
 
 // Tìm kiếm sản phẩm theo từ khoá (query string: ?keyword=...)
 exports.searchProducts = async (req, res) => {
@@ -253,3 +266,44 @@ exports.checkProductInOrder = async (req, res) => {
     res.status(500).json({ message: "Lỗi kiểm tra đơn hàng" });
   }
 };
+exports.updateProductQuantity = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { color, ram, soluong } = req.body;
+
+    const quantityNumber = Number(soluong);
+    if (!soluong || isNaN(quantityNumber)) {
+      return res.status(400).json({ message: "Số lượng không hợp lệ" });
+    }
+
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    const variant = product.variants.find(
+      (v) => v.color === color && v.ram === ram
+    );
+
+    if (!variant) {
+      return res.status(400).json({ message: "Không tìm thấy phiên bản sản phẩm" });
+    }
+
+    // 👉 Cập nhật vào variant
+    variant.soluong += quantityNumber;
+
+    // ✅ THÊM DÒNG NÀY để Mongoose biết bạn đã thay đổi
+    product.markModified('variants');
+
+    // 👉 Cập nhật lại tổng số lượng sản phẩm
+    product.soluong = product.variants.reduce((total, v) => total + v.soluong, 0);
+
+    await product.save();
+    res.status(200).json({ message: "Cập nhật thành công", product });
+  } catch (error) {
+    console.error("🔥 Lỗi cập nhật số lượng:", error);
+    res.status(500).json({ message: "Lỗi server khi cập nhật số lượng" });
+  }
+};
+
+

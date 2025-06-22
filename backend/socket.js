@@ -14,7 +14,7 @@ const initSocket = (server) => {
   // Khi client kết nối
   io.on('connection', (socket) => {
 
-    // console.log('✅ Đã kết nối socket mới, ID là:', socket.id);
+    console.log('✅ Đã kết nối socket mới, ID là:', socket.id);
 
     // Khi người dùng muốn vào phòng theo userId (để nhận thông báo cá nhân)
     socket.on('join-user', (userId) => {
