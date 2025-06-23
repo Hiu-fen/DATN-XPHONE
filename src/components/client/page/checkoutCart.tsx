@@ -17,17 +17,25 @@ interface CartItem {
   storage?: string;
 }
 
+interface IUserExtended {
+  _id: string;
+  name: string;
+  email: string;
+  sdt?: string;
+  address?: string;
+}
+
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
+  const currentUser = user as IUserExtended | null;
   const selectedItems = location.state?.selectedItems as ICartItem[] | undefined;
   const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const SHIPPING_FEE = 35000;
 
-  // Lấy giỏ hàng và sản phẩm từ server
   useEffect(() => {
     const fetchCartAndProducts = async () => {
       try {
@@ -37,7 +45,6 @@ const Checkout = () => {
         }
 
         if (selectedItems && selectedItems.length > 0) {
-          // Nếu có selectedItems, lấy thông tin sản phẩm từ API để bổ sung dữ liệu
           const productsResponse = await axios.get("http://localhost:5000/api/products");
           const productsData = productsResponse.data;
 
@@ -59,7 +66,6 @@ const Checkout = () => {
               productName: product ? product.name : "Sản phẩm không tồn tại",
               price,
               soluong: item.quantity,
-              quantity: item.quantity,
               image: product?.image || "",
               color: item.color || "",
               storage: item.storage || "",
@@ -70,10 +76,9 @@ const Checkout = () => {
           return;
         }
 
-        // Trường hợp mặc định: lấy toàn bộ giỏ hàng nếu không có selectedItems
-        if (user?._id) {
+        if (currentUser?._id) {
           const [cartResponse, productsResponse] = await Promise.all([
-            axios.get(`http://localhost:5000/api/carts/${user._id}`),
+            axios.get(`http://localhost:5000/api/carts/${currentUser._id}`),
             axios.get("http://localhost:5000/api/products"),
           ]);
 
@@ -113,23 +118,33 @@ const Checkout = () => {
     };
 
     fetchCartAndProducts();
-  }, [user, buyNowItem, selectedItems]);
+  }, [currentUser, buyNowItem, selectedItems]);
 
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.soluong,
     0
   );
-  const totalWithShipping = totalPrice + SHIPPING_FEE;
+const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
 
   const [form, setForm] = useState({
-    name: user?.name || "",
-    phone: "",
-    address: "",
-    email: user?.email || "",
+    name: currentUser?.name || "",
+    sdt: currentUser?.sdt || "",
+    address: currentUser?.address || "",
+    email: currentUser?.email || "",
     note: "",
     paymentMethod: "COD",
     shippingProvider: "Giao hàng tiêu chuẩn",
   });
+
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      name: currentUser?.name || prev.name,
+      email: currentUser?.email || prev.email,
+      sdt: currentUser?.sdt || prev.sdt,
+      address: currentUser?.address || prev.address,
+    }));
+  }, [currentUser]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -141,64 +156,68 @@ const Checkout = () => {
   };
 
   const handleOrder = async () => {
-    if (!user) {
-      message.error("Vui lòng đăng nhập để đặt hàng");
+  if (!user) {
+    message.error("Vui lòng đăng nhập để đặt hàng");
+    navigate("/login");
+    return;
+  }
+
+  if (!form.sdt || !form.address) {
+    message.error("Vui lòng cập nhật số điện thoại và địa chỉ trước khi đặt hàng.");
+    setTimeout(() => navigate("/account"), 1000);
+    return;
+  }
+
+  if (!form.name || !form.email) {
+    message.error("Vui lòng điền đầy đủ thông tin bắt buộc.");
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(form.email)) {
+    message.error("Email không hợp lệ");
+    return;
+  }
+
+  const orderCode = `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+  const newOrder = {
+  orderCode,
+  customerName: form.name,
+  phone: form.sdt,
+  address: form.address,
+  email: form.email,
+  notes: form.note,
+  paymentMethod: form.paymentMethod,
+  shippingProvider: form.shippingProvider,
+  total: Number(totalWithShipping), // 👈 ép chắc chắn là số
+  status: "Chờ xác nhận",
+  date: new Date().toISOString(),
+  isPaid: false,
+  refunded: false,
+  items: cart.map((item) => ({
+    productId: item.productId,
+    productName: item.productName,
+    soluong: Number(item.soluong), // 👈 đảm bảo là số
+    price: Number(item.price), // 👈 đảm bảo là số
+    color: item.color || "",
+    storage: item.storage || "",
+  })),
+  userId: user._id,
+};
+
+  console.log("🛒 Đơn hàng chuẩn bị gửi:", newOrder); // 👉 THÊM DÒNG NÀY ĐỂ LOG RA CHI TIẾT
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      message.error("Không tìm thấy token xác thực. Vui lòng đăng nhập lại.");
       navigate("/login");
       return;
     }
 
-    if (!form.name || !form.phone || !form.address || !form.email) {
-      message.error("Vui lòng điền đầy đủ thông tin bắt buộc");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(form.email)) {
-      message.error("Email không hợp lệ");
-      return;
-    }
-
-    const orderCode = `ORD-${Math.random()
-      .toString(36)
-      .substr(2, 5)
-      .toUpperCase()}`;
-    const newOrder = {
-      orderCode,
-      customerName: form.name,
-      phone: form.phone,
-      address: form.address,
-      email: form.email,
-      notes: form.note,
-      paymentMethod: form.paymentMethod,
-      shippingProvider: form.shippingProvider,
-      total: totalWithShipping,
-      status: "Chờ xác nhận",
-      date: new Date().toISOString(),
-      isPaid: false,
-      refunded: false,
-      items: cart.map((item) => ({
-        productId: item.productId,
-        productName: item.productName,
-        soluong: item.soluong,
-        price: item.price,
-        color: item.color || "",
-        storage: item.storage || "",
-      })),
-      userId: user._id,
-    };
-
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        message.error("Không tìm thấy token xác thực. Vui lòng đăng nhập lại.");
-        navigate("/login");
-        return;
-      }
-
-      await axios.post("http://localhost:5000/api/orders", newOrder, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
+    await axios.post("http://localhost:5000/api/orders", newOrder, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
       if (form.paymentMethod === "Momo") {
         message.info(
           "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
@@ -255,6 +274,7 @@ const Checkout = () => {
         error.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
       );
     }
+    // return null;
   };
 
   if (!user) {
@@ -297,22 +317,23 @@ const Checkout = () => {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-4 py-3"
             />
-            <input
+                       <input
               type="tel"
-              name="phone"
+              name="sdt"
               placeholder="Số điện thoại *"
-              value={form.phone}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3"
+              value={form.sdt}
+              disabled
+              className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 cursor-not-allowed"
             />
             <input
-              type="text"
-              name="address"
-              placeholder="Địa chỉ nhận hàng *"
-              value={form.address}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3"
-            />
+  type="text"
+  name="address"
+  placeholder="Địa chỉ nhận hàng *"
+  value={form.address}
+  disabled
+  className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 cursor-not-allowed"
+/>
+
             <input
               type="email"
               name="email"
@@ -438,6 +459,7 @@ const Checkout = () => {
       </div>
     </div>
   );
+  
 };
 
 export default Checkout;

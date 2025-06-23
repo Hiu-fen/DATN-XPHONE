@@ -10,13 +10,14 @@ import {
   RightOutlined,
 } from "@ant-design/icons";
 import { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { IProduct } from "../../../interface/product";
 import { IComment } from "../../../interface/comments";
 import { addToCart } from "../../../api/cartApi";
 import { message } from "antd";
 import { useQuery } from "@tanstack/react-query";
+
 
 const Details = () => {
   const { id } = useParams();
@@ -222,61 +223,118 @@ const Details = () => {
     }
     setQuantity(value);
   };
-  const handleAddToCart = async () => {
-    if (!product) {
-      message.error("Không tìm thấy sản phẩm.");
+const handleAddToCart = async () => {
+  if (!product) {
+    message.error("Không tìm thấy sản phẩm.");
+    return;
+  }
 
+  if (!product.status) {
+    message.error("Sản phẩm này không còn được bán.");
+    return;
+  }
+
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user?._id) {
+      message.warning("Bạn cần đăng nhập để mua hàng.");
+      navigate("/login");
       return;
     }
-    if (!product.status) {
-      message.error("Sản phẩm này không còn được bán.");
+
+    if (!product._id) {
+      message.warning("Không tìm thấy sản phẩm.");
       return;
     }
 
-    try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user?._id) {
-        message.warning("Bạn cần đăng nhập để mua hàng.");
-        navigate("/login");
-        return;
-      }
-      if (!product._id) {
-        message.warning("Không tìm thấy sản phẩm.");
-        return;
-      }
-      if (product.soluong <= 0) {
-        message.warning("Sản phẩm đã hết hàng.");
-        return;
-      }
-      if (!selectedVariant) {
-        message.warning("Vui lòng chọn biến thể.");
-        return;
-      }
-      // Kiểm tra số lượng biến thể
-      const variant = product.variants?.find(
-        (v) =>
-          v.color === selectedVariant.color && v.ram === selectedVariant.ram
+    if (product.soluong <= 0) {
+      message.warning("Sản phẩm đã hết hàng.");
+      return;
+    }
+
+    if (!selectedVariant) {
+      message.warning("Vui lòng chọn biến thể.");
+      return;
+    }
+
+    // Tìm biến thể sản phẩm đã chọn
+    const variant = product.variants?.find(
+      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+    );
+
+    // Kiểm tra nếu variant là undefined (không tìm thấy biến thể)
+    if (!variant) {
+      message.warning("Biến thể không hợp lệ hoặc không có sẵn.");
+      return;
+    }
+
+    // Kiểm tra số lượng tồn kho của biến thể
+    if (variant.soluong <= 0) {
+      message.warning(`Biến thể ${variant.color} - ${variant.ram} đã hết hàng!`);
+      return;
+    }
+
+    // Kiểm tra số lượng vượt quá tồn kho của biến thể
+    if (quantity > variant.soluong) {
+      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+      return;
+    }
+
+    // Kiểm tra tổng số lượng sản phẩm trong giỏ hàng hiện tại
+    const cartResponse = await axios.get(`http://localhost:5000/api/carts/${user._id}`);
+    const cart = cartResponse.data;
+    const cartItem = cart.items.find(
+      (item: any) =>
+        item.productId === product._id &&
+        item.color === selectedVariant.color &&
+        item.storage === selectedVariant.ram
+    );
+
+    // Tính tổng số lượng nếu sản phẩm đã có trong giỏ hàng
+    let totalQuantity = quantity;
+    if (cartItem) {
+      totalQuantity += cartItem.quantity;
+    }
+
+    // Kiểm tra nếu tổng số lượng trong giỏ hàng vượt quá số lượng tồn kho
+    if (totalQuantity > variant.soluong) {
+      message.warning(
+        `Số lượng trong giỏ hàng của biến thể ${variant.color} - ${variant.ram} vượt quá tồn kho!`
       );
-      if (variant && quantity > variant.soluong) {
-        message.warning(
-          `Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`
-        );
-        return;
-      }
-      await addToCart({
-        userId: user._id,
-        productId: product._id,
-        quantity: quantity,
-        price: product.price,
-        color: selectedVariant.color,
-        storage: selectedVariant.ram,
-      });
-      message.success("Đã thêm vào giỏ hàng!");
-    } catch (error) {
-      console.error("Lỗi thêm giỏ hàng:", error);
+      return;
+    }
+
+    // Thêm vào giỏ hàng nếu không có lỗi
+    const cartItemToAdd = {
+      userId: user._id,
+      items: [
+        {
+          productId: product._id,
+          quantity: quantity,
+          price: product.price,
+          color: selectedVariant.color,
+          storage: selectedVariant.ram,
+        },
+      ],
+    };
+
+    // Gửi yêu cầu POST đến API giỏ hàng
+    const response = await axios.post("http://localhost:5000/api/carts", cartItemToAdd);
+    message.success("Đã thêm vào giỏ hàng!");
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error("Lỗi thêm giỏ hàng:", error.message);
+      message.error(error.response?.data?.message || "Thêm vào giỏ hàng thất bại.");
+    } else {
+      console.error("Lỗi không phải AxiosError:", error);
       message.error("Thêm vào giỏ hàng thất bại.");
     }
-  };
+  }
+};
+
+
+
+
   // mua ngay
   const handleBuyNow = () => {
     if (!product || !selectedVariant?.color || !selectedVariant?.ram) {
