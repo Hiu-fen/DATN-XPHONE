@@ -1,6 +1,10 @@
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
+
 const axios = require("axios");
+
+const { sendOrderConfirmation } = require("../utils/emailService") ;
+
 
 // Danh sách đơn hàng
 exports.getAllOrders = async (req, res) => {
@@ -104,6 +108,8 @@ exports.updateOrderReturn = async (req, res) => {
 };
 
 // Tạo đơn hàng mới
+
+
 exports.createOrder = async (req, res) => {
   try {
     const {
@@ -146,9 +152,11 @@ exports.createOrder = async (req, res) => {
         return res.status(400).json({ message: `Không đủ hàng cho sản phẩm ${item.productName}` });
       }
 
+
       // ✅ Lưu cả color và storage vào item ngoài snapshot
       item.color = item.color || "";
       item.storage = item.storage || "";
+
 
       item.snapshot = {
         name: item.productName,
@@ -177,6 +185,21 @@ exports.createOrder = async (req, res) => {
     });
 
     await order.save();
+
+    // ✅ Gửi email xác nhận
+    try {
+      await sendOrderConfirmation(email, {
+        orderCode,
+        customerName,
+        address,
+        total,
+        paymentMethod,
+        items,
+      });
+    } catch (emailError) {
+      console.error("Lỗi khi gửi email xác nhận:", emailError.message);
+    }
+
     res.status(201).json(order);
   } catch (error) {
     console.error("Lỗi khi tạo đơn hàng:", error);
@@ -184,7 +207,11 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// Đánh dấu đã thanh toán
+
+
+
+// Cập nhật thanh toán
+
 exports.markAsPaid = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
