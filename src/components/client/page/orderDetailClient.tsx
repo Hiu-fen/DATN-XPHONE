@@ -12,7 +12,7 @@ import {
   FaHashtag,
   FaTrashAlt
 } from 'react-icons/fa';
-import { Modal, Input, Select, message, Radio } from 'antd'; // Thêm các import mới
+import { Modal, Input, Select, message, Radio } from 'antd';
 
 interface Item {
   productName: string;
@@ -40,6 +40,7 @@ const OrderDetail = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [cancelReason, setCancelReason] = useState(""); // Lý do hủy
   const [isModalOpen, setIsModalOpen] = useState(false); // Modal mở khi hủy
+  const [isCancelDisabled, setIsCancelDisabled] = useState(false); // Để khóa nút hủy
 
   const cancelReasons = [
     "Sản phẩm không còn nhu cầu",
@@ -51,31 +52,39 @@ const OrderDetail = () => {
 
   useEffect(() => {
     axios.get(`http://localhost:5000/api/orders/${id}`)
-      .then(res => setOrder(res.data))
+      .then(res => {
+        setOrder(res.data);
+        // Kiểm tra trạng thái đơn hàng, chỉ cho phép hủy khi "Chờ xác nhận"
+        if (res.data.status !== "Chờ xác nhận") {
+          setIsCancelDisabled(true); // Khóa nút hủy nếu không phải "Chờ xác nhận"
+        }
+      })
       .catch(err => console.error('Lỗi khi lấy chi tiết đơn hàng:', err));
   }, [id]);
 
   const handleCancelOrder = async () => {
-  if (!cancelReason) {
-    message.warning("Vui lòng chọn lý do huỷ đơn hàng");
-    return;
-  }
+    if (!cancelReason) {
+      message.warning("Vui lòng chọn lý do huỷ đơn hàng");
+      return;
+    }
 
-  try {
-    // Gọi đúng route PATCH
-    await axios.patch(`http://localhost:5000/api/orders/${id}`, {
-      status: "Đã huỷ", // Cập nhật trạng thái đơn hàng thành "Đã huỷ"
-      returnReason: cancelReason // Lý do hủy đơn hàng
-    });
+    try {
+      // Gọi đúng route PATCH
+      await axios.patch(`http://localhost:5000/api/orders/${id}`, {
+        status: "Đã huỷ", // Cập nhật trạng thái đơn hàng thành "Đã huỷ"
+        returnReason: cancelReason // Lý do hủy đơn hàng
+      });
 
-    message.success("Đơn hàng đã được huỷ thành công");
-    setIsModalOpen(false);
-  } catch (err) {
-    console.error("Lỗi khi hủy đơn:", err);
-    message.error("Không thể huỷ đơn hàng. Vui lòng thử lại");
-  }
-};
-
+      message.success("Đơn hàng đã được huỷ thành công");
+      // Cập nhật lại trạng thái đơn hàng trong state
+      setOrder(prevOrder => prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder);
+      setIsModalOpen(false);
+      setIsCancelDisabled(true); // Khóa nút hủy sau khi hủy đơn
+    } catch (err) {
+      console.error("Lỗi khi hủy đơn:", err);
+      message.error("Không thể huỷ đơn hàng. Vui lòng thử lại");
+    }
+  };
 
   if (!order) {
     return (
@@ -168,7 +177,8 @@ const OrderDetail = () => {
       <div className="flex justify-between items-center mt-6">
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-200"
+          className={`bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-200 ${isCancelDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+          disabled={isCancelDisabled} // Khóa nút hủy khi đơn đã bị hủy
         >
           <FaTrashAlt /> Hủy đơn hàng
         </button>
