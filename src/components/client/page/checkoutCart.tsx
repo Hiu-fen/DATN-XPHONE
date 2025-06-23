@@ -164,7 +164,7 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
 
   if (!form.sdt || !form.address) {
     message.error("Vui lòng cập nhật số điện thoại và địa chỉ trước khi đặt hàng.");
-    setTimeout(() => navigate("/account"), 1000);
+    setTimeout(() => navigate("/accounts"), 1000);
     return;
   }
 
