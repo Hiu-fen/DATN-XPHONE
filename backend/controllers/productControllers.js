@@ -1,3 +1,6 @@
+const axios = require("axios");
+
+
 const Product = require('../models/productModels');
 const Order = require('../models/orderModel');
 
@@ -204,39 +207,49 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// API để trừ số lượng sản phẩm - Order
-// Controller: updateVariantQuantity
-// exports.updateVariantQuantity = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { color, ram, quantity } = req.body;
+exports.restoreProductQuantity = async (req, res) => {
+  try {
+    const items = req.body.items;
+    // console.log("🟢 Dữ liệu nhận để khôi phục:", items);
 
-//     const product = await Product.findById(id);
-//     if (!product) {
-//       return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
-//     }
+    for (const item of items) {
+      // console.log("➡️ Đang xử lý:", item);
+      const { productId, color, ram, quantity } = item;
 
-//     const variant = product.variants.find(
-//       (v) => v.color === color && v.ram === ram
-//     );
+      if (!color || !ram) {
+        // console.warn("⚠️ Dữ liệu thiếu thông tin biến thể:", item);
+        continue;
+      }
 
-//     if (!variant) {
-//       return res.status(404).json({ message: 'Không tìm thấy biến thể sản phẩm' });
-//     }
+      const product = await Product.findById(productId);
+      if (!product) continue;
 
-//     if (variant.soluong < quantity) {
-//       return res.status(400).json({ message: 'Không đủ số lượng trong kho' });
-//     }
+      const variant = product.variants.find(
+        (v) => v.color === color && v.ram === ram
+      );
 
-//     variant.soluong -= quantity;
-//     await product.save();
+      if (!variant) {
+        // console.warn(`❌ Không tìm thấy biến thể phù hợp: color=${color}, ram=${ram}`);
+        continue;
+      }
 
-//     res.json({ message: 'Cập nhật số lượng thành công', product });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Lỗi khi cập nhật số lượng sản phẩm' });
-//   }
-// };
+      variant.soluong += Number(quantity);
+      product.markModified("variants");
+
+      product.soluong = product.variants.reduce((sum, v) => sum + v.soluong, 0);
+      await product.save();
+    }
+
+    res.status(200).json({ message: "Khôi phục số lượng biến thể thành công" });
+  } catch (error) {
+    console.error("❌ Lỗi khôi phục số lượng biến thể:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  }
+};
+
+
+
+
 
 
 

@@ -57,6 +57,7 @@ const OrderSchema = new mongoose.Schema({
     },
   ],
   userId: { type: String },
+  restored: { type: Boolean, default: false },
 });
 
 module.exports = mongoose.model("Order", OrderSchema);
