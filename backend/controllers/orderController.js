@@ -1,7 +1,10 @@
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
-const { sendOrderConfirmation } = require("../utils/emailService") ;
+
 const axios = require("axios");
+
+const { sendOrderConfirmation } = require("../utils/emailService") ;
+
 
 // Danh sách đơn hàng
 exports.getAllOrders = async (req, res) => {
@@ -148,11 +151,12 @@ exports.createOrder = async (req, res) => {
       if (product.soluong < item.soluong) {
         return res.status(400).json({ message: `Không đủ hàng cho sản phẩm ${item.productName}` });
       }
-      // Snapshot thông tin sản phẩm
+
 
       // ✅ Lưu cả color và storage vào item ngoài snapshot
       item.color = item.color || "";
       item.storage = item.storage || "";
+
 
       item.snapshot = {
         name: item.productName,
@@ -204,7 +208,10 @@ exports.createOrder = async (req, res) => {
 };
 
 
-// Đánh dấu đã thanh toán
+
+
+// Cập nhật thanh toán
+
 exports.markAsPaid = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
