@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message } from "antd";
 import { User } from "../../../interface/user";
-import { createNotification } from "../../../api/admin/notificationApi";
+import { createNotificationForAdmin } from "../../../api/admin/notificationApi";
 
 const LoginAdmin = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<User>();
@@ -29,10 +29,10 @@ const LoginAdmin = () => {
       localStorage.setItem("admin", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
 
-      await createNotification({
+      await createNotificationForAdmin({
         userId: user._id,
-        message: `Xin chào tài khoản "${user.email}" đã đăng nhập vào admin hệ thống`,
-        type: "info", 
+        message: `Admin "${user.email}" vừa đăng nhập hệ thống`,
+        type: 'info'
       });
 
       message.success("Đăng nhập thành công");

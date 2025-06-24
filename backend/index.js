@@ -2,8 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const http = require('http');
-const { initSocket } = require('./socket');
 
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRouter');
@@ -14,9 +12,8 @@ const promotionRoutes = require('./routes/promotionRouter');
 const bannerRouter = require('./routes/bannerRouter');
 const userRouter = require('./routes/userRouter');
 const cartRouter = require('./routes/cartRouter');
-// const variantRouter = require('./routes/variant/ramRouter');
 const colorRouter = require('./routes/variant/colorRouter');
-const ramRouter   = require('./routes/variant/ramRouter');
+const ramRouter = require('./routes/variant/ramRouter');
 const newsRoutes = require('./routes/newsRoutes');
 const statisticsRouter = require('./routes/statisticsRouter');
 const notificationRoutes = require('./routes/notificationRouters');
@@ -24,22 +21,18 @@ const notificationRoutes = require('./routes/notificationRouters');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Cấu hình CORS cho phép frontend truy cập
 app.use(cors({
-  origin: 'http://localhost:5173', // địa chỉ frontend
+  origin: 'http://localhost:5173',
   credentials: true,
 }));
 
-// ✅ Middleware xử lý dữ liệu
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// ✅ Kết nối MongoDB
 mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('✅ Kết nối MongoDB thành công'))
 .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
 
-// ✅ Gọi các route
 app.use('/api/products', productRoutes);
 app.use('/api/category', categoryRoutes);
 app.use('/api/contacts', contactRoutes);
@@ -50,19 +43,13 @@ app.use('/api/users', userRouter);
 app.use('/api/orders', orderRoutes);
 app.use('/api/carts', cartRouter);
 app.use('/api/colors', colorRouter);
-app.use('/api/rams',   ramRouter);
+app.use('/api/rams', ramRouter);
 app.use('/api/news', newsRoutes);
 app.use('/api/statistics', statisticsRouter);
 app.use('/api/notifications', notificationRoutes);
-// app.use('/api/variants', variantRoutes); // Uncomment nếu bạn có route này
 
-// ✅ Cron job (nếu có file cron.js)
 require('./cron');
 
-const server = http.createServer(app);
-initSocket(server);
-
-// ✅ Lắng nghe server
-server.listen(PORT, () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server đang chạy tại http://localhost:${PORT}`);
 });

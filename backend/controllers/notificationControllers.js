@@ -1,22 +1,128 @@
 const Notification = require('../models/notificationModels');
-const { getIO } = require('../socket');
+const User = require('../models/userModels'); 
 
-// [GET] /api/notifications?userId=...&role=...
-exports.getNotificationsByUser = async (req, res) => {
+// Lấy thông báo user
+exports.getUserNotifications = async (req, res) => {
   try {
-    const { userId, role } = req.query;
-    if (!userId || !role) return res.status(400).json({ message: 'Thiếu userId hoặc role' });
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: 'Thiếu userId' });
+
+    const notis = await Notification.find({
+      $or: [{ userId }, { scope: 'user' }, { scope: 'global' }],
+      deletedBy: { $ne: userId }
+    }).sort({ createdAt: -1 });
+
+    const data = notis.map(n => ({
+      ...n.toObject(),
+      isRead: n.readBy.includes(userId),
+    }));
+
+    res.status(200).json({ message: 'Lấy thông báo user thành công', data });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.createNotificationForUser = async (req, res) => {
+  try {
+    const { userId, message, type = 'info' } = req.body;
+    if (!userId || !message) return res.status(400).json({ message: 'Thiếu thông tin' });
+
+    const user = await User.findById(userId);
+    if (!user || user.role !== 'user') return res.status(403).json({ message: 'Admin không đăng nhập được nhé, dùng tài khoản user đi ae!' });
+
+    const noti = await Notification.create({ userId, message, type, role: 'user' });
+    res.status(201).json({ message: 'Tạo thông báo user thành công', data: noti });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.markOneUserNotificationAsRead = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const { id } = req.params;
+    await Notification.findByIdAndUpdate(id, { $addToSet: { readBy: userId } });
+    res.status(200).json({ message: 'Đã đánh dấu đã đọc' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.markAllUserNotificationsAsRead = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const notis = await Notification.find({
+      $or: [{ userId }, { scope: 'user' }, { scope: 'global' }],
+      readBy: { $ne: userId }
+    });
+    await Promise.all(notis.map(n => Notification.findByIdAndUpdate(n._id, { $addToSet: { readBy: userId } })));
+    res.status(200).json({ message: 'Đã đánh dấu tất cả là đã đọc' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.deleteUserNotification = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const { id } = req.params;
+    await Notification.findByIdAndUpdate(id, { $addToSet: { deletedBy: userId } });
+    res.status(200).json({ message: 'Đã xoá thông báo (mềm)' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+exports.deleteAllUserNotifications = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    const notis = await Notification.find({
+      $or: [{ userId }, { scope: 'user' }, { scope: 'global' }],
+      deletedBy: { $ne: userId }
+    });
+    await Promise.all(notis.map(n => Notification.findByIdAndUpdate(n._id, { $addToSet: { deletedBy: userId } })));
+    res.status(200).json({ message: `Đã xóa ${notis.length} thông báo` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// [GET] /api/notifications/user/unread-count?userId=...
+exports.getUnreadUserNotificationCount = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ message: 'Thiếu userId' });
+
+    const count = await Notification.countDocuments({
+      $or: [{ userId }, { role: 'user' }, { scope: 'global' }],
+      deletedBy: { $ne: userId },
+      readBy: { $ne: userId },
+    });
+
+    res.status(200).json({ message: 'Số thông báo chưa đọc', count });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Phần của admin
+exports.getAdminNotifications = async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'Thiếu userId' });
+    }
 
     const notifications = await Notification.find({
       $or: [
-        { userId },
-        { scope: role },
-        { scope: 'global' },
+        { userId, role: 'admin' },
+        { scope: { $in: ['admin', 'global'] }, role: 'admin' }
       ],
-      deletedBy: { $ne: userId } // Không lấy những cái đã xóa bởi user này
+      deletedBy: { $ne: userId },
     }).sort({ createdAt: -1 });
 
-    // Gắn thêm trạng thái isRead cho FE
     const result = notifications.map((n) => ({
       ...n.toObject(),
       isRead: n.readBy.includes(userId),
@@ -24,122 +130,104 @@ exports.getNotificationsByUser = async (req, res) => {
 
     res.status(200).json({ message: 'Lấy thông báo thành công', data: result });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message || 'Lỗi server' });
   }
 };
 
-// [POST] /api/notifications
-exports.createNotification = async (req, res) => {
+exports.createNotificationForAdmin = async (req, res) => {
   try {
-    const { userId, message, type } = req.body;
-    if (!userId || !message) return res.status(400).json({ message: 'Thiếu userId hoặc message' });
+    const { userId, message, type = 'info' } = req.body;
 
-    const notification = await Notification.create({ userId, message, type });
+    if (!userId || !message) {
+      return res.status(400).json({ message: 'Thiếu userId hoặc message' });
+    }
 
-    const io = getIO();
-    io.to(userId).emit('new_notification', notification);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'Không tìm thấy admin' });
+    }
 
-    res.status(201).json({ message: 'Tạo thông báo thành công', data: notification });
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Chỉ tạo thông báo cho tài khoản admin' });
+    }
+
+    const notification = await Notification.create({
+      userId,
+      message,
+      type,
+      role: 'admin',
+    });
+
+    res.status(201).json({ message: 'Tạo thông báo admin thành công', data: notification });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// PATCH /api/notifications/:id/read?userId=...
-exports.markOneAsRead = async (req, res) => {
+exports.markOneAdminNotificationAsRead = async (req, res) => {
   try {
     const { userId } = req.query;
     const { id } = req.params;
-
-    if (!userId || !id) return res.status(400).json({ message: 'Thiếu userId hoặc id' });
-
-    await Notification.findByIdAndUpdate(id, {
-      $addToSet: { readBy: userId } // không trùng
-    });
-
-    res.status(200).json({ message: 'Đánh dấu đã đọc thành công' });
+    await Notification.findByIdAndUpdate(id, { $addToSet: { readBy: userId } });
+    res.status(200).json({ message: 'Đã đánh dấu đã đọc (admin)' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// PATCH /api/notifications/read-all?userId=...&role=...
-exports.markAllAsRead = async (req, res) => {
+exports.markAllAdminNotificationsAsRead = async (req, res) => {
   try {
-    const { userId, role } = req.query;
-    if (!userId || !role) return res.status(400).json({ message: 'Thiếu userId hoặc role' });
-
-    const notifications = await Notification.find({
-      $or: [{ userId }, { scope: role }, { scope: 'global' }],
+    const { userId } = req.query;
+    const notis = await Notification.find({
+      $or: [{ userId }, { scope: 'admin' }, { scope: 'global' }],
       readBy: { $ne: userId }
     });
-
-    const updatePromises = notifications.map(n =>
-      Notification.findByIdAndUpdate(n._id, {
-        $addToSet: { readBy: userId }
-      })
-    );
-
-    await Promise.all(updatePromises);
-    res.status(200).json({ message: 'Đã đánh dấu tất cả là đã đọc' });
+    await Promise.all(notis.map(n => Notification.findByIdAndUpdate(n._id, { $addToSet: { readBy: userId } })));
+    res.status(200).json({ message: 'Đã đánh dấu tất cả là đã đọc (admin)' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// [DELETE] /api/notifications/:id?userId=...
-exports.deleteNotification = async (req, res) => {
+exports.deleteAdminNotification = async (req, res) => {
   try {
     const { userId } = req.query;
     const { id } = req.params;
-
-    if (!userId || !id) {
-      return res.status(400).json({ message: 'Thiếu userId hoặc id' });
-    }
-
-    const notification = await Notification.findByIdAndUpdate(
-      id,
-      { $addToSet: { deletedBy: userId } },
-      { new: true }
-    );
-
-    if (!notification) {
-      return res.status(404).json({ message: 'Không tìm thấy thông báo để xóa' });
-    }
-
-    res.status(200).json({ message: 'Đã xoá thông báo (mềm)' });
+    await Notification.findByIdAndUpdate(id, { $addToSet: { deletedBy: userId } });
+    res.status(200).json({ message: 'Đã xoá thông báo (admin)' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-// [DELETE] /api/notifications?userId=...&role=...
-exports.deleteAllNotifications = async (req, res) => {
+exports.deleteAllAdminNotifications = async (req, res) => {
   try {
-    const { userId, role } = req.query;
-
-    if (!userId || !role) {
-      return res.status(400).json({ message: 'Thiếu userId hoặc role' });
-    }
-
-    const notifications = await Notification.find({
-      $or: [
-        { userId },
-        { scope: role },
-        { scope: 'global' }
-      ],
+    const { userId } = req.query;
+    const notis = await Notification.find({
+      $or: [{ userId }, { scope: 'admin' }, { scope: 'global' }],
       deletedBy: { $ne: userId }
     });
+    await Promise.all(notis.map(n => Notification.findByIdAndUpdate(n._id, { $addToSet: { deletedBy: userId } })));
+    res.status(200).json({ message: `Đã xóa ${notis.length} thông báo (admin)` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
-    const updateTasks = notifications.map(n =>
-      Notification.findByIdAndUpdate(n._id, {
-        $addToSet: { deletedBy: userId }
-      })
-    );
+exports.getUnreadAdminNotificationCount = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) {
+      return res.status(400).json({ message: 'Thiếu userId' });
+    }
 
-    await Promise.all(updateTasks);
+    const count = await Notification.countDocuments({
+      $or: [{ role: 'admin' }, { scope: 'global' }],
+      deletedBy: { $ne: userId },
+      readBy: { $ne: userId },
+    });
 
-    res.status(200).json({ message: `Đã xoá ${notifications.length} thông báo (mềm)` });
+    res.status(200).json({ message: 'Số thông báo chưa đọc', count });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
