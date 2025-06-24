@@ -3,7 +3,6 @@ const Cart = require('../models/cartModels');
 const mongoose = require('mongoose');
 const Product = require('../models/productModels');
 const Notification = require('../models/notificationModels');
-const { getIO } = require('../socket');
 
 // Hàm để tạo mã khuyến mãi ngẫu nhiên
 exports.getRandomCode = (req, res) => {
@@ -104,28 +103,26 @@ exports.autoDisableExpiredPromotions = async () => {
     });
 
     if (expiredPromotions.length > 0) {
-      const io = getIO();
-
       const updatePromises = expiredPromotions.map(async (promo) => {
         await Promotion.findByIdAndUpdate(promo._id, { status: false });
 
-        const notification = await Notification.create({
+        await Notification.create({
           message: `Khuyến mãi "${promo.name}" đã hết hạn`,
           scope: 'admin',
           type: 'warning',
           relatedId: promo._id,
+          role: 'admin',
         });
-
-        io.to('admin').emit('new_notification', notification); // Gửi socket tới admin
       });
 
       await Promise.all(updatePromises);
-      console.log(`✅ Đã tắt ${expiredPromotions.length} khuyến mãi hết hạn và gửi thông báo.`);
+      console.log(`✅ Đã tắt ${expiredPromotions.length} khuyến mãi hết hạn và tạo thông báo.`);
     }
   } catch (error) {
     console.error('❌ Lỗi khi tự động cập nhật trạng thái khuyến mãi:', error);
   }
 };
+
 
 exports.applyVoucher = async (req, res) => {
   try {

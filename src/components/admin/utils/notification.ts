@@ -10,11 +10,13 @@ export interface ApiNotificationItem {
   _id: string;
   message: string;
   userId?: string;
-  isRead: boolean;
+  type:string
   createdAt: string;
   updatedAt: string;
   relatedId: string;
+  readBy: string[];
 }
+
 
 // Hàm thêm thông báo vào localStorage và tự động sắp xếp
 export const addNotification = (message: string) => {
