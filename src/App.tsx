@@ -92,8 +92,7 @@ const App = () => {
       element: <ClientLayout />,
       children: [
         { path: "/", element: <Home /> },
-        { path: "login", element: <Login /> },
-        { path: "register", element: <Register /> },
+       
         { path: "about", element: <About /> },
         { path: "contact", element: <Contact /> },
         { path: "cart/:id", element: <Cart /> },
@@ -121,6 +120,8 @@ const App = () => {
         { path: "product", element: <Product /> },
       ],
     },
+     { path: "login", element: <Login /> },
+        { path: "register", element: <Register /> },
     {
       path: "/admin/login",
       element: <LoginAdmin />,
@@ -138,6 +139,9 @@ const App = () => {
       ),
       children: [
         { index: true, element: <AdminDashboard /> },
+        //Router Thống kê
+        { path: "statistics", element: <AdminDashboard /> },
+        
         //Router Danh mục
         { path: "category/list", element: <GetListCategory /> },
         { path: "category/add", element: <PostAddCategory /> },

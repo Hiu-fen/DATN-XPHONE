@@ -86,5 +86,12 @@ body {
   animation: slideDown 0.35s ease-out forwards;
 }
 
+/* Hiệu ứng ping cho các nút hoặc biểu tượng bên thông báo admin */
+@layer utilities {
+  .animate-ping-slow {
+    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+
 
 

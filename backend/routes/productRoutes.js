@@ -13,8 +13,11 @@ router.post('/', productController.createProduct);
 router.put('/:id', productController.updateProduct);
 router.delete('/:id', productController.deleteProduct);
 router.get("/:id/check-in-order", productController.checkProductInOrder);
-// cập nhật số lượng(0rder-Thế Anh)
+
+
 router.patch('/:id/update-quantity', productController.updateProductQuantity);
+router.post("/restore-quantity", productController.restoreProductQuantity);
+
 
 
 module.exports = router;

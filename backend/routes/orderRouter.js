@@ -20,6 +20,7 @@ router.patch("/:id/paid", orderController.markAsPaid);
 
 // Lấy đơn hàng theo userId
 router.get('/user/:userId', orderController.getOrdersByUser);
+// router.put('/orders/:id/status', updateOrderStatus);
 
 
 

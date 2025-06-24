@@ -8,10 +8,10 @@ import { useUser } from "../context/UserContext";
 
 const Cart = () => {
   const navigate = useNavigate();
-
   const [cartItems, setCartItems] = useState<ICartItem[]>([]);
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const { user } = useUser();
   const userId = user?._id || null;
 
@@ -39,23 +39,6 @@ const Cart = () => {
     }
   };
 
-  const handleCheckout = async () => {
-    if (!userId) {
-      message.error("Bạn chưa đăng nhập");
-      return;
-    }
-
-    try {
-      await axios.put(`http://localhost:5000/api/carts/${userId}`, {
-        items: cartItems,
-      });
-      navigate("/checkout");
-    } catch (error) {
-      console.error("Lỗi khi lưu giỏ hàng trước khi checkout:", error);
-      message.error("Không thể lưu giỏ hàng. Vui lòng thử lại.");
-    }
-  };
-
   useEffect(() => {
     if (userId) getProductCart();
   }, [userId]);
@@ -77,73 +60,103 @@ const Cart = () => {
     localStorage.setItem("cartItems", JSON.stringify(updatedItems));
   };
 
-const handleQuantityChange = (
-  productId: string,
-  color: string,
-  storage: string,
-  delta: number
-) => {
-  const product = getProductById(productId);
-  if (!product) return;
-
-  let messageDisplayed = false;
-
-  const updatedItems = cartItems.map((item) => {
-    if (
-      item.productId === productId &&
-      item.color === color &&
-      item.storage === storage
-    ) {
-      const newQuantity = item.quantity + delta;
-
-      if (newQuantity < 1) {
-        message.warning("Số lượng tối thiểu là 1");
-        messageDisplayed = true;
-        return item;
-      }
-
-      const variant = product.variants?.find(
-        (v) => v.color === color && v.ram === storage
-      );
-
-      if (variant && newQuantity > variant.soluong) {
-        message.warning(
-          `Chỉ còn lại ${variant.soluong} sản phẩm trong kho cho biến thể ${color} - ${storage}`
+  const handleQuantityChange = (
+    productId: string,
+    color: string,
+    storage: string,
+    delta: number
+  ) => {
+    const updatedItems = cartItems.map((item) => {
+      if (
+        item.productId === productId &&
+        item.color === color &&
+        item.storage === storage
+      ) {
+        const product = getProductById(productId);
+        const variant = product?.variants?.find(
+          (v) => v.color === color && v.ram === storage
         );
-        messageDisplayed = true;
-        return item;
+        const maxStock = variant?.soluong || 1;
+        const newQuantity = item.quantity + delta;
+
+        if (newQuantity < 1) {
+          message.error("Số lượng không được nhỏ hơn 1");
+          return item;
+        }
+
+        if (newQuantity > maxStock) {
+          message.error("Số lượng sản phẩm không đủ trong kho");
+          return item;
+        }
+
+        return { ...item, quantity: newQuantity };
       }
+      return item;
+    });
 
-      return { ...item, quantity: newQuantity };
-    }
-    return item;
-  });
-
-  const isQuantityChanged = updatedItems.some(
-    (item, index) => item.quantity !== cartItems[index].quantity
-  );
-
-  if (isQuantityChanged) {
     updateCartItems(updatedItems);
     updateCartOnServer(updatedItems);
-  } else if (!messageDisplayed) {
-    message.info("Không có thay đổi trong giỏ hàng");
-  }
-};
-
+  };
 
   const handleRemove = (itemId: string) => {
     const updatedItems = cartItems.filter((item) => item._id !== itemId);
     updateCartItems(updatedItems);
     updateCartOnServer(updatedItems);
+    setSelectedItems(selectedItems.filter((id) => id !== itemId));
     message.success("Xóa thành công");
   };
 
-  const total = cartItems.reduce((acc, item) => {
-    const product = getProductById(item.productId);
-    const price = product ? Number(product.price) : 0;
-    return acc + price * item.quantity;
-  }, 0);
+  const handleSelectAll = () => {
+    if (selectedItems.length === cartItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map((item) => item._id));
+    }
+  };
+
+  const handleSelectItem = (itemId: string) => {
+    if (selectedItems.includes(itemId)) {
+      setSelectedItems(selectedItems.filter((id) => id !== itemId));
+    } else {
+      setSelectedItems([...selectedItems, itemId]);
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (!userId) {
+      message.error("Bạn chưa đăng nhập");
+      return;
+    }
+
+    if (selectedItems.length === 0) {
+      message.error("Vui lòng chọn ít nhất một sản phẩm để thanh toán");
+      return;
+    }
+
+    const hasInvalidQuantity = selectedItems.some((itemId) => {
+      const item = cartItems.find((i) => i._id === itemId);
+      const product = getProductById(item?.productId || "");
+      const variant = product?.variants?.find(
+        (v) => v.color === item?.color && v.ram === item?.storage
+      );
+      return item && variant && item.quantity > (variant.soluong || 0);
+    });
+
+    if (hasInvalidQuantity) {
+      message.error("Một hoặc nhiều sản phẩm vượt quá số lượng tồn kho");
+      return;
+    }
+
+    try {
+      const selectedCartItems = cartItems.filter((item) =>
+        selectedItems.includes(item._id)
+      );
+      navigate("/checkout", { state: { selectedItems: selectedCartItems } });
+    } catch (error) {
+      console.error("Lỗi khi lưu giỏ hàng trước khi checkout:", error);
+      message.error("Không thể lưu giỏ hàng. Vui lòng thử lại.");
+    }
+  };
 
   if (loading) return <p>Đang tải giỏ hàng...</p>;
 
@@ -161,7 +174,12 @@ const handleQuantityChange = (
             <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
               <tr>
                 <th className="p-4 text-center">
-                  <input type="checkbox" className="w-4" />
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.length === cartItems.length}
+                    onChange={handleSelectAll}
+                    className="w-4"
+                  />
                 </th>
                 <th className="p-4 text-center">STT</th>
                 <th className="p-4 text-left">Sản phẩm</th>
@@ -179,10 +197,9 @@ const handleQuantityChange = (
                 if (!product) return null;
 
                 const variant = product.variants?.find(
-                  (v) =>
-                    v.color === item.color && v.ram === item.storage
+                  (v) => v.color === item.color && v.ram === item.storage
                 );
-                const maxStock = variant?.soluong || Infinity;
+                const maxStock = variant?.soluong || 1;
 
                 return (
                   <tr
@@ -190,9 +207,13 @@ const handleQuantityChange = (
                     className="border-t hover:bg-gray-50 transition-all"
                   >
                     <td className="p-4 text-center">
-                      <input type="checkbox" className="w-4" />
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(item._id)}
+                        onChange={() => handleSelectItem(item._id)}
+                        className="w-4"
+                      />
                     </td>
-
                     <td className="text-center p-4 font-semibold">
                       {index + 1}
                     </td>
@@ -209,9 +230,8 @@ const handleQuantityChange = (
                     <td className="text-center p-4">{item.color || "-"}</td>
                     <td className="text-center p-4">{item.storage || "-"}</td>
                     <td className="text-center p-4 text-red-500 font-medium">
-                      {formatPrice(`${product.price}`)}
+                      {formatPrice(`${variant?.price || product.price}`)}
                     </td>
-
                     <td className="text-center p-4">
                       <div className="flex justify-center items-center gap-2">
                         <button
@@ -237,19 +257,24 @@ const handleQuantityChange = (
                               1
                             )
                           }
-                          className="w-7 h-7 text-lg border rounded hover:bg-gray-100"
+                          className="w-7 h-7 text-lg border rounded hover:bg-gray-100 disabled:opacity-50"
                           disabled={item.quantity >= maxStock}
                         >
                           ＋
                         </button>
                       </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        Tồn kho: {maxStock}
+                      </div>
                     </td>
                     <td className="text-center p-4 font-semibold text-red-600">
                       {formatPrice(
-                        String(Number(product.price) * item.quantity)
+                        String(
+                          Number(variant?.price || product.price) * item.quantity
+                        )
                       )}
                     </td>
-                    <td className="text-center p-4 gap-2">
+                    <td className="text-center p-4 gap-2 items-center justify-center">
                       <button
                         onClick={() => handleRemove(item._id)}
                         className="text-sm text-red-600 font-semibold px-3 py-1 rounded border border-red-600 hover:bg-red-600 hover:text-white transition-colors duration-200 focus:outline-none"
@@ -270,14 +295,7 @@ const handleQuantityChange = (
             >
               ← Quay lại tiếp tục mua sắm
             </Link>
-
             <div className="text-right space-y-2">
-              <p className="text-xl font-bold">
-                Tổng Tiền:{" "}
-                <span className="text-red-600">
-                  {formatPrice(String(total))}
-                </span>
-              </p>
               <button
                 onClick={handleCheckout}
                 className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition font-semibold"

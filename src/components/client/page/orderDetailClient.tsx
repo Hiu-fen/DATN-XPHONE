@@ -9,8 +9,10 @@ import {
   FaCreditCard,
   FaCalendarAlt,
   FaClipboardList,
-  FaHashtag
+  FaHashtag,
+  FaTrashAlt
 } from 'react-icons/fa';
+import { Modal, Input, Select, message, Radio } from 'antd';
 
 interface Item {
   productName: string;
@@ -36,12 +38,53 @@ interface Order {
 const OrderDetail = () => {
   const { id } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
+  const [cancelReason, setCancelReason] = useState(""); // Lý do hủy
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal mở khi hủy
+  const [isCancelDisabled, setIsCancelDisabled] = useState(false); // Để khóa nút hủy
+
+  const cancelReasons = [
+    "Sản phẩm không còn nhu cầu",
+    "Lỗi thông tin sản phẩm",
+    "Nhận được sản phẩm bị lỗi",
+    "Đặt nhầm sản phẩm",
+    "Khác"
+  ];
 
   useEffect(() => {
     axios.get(`http://localhost:5000/api/orders/${id}`)
-      .then(res => setOrder(res.data))
+      .then(res => {
+        setOrder(res.data);
+        // Kiểm tra trạng thái đơn hàng, chỉ cho phép hủy khi "Chờ xác nhận"
+        if (res.data.status !== "Chờ xác nhận") {
+          setIsCancelDisabled(true); // Khóa nút hủy nếu không phải "Chờ xác nhận"
+        }
+      })
       .catch(err => console.error('Lỗi khi lấy chi tiết đơn hàng:', err));
   }, [id]);
+
+  const handleCancelOrder = async () => {
+    if (!cancelReason) {
+      message.warning("Vui lòng chọn lý do huỷ đơn hàng");
+      return;
+    }
+
+    try {
+      // Gọi đúng route PATCH
+      await axios.patch(`http://localhost:5000/api/orders/${id}`, {
+        status: "Đã huỷ", // Cập nhật trạng thái đơn hàng thành "Đã huỷ"
+        returnReason: cancelReason // Lý do hủy đơn hàng
+      });
+
+      message.success("Đơn hàng đã được huỷ thành công");
+      // Cập nhật lại trạng thái đơn hàng trong state
+      setOrder(prevOrder => prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder);
+      setIsModalOpen(false);
+      setIsCancelDisabled(true); // Khóa nút hủy sau khi hủy đơn
+    } catch (err) {
+      console.error("Lỗi khi hủy đơn:", err);
+      message.error("Không thể huỷ đơn hàng. Vui lòng thử lại");
+    }
+  };
 
   if (!order) {
     return (
@@ -73,7 +116,6 @@ const OrderDetail = () => {
         <div>
           <p className="text-gray-600 mb-1"> Ngày đặt:</p>
           <p className="font-medium text-gray-800 flex items-center gap-2">
-            
             {new Date(order.date).toLocaleDateString()}
           </p>
         </div>
@@ -84,21 +126,18 @@ const OrderDetail = () => {
         <div>
           <p className="text-gray-600 mb-1"> Thanh toán:</p>
           <p className="font-medium text-gray-800 flex items-center gap-2">
-            
             {order.paymentMethod || 'Chưa rõ'}
           </p>
         </div>
         <div>
           <p className="text-gray-600 mb-1"> Địa chỉ:</p>
           <p className="font-medium text-gray-800 flex items-center gap-2">
-          
             {order.address}
           </p>
         </div>
         <div>
           <p className="text-gray-600 mb-1"> Số sản phẩm:</p>
           <p className="font-medium text-gray-800 flex items-center gap-2">
-            
             {order.items.length}
           </p>
         </div>
@@ -106,7 +145,7 @@ const OrderDetail = () => {
 
       <div className="bg-white rounded-lg shadow border border-gray-200">
         <div className="px-6 py-4 border-b bg-gray-50 font-semibold text-gray-700 text-lg flex items-center gap-2">
-          
+          Chi tiết sản phẩm
         </div>
         <div>
           {order.items.map((item, idx) => (
@@ -135,13 +174,46 @@ const OrderDetail = () => {
         </div>
       </div>
 
-      {/* Tổng tiền */}
-      <div className="mt-6 text-right">
-        <p className="text-xl text-gray-800 font-bold">
+      <div className="flex justify-between items-center mt-6">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className={`bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition duration-200 ${isCancelDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+          disabled={isCancelDisabled} // Khóa nút hủy khi đơn đã bị hủy
+        >
+          <FaTrashAlt /> Hủy đơn hàng
+        </button>
+
+        <div className="text-xl text-gray-800 font-bold">
           <FaMoneyBillWave className="inline mr-1 text-green-600" />
           Tổng cộng: <span className="text-green-700">{order.total.toLocaleString()} đ</span>
-        </p>
+        </div>
       </div>
+
+      {/* Modal hủy đơn */}
+      <Modal
+        title="Lý do hủy đơn hàng"
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        onOk={handleCancelOrder}
+        okText="Xác nhận hủy"
+        cancelText="Hủy"
+      >
+        <div>
+          <label className="font-medium text-gray-600">Lý do hủy:</label>
+          <Select
+            value={cancelReason}
+            onChange={(value) => setCancelReason(value)}
+            placeholder="Chọn lý do hủy"
+            style={{ width: '100%' }}
+          >
+            {cancelReasons.map((reason, idx) => (
+              <Select.Option key={idx} value={reason}>
+                {reason}
+              </Select.Option>
+            ))}
+          </Select>
+        </div>
+      </Modal>
     </div>
   );
 };
