@@ -4,6 +4,7 @@ import { Mail, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from "./GoogleLoginButton";
+import { createNotificationForUser } from "../../api/admin/notificationApi";
 
 interface LoginForm {
   email: string;
@@ -29,6 +30,12 @@ const Login = () => {
 
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
+
+      await createNotificationForUser({
+        userId: user._id,
+        message: `Tài khoản "${user.email}" đã đăng nhập hệ thống`,
+        type: 'info'
+      });
 
       message.success("Đăng nhập thành công");
       nav("/");
