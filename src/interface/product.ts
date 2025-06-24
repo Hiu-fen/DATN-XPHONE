@@ -1,4 +1,5 @@
 export interface IProduct {
+  quantity: number;
   _id?: string;
   name: string;
   image: string;
