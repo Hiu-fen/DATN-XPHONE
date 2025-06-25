@@ -83,3 +83,14 @@ export const deleteAllAdminNotifications = (userId: string) => {
 export const getAdminUnreadCount = (userId: string) => {
   return axios.get(`${BASE_URL}/admin/unread-count?userId=${userId}`);
 };
+
+// Lấy tất cả thông báo (dành cho admin quản lý toàn bộ)
+export const getAllNotifications = () => {
+  return axios.get(`${BASE_URL}/all`);
+};
+
+// Xóa toàn bộ thông báo đã đọc hoặc đã bị xóa bởi tất cả người dùng
+export const purgeReadAndDeletedNotifications = () => {
+  return axios.delete(`${BASE_URL}/purge-read-deleted`);
+};
+

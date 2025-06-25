@@ -208,7 +208,6 @@ exports.createOrder = async (req, res) => {
         message: `Bạn đã đặt hàng thành công với mã đơn ${orderCode}`,
         type: "order",
         role: "user",
-        scope: "user",
         relatedId: order._id,
       });
 
