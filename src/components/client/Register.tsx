@@ -45,7 +45,7 @@ const Register = () => {
 
   return (
     <div
-      className="w-full h-[600px] bg-cover bg-center flex items-center justify-center"
+      className="w-full h-[600px] bg-cover bg-center flex items-center justify-center ml-[-80px] mt-[50px]"
       style={{ backgroundImage: `url('/register.png')` }}
     >
       <div className="w-[300px] h-[400px] sm:w-[550px] bg-white bg-opacity-0 rounded-xl p-6 shadow-xl backdrop-blur-md ml-[650px] mt-[-50px]">
@@ -118,7 +118,7 @@ const Register = () => {
           </button>
 
           {/* Google */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-[-20px]">
             <p className="text-center text-gray-600 ">
               Chưa đã có tài khoản?{' '}
               <a href="/login" className="text-red-500 font-semibold hover:underline">
@@ -126,7 +126,7 @@ const Register = () => {
               </a>
             </p>
 
-            <div className="text-center text-gray-500 text-xs mt-2 scale-90">
+            <div className="text-center text-gray-500 text-xs mt-[-20px] scale-90">
               <GoogleLoginButton mode="register" />
             </div>
           </div>
