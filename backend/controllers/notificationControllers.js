@@ -233,4 +233,66 @@ exports.getUnreadAdminNotificationCount = async (req, res) => {
   }
 };
 
+const MAX_NOTIFICATIONS = 60;
+
+exports.getAllNotifications = async (req, res) => {
+  try {
+    const data = await Notification.find().sort({ createdAt: -1 });
+
+    if (data.length >= MAX_NOTIFICATIONS) {
+      const existingWarning = await Notification.findOne({
+        message: { $regex: 'có.*thông báo.*dọn dẹp', $options: 'i' },
+        type: 'warning',
+        scope: 'admin',
+        createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } 
+      });
+
+      if (!existingWarning) {
+        const admins = await User.find({ role: 'admin' });
+
+        await Promise.all(
+          admins.map(admin =>
+            Notification.create({
+              userId: admin._id,
+              message: `Hệ thống có ${data.length} thông báo - cần dọn dẹp`,
+              type: 'warning',
+              role: 'admin',
+              scope: 'admin',
+            })
+          )
+        );
+      }
+    }
+
+    res.status(200).json({ message: 'Lấy tất cả thông báo', data });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+// Xóa cứng tất cả thông báo đã đọc + đã bị xóa mềm
+exports.purgeReadAndDeletedNotifications = async (req, res) => {
+  try {
+    // Lấy tất cả thông báo mà mọi người đều đã đọc và đã xóa
+    const notifications = await Notification.find();
+
+    const toDelete = notifications.filter(n => {
+      const allRead = n.readBy.length > 0;  // hoặc kiểm tra số lượng readBy >= số user (tùy logic)
+      const allDeleted = n.deletedBy.length > 0;
+      return allRead && allDeleted;
+    });
+
+    const idsToDelete = toDelete.map(n => n._id);
+    await Notification.deleteMany({ _id: { $in: idsToDelete } });
+
+    res.status(200).json({ message: `Đã xoá ${idsToDelete.length} thông báo vĩnh viễn` });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+
+
 

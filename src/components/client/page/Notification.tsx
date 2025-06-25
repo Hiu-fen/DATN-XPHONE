@@ -23,10 +23,11 @@ import {
   deleteAllUserNotifications,
   deleteUserNotification,
   getUserNotifications,
+  getUserUnreadCount,
   markAllUserNotiAsRead,
   markOneUserNotiAsRead,
 } from '../../../api/admin/notificationApi';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiNotificationItem } from '../../admin/utils/notification';
 
 const { Title } = Typography;
@@ -56,6 +57,13 @@ const Notification = () => {
     }
   };
 
+  const { data } = useQuery({
+    queryKey: ['unread-count', userId],
+    queryFn: () => getUserUnreadCount(userId!),
+    enabled: !!userId,
+    refetchInterval: 30000, 
+  });
+
   const handleMarkAsRead = async (id: string) => {
     try {
       await markOneUserNotiAsRead(id, userId);
@@ -79,6 +87,9 @@ const Notification = () => {
     try {
       await deleteUserNotification(id, userId);
       setNotifications((prev) => prev.filter((n) => n._id !== id));
+      queryClient.invalidateQueries({
+        queryKey: ['unread-count', userId],
+      });
       message.success('Đã xoá thông báo');
     } catch {
       message.error('Xoá thất bại');
@@ -108,12 +119,14 @@ const Notification = () => {
     try {
       await deleteAllUserNotifications(userId);
       setNotifications([]);
+      queryClient.invalidateQueries({
+        queryKey: ['unread-count', userId],
+      });
       message.success('Đã xoá tất cả thông báo');
     } catch {
       message.error('Không thể xoá tất cả');
     }
   };
-
 
   const getNotificationLink = (note: ApiNotificationItem) => {
     switch (note.type) {
@@ -147,6 +160,8 @@ const Notification = () => {
     }
   };
 
+  const unreadCount = data?.data?.count ?? 0;
+
   return (
     <div className="py-10 px-4 mx-auto font-sans">
       <Title level={3} className="flex items-center gap-3">
@@ -160,7 +175,7 @@ const Notification = () => {
           onClick={handleMarkAllAsRead}
           disabled={notifications.every((n) => n.readBy?.includes(userId))}
         >
-          Đánh dấu tất cả là đã đọc
+          Đánh dấu tất cả là đã đọc ({unreadCount})
         </Button>
         <Button
           danger
@@ -168,7 +183,7 @@ const Notification = () => {
           onClick={handleDeleteAll}
           disabled={notifications.length === 0}
         >
-          Xoá tất cả thông báo
+          Xoá tất cả thông báo ({unreadCount})
         </Button>
       </div>
       
