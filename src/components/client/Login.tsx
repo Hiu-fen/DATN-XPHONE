@@ -49,7 +49,7 @@ const Login = () => {
 
   return (
     <div
-      className=" w-[100%] h-[600px] bg-cover bg-center flex items-center justify-center"
+      className=" w-[100%] h-[600px] bg-cover bg-center flex items-center justify-center ml-[-80px] mt-[50px]"
       style={{ backgroundImage: `url('/login.png')` }}
     >
       <div className="w-[300px] h-[400px] sm:w-[550px] bg-white bg-opacity-0 rounded-xl p-6 shadow-xl backdrop-blur-md ml-[650px] mt-[-50px]">
@@ -83,7 +83,7 @@ const Login = () => {
               type="password"
               placeholder="Nhập mật khẩu"
               className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 transition ${
-                errors.password ? "border-red-500" : "border-gray-300"
+                errors.password ? "border-red-500" : "border-gray-300" 
               }`}
             />
             <Lock className="absolute left-3 top-10 text-red-400 w-5 h-5 pointer-events-none" />
@@ -97,7 +97,7 @@ const Login = () => {
             Đăng nhập
           </button>
 
-         <div className="flex items-center justify-between">
+         <div className="flex items-center justify-between mt-[-20px]">
            <p className="text-center text-gray-600 ">
             Chưa có tài khoản?{' '}
             <a href="/register" className="text-red-500 font-semibold hover:underline">
@@ -105,7 +105,7 @@ const Login = () => {
             </a>
           </p>
 
- <div className="text-center text-gray-500 text-xs mt-2 scale-90">
+          <div className="text-center text-gray-500 text-xs mt-[-20px] scale-90">
             <GoogleLoginButton mode="login" />
           </div>
          </div>
