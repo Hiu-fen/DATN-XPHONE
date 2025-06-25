@@ -1,5 +1,6 @@
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
+const Notification = require("../models/notificationModels");
 
 const axios = require("axios");
 
@@ -198,6 +199,23 @@ exports.createOrder = async (req, res) => {
       });
     } catch (emailError) {
       console.error("Lỗi khi gửi email xác nhận:", emailError.message);
+    }
+
+    // ✅ Tạo thông báo cho người dùng
+    if (userId) {
+      const notification = new Notification({
+        userId, // phải là ObjectId
+        message: `Bạn đã đặt hàng thành công với mã đơn ${orderCode}`,
+        type: "order",
+        role: "user",
+        relatedId: order._id,
+      });
+
+      try {
+        await notification.save();
+      } catch (err) {
+        console.error("Lỗi khi tạo thông báo đặt hàng:", err.message);
+      }
     }
 
     res.status(201).json(order);

@@ -1,67 +1,30 @@
 import {
-  PhoneOutlined,
-  TruckOutlined,
-  GiftOutlined,
-  CheckOutlined,
   ShoppingCartOutlined,
-  StarOutlined,
-  MoreOutlined,
-  LeftOutlined,
-  RightOutlined,
 } from "@ant-design/icons";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { IProduct } from "../../../interface/product";
-import { IComment } from "../../../interface/comments";
-import { addToCart } from "../../../api/cartApi";
 import { message } from "antd";
 import { useQuery } from "@tanstack/react-query";
+import CommentSection from "../componentChild/Detail/CommentSection";
+import RelatedProducts from "../componentChild/Detail/RelatedProducts";
+import PromotionSection from "../componentChild/Detail/PromotionSection";
+import SupportPolicy from "../componentChild/Detail/SupportPolicy";
 
 
 const Details = () => {
   const { id } = useParams();
   const [product, setProduct] = useState<IProduct | null>(null);
   const [mainImage, setMainImage] = useState<string>("");
-  // Danh Sách Bình Luận
-  const [comments, setComments] = useState<IComment[]>([]);
-  const [newComment, setNewComment] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<{
     color: string;
     ram: string;
   } | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const navigate = useNavigate();
-  const relatedProductsRef = useRef<HTMLDivElement>(null);
 
-  // Fetch related products
-  useEffect(() => {
-    let isMounted = true;
-    if (product?.danhmuc) {
-      const fetchRelated = async () => {
-        try {
-          const res = await axios.get(`http://localhost:5000/api/products`);
-          if (isMounted) {
-            const filtered = res.data.filter(
-              (p: IProduct) =>
-                p._id !== product._id && p.danhmuc === product.danhmuc
-            );
-            setRelatedProducts(filtered.slice(0, 4));
-          }
-        } catch (error) {
-          console.error("Lỗi lấy sản phẩm liên quan:", error);
-          message.error("Không thể tải sản phẩm liên quan.");
-        }
-      };
-      fetchRelated();
-    }
-    return () => {
-      isMounted = false;
-    };
-  }, [product]);
-  // Fetch product details
+  // Lấy chi tiết sản phẩm
   useEffect(() => {
     let isMounted = true;
     const fetchProduct = async () => {
@@ -73,7 +36,7 @@ const Details = () => {
           setSelectedVariant(null);
         }
       } catch (error) {
-        console.error("Failed to fetch product:", error);
+        console.error("Không thể tải thông tin sản phẩm:", error);
         message.error("Không thể tải thông tin sản phẩm.");
       }
     };
@@ -82,115 +45,14 @@ const Details = () => {
       isMounted = false;
     };
   }, [id]);
-  // Lấy toàn bộ danh sách bình luận
-  useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/comments/${id}`);
-        setComments(res.data);
-      } catch (error) {
-        console.error("Lỗi lấy bình luận:", error);
-      }
-    };
-    fetchComments();
-  }, [id]);
-  // Thêm bình luận
-  const handleAddComment = async () => {
-    if (!newComment.trim()) return;
-    setLoading(true);
-    try {
-      // Lấy user từ localStorage nếu có
-      const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
-      const userName = userInfo?.name || "Khách hàng";
 
-      const res = await axios.post("http://localhost:5000/api/comments", {
-        sanpham: product?._id,
-        user: userName,
-        content: newComment.trim(),
-        date: new Date().toISOString(),
-        status: false,
-        likes: 0,
-      });
-
-      setComments([res.data, ...comments]);
-      setNewComment("");
-      message.success(
-        "Bình luận của bạn đã được gửi thành công, chờ phê duyệt!"
-      );
-    } catch (error) {
-      console.error("Lỗi gửi bình luận:", error);
-      message.error("Gửi bình luận thất bại!");
-    }
-    setLoading(false);
-  };
-  // Like Bình Luận
-  const handleLike = async (commentId: string) => {
-    try {
-      const res = await axios.post(
-        `http://localhost:5000/api/comments/${commentId}/like`
-      );
-      setComments((prevComments) =>
-        prevComments.map((comment) =>
-          comment._id === commentId ? res.data : comment
-        )
-      );
-    } catch (error) {
-      console.error("Lỗi khi tăng like:", error);
-    }
-  };
-  // Comment menu states and functions
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editContent, setEditContent] = useState<string>("");
-  const toggleMenu = (commentId: string) => {
-    if (activeMenuId === commentId) setActiveMenuId(null);
-    else setActiveMenuId(commentId);
-  };
-  const startEdit = (comment: IComment) => {
-    setEditingId(comment._id);
-    setEditContent(comment.content);
-    setActiveMenuId(null);
-  };
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditContent("");
-  };
-  // Sửa bình luận
-  const saveEdit = async () => {
-    if (!editContent.trim()) return alert("Nội dung không được để trống");
-    try {
-      const res = await axios.put(
-        `http://localhost:5000/api/comments/${editingId}`,
-        {
-          content: editContent.trim(),
-        }
-      );
-      setComments((prev) =>
-        prev.map((c) => (c._id === editingId ? res.data : c))
-      );
-      setEditingId(null);
-      setEditContent("");
-    } catch (error) {
-      console.error("Lỗi cập nhật bình luận:", error);
-    }
-  };
-  // Xóa bình luận
-  const deleteComment = async (commentId: string) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa bình luận này?")) return;
-    try {
-      await axios.delete(`http://localhost:5000/api/comments/${commentId}`);
-      setComments((prev) => prev.filter((c) => c._id !== commentId));
-      setActiveMenuId(null);
-    } catch (error) {
-      console.error("Lỗi xóa bình luận:", error);
-    }
-  };
   // Handle select variant
   const handleSelectVariant = (color: string, ram: string) => {
     setSelectedVariant({ color, ram });
     setQuantity(1); // Reset quantity when changing variant
     console.log("Selected variant:", { color, ram });
   };
+  
   // Get selected variant price
   const getSelectedVariantPrice = () => {
     if (!selectedVariant) {
@@ -203,6 +65,7 @@ const Details = () => {
       ? `${variant.price} VNĐ`
       : product?.price || "Liên hệ";
   };
+
   // Handle quantity change
   const handleQuantityChange = (value: number) => {
     if (value < 1) return;
@@ -223,119 +86,118 @@ const Details = () => {
     }
     setQuantity(value);
   };
-const handleAddToCart = async () => {
-  if (!product) {
-    message.error("Không tìm thấy sản phẩm.");
-    return;
-  }
 
-  if (!product.status) {
-    message.error("Sản phẩm này không còn được bán.");
-    return;
-  }
-
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    if (!user?._id) {
-      message.warning("Bạn cần đăng nhập để mua hàng.");
-      navigate("/login");
+  // Thêm sản phẩm vào giỏ hàng
+  const handleAddToCart = async () => {
+    if (!product) {
+      message.error("Không tìm thấy sản phẩm.");
       return;
     }
 
-    if (!product._id) {
-      message.warning("Không tìm thấy sản phẩm.");
+    if (!product.status) {
+      message.error("Sản phẩm này không còn được bán.");
       return;
     }
 
-    if (product.soluong <= 0) {
-      message.warning("Sản phẩm đã hết hàng.");
-      return;
-    }
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (!user?._id) {
+        message.warning("Bạn cần đăng nhập để mua hàng.");
+        navigate("/login");
+        return;
+      }
 
-    if (!selectedVariant) {
-      message.warning("Vui lòng chọn biến thể.");
-      return;
-    }
+      if (!product._id) {
+        message.warning("Không tìm thấy sản phẩm.");
+        return;
+      }
 
-    // Tìm biến thể sản phẩm đã chọn
-    const variant = product.variants?.find(
-      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-    );
+      if (product.soluong <= 0) {
+        message.warning("Sản phẩm đã hết hàng.");
+        return;
+      }
 
-    // Kiểm tra nếu variant là undefined (không tìm thấy biến thể)
-    if (!variant) {
-      message.warning("Biến thể không hợp lệ hoặc không có sẵn.");
-      return;
-    }
+      if (!selectedVariant) {
+        message.warning("Vui lòng chọn biến thể.");
+        return;
+      }
 
-    // Kiểm tra số lượng tồn kho của biến thể
-    if (variant.soluong <= 0) {
-      message.warning(`Biến thể ${variant.color} - ${variant.ram} đã hết hàng!`);
-      return;
-    }
-
-    // Kiểm tra số lượng vượt quá tồn kho của biến thể
-    if (quantity > variant.soluong) {
-      message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
-      return;
-    }
-
-    // Kiểm tra tổng số lượng sản phẩm trong giỏ hàng hiện tại
-    const cartResponse = await axios.get(`http://localhost:5000/api/carts/${user._id}`);
-    const cart = cartResponse.data;
-    const cartItem = cart.items.find(
-      (item: any) =>
-        item.productId === product._id &&
-        item.color === selectedVariant.color &&
-        item.storage === selectedVariant.ram
-    );
-
-    // Tính tổng số lượng nếu sản phẩm đã có trong giỏ hàng
-    let totalQuantity = quantity;
-    if (cartItem) {
-      totalQuantity += cartItem.quantity;
-    }
-
-    // Kiểm tra nếu tổng số lượng trong giỏ hàng vượt quá số lượng tồn kho
-    if (totalQuantity > variant.soluong) {
-      message.warning(
-        `Số lượng trong giỏ hàng của biến thể ${variant.color} - ${variant.ram} vượt quá tồn kho!`
+      // Tìm biến thể sản phẩm đã chọn
+      const variant = product.variants?.find(
+        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
       );
-      return;
-    }
 
-    // Thêm vào giỏ hàng nếu không có lỗi
-    const cartItemToAdd = {
-      userId: user._id,
-      items: [
-        {
-          productId: product._id,
-          quantity: quantity,
-          price: product.price,
-          color: selectedVariant.color,
-          storage: selectedVariant.ram,
-        },
-      ],
-    };
+      // Kiểm tra nếu variant là undefined (không tìm thấy biến thể)
+      if (!variant) {
+        message.warning("Biến thể không hợp lệ hoặc không có sẵn.");
+        return;
+      }
 
-    // Gửi yêu cầu POST đến API giỏ hàng
-    const response = await axios.post("http://localhost:5000/api/carts", cartItemToAdd);
-    message.success("Đã thêm vào giỏ hàng!");
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      console.error("Lỗi thêm giỏ hàng:", error.message);
-      message.error(error.response?.data?.message || "Thêm vào giỏ hàng thất bại.");
-    } else {
-      console.error("Lỗi không phải AxiosError:", error);
-      message.error("Thêm vào giỏ hàng thất bại.");
-    }
-  }
-};
+      // Kiểm tra số lượng tồn kho của biến thể
+      if (variant.soluong <= 0) {
+        message.warning(`Biến thể ${variant.color} - ${variant.ram} đã hết hàng!`);
+        return;
+      }
 
+      // Kiểm tra số lượng vượt quá tồn kho của biến thể
+      if (quantity > variant.soluong) {
+        message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
+        return;
+      }
 
+      // Kiểm tra tổng số lượng sản phẩm trong giỏ hàng hiện tại
+      const cartResponse = await axios.get(`http://localhost:5000/api/carts/${user._id}`);
+      const cart = cartResponse.data;
+      const cartItem = cart.items.find(
+        (item: any) =>
+          item.productId === product._id &&
+          item.color === selectedVariant.color &&
+          item.storage === selectedVariant.ram
+      );
 
+      // Tính tổng số lượng nếu sản phẩm đã có trong giỏ hàng
+      let totalQuantity = quantity;
+      if (cartItem) {
+        totalQuantity += cartItem.quantity;
+      }
 
-  // mua ngay
+      // Kiểm tra nếu tổng số lượng trong giỏ hàng vượt quá số lượng tồn kho
+      if (totalQuantity > variant.soluong) {
+        message.warning(
+          `Số lượng trong giỏ hàng của biến thể ${variant.color} - ${variant.ram} vượt quá tồn kho!`
+        );
+        return;
+      }
+
+      // Thêm vào giỏ hàng nếu không có lỗi
+      const cartItemToAdd = {
+        userId: user._id,
+        items: [
+          {
+            productId: product._id,
+            quantity: quantity,
+            price: product.price,
+            color: selectedVariant.color,
+            storage: selectedVariant.ram,
+          },
+        ],
+      };
+
+      // Gửi yêu cầu POST đến API giỏ hàng
+      const response = await axios.post("http://localhost:5000/api/carts", cartItemToAdd);
+          message.success("Đã thêm vào giỏ hàng!");
+        } catch (error: unknown) {
+          if (error instanceof AxiosError) {
+            console.error("Lỗi thêm giỏ hàng:", error.message);
+            message.error(error.response?.data?.message || "Thêm vào giỏ hàng thất bại.");
+          } else {
+            console.error("Lỗi không phải AxiosError:", error);
+            message.error("Thêm vào giỏ hàng thất bại.");
+          }
+        }
+  };
+
+  // Mua ngay
   const handleBuyNow = () => {
     if (!product || !selectedVariant?.color || !selectedVariant?.ram) {
       message.warning("Vui lòng chọn biến thể");
@@ -365,16 +227,6 @@ const handleAddToCart = async () => {
     navigate("/checkout", { state: { buyNowItem } });
   };
 
-  // Scroll related products
-  const scrollRelatedProducts = (direction: "left" | "right") => {
-    if (relatedProductsRef.current) {
-      const scrollAmount = 300;
-      relatedProductsRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
   const { data: categoryNames } = useQuery<string[]>({
     queryKey: ["category-names", product?.danhmuc],
     queryFn: async () => {
@@ -403,6 +255,7 @@ const handleAddToCart = async () => {
     return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
 
   const uniqueVariants = product.variants || [];
+
   return (
     <div className="w-full h-full bg-white p-4 md:p-8">
       {/* Thông tin */}
@@ -537,20 +390,6 @@ const handleAddToCart = async () => {
                   : product.soluong}
               </p>
             </div>
-            <div className="space-y-2 text-gray-700 mb-6">
-              <div className="flex items-center gap-2">
-                <CheckOutlined className="text-green-600 text-xl" />
-                <p>Sản phẩm chính hãng, nguyên seal</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckOutlined className="text-green-600 text-xl" />
-                <p>Đổi trả trong 7 ngày nếu lỗi kỹ thuật</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckOutlined className="text-green-600 text-xl" />
-                <p>Bảo hành theo chính sách của hãng</p>
-              </div>
-            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mt-4 max-w-md w-full">
             <button
@@ -559,9 +398,6 @@ const handleAddToCart = async () => {
               disabled={!product.status}
             >
               MUA NGAY
-              <span className="text-[11px] text-gray-300 mt-0.5 text-center">
-                không được freeShip
-              </span>
             </button>
             <button
               className="flex-1 flex flex-col items-center justify-center gap-1 border-2 border-red-600 text-red-600 py-2 px-6 rounded-lg font-semibold text-sm md:text-base hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -573,239 +409,28 @@ const handleAddToCart = async () => {
             </button>
           </div>
         </div>
+        {/* Hiển thị khuyến mãi và chính sách hỗ trợ */}
         <div className="col-span-12 lg:col-span-3 space-y-3">
-          <div className="bg-white rounded-md shadow-sm border border-red-400">
-            <div className="bg-red-500 text-white px-3 py-1.5 flex items-center gap-2 font-semibold text-base justify-center rounded-t-md">
-              <GiftOutlined className="text-lg" />
-              <span>Khuyến mãi đặc biệt</span>
-            </div>
-            <div className="p-3 text-sm text-gray-700 space-y-1">
-              <p>
-                - Giảm{" "}
-                <span className="text-red-600 font-semibold">250.000đ</span> khi
-                mua kèm gói bảo hành VIP 12 tháng 1 Đổi 1.
-              </p>
-              <p>
-                - Trả góp qua Home PayLater giảm thêm 5% tối đa{" "}
-                <span className="text-red-600 font-semibold">500.000đ</span>.
-              </p>
-              <p>
-                - Hỗ trợ trả góp 0% chỉ cần CCCD gắn chip hoặc 0% qua thẻ tín
-                dụng.
-              </p>
-            </div>
-          </div>
-          <div className="bg-white rounded-md shadow-sm border border-gray-800">
-            <div className="bg-gray-900 text-white px-3 py-1.5 flex items-center gap-2 font-semibold text-base justify-center rounded-t-md">
-              <StarOutlined className="text-lg" />
-              <span>Chính sách hỗ trợ</span>
-            </div>
-            <table className="w-full text-sm border-separate border-spacing-y-1 px-3 py-2">
-              <tbody>
-                {[
-                  {
-                    icon: <TruckOutlined className="text-xl text-gray-600" />,
-                    title: "Vận chuyển miễn phí",
-                    desc: "Đơn hàng từ 2 triệu",
-                  },
-                  {
-                    icon: <GiftOutlined className="text-xl text-gray-600" />,
-                    title: "Quà tặng",
-                    desc: "Ưu đãi đặc biệt theo mùa",
-                  },
-                  {
-                    icon: <CheckOutlined className="text-xl text-gray-600" />,
-                    title: "Cam kết chất lượng",
-                    desc: "100% chính hãng",
-                  },
-                  {
-                    icon: <PhoneOutlined className="text-xl text-gray-600" />,
-                    title: "Hotline: 0789182477",
-                    desc: "Hỗ trợ từ 8h - 22h",
-                  },
-                ].map((item, idx) => (
-                  <tr key={idx} className="bg-gray-50 rounded-md">
-                    <td className="w-10 text-center py-2 align-top">
-                      {item.icon}
-                    </td>
-                    <td className="py-2 align-top">
-                      <div>
-                        <span className="font-semibold">{item.title}</span>
-                        <br />
-                        <span className="text-xs text-gray-500">
-                          {item.desc}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <PromotionSection />
+          <SupportPolicy />
         </div>
       </div>
-      {/* Mô tả */}
-      <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-center mb-8 border-b-4 border-gray-300 pb-3">
-          MÔ TẢ SẢN PHẨM
-        </h2>
-        <div className="text-gray-700 text-base md:text-lg leading-relaxed max-w-3xl mx-auto space-y-5 px-2 md:px-0">
-          <p>{product.mota || "Không có mô tả."}</p>
-        </div>
-      </section>
-      {/* Bình Luận */}
-      <section className="max-w-3xl mx-auto mt-12 px-4 md:px-0">
-        <div className="flex items-center gap-2">
-          <h6 className="text-black-500 font-semibold text-sm md:text-base">
-            Bình luận sản phẩm
-          </h6>
-        </div>
-        <textarea
-          rows={3}
-          placeholder="Viết bình luận của bạn..."
-          className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none focus:outline-none focus:border-blue-500 mt-3"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-        ></textarea>
-        <button
-          disabled={loading}
-          onClick={handleAddComment}
-          className="mt-2 bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 text-sm"
-        >
-          {loading ? "Đang gửi..." : "Gửi bình luận"}
-        </button>
-        <div className="mt-5 space-y-3">
-          {comments
-            .filter((comment) => comment.status)
-            .map((comment) => (
-              <div
-                key={comment._id}
-                className="p-3 border border-gray-200 rounded-md relative text-sm"
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-semibold">{comment.user}</span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(comment.date).toLocaleString("vi-VN")}
-                  </span>
-                  <button
-                    className="ml-2 p-1 text-gray-600 hover:text-gray-900"
-                    onClick={() => toggleMenu(comment._id)}
-                  >
-                    <MoreOutlined />
-                  </button>
-                  {activeMenuId === comment._id && (
-                    <div className="absolute top-7 right-3 bg-white border border-gray-300 rounded shadow-md z-10 text-xs">
-                      <button
-                        className="block px-3 py-1 hover:bg-gray-100 w-full text-left"
-                        onClick={() => startEdit(comment)}
-                      >
-                        Chỉnh sửa
-                      </button>
-                      <button
-                        className="block px-3 py-1 hover:bg-gray-100 w-full text-left text-red-600"
-                        onClick={() => deleteComment(comment._id)}
-                      >
-                        Xóa
-                      </button>
-                    </div>
-                  )}
-                </div>
-                {editingId === comment._id ? (
-                  <>
-                    <textarea
-                      className="w-full h-16 border border-gray-300 rounded resize-none text-sm"
-                      rows={3}
-                      value={editContent}
-                      onChange={(e) => setEditContent(e.target.value)}
-                    />
-                    <div className="mt-2 flex gap-2">
-                      <button
-                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-xs"
-                        onClick={saveEdit}
-                      >
-                        Lưu
-                      </button>
-                      <button
-                        className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400 text-xs"
-                        onClick={cancelEdit}
-                      >
-                        Hủy
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-gray-700">{comment.content}</p>
-                )}
-                <div className="mt-1 flex items-center gap-2 text-xs">
-                  <button
-                    onClick={() => handleLike(comment._id)}
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                  >
-                    👍 Like
-                  </button>
-                  <span>{comment.likes ?? 0}</span>
-                </div>
-              </div>
-            ))}
-        </div>
-      </section>
-      {/* Sản phẩm liên quan */}
-      <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0 relative">
-        <div className="flex items-center gap-3">
-          <div className=" bg-red-500 w-[30px] rounded-lg h-[50px]" />
-          <h6 className=" text-red-500 font-semibold">Sản phẩm liên quan</h6>
-        </div>
-        <br />
-        <button
-          onClick={() => scrollRelatedProducts("left")}
-          className="hidden md:flex absolute -left-16 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 hover:bg-gray-300 z-10 shadow"
-        >
-          <LeftOutlined className="text-3xl" />
-        </button>
-        <div className="relative">
-          <div
-            ref={relatedProductsRef}
-            className="flex overflow-x-auto gap-4 scrollbar-hide max-w-[1008px]"
-          >
-            {relatedProducts.length > 0 ? (
-              relatedProducts.map((item) => (
-                <Link
-                  to={`/detail/${item._id}`}
-                  key={item._id}
-                  className="flex-shrink-0 w-60 border rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200"
-                >
-                  <img
-                    src={item.image || "/default-image.jpg"}
-                    alt={item.name}
-                    className="w-full h-40 object-cover"
-                  />
-                  <div className="p-3">
-                    <h3 className="font-semibold text-lg truncate">
-                      {item.name}
-                    </h3>
-                    <div className="flex justify-between items-center">
-                      <p className="text-red-600 font-bold">
-                        {item.price || "Liên hệ"}
-                      </p>
-                      <button className="text-gray-600 hover:text-red-600">
-                        <ShoppingCartOutlined className="text-xl" />
-                      </button>
-                    </div>
-                  </div>
-                </Link>
-              ))
-            ) : (
-              <p>Không có sản phẩm liên quan.</p>
-            )}
+      {/* Mô tả sản phẩm */}
+      <section className="w-full mt-16 px-4 md:px-0">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-center text-3xl md:text-4xl font-bold mb-6 md:mb-8 border-b border-gray-300 pb-3 text-gray-900">
+            MÔ TẢ SẢN PHẨM
+          </h2>
+          <div className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-3xl mx-auto text-gray-700 leading-relaxed">
+            <p>{product.mota || "Không có mô tả."}</p>
           </div>
         </div>
-        <button
-          onClick={() => scrollRelatedProducts("right")}
-          className="hidden md:flex absolute -right-16 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 hover:bg-gray-300 z-10 shadow"
-        >
-          <RightOutlined className="text-3xl" />
-        </button>
       </section>
+
+      {/* Hiển thị bình Luận */}
+      <CommentSection />
+      {/* Sản phẩm liên quan */}
+      <RelatedProducts />
     </div >
   );
 };

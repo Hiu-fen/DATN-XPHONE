@@ -1,8 +1,7 @@
 const axios = require("axios");
-
-
 const Product = require('../models/productModels');
 const Order = require('../models/orderModel');
+const Notification = require('../models/notificationModels');
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -79,6 +78,15 @@ exports.createProduct = async (req, res) => {
     // 5. Tạo đối tượng mới và lưu vào database
     const product = new Product(productData);
     const savedProduct = await product.save();
+
+    // ✅ Tạo thông báo mới cho user
+    await Notification.create({
+      message: `Sản phẩm "${savedProduct.name}" vừa mới được ra mắt`,
+      type: 'product', // hoặc 'success'
+      scope: 'user',
+      role: 'user',
+      relatedId: savedProduct._id,
+    });
 
     // 6. Trả về kết quả
     return res.status(201).json(savedProduct);

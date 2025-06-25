@@ -81,6 +81,7 @@ import Wishlist from './components/client/page/Wishlist';
 import Deleted_products from './components/admin/Product/Deleted-products';
 import OrderHistory from './components/client/page/history';
 import OrderDetailClient from './components/client/page/orderDetailClient';
+import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
 
 
 
@@ -141,7 +142,8 @@ const App = () => {
         { index: true, element: <AdminDashboard /> },
         //Router Thống kê
         { path: "statistics", element: <AdminDashboard /> },
-        
+        { path: "seting", element: <SettingAdmin /> },
+
         //Router Danh mục
         { path: "category/list", element: <GetListCategory /> },
         { path: "category/add", element: <PostAddCategory /> },

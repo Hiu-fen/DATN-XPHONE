@@ -1,9 +1,24 @@
 import { FaBars, FaHeart, FaBell, FaShoppingCart, FaHistory } from 'react-icons/fa';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Button, Dropdown } from 'antd';
+import { Badge, Button, Dropdown } from 'antd';
+import { useQuery } from '@tanstack/react-query';
+import { getUserUnreadCount } from '../../../../api/admin/notificationApi';
 
-const HamburgerMenu = ({ userId }: { userId?: string }) => {
+
+const HamburgerMenu = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId = user?._id;
+
+  const { data } = useQuery({
+    queryKey: ['unread-count', userId],
+    queryFn: () => getUserUnreadCount(userId!),
+    enabled: !!userId,
+    refetchInterval: 30000, 
+  });
+
+  const unreadCount = data?.data?.count ?? 0;
+
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const menu = {
@@ -19,8 +34,11 @@ const HamburgerMenu = ({ userId }: { userId?: string }) => {
       {
         key: 'notifications',
         label: (
-          <Link to="/notification" className="flex items-center gap-2">
-            <FaBell /> <span>Thông báo</span>
+          <Link to="/notification" className="flex items-center gap-2 relative">
+            <Badge count={unreadCount > 9 ? '9+' : unreadCount} size="small" offset={[6, -4]}>
+              <FaBell className="text-base" />
+            </Badge>
+            <span>Thông báo</span>
           </Link>
         ),
       },
@@ -48,14 +66,16 @@ const HamburgerMenu = ({ userId }: { userId?: string }) => {
       <Dropdown
         menu={menu}
         trigger={['click']}
-        placement="bottomRight"
-        popupRender={menuNode => (
+        placement='bottomRight'
+        popupRender={(menuNode) => (
           <div className="min-w-[200px] bg-white rounded-md shadow-lg">
             {menuNode}
           </div>
         )}
       >
-        <Button type="text" icon={<FaBars className="text-2xl" />} />
+        <Badge dot={unreadCount > 0} offset={[-4, 5]}>
+          <Button type="text" icon={<FaBars className="text-2xl" />} />
+        </Badge>
       </Dropdown>
     </div>
   );

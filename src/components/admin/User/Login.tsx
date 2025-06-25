@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { message } from "antd";
 import { User } from "../../../interface/user";
-import { createNotification } from "../../../api/admin/notificationApi";
+import { createNotificationForAdmin } from "../../../api/admin/notificationApi";
+import GoogleLoginButton from "../../client/GoogleLoginButton";
 
 const LoginAdmin = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<User>();
@@ -29,10 +30,10 @@ const LoginAdmin = () => {
       localStorage.setItem("admin", JSON.stringify(user));
       localStorage.setItem("token", res.data.token);
 
-      await createNotification({
+      await createNotificationForAdmin({
         userId: user._id,
-        message: `Xin chào tài khoản "${user.email}" đã đăng nhập vào admin hệ thống`,
-        type: "info", 
+        message: `Admin "${user.email}" vừa đăng nhập hệ thống`,
+        type: 'info'
       });
 
       message.success("Đăng nhập thành công");
@@ -43,7 +44,7 @@ const LoginAdmin = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{backgroundImage: "url('https://i.pinimg.com/originals/cb/c2/2c/cbc22ca5a3d7568a742262639a9f6b3f.jpg')", backgroundSize: "cover"}}>
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundImage: "url('https://i.pinimg.com/originals/cb/c2/2c/cbc22ca5a3d7568a742262639a9f6b3f.jpg')", backgroundSize: "cover" }}>
       <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-3xl overflow-hidden shadow-xl">
         {/* Left Panel */}
         <div className="md:w-1/2 bg-gradient-to-br from-green-700 to-green-500 text-white p-10 flex flex-col justify-between">
@@ -51,15 +52,15 @@ const LoginAdmin = () => {
             <img
               src="https://adsmo.vn/wp-content/uploads/2020/12/quan-tri-web-chuyen-nghiep-gia-re-adsmo.png" style={{ width: "600px", height: "250px" }}
               alt="logo"
-             
-              
+
+
             />
             <h2 className="text-3xl font-bold mb-4"> Xin Chào Bạn Đã Đến Hệ Thống Quản Trị Của XPhone</h2>
             <p className="text-sm">
               Hệ thống quản trị XPhone giúp bạn quản lý các danh mục, sản phẩm và đơn hàng một cách dễ dàng và hiệu quả. Hãy đăng nhập để bắt đầu trải nghiệm!
             </p>
           </div>
-          
+
         </div>
 
         {/* Right Panel - Form */}
@@ -95,6 +96,7 @@ const LoginAdmin = () => {
               <span></span>
               <a href="#" className="hover:underline">Quên Mật Khẩu</a>
             </div>
+            
 
             <button
               type="submit"
@@ -102,6 +104,9 @@ const LoginAdmin = () => {
             >
               Đăng Nhập
             </button>
+            <div className="text-center text-gray-500 text-xs mt-2">
+              <GoogleLoginButton mode="login-admin" />
+            </div>
           </form>
 
           <p className="text-center text-sm mt-6 text-gray-600">
