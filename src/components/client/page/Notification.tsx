@@ -19,16 +19,9 @@ import {
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
-import {
-  deleteAllUserNotifications,
-  deleteUserNotification,
-  getUserNotifications,
-  getUserUnreadCount,
-  markAllUserNotiAsRead,
-  markOneUserNotiAsRead,
-} from '../../../api/admin/notificationApi';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiNotificationItem } from '../../admin/utils/notification';
+import { deleteAllUserNotifications, deleteUserNotification, getUserNotifications, getUserUnreadCount, markAllUserNotiAsRead, markOneUserNotiAsRead } from '../../../api/client/nofitationApiClient';
 
 const { Title } = Typography;
 
@@ -134,8 +127,6 @@ const Notification = () => {
         return `/history/${note.relatedId}`;
       case 'product':
         return `/detail/${note.relatedId}`;
-      
-      // Thêm các type khác nếu có
       default:
         return '#';
     }
@@ -145,10 +136,6 @@ const Notification = () => {
     switch (type) {
       case 'order':
         return <CheckCircleOutlined className="text-green-500" />;
-      case 'approval':
-        return <WarningOutlined className="text-yellow-500" />;
-      case 'system':
-        return <InfoCircleOutlined className="text-blue-500" />;
       case 'product':
         return <CheckCircleOutlined className="text-purple-500" />;
       case 'info':
@@ -183,7 +170,7 @@ const Notification = () => {
           onClick={handleDeleteAll}
           disabled={notifications.length === 0}
         >
-          Xoá tất cả thông báo ({unreadCount})
+          Xoá tất cả thông báo
         </Button>
       </div>
       

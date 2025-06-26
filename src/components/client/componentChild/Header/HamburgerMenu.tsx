@@ -3,8 +3,7 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge, Button, Dropdown } from 'antd';
 import { useQuery } from '@tanstack/react-query';
-import { getUserUnreadCount } from '../../../../api/admin/notificationApi';
-
+import { getUserUnreadCount } from '../../../../api/client/nofitationApiClient';
 
 const HamburgerMenu = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');

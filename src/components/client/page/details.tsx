@@ -179,6 +179,9 @@ const Details = () => {
             price: product.price,
             color: selectedVariant.color,
             storage: selectedVariant.ram,
+            categoryId: Array.isArray(product.danhmuc)
+            ? product.danhmuc[0] // nếu là mảng, lấy phần tử đầu tiên
+            : product.danhmuc     // nếu là 1 id
           },
         ],
       };
@@ -203,19 +206,28 @@ const Details = () => {
       message.warning("Vui lòng chọn biến thể");
       return;
     }
+
     const variant = product.variants?.find(
       (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
     );
+
     if (!variant || quantity > variant.soluong) {
       return message.warning("Số lượng vượt quá tồn kho");
     }
+
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user?._id) {
       message.warning("Vui lòng đăng nhập để mua hàng");
       navigate("/login");
       return;
     }
+
+    const categoryId = Array.isArray(product.danhmuc)
+      ? product.danhmuc[0]
+      : product.danhmuc;
+
     const buyNowItem = {
+      _id: "buy-now-temp-id", // Nếu cần _id tạm, có thể bỏ nếu không dùng
       productId: product._id,
       productName: product.name,
       image: product.image,
@@ -223,9 +235,12 @@ const Details = () => {
       soluong: quantity,
       color: selectedVariant.color,
       storage: selectedVariant.ram,
+      categoryId, 
     };
+
     navigate("/checkout", { state: { buyNowItem } });
   };
+
 
   const { data: categoryNames } = useQuery<string[]>({
     queryKey: ["category-names", product?.danhmuc],

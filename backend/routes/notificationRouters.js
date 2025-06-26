@@ -24,5 +24,6 @@ router.delete('/admin', noti.deleteAllAdminNotifications);
 // Xử lý chung
 router.get('/all', noti.getAllNotifications);
 router.delete('/purge-read-deleted', noti.purgeReadAndDeletedNotifications);
+router.delete('/:id', noti.deleteOneNotificationHard); 
 
 module.exports = router;

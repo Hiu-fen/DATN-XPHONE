@@ -5,5 +5,5 @@ export interface ICartItem {
     price: number;
     color: string;
     storage: string;
-    // quantity: number;
-    }
+    categoryId?: string;
+}

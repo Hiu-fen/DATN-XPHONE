@@ -4,7 +4,7 @@ import { Mail, Lock } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from "./GoogleLoginButton";
-import { createNotificationForUser } from "../../api/admin/notificationApi";
+import { createNotificationForUser } from "../../api/client/nofitationApiClient";
 
 interface LoginForm {
   email: string;

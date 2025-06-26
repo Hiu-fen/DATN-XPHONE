@@ -1,6 +1,7 @@
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
 const Notification = require("../models/notificationModels");
+const Promotion = require('../models/promotionModels');
 
 const axios = require("axios");
 
@@ -127,6 +128,9 @@ exports.createOrder = async (req, res) => {
       userId = null,
     } = req.body;
 
+    const { voucherCode } = req.body;
+
+
     if (!customerName || !phone || !address || !items || !total || !email) {
       return res.status(400).json({ message: "Thiếu thông tin bắt buộc" });
     }
@@ -186,6 +190,22 @@ exports.createOrder = async (req, res) => {
     });
 
     await order.save();
+
+    if (voucherCode) {
+      try {
+        const voucher = await Promotion.findOne({ code: voucherCode });
+
+        if (voucher) {
+          voucher.quantity = Math.max(0, voucher.quantity - 1); // Không cho xuống âm
+          voucher.usageCount = (voucher.usageCount || 0) + 1;
+          await voucher.save();
+        } else {
+          console.warn("⚠️ Không tìm thấy mã khuyến mãi:", voucherCode);
+        }
+      } catch (err) {
+        console.error("❌ Lỗi khi cập nhật mã khuyến mãi:", err.message);
+      }
+    }
 
     // ✅ Gửi email xác nhận
     try {
