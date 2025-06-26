@@ -5,6 +5,8 @@ import { useUser } from "../context/UserContext";
 import { ICartItem } from "../../../interface/cart";
 import { IProduct } from "../../../interface/product";
 import axios, { AxiosError } from "axios";
+import VoucherInput from "../componentChild/Checkout/VoucherInput";
+import { applyVoucherToOrder } from "../../../api/client/promotionApiClient";
 
 interface CartItem {
   _id: string;
@@ -15,6 +17,7 @@ interface CartItem {
   image: string;
   color?: string;
   storage?: string;
+  categoryId?: string;
 }
 
 interface IUserExtended {
@@ -35,6 +38,13 @@ const Checkout = () => {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const SHIPPING_FEE = 35000;
+  const [discountAmount, setDiscountAmount] = useState<number>(0); // Giảm giá áp dụng
+  const [voucherCode, setVoucherCode] = useState<string>("");       // Mã đang áp dụng
+  const [finalPrice, setFinalPrice] = useState<number>(0);
+  const [voucherInfo, setVoucherInfo] = useState<{
+    name: string;
+    discountValue: string;
+  } | null>(null);
 
   useEffect(() => {
     const fetchCartAndProducts = async () => {
@@ -69,6 +79,7 @@ const Checkout = () => {
               image: product?.image || "",
               color: item.color || "",
               storage: item.storage || "",
+              categoryId: item.categoryId || product?.categoryId || "",
             };
           });
 
@@ -106,6 +117,7 @@ const Checkout = () => {
               image: product?.image || "",
               color: item.color || "",
               storage: item.storage || "",
+              categoryId: product?.categoryId || "",
             };
           });
 
@@ -124,7 +136,10 @@ const Checkout = () => {
     (sum, item) => sum + item.price * item.soluong,
     0
   );
-const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
+// const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
+const totalWithDiscountAndShipping =
+  (discountAmount > 0 ? finalPrice : totalPrice) + SHIPPING_FEE;
+
 
   const [form, setForm] = useState({
     name: currentUser?.name || "",
@@ -189,11 +204,12 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
   notes: form.note,
   paymentMethod: form.paymentMethod,
   shippingProvider: form.shippingProvider,
-  total: Number(totalWithShipping), // 👈 ép chắc chắn là số
+  total: Number((discountAmount > 0 ? finalPrice : totalPrice)) + Number(SHIPPING_FEE),
   status: "Chờ xác nhận",
   date: new Date().toISOString(),
   isPaid: false,
   refunded: false,
+  voucherCode,
   items: cart.map((item) => ({
     productId: item.productId,
     productName: item.productName,
@@ -215,9 +231,10 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
       return;
     }
 
-    await axios.post("http://localhost:5000/api/orders", newOrder, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+      await axios.post("http://localhost:5000/api/orders", newOrder, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
       if (form.paymentMethod === "Momo") {
         message.info(
           "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
@@ -297,8 +314,39 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
     );
   }
 
+  const handleApplyVoucher = async (code: string) => {
+    try {
+      const itemsPayload = cart.map((item) => ({
+        productId: item.productId,
+        categoryId: item.categoryId,
+        quantity: item.soluong,
+        price: item.price,
+      }));
+      
+      const response = await applyVoucherToOrder({
+        code,
+        total: totalPrice,
+        items: itemsPayload,
+      });
+
+      const { discountAmount, finalPrice, voucherCode, voucherInfo } = response.data;
+      message.success("Áp dụng mã thành công");
+      setDiscountAmount(discountAmount);
+      setVoucherCode(voucherCode);
+      setFinalPrice(finalPrice);
+      setVoucherInfo(voucherInfo);
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || "Không áp dụng được mã khuyến mãi";
+      message.error(errorMsg);
+      setDiscountAmount(0);
+      setVoucherCode("");
+    }
+  };
+
   return (
-    <div className="max-w-6xl mx-auto p-8 bg-white shadow-lg rounded-lg mt-12 mb-12">
+    <div className="mx-3 p-8 border-2 bg-white shadow-lg rounded-lg mt-12 mb-12">
+
+
       <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
         Xác nhận đơn hàng
       </h1>
@@ -326,13 +374,13 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
               className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 cursor-not-allowed"
             />
             <input
-  type="text"
-  name="address"
-  placeholder="Địa chỉ nhận hàng *"
-  value={form.address}
-  disabled
-  className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 cursor-not-allowed"
-/>
+              type="text"
+              name="address"
+              placeholder="Địa chỉ nhận hàng *"
+              value={form.address}
+              disabled
+              className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 cursor-not-allowed"
+            />
 
             <input
               type="email"
@@ -435,16 +483,31 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
 
           <div className="mt-6 border-t border-gray-300 pt-4 space-y-2">
             <div className="flex justify-between text-gray-600 text-lg">
-              <span>Tổng tiền:</span>
+              <span>Tạm tính:</span>
               <span>{totalPrice.toLocaleString("vi-VN")} VND</span>
             </div>
+
+            {discountAmount > 0 && (
+              <>
+                <div className="flex justify-between text-green-600 text-lg font-medium">
+                  <span>Khuyến mãi:</span>
+                  <span>-{discountAmount.toLocaleString("vi-VN")} VND</span>
+                </div>
+                <div className="text-sm text-green-700 italic">
+                  Mã: <strong>{voucherCode}</strong>{" "}
+                  {voucherInfo?.name && `– ${voucherInfo.name}`}
+                </div>
+              </>
+            )}
+
             <div className="flex justify-between text-gray-600 text-lg">
               <span>Phí vận chuyển:</span>
               <span>{SHIPPING_FEE.toLocaleString("vi-VN")} VND</span>
             </div>
+
             <div className="flex justify-between text-xl font-bold text-gray-900">
               <span>Tổng cộng:</span>
-              <span>{totalWithShipping.toLocaleString("vi-VN")} VND</span>
+              <span>{totalWithDiscountAndShipping.toLocaleString("vi-VN")} VND</span>
             </div>
           </div>
 
@@ -455,6 +518,7 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
             {form.paymentMethod === "Bank" &&
               "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"}
           </div>
+          <VoucherInput onApply={handleApplyVoucher} />
         </div>
       </div>
     </div>

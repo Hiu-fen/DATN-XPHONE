@@ -1,8 +1,8 @@
 const Promotion = require('../models/promotionModels');
-const Cart = require('../models/cartModels');
 const mongoose = require('mongoose');
 const Product = require('../models/productModels');
 const Notification = require('../models/notificationModels');
+const Order = require("../models/orderModel");
 
 // Hàm để tạo mã khuyến mãi ngẫu nhiên
 exports.getRandomCode = (req, res) => {
@@ -123,50 +123,36 @@ exports.autoDisableExpiredPromotions = async () => {
   }
 };
 
-
-exports.applyVoucher = async (req, res) => {
+// Hàm xử lý khi áp mã giảm giá
+exports.applyVoucherToOrder = async (req, res) => {
   try {
-    const { code, userId, totalOrderValue } = req.body;
+    const { code, total, items } = req.body;
 
-    if (!code || !userId || !totalOrderValue) {
-      return res.status(400).json({ message: "Vui lòng nhập đầy đủ thông tin." });
+    if (!code || !total || !items || items.length === 0) {
+      return res.status(400).json({ message: "Thiếu thông tin." });
     }
 
     const voucher = await Promotion.findOne({ code });
     if (!voucher) return res.status(404).json({ message: "Không tìm thấy mã khuyến mãi." });
 
     if (!voucher.status) return res.status(400).json({ message: "Mã khuyến mãi đã bị khóa." });
+
     if (new Date(voucher.endDate) < new Date()) {
-      return res.status(400).json({ message: "Mã đã hết hạn." });
+      return res.status(400).json({ message: "Mã khuyến mãi đã hết hạn." });
     }
 
     if (voucher.quantity <= 0) {
       return res.status(400).json({ message: "Mã khuyến mãi đã hết lượt sử dụng." });
     }
-    // if (voucher.minOrderValue && totalOrderValue < voucher.minOrderValue) {
-    //   return res.status(400).json({
-    //     message: `Đơn hàng tối thiểu là ${voucher.minOrderValue.toLocaleString()} VNĐ.`,
-    //   });
-    // }
 
-    const cart = await Cart.findOne({ userId });
-    if (!cart || !cart.items || cart.items.length === 0) {
-      return res.status(400).json({ message: "Giỏ hàng đang trống." });
-    }
-
-    const productIds = cart.items.map(item => item.productId);
-    const products = await Product.find({ _id: { $in: productIds } });
-
-    if (voucher.applicableCategories && voucher.applicableCategories.length > 0) {
-      const applicableCategoryIds = voucher.applicableCategories.map(cat => cat.toString());
-
-      const hasApplicable = products.some(product => {
-        if (!product || !product.danhmuc) return false;
-        return applicableCategoryIds.includes(product.danhmuc.toString());
-      });
-
-      if (!hasApplicable) {
-        return res.status(400).json({ message: "Mã này không áp dụng cho các sản phẩm không có trong danh mục cho phép." });
+    // Kiểm tra danh mục nếu có
+    if (voucher.applicableCategories?.length > 0) {
+      const allowedCategories = voucher.applicableCategories.map(id => id.toString());
+      const valid = items.some((i) => allowedCategories.includes(i.categoryId));
+      if (!valid) {
+        return res.status(400).json({
+          message: "Mã này không áp dụng cho sản phẩm trong đơn hàng.",
+        });
       }
     }
 
@@ -176,29 +162,31 @@ exports.applyVoucher = async (req, res) => {
     if (voucher.discountType === "fixed") {
       discountAmount = 200000;
     } else if (voucher.discountType === "percent") {
-      discountAmount = (voucher.discountValue / 100) * totalOrderValue;
+      discountAmount = (voucher.discountValue / 100) * total;
+
+      // Áp dụng giới hạn giảm tối đa nếu có
+      if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
+        discountAmount = voucher.maxDiscount;
+      }
     } else if (voucher.discountType === "free_ship") {
       discountAmount = 40000;
     }
 
-    if (discountAmount > totalOrderValue) {
-      discountAmount = totalOrderValue;
+    // Không cho giảm quá tổng tiền
+    if (discountAmount > total) {
+      discountAmount = total;
     }
 
-    voucher.quantity -= 1;
-    voucher.usageCount = (voucher.usageCount || 0) + 1;
-
-     await voucher.save();
+    const finalPrice = total - discountAmount;
 
     return res.status(200).json({
       message: "Áp dụng mã thành công.",
       discountAmount,
-      finalPrice: totalOrderValue - discountAmount,
+      finalPrice,
       voucherCode: code,
     });
-
   } catch (err) {
-    console.error("Lỗi khi áp dụng voucher:", err);
+    console.error("❌ Lỗi khi áp dụng voucher:", err);
     return res.status(500).json({ message: "Lỗi máy chủ.", error: err.message });
   }
 };

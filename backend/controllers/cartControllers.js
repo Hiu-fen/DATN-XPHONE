@@ -60,7 +60,12 @@ exports.addToCart = async (req, res) => {
       if (!item.productId || !item.color || !item.storage || !item.quantity) {
         return res.status(400).json({ message: "Mỗi sản phẩm cần có productId, color, storage và quantity" });
       }
+      
+      if (!item.categoryId) {
+        return res.status(400).json({ message: "Thiếu categoryId của sản phẩm" });
+      }
     }
+
 
     let cart = await Cart.findOne({ userId });
     if (!cart) {

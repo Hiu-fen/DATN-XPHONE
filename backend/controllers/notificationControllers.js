@@ -1,7 +1,9 @@
 const Notification = require('../models/notificationModels');
 const User = require('../models/userModels'); 
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 
-// Lấy thông báo user
+// Hiển thị thông báo
 exports.getUserNotifications = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -23,6 +25,7 @@ exports.getUserNotifications = async (req, res) => {
   }
 };
 
+// Tạo thông báo khi đăng nhập
 exports.createNotificationForUser = async (req, res) => {
   try {
     const { userId, message, type = 'info' } = req.body;
@@ -38,6 +41,7 @@ exports.createNotificationForUser = async (req, res) => {
   }
 };
 
+// Đánh dấu mềm đã đọc
 exports.markOneUserNotificationAsRead = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -49,6 +53,7 @@ exports.markOneUserNotificationAsRead = async (req, res) => {
   }
 };
 
+// Đánh dấu mềm tất cả đã đọc
 exports.markAllUserNotificationsAsRead = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -63,6 +68,7 @@ exports.markAllUserNotificationsAsRead = async (req, res) => {
   }
 };
 
+// Xóa mềm 
 exports.deleteUserNotification = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -74,6 +80,7 @@ exports.deleteUserNotification = async (req, res) => {
   }
 };
 
+// Xóa tất cả mềm
 exports.deleteAllUserNotifications = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -88,14 +95,17 @@ exports.deleteAllUserNotifications = async (req, res) => {
   }
 };
 
-// [GET] /api/notifications/user/unread-count?userId=...
+// Tính số thông báo chưa đọc + xóa mềm
 exports.getUnreadUserNotificationCount = async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) return res.status(400).json({ message: 'Thiếu userId' });
 
     const count = await Notification.countDocuments({
-      $or: [{ userId }, { role: 'user' }, { scope: 'global' }],
+      $or: [
+        { userId, role: 'user' },
+        { scope: { $in: ['user', 'global'] }, role: 'user' },
+      ],
       deletedBy: { $ne: userId },
       readBy: { $ne: userId },
     });
@@ -107,6 +117,7 @@ exports.getUnreadUserNotificationCount = async (req, res) => {
 };
 
 // Phần của admin
+// Hiển thị thông báo
 exports.getAdminNotifications = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -134,6 +145,7 @@ exports.getAdminNotifications = async (req, res) => {
   }
 };
 
+// Tạo thông báo khi đăng nhập
 exports.createNotificationForAdmin = async (req, res) => {
   try {
     const { userId, message, type = 'info' } = req.body;
@@ -164,6 +176,7 @@ exports.createNotificationForAdmin = async (req, res) => {
   }
 };
 
+// Đánh dấu mềm đã đọc 
 exports.markOneAdminNotificationAsRead = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -175,6 +188,7 @@ exports.markOneAdminNotificationAsRead = async (req, res) => {
   }
 };
 
+// Đánh dấu mềm tất cả đã đọc
 exports.markAllAdminNotificationsAsRead = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -189,6 +203,7 @@ exports.markAllAdminNotificationsAsRead = async (req, res) => {
   }
 };
 
+// Xóa mềm 
 exports.deleteAdminNotification = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -200,6 +215,7 @@ exports.deleteAdminNotification = async (req, res) => {
   }
 };
 
+// Xóa tất cả mềm
 exports.deleteAllAdminNotifications = async (req, res) => {
   try {
     const { userId } = req.query;
@@ -214,15 +230,17 @@ exports.deleteAllAdminNotifications = async (req, res) => {
   }
 };
 
+// Tính số thông báo chưa đọc + xóa mềm
 exports.getUnreadAdminNotificationCount = async (req, res) => {
   try {
     const { userId } = req.query;
-    if (!userId) {
-      return res.status(400).json({ message: 'Thiếu userId' });
-    }
+    if (!userId) return res.status(400).json({ message: 'Thiếu userId' });
 
     const count = await Notification.countDocuments({
-      $or: [{ role: 'admin' }, { scope: 'global' }],
+      $or: [
+        { userId, role: 'admin' },
+        { scope: { $in: ['admin', 'global'] }, role: 'admin' },
+      ],
       deletedBy: { $ne: userId },
       readBy: { $ne: userId },
     });
@@ -233,6 +251,7 @@ exports.getUnreadAdminNotificationCount = async (req, res) => {
   }
 };
 
+// Xử lý chung
 const MAX_NOTIFICATIONS = 60;
 
 exports.getAllNotifications = async (req, res) => {
@@ -272,21 +291,43 @@ exports.getAllNotifications = async (req, res) => {
 
 
 // Xóa cứng tất cả thông báo đã đọc + đã bị xóa mềm
+// Xóa cứng tất cả thông báo đã đọc + đã bị xóa mềm
 exports.purgeReadAndDeletedNotifications = async (req, res) => {
   try {
-    // Lấy tất cả thông báo mà mọi người đều đã đọc và đã xóa
     const notifications = await Notification.find();
 
+    // Xác định thông báo có ÍT NHẤT 1 người đã đọc hoặc đã xoá
     const toDelete = notifications.filter(n => {
-      const allRead = n.readBy.length > 0;  // hoặc kiểm tra số lượng readBy >= số user (tùy logic)
-      const allDeleted = n.deletedBy.length > 0;
-      return allRead && allDeleted;
+      const readCount = Array.isArray(n.readBy) ? n.readBy.length : 0;
+      const deletedCount = Array.isArray(n.deletedBy) ? n.deletedBy.length : 0;
+
+      return readCount >= 1 || deletedCount >= 1; 
     });
 
     const idsToDelete = toDelete.map(n => n._id);
     await Notification.deleteMany({ _id: { $in: idsToDelete } });
 
-    res.status(200).json({ message: `Đã xoá ${idsToDelete.length} thông báo vĩnh viễn` });
+    res.status(200).json({
+      message: `Đã xoá ${idsToDelete.length} thông báo vĩnh viễn`,
+      deletedCount: idsToDelete.length,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Xóa cứng 1 thông báo
+exports.deleteOneNotificationHard = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const noti = await Notification.findById(id);
+
+    if (!noti) {
+      return res.status(404).json({ message: 'Không tìm thấy thông báo' });
+    }
+
+    await Notification.findByIdAndDelete(id);
+    res.status(200).json({ message: 'Xoá thông báo thành công' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

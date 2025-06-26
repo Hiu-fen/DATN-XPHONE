@@ -6,6 +6,7 @@ export interface Promotion {
   code: string;      
   discountType: string; // Loại giảm giá 
   discountValue?: number | undefined;
+  maxDiscount?: number;
   description: string; // Mô tả khuyến mãi
   applicableCategories : ICategory[]; // Các sản phẩm áp dụng
   condition?: string;  // Điều kiện áp dụng
