@@ -83,7 +83,8 @@ import Deleted_products from './components/admin/Product/Deleted-products';
 import OrderHistory from './components/client/page/order/history';
 import OrderDetailClient from './components/client/page/order/orderDetailClient';
 import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
-import ReturnRequestDetail from './components/client/page/ReturnDetail';
+import ReturnDetail from './components/admin/Order/ReturnDetail';
+import ReturnRequestDetail from './components/client/page/order/ReturnDetail';
 
 
 
@@ -176,6 +177,8 @@ const App = () => {
         //admin
         { path: "orders", element: <OrderList /> },
         { path: "orders/:id", element: <OrderDetail /> },
+        { path: "orders/:id/return", element: <ReturnDetail /> },
+
 
         /// Router quản lý Khuyễn mãi
         { path: "promotion/list", element: <GetPromotion /> },

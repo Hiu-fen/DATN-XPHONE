@@ -14,7 +14,7 @@ router.get("/:id", orderController.getOrderById);
 router.patch("/:id", orderController.updateOrderStatus);
 
 // Xử lý yêu cầu trả hàng
-router.patch("/:id/return", upload.single("image"), orderController.updateOrderReturn);
+router.patch("/:id/return", upload.array("images", 10), orderController.updateOrderReturn);
 // Thêm đơn hàng
 router.post("/", orderController.createOrder);
 // Cập nhật trạng thái thanh toán

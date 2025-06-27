@@ -1,7 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaTrash } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import axios from "axios";
+import {
+  FaArrowLeft,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaTrash,
+} from "react-icons/fa";
 
 interface Item {
   productName: string;
@@ -33,20 +38,26 @@ const ReturnRequestDetail = () => {
   const navigate = useNavigate();
 
   const [order, setOrder] = useState<Order | null>(null);
-  const [reason, setReason] = useState('');
-  const [note, setNote] = useState('');
+  const [reason, setReason] = useState("");
+  const [note, setNote] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const reasons = [
-    'Sản phẩm bị lỗi',
-    'Không đúng mô tả',
-    'Không hài lòng với chất lượng',
-    'Tôi muốn đổi sản phẩm khác',
-    'Khác'
+    "Thiếu hàng",
+    "Hàng lỗi, không hoạt động",
+    "Không hài lòng với chất lượng",
+    "Khác với mô tả",
+    "Hàng đã qua sử dụng",
+    "Hàng giả hàng nhái",
+    "Hàng nguyên vẹn nhưng không còn nhu cầu",
+    "Khác",
   ];
 
   useEffect(() => {
@@ -55,7 +66,7 @@ const ReturnRequestDetail = () => {
         const res = await axios.get(`http://localhost:5000/api/orders/${id}`);
         setOrder(res.data);
       } catch (err) {
-        setToast({ type: 'error', message: 'Không thể tải đơn hàng' });
+        setToast({ type: "error", message: "Không thể tải đơn hàng" });
       } finally {
         setLoading(false);
       }
@@ -66,7 +77,10 @@ const ReturnRequestDetail = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setImages((prev) => [...prev, ...files]);
-    setPreviewUrls((prev) => [...prev, ...files.map((file) => URL.createObjectURL(file))]);
+    setPreviewUrls((prev) => [
+      ...prev,
+      ...files.map((file) => URL.createObjectURL(file)),
+    ]);
   };
 
   const handleRemoveImage = (index: number) => {
@@ -76,7 +90,14 @@ const ReturnRequestDetail = () => {
 
   const handleSubmit = () => {
     if (!reason) {
-      setToast({ type: 'error', message: 'Vui lòng chọn lý do trả hàng' });
+      setToast({ type: "error", message: "Vui lòng chọn lý do trả hàng" });
+      return;
+    }
+    if (images.length < 3) {
+      setToast({
+        type: "error",
+        message: "Vui lòng chọn ít nhất 3 ảnh minh họa",
+      });
       return;
     }
     setShowConfirmModal(true);
@@ -84,59 +105,59 @@ const ReturnRequestDetail = () => {
 
   const confirmSubmit = async () => {
     const formData = new FormData();
-    formData.append('returnReason', reason);
-    formData.append('returnStatus', 'Đang chờ duyệt');
-    formData.append('note', note);
-    images.forEach((image) => formData.append('images', image));
+    formData.append("returnReason", reason);
+    formData.append("returnStatus", "Đang chờ duyệt");
+    formData.append("note", note);
+    images.forEach((image) => formData.append("images", image));
 
     try {
-      await axios.patch(`http://localhost:5000/api/orders/${id}/return`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setToast({ type: 'success', message: 'Gửi yêu cầu trả hàng thành công' });
-      setTimeout(() => navigate('/history'), 2000);
+      await axios.patch(
+        `http://localhost:5000/api/orders/${id}/return`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      setToast({ type: "success", message: "Gửi yêu cầu trả hàng thành công" });
+      setTimeout(() => navigate("/history"), 2000);
     } catch {
-      setToast({ type: 'error', message: 'Gửi yêu cầu thất bại' });
+      setToast({ type: "error", message: "Gửi yêu cầu thất bại" });
     } finally {
       setShowConfirmModal(false);
     }
   };
 
-  if (loading) return (
-    <div className="p-8 text-center text-gray-500 text-sm animate-pulse">
-      Đang tải đơn hàng...
-    </div>
-  );
-  if (!order) return (
-    <div className="p-8 text-red-600 flex items-center justify-center gap-2">
-      <FaTimesCircle /> Không tìm thấy đơn hàng
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="p-8 text-center text-gray-500 text-sm animate-pulse">
+        Đang tải đơn hàng...
+      </div>
+    );
+  if (!order)
+    return (
+      <div className="p-8 text-red-600 flex items-center justify-center gap-2">
+        <FaTimesCircle /> Không tìm thấy đơn hàng
+      </div>
+    );
 
   return (
     <div className="pt-20 pb-8 px-4 max-w-3xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-6">
-        <Link to="/history" className="inline-flex items-center text-blue-600 hover:underline transition-colors duration-200">
+        <Link
+          to="/history"
+          className="inline-flex items-center text-blue-600 hover:underline transition-colors duration-200"
+        >
           <FaArrowLeft className="mr-2 w-4 h-4" /> Quay lại lịch sử đơn
         </Link>
       </div>
 
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-6">
-        {/* Order Info */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Yêu cầu trả hàng</h1>
-          <p className="text-sm text-gray-500 mt-1">Mã đơn: #{order.orderCode}</p>
-          <div className="mt-4 space-y-2 text-sm text-gray-700">
-            <p><strong>Ngày đặt:</strong> {new Date(order.date).toLocaleString('vi-VN')}</p>
-            <p><strong>Trạng thái:</strong> {order.status}</p>
-            <p><strong>Địa chỉ:</strong> {order.address}</p>
-            <p><strong>Tổng tiền:</strong> {order.total.toLocaleString()}đ</p>
-            {order.isPaid && <p><strong>Thanh toán:</strong> Đã thanh toán</p>}
-            {order.refunded && <p><strong>Hoàn tiền:</strong> Đã hoàn tiền</p>}
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Yêu Cầu Trả Hàng Hoàn Tiền
+          </h1>
         </div>
-
         {/* Order Items (Display Only) */}
         <div>
           <h2 className="font-medium text-gray-800 mb-3">Thông tin sản phẩm</h2>
@@ -159,11 +180,15 @@ const ReturnRequestDetail = () => {
                     </div>
                   )}
                   <div>
-                    <p className="text-sm font-medium text-gray-700">{item.productName}</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      {item.productName}
+                    </p>
                     <p className="text-xs text-gray-500">
-                      Số lượng: {item.soluong} | Giá: {item.price.toLocaleString()}đ
+                      Số lượng: {item.soluong} | Giá:{" "}
+                      {item.price.toLocaleString()}đ
                       {item.snapshot?.color && ` | Màu: ${item.snapshot.color}`}
-                      {item.snapshot?.storage && ` | Bộ nhớ: ${item.snapshot.storage}`}
+                      {item.snapshot?.storage &&
+                        ` | Bộ nhớ: ${item.snapshot.storage}`}
                     </p>
                   </div>
                 </div>
@@ -180,7 +205,9 @@ const ReturnRequestDetail = () => {
               <label
                 key={i}
                 className={`flex items-center px-4 py-3 border rounded-lg cursor-pointer transition-all duration-200 ${
-                  reason === r ? 'bg-blue-50 border-blue-300' : 'border-gray-200 hover:bg-gray-50'
+                  reason === r
+                    ? "bg-blue-50 border-blue-300"
+                    : "border-gray-200 hover:bg-gray-50"
                 }`}
               >
                 <input
@@ -196,22 +223,29 @@ const ReturnRequestDetail = () => {
             ))}
           </div>
         </div>
-
+        <div className="text-left mt-4">
+          <p className="text-sm text-gray-500 mb-1">Số tiền hoàn lại dự kiến</p>
+          <div className="text-lg font-semibold text-green-600">
+            {order.total.toLocaleString()} đ
+          </div>
+        </div>
         {/* Note */}
         <div>
-          <label className="block font-medium text-gray-800 mb-2">Ghi chú chi tiết (tùy chọn):</label>
+          <label className="block font-medium text-gray-800 mb-2">Mô Tả</label>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={4}
             className="w-full p-3 border border-gray-200 rounded-lg resize-none focus:ring focus:ring-blue-100 transition-all duration-200"
-            placeholder="Ví dụ: Hộp móp, máy bị xước, không đúng dung lượng..."
+            placeholder="Ghi chú thêm"
           />
         </div>
 
         {/* Image Upload */}
         <div>
-          <label className="block font-medium text-gray-800 mb-2">Ảnh bằng chứng (tùy chọn):</label>
+          <label className="block font-medium text-gray-800 mb-2">
+            Ảnh bằng chứng:
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -219,6 +253,15 @@ const ReturnRequestDetail = () => {
             onChange={handleImageChange}
             className="mb-3 text-sm text-gray-600"
           />
+          <p
+            className={`text-xs ${
+              images.length < 3 ? "text-red-500" : "text-gray-400"
+            }`}
+          >
+            {images.length < 3
+              ? "Vui lòng chọn ít nhất 3 ảnh minh họa"
+              : `${images.length} ảnh đã chọn`}
+          </p>
           {previewUrls.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {previewUrls.map((url, index) => (
@@ -239,26 +282,36 @@ const ReturnRequestDetail = () => {
             </div>
           )}
         </div>
-
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          disabled={!reason || order.returnStatus === 'Đang chờ duyệt' || order.returnStatus === 'Yêu cầu đã được duyệt'}
+          disabled={
+            !reason ||
+            images.length < 3 ||
+            order.returnStatus === "Đang chờ duyệt" ||
+            order.returnStatus === "Yêu cầu đã được duyệt"
+          }
           className={`w-full px-5 py-3 text-white font-semibold rounded-lg transition-all duration-300 ${
-            reason && order.returnStatus !== 'Đang chờ duyệt' && order.returnStatus !== 'Yêu cầu đã được duyệt'
-              ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-md'
-              : 'bg-gray-300 cursor-not-allowed'
+            reason &&
+            order.returnStatus !== "Đang chờ duyệt" &&
+            order.returnStatus !== "Yêu cầu đã được duyệt"
+              ? "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 shadow-md"
+              : "bg-gray-300 cursor-not-allowed"
           }`}
         >
-          Gửi yêu cầu trả hàng
+          Gửi yêu cầu
         </button>
 
         {/* Toast Notification */}
         {toast && (
-          <div className={`fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm animate-slide-in-right ${
-            toast.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {toast.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}
+          <div
+            className={`fixed top-4 right-4 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm animate-slide-in-right ${
+              toast.type === "success"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {toast.type === "success" ? <FaCheckCircle /> : <FaTimesCircle />}
             {toast.message}
           </div>
         )}
@@ -267,8 +320,12 @@ const ReturnRequestDetail = () => {
         {showConfirmModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Xác nhận gửi yêu cầu</h3>
-              <p className="text-sm text-gray-600 mb-6">Bạn có chắc muốn gửi yêu cầu trả hàng?</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Xác nhận gửi yêu cầu
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Bạn có chắc muốn gửi yêu cầu trả hàng?
+              </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowConfirmModal(false)}
