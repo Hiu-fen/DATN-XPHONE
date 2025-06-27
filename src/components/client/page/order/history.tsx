@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
@@ -87,7 +85,7 @@ const OrderHistory = () => {
             const imageMap: { [key: string]: string } = {};
             imageResponses.forEach((res, index) => {
               if (res.data) {
-                imageMap[uniqueProductIds[index]] =
+                imageMap[uniqueProductIds[index] as string] =
                   res.data.image || "/placeholder-image.png";
               }
             });
@@ -265,14 +263,6 @@ const OrderHistory = () => {
     }
   };
 
-  // Bỏ qua đánh giá
-  const skipReview = () => {
-    if (currentProductIndex < uniqueProducts.length - 1) {
-      setCurrentProductIndex((prev) => prev + 1);
-    } else {
-      handleCloseReviewModal();
-    }
-  };
 
   // Đóng modal
   const handleCloseReviewModal = () => {
