@@ -5,6 +5,8 @@ import { useUser } from "../../context/UserContext";
 import { ICartItem } from "../../../../interface/cart";
 import { IProduct } from "../../../../interface/product";
 import axios, { AxiosError } from "axios";
+import VoucherInput from "../../componentChild/Checkout/VoucherInput";
+import { applyVoucherToOrder } from "../../../../api/client/promotionApiClient";
 
 interface CartItem {
   _id: string;
@@ -15,6 +17,7 @@ interface CartItem {
   image: string;
   color?: string;
   storage?: string;
+  categoryId?: string;
 }
 
 interface IUserExtended {
@@ -39,6 +42,15 @@ const Checkout = () => {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const SHIPPING_FEE = 35000;
+
+   const [discountAmount, setDiscountAmount] = useState<number>(0); // Giảm giá áp dụng
+  const [voucherCode, setVoucherCode] = useState<string>("");       // Mã đang áp dụng
+  const [finalPrice, setFinalPrice] = useState<number>(0);
+  const [voucherInfo, setVoucherInfo] = useState<{
+    name: string;
+    discountValue: string;
+
+  } | null>(null);
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -138,7 +150,9 @@ const Checkout = () => {
     (sum, item) => sum + item.price * item.soluong,
     0
   );
-  const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
+  // const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
+  const totalWithDiscountAndShipping =
+  (discountAmount > 0 ? finalPrice : totalPrice) + SHIPPING_FEE;
 
   const [form, setForm] = useState({
     name: currentUser?.name || "",
@@ -203,7 +217,8 @@ const Checkout = () => {
       notes: form.note,
       paymentMethod: form.paymentMethod,
       shippingProvider: form.shippingProvider,
-      total: Number(totalWithShipping), // 👈 ép chắc chắn là số
+      // total: Number(totalWithShipping), // 👈 ép chắc chắn là số
+      total: Number((discountAmount > 0 ? finalPrice : totalPrice)) + Number(SHIPPING_FEE),
       status: "Chờ xác nhận",
       date: new Date().toISOString(),
       isPaid: false,
@@ -297,7 +312,7 @@ const Checkout = () => {
         Vui lòng{" "}
         <a href="/login" className="text-blue-600 hover:underline">
           đăng nhập
-        </a>{" "}
+        </a>{" "}Vui lòng chuyển khoản qua Momo
         để thanh toán.
       </div>
     );
@@ -310,6 +325,34 @@ const Checkout = () => {
       </div>
     );
   }
+    const handleApplyVoucher = async (code: string) => {
+    try {
+      const itemsPayload = cart.map((item) => ({
+        productId: item.productId,
+        categoryId: item.categoryId,
+        quantity: item.soluong,
+        price: item.price,
+      }));
+
+      const response = await applyVoucherToOrder({
+        code,
+        total: totalPrice,
+        items: itemsPayload,
+      });
+
+      const { discountAmount, finalPrice, voucherCode, voucherInfo } = response.data;
+      message.success("Áp dụng mã thành công");
+      setDiscountAmount(discountAmount);
+      setVoucherCode(voucherCode);
+      setFinalPrice(finalPrice);
+      setVoucherInfo(voucherInfo);
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || "Không áp dụng được mã khuyến mãi";
+      message.error(errorMsg);
+      setDiscountAmount(0);
+      setVoucherCode("");
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-8 bg-white shadow-lg rounded-lg mt-12 mb-12">
@@ -506,7 +549,7 @@ const Checkout = () => {
             </div>
             <div className="flex justify-between text-xl font-bold text-gray-900">
               <span>Tổng cộng:</span>
-              <span>{totalWithShipping.toLocaleString("vi-VN")} VND</span>
+              <span>{totalWithDiscountAndShipping.toLocaleString("vi-VN")} VND</span>
             </div>
           </div>
 
@@ -517,6 +560,7 @@ const Checkout = () => {
             {form.paymentMethod === "Bank" &&
               "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"}
           </div>
+          <VoucherInput onApply={handleApplyVoucher} />
         </div>
       </div>
     </div>
