@@ -1,5 +1,5 @@
 import { useForm } from 'react-hook-form';
-import { IContact } from '../../../interface/contact';
+import { IContact } from '../../../../interface/contact';
 import { useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { message } from 'antd';

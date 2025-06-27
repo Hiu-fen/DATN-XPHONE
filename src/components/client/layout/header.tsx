@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
-import HamburgerMenu from "./componentChild/Header/HamburgerMenu";
-import MenuNgangHeader from "./componentChild/Header/MenuNgang";
-import SearchClient from "./componentChild/Header/SearchClient";
-import UserMenu from "./componentChild/Header/UserMenu";
-import TenThuongHieu from "./componentChild/Home/BrandTitle";
-import PromoNotice from "./componentChild/Header/ThongBaoKhuyenMai";
+import HamburgerMenu from "../componentChild/Header/HamburgerMenu";
+import MenuNgangHeader from "../componentChild/Header/MenuNgang";
+import SearchClient from "../componentChild/Header/SearchClient";
+import UserMenu from "../componentChild/Header/UserMenu";
+import TenThuongHieu from "../componentChild/Home/BrandTitle";
+import PromoNotice from "../componentChild/Header/ThongBaoKhuyenMai";
 
 const ClientHeader = () => {
   return (
