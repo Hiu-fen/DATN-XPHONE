@@ -65,6 +65,14 @@ export interface DailyRevenueInMonth {
   daily: Array<{ day: number; total: number }>;
 }
 
+export interface TopSellingProduct {
+  productId: string;
+  totalSold: number;
+  name: string;
+  image: string;
+  price: number;
+}
+
 // Lấy thống kê tổng quan dashboard
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   const response = await axios.get(`${API_URL}/dashboard`);
@@ -92,6 +100,13 @@ export const getStatsByDateRange = async (
 export const getDailyRevenueInMonth = async (month: number, year: number): Promise<DailyRevenueInMonth> => {
   const response = await axios.get(`${API_URL}/daily-in-month`, {
     params: { month, year }
+  });
+  return response.data;
+};
+
+export const getTopSellingProducts = async (sort: 'asc' | 'desc' = 'desc'): Promise<TopSellingProduct[]> => {
+  const response = await axios.get(`${API_URL}/top-selling-products`, {
+    params: { sort }
   });
   return response.data;
 }; 
