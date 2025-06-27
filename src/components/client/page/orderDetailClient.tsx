@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import axios from "axios";
 import {
   FaArrowLeft,
   FaMoneyBillWave,
@@ -13,8 +13,9 @@ import {
   FaTrashAlt,
   FaTimes,
   FaCheck,
-  FaExclamationTriangle
-} from 'react-icons/fa';
+  FaExclamationTriangle,
+  FaBoxOpen, 
+} from "react-icons/fa";
 
 interface Item {
   productName: string;
@@ -35,6 +36,9 @@ interface Order {
   items: Item[];
   paymentMethod?: string;
   address: string;
+  returnStatus?: string;
+  statusHistory?: { status: string; timestamp: string }[];
+  returnStatusHistory?: { status: string; timestamp: string }[]; 
 }
 
 const OrderDetail = () => {
@@ -46,17 +50,22 @@ const OrderDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<'success' | 'error' | 'warning'>('success');
+  const [toastType, setToastType] = useState<"success" | "error" | "warning">(
+    "success"
+  );
 
   const cancelReasons = [
     "Sản phẩm không còn nhu cầu",
-    "Lỗi thông tin sản phẩm", 
+    "Lỗi thông tin sản phẩm",
     "Nhận được sản phẩm bị lỗi",
     "Đặt nhầm sản phẩm",
-    "Khác"
+    "Khác",
   ];
 
-  const showToastMessage = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
+  const showToastMessage = (
+    message: string,
+    type: "success" | "error" | "warning" = "success"
+  ) => {
     setToastMessage(message);
     setToastType(type);
     setShowToast(true);
@@ -65,32 +74,41 @@ const OrderDetail = () => {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'chờ xác nhận':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'đang xử lý':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'đang giao':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'đã giao':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'đã huỷ':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case "chờ xác nhận":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "đang xử lý":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "đang giao":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "đã giao":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "đã huỷ":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "yêu cầu trả hàng":
+      case "đang đợi duyệt":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "yêu cầu đã được duyệt":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "yêu cầu bị từ chối":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/orders/${id}`);
+        const response = await axios.get(
+          `http://localhost:5000/api/orders/${id}`
+        );
         setOrder(response.data);
         if (response.data.status !== "Chờ xác nhận") {
           setIsCancelDisabled(true);
         }
       } catch (err) {
-        console.error('Lỗi khi lấy chi tiết đơn hàng:', err);
-        showToastMessage('Không thể tải thông tin đơn hàng', 'error');
+        console.error("Lỗi khi lấy chi tiết đơn hàng:", err);
+        showToastMessage("Không thể tải thông tin đơn hàng", "error");
       } finally {
         setLoading(false);
       }
@@ -103,23 +121,25 @@ const OrderDetail = () => {
 
   const handleCancelOrder = async () => {
     if (!cancelReason) {
-      showToastMessage("Vui lòng chọn lý do huỷ đơn hàng", 'warning');
+      showToastMessage("Vui lòng chọn lý do huỷ đơn hàng", "warning");
       return;
     }
 
     try {
       await axios.patch(`http://localhost:5000/api/orders/${id}`, {
         status: "Đã huỷ",
-        returnReason: cancelReason
+        returnReason: cancelReason,
       });
 
-      showToastMessage("Đơn hàng đã được huỷ thành công", 'success');
-      setOrder(prevOrder => prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder);
+      showToastMessage("Đơn hàng đã được huỷ thành công", "success");
+      setOrder((prevOrder) =>
+        prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder
+      );
       setIsModalOpen(false);
       setIsCancelDisabled(true);
     } catch (err) {
       console.error("Lỗi khi hủy đơn:", err);
-      showToastMessage("Không thể huỷ đơn hàng. Vui lòng thử lại", 'error');
+      showToastMessage("Không thể huỷ đơn hàng. Vui lòng thử lại", "error");
     }
   };
 
@@ -130,7 +150,9 @@ const OrderDetail = () => {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600 text-lg">Đang tải dữ liệu đơn hàng...</p>
+              <p className="text-gray-600 text-lg">
+                Đang tải dữ liệu đơn hàng...
+              </p>
             </div>
           </div>
         </div>
@@ -145,8 +167,12 @@ const OrderDetail = () => {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <FaExclamationTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Không tìm thấy đơn hàng</h2>
-              <p className="text-gray-600 mb-6">Đơn hàng bạn tìm kiếm không tồn tại hoặc đã bị xóa.</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Không tìm thấy đơn hàng
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Đơn hàng bạn tìm kiếm không tồn tại hoặc đã bị xóa.
+              </p>
               <Link
                 to="/history"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
@@ -167,14 +193,20 @@ const OrderDetail = () => {
         {/* Toast Notification */}
         {showToast && (
           <div className="fixed top-24 right-4 z-50 animate-slide-in-right">
-            <div className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg border ${
-              toastType === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-              toastType === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-              'bg-yellow-50 border-yellow-200 text-yellow-800'
-            }`}>
-              {toastType === 'success' && <FaCheck className="w-5 h-5" />}
-              {toastType === 'error' && <FaTimes className="w-5 h-5" />}
-              {toastType === 'warning' && <FaExclamationTriangle className="w-5 h-5" />}
+            <div
+              className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg border ${
+                toastType === "success"
+                  ? "bg-green-50 border-green-200 text-green-800"
+                  : toastType === "error"
+                  ? "bg-red-50 border-red-200 text-red-800"
+                  : "bg-yellow-50 border-yellow-200 text-yellow-800"
+              }`}
+            >
+              {toastType === "success" && <FaCheck className="w-5 h-5" />}
+              {toastType === "error" && <FaTimes className="w-5 h-5" />}
+              {toastType === "warning" && (
+                <FaExclamationTriangle className="w-5 h-5" />
+              )}
               <span className="font-medium">{toastMessage}</span>
             </div>
           </div>
@@ -204,27 +236,21 @@ const OrderDetail = () => {
               <FaClipboardList className="w-5 h-5 text-blue-600" />
               Thông tin đơn hàng
             </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="flex items-start gap-3">
-                <FaHashtag className="w-5 h-5 text-gray-500 mt-1" />
-                <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Mã đơn hàng</p>
-                  <p className="font-semibold text-gray-900">#{order.orderCode}</p>
-                </div>
-              </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="flex items-start gap-3">
                 <FaCalendarAlt className="w-5 h-5 text-gray-500 mt-1" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Ngày đặt</p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">
+                    Ngày đặt
+                  </p>
                   <p className="font-semibold text-gray-900">
-                    {new Date(order.date).toLocaleDateString('vi-VN', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
+                    {new Date(order.date).toLocaleDateString("vi-VN", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
                     })}
                   </p>
                 </div>
@@ -233,25 +259,54 @@ const OrderDetail = () => {
               <div className="flex items-start gap-3">
                 <FaBox className="w-5 h-5 text-gray-500 mt-1" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Trạng thái</p>
-                  <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
+                  <p className="text-sm font-medium text-gray-500 mb-1">
+                    Trạng thái
+                  </p>
+                  <span
+                    className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                      order.status
+                    )}`}
+                  >
                     {order.status}
                   </span>
                 </div>
               </div>
+              {order.returnStatus && (
+                <div className="flex items-start gap-3">
+                  <FaBox className="w-5 h-5 text-gray-500 mt-1" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">
+                      Trạng thái trả hàng
+                    </p>
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                        order.returnStatus
+                      )}`}
+                    >
+                      {order.returnStatus}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-start gap-3">
                 <FaCreditCard className="w-5 h-5 text-gray-500 mt-1" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Thanh toán</p>
-                  <p className="font-semibold text-gray-900">{order.paymentMethod || 'Chưa rõ'}</p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">
+                    Thanh toán
+                  </p>
+                  <p className="font-semibold text-gray-900">
+                    {order.paymentMethod || "Chưa rõ"}
+                  </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
                 <FaMapMarkerAlt className="w-5 h-5 text-gray-500 mt-1" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Địa chỉ giao hàng</p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">
+                    Địa chỉ giao hàng
+                  </p>
                   <p className="font-semibold text-gray-900">{order.address}</p>
                 </div>
               </div>
@@ -259,8 +314,12 @@ const OrderDetail = () => {
               <div className="flex items-start gap-3">
                 <FaBox className="w-5 h-5 text-gray-500 mt-1" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-1">Số sản phẩm</p>
-                  <p className="font-semibold text-gray-900">{order.items.length} sản phẩm</p>
+                  <p className="text-sm font-medium text-gray-500 mb-1">
+                    Số sản phẩm
+                  </p>
+                  <p className="font-semibold text-gray-900">
+                    {order.items.length} sản phẩm
+                  </p>
                 </div>
               </div>
             </div>
@@ -274,10 +333,13 @@ const OrderDetail = () => {
                 Chi tiết sản phẩm
               </h2>
             </div>
-            
+
             <div className="divide-y divide-gray-200">
               {order.items.map((item, idx) => (
-                <div key={idx} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                <div
+                  key={idx}
+                  className="p-6 hover:bg-gray-50 transition-colors duration-200"
+                >
                   <div className="flex flex-col sm:flex-row gap-4">
                     {/* Product Image */}
                     <div className="flex-shrink-0">
@@ -296,16 +358,21 @@ const OrderDetail = () => {
 
                     {/* Product Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-lg mb-2">{item.productName}</h3>
+                      <h3 className="font-semibold text-gray-900 text-lg mb-2">
+                        {item.productName}
+                      </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm text-gray-600">
                         <div>
-                          <span className="font-medium">Màu sắc:</span> {item.snapshot?.color || 'Không xác định'}
+                          <span className="font-medium">Màu sắc:</span>{" "}
+                          {item.snapshot?.color || "Không xác định"}
                         </div>
                         <div>
-                          <span className="font-medium">Bộ nhớ:</span> {item.snapshot?.storage || 'Không xác định'}
+                          <span className="font-medium">Bộ nhớ:</span>{" "}
+                          {item.snapshot?.storage || "Không xác định"}
                         </div>
                         <div>
-                          <span className="font-medium">Số lượng:</span> {item.soluong}
+                          <span className="font-medium">Số lượng:</span>{" "}
+                          {item.soluong}
                         </div>
                       </div>
                     </div>
@@ -313,8 +380,12 @@ const OrderDetail = () => {
                     {/* Price */}
                     <div className="flex-shrink-0 text-right">
                       <div className="text-sm text-gray-500 mb-1">Đơn giá</div>
-                      <div className="font-medium text-gray-900">{item.price.toLocaleString()} đ</div>
-                      <div className="text-sm text-gray-500 mt-1">Thành tiền</div>
+                      <div className="font-medium text-gray-900">
+                        {item.price.toLocaleString()} đ
+                      </div>
+                      <div className="text-sm text-gray-500 mt-1">
+                        Thành tiền
+                      </div>
                       <div className="text-lg font-semibold text-green-600">
                         {(item.price * item.soluong).toLocaleString()} đ
                       </div>
@@ -325,6 +396,61 @@ const OrderDetail = () => {
             </div>
           </div>
 
+          {/* Status History */}
+          {order.statusHistory && order.statusHistory.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FaClipboardList className="w-5 h-5 text-blue-600" />
+                Lịch sử trạng thái đơn hàng
+              </h2>
+              <ul className="space-y-3 text-sm text-gray-700">
+                {order.statusHistory.map((entry, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-center border-b pb-2 last:border-b-0 hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <span className="font-medium">{entry.status}</span>
+                    <span className="text-gray-500">
+                      {new Date(entry.timestamp).toLocaleString("vi-VN")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Return Status History */}
+          {order.returnStatusHistory && order.returnStatusHistory.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FaBoxOpen className="w-5 h-5 text-orange-600" />
+                Lịch sử trạng thái trả hàng
+              </h2>
+              <ul className="space-y-3 text-sm text-gray-700">
+                {order.returnStatusHistory.map((entry, index) => (
+                  <li
+                    key={index}
+                    className="flex justify-between items-center border-b pb-2 last:border-b-0 hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    <div className="flex items-center gap-2">
+                      <FaBoxOpen className="w-4 h-4 text-orange-600" />
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(
+                          entry.status
+                        )}`}
+                      >
+                        {entry.status}
+                      </span>
+                    </div>
+                    <span className="text-gray-500">
+                      {new Date(entry.timestamp).toLocaleString("vi-VN")}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Actions and Total */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <button
@@ -332,13 +458,24 @@ const OrderDetail = () => {
               disabled={isCancelDisabled}
               className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
                 isCancelDisabled
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               }`}
             >
               <FaTrashAlt className="w-4 h-4" />
-              {isCancelDisabled ? 'Không thể hủy' : 'Hủy đơn hàng'}
+              {isCancelDisabled ? "Không thể hủy" : "Hủy đơn hàng"}
             </button>
+            <Link
+              to={`/return/${id}`}
+              className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
+                order.status !== "Giao thành công" || !!order.returnStatus
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed pointer-events-none"
+                  : "bg-yellow-500 text-white hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400"
+              }`}
+            >
+              <FaBox className="w-4 h-4" />
+              {order.returnStatus ? "Đã yêu cầu trả hàng" : "Yêu cầu trả hàng"}
+            </Link>
 
             <div className="text-right">
               <p className="text-sm text-gray-500 mb-1">Tổng thanh toán</p>
@@ -355,7 +492,9 @@ const OrderDetail = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Hủy đơn hàng</h3>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Hủy đơn hàng
+                </h3>
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
@@ -371,7 +510,10 @@ const OrderDetail = () => {
                   </label>
                   <div className="space-y-3">
                     {cancelReasons.map((reason, idx) => (
-                      <label key={idx} className="flex items-center cursor-pointer">
+                      <label
+                        key={idx}
+                        className="flex items-center cursor-pointer"
+                      >
                         <input
                           type="radio"
                           name="cancelReason"
@@ -380,7 +522,9 @@ const OrderDetail = () => {
                           onChange={(e) => setCancelReason(e.target.value)}
                           className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                         />
-                        <span className="ml-3 text-sm text-gray-700">{reason}</span>
+                        <span className="ml-3 text-sm text-gray-700">
+                          {reason}
+                        </span>
                       </label>
                     ))}
                   </div>
@@ -398,8 +542,8 @@ const OrderDetail = () => {
                     disabled={!cancelReason}
                     className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors duration-200 ${
                       cancelReason
-                        ? 'bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
-                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        ? "bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        : "bg-gray-100 text-gray-400 cursor-not-allowed"
                     }`}
                   >
                     Xác nhận hủy

@@ -82,6 +82,7 @@ import Deleted_products from './components/admin/Product/Deleted-products';
 import OrderHistory from './components/client/page/history';
 import OrderDetailClient from './components/client/page/orderDetailClient';
 import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
+import ReturnRequestDetail from './components/client/page/ReturnDetail';
 
 
 
@@ -104,6 +105,8 @@ const App = () => {
         { path: "news/:id", element: <NewsDetail /> },
         { path: 'history', element: <OrderHistory /> },
         { path: "history/:id", element: <OrderDetailClient /> },
+        // Trả hàng
+        { path: "return/:id", element: <ReturnRequestDetail /> },
 
         { path: "*", element: <NotFound /> },
         {

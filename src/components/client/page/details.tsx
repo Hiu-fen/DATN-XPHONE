@@ -409,7 +409,7 @@ const Details = () => {
           <div className="flex flex-col sm:flex-row gap-3 mt-4 max-w-md w-full">
             <button
               className="flex-1 bg-black text-white py-2 px-6 rounded-lg font-semibold"
-              onClick={handleBuyNow} // 🔄 Thay vì handleAddToCart1
+              onClick={handleBuyNow} 
               disabled={!product.status}
             >
               MUA NGAY
