@@ -5,6 +5,7 @@ const itemSchema = new mongoose.Schema({
   price: { type: Number },
   color: { type: String },
   storage: { type: String },
+  categoryId: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
 }, { _id: true });
 const cartSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

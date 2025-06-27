@@ -10,6 +10,7 @@ const promotionSchema = new mongoose.Schema({
     default: 'free_ship'
   },
   discountValue: { type: Number },
+  maxDiscount: { type: Number, default: null }, // Giảm tối đa cho mã phần trăm
   description: { type: String },
   applicableCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   condition: { type: String },

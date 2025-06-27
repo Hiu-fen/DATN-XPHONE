@@ -22,7 +22,7 @@ import {
 import { ApiNotificationItem } from '../../utils/notification';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BellOutlined,
   CheckCircleOutlined,
@@ -37,6 +37,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState<ApiNotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const adminData = JSON.parse(localStorage.getItem('admin') || '{}');
   const userId = adminData?._id || '';
@@ -72,6 +73,9 @@ export default function NotificationBell() {
     try {
       await deleteAdminNotification(id, userId);
       setNotifications((prev) => prev.filter((item) => item._id !== id));
+      queryClient.invalidateQueries({
+        queryKey: ['unread-admin', userId],
+      });
       message.success('Đã xoá thông báo');
     } catch {
       message.error('Xoá thất bại');
@@ -82,6 +86,9 @@ export default function NotificationBell() {
     try {
       await deleteAllAdminNotifications(userId);
       setNotifications([]);
+      queryClient.invalidateQueries({
+        queryKey: ['unread-admin', userId],
+      });
       message.success('Đã xoá tất cả thông báo');
     } catch {
       message.error('Xoá tất cả thất bại');
@@ -99,6 +106,9 @@ export default function NotificationBell() {
         };
       });
       setNotifications(updated);
+      queryClient.invalidateQueries({
+        queryKey: ['unread-admin', userId],
+      });
       message.success('Đã đánh dấu tất cả là đã đọc');
     } catch {
       message.error('Lỗi khi đánh dấu đã đọc');
@@ -118,6 +128,9 @@ export default function NotificationBell() {
             : item
         )
       );
+      queryClient.invalidateQueries({
+        queryKey: ['unread-admin', userId],
+      });
       message.success('Đã đánh dấu thành công');
     } catch {
       message.error('Lỗi khi đánh dấu thông báo');
@@ -137,10 +150,6 @@ export default function NotificationBell() {
     switch (type) {
       case 'order':
         return <CheckCircleOutlined className="text-green-500" />;
-      case 'approval':
-        return <WarningOutlined className="text-yellow-500" />;
-      case 'system':
-        return <InfoCircleOutlined className="text-blue-500" />;
       case 'product':
         return <CheckCircleOutlined className="text-purple-500" />;
       case 'info':
@@ -159,7 +168,7 @@ export default function NotificationBell() {
         <div className="flex gap-2">
           {unreadCount > 0 && (
             <Button size="small" onClick={handleMarkAllAsRead}>
-              Đã đọc tất cả 
+              Đã đọc tất cả ({unreadCount})
             </Button>
           )}
           {notifications.length > 0 && (

@@ -1,17 +1,22 @@
 import {
   BarChartOutlined,
+  BranchesOutlined,
   CommentOutlined,
   DatabaseOutlined,
-  FolderOpenOutlined,
+  FileImageOutlined,
   GiftOutlined,
   PhoneOutlined,
   PictureOutlined,
+  ReadOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import { Layout, Menu } from 'antd';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+
+const { Sider } = Layout;
 
 const AdminSidebar = () => {
   const navigate = useNavigate();
@@ -20,205 +25,150 @@ const AdminSidebar = () => {
 
   const menuItems = [
     {
-      key: 'dashboard',
-      label: 'Thống kê',
-      icon: <BarChartOutlined />,
-      path: '/admin',
+      key: '/admin',
+      icon: <BarChartOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Thống kê</span>,
     },
     {
       key: 'product-manage',
-      label: 'Quản lý sản phẩm',
-      icon: <ShoppingOutlined />,
+      icon: <ShoppingOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý sản phẩm</span>,
       children: [
-        { key: 'product-list', label: 'Danh sách sản phẩm', path: '/admin/phone/list' },
-        { key: 'product-add', label: 'Thêm sản phẩm', path: '/admin/phone/add' },
+        { key: '/admin/phone/list', label: <span className="text-[15px]">Danh sách sản phẩm</span> },
+        { key: '/admin/phone/add', label: <span className="text-[15px]">Thêm sản phẩm</span> },
       ],
     },
     {
       key: 'category-manage',
-      label: 'Quản lý danh mục',
-      icon: <DatabaseOutlined />,
+      icon: <DatabaseOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý danh mục</span>,
       children: [
-        { key: 'category-list', label: 'Danh mục', path: '/admin/category/list' },
-        { key: 'category-add', label: 'Thêm danh mục', path: '/admin/category/add' },
+        { key: '/admin/category/list', label: <span className="text-[15px]">Danh mục</span> },
+        { key: '/admin/category/add', label: <span className="text-[15px]">Thêm danh mục</span> },
       ],
     },
     {
       key: 'comment-manage',
-      label: 'Quản lý bình luận',
-      icon: <CommentOutlined />,
+      icon: <CommentOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý bình luận</span>,
       children: [
-        { key: 'comment-list', label: 'Bình luận', path: '/admin/comment/list' },
-        { key: 'comment-add', label: 'Thêm bình luận', path: '/admin/comment/add' },
+        { key: '/admin/comment/list', label: <span className="text-[15px]">Bình luận</span> },
+        { key: '/admin/comment/add', label: <span className="text-[15px]">Thêm bình luận</span> },
       ],
     },
     {
       key: 'user',
-      label: 'Quản lý tài khoản',
-      icon: <UserOutlined />,
+      icon: <UserOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý tài khoản</span>,
       children: [
-        { key: 'user/listadmin', label: 'Tài khoản quản trị', path: '/admin/user/listadmin' },
-        { key: 'user/listclient', label: 'Tài khoản người dùng', path: '/admin/user/listclient' },
+        { key: '/admin/user/listadmin', label: <span className="text-[15px]">Tài khoản quản trị</span> },
+        { key: '/admin/user/listclient', label: <span className="text-[15px]">Tài khoản người dùng</span> },
       ],
     },
     {
       key: 'banner',
-      label: 'Quản lý Banner',
-      icon: <PictureOutlined />,
+      icon: <PictureOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý Banner</span>,
       children: [
-        { key: 'banner/list', label: 'Banner', path: '/admin/banner/list' },
-        { key: 'banner/add', label: 'Thêm Banner', path: '/admin/banner/add' }
-
+        { key: '/admin/banner/list', label: <span className="text-[15px]">Banner</span> },
+        { key: '/admin/banner/add', label: <span className="text-[15px]">Thêm Banner</span> },
       ],
     },
     {
-      key: 'phone',
-      label: 'Quản lý liên hệ',
-      icon: <PhoneOutlined />,
+      key: 'contact',
+      icon: <PhoneOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý liên hệ</span>,
       children: [
-        { key: 'contact/list', label: 'Liên hệ', path: '/admin/contact/list' },
-        { key: 'contact/add', label: 'Thêm liên hệ', path: '/admin/contact/add' },
+        { key: '/admin/contact/list', label: <span className="text-[15px]">Liên hệ</span> },
+        { key: '/admin/contact/add', label: <span className="text-[15px]">Thêm liên hệ</span> },
       ],
     },
     {
       key: 'orders',
-      label: 'Quản lý đơn hàng',
-      icon: <ShoppingCartOutlined />,
-      children: [{ key: 'order/list', label: 'Đơn hàng', path: '/admin/orders' }],
-
+      icon: <ShoppingCartOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý đơn hàng</span>,
+      children: [{ key: '/admin/orders', label: <span className="text-[15px]">Đơn hàng</span> }],
     },
     {
       key: 'album',
-      label: 'Quản lý Album ảnh',
-      icon: <FolderOpenOutlined />,
+      icon: <FileImageOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý Album ảnh</span>,
       children: [
-        { key: 'album/list', label: 'Album ảnh', path: '/admin/album/list' },
-        { key: 'album-add', label: 'Thêm Album ảnh', path: '/admin/album/add' },
+        { key: '/admin/album/list', label: <span className="text-[15px]">Album ảnh</span> },
+        { key: '/admin/album/add', label: <span className="text-[15px]">Thêm Album ảnh</span> },
       ],
-
     },
     {
       key: 'news',
-      label: 'Quản lý tin tức',
-      icon: <FolderOpenOutlined />,
+      icon: <ReadOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý tin tức</span>,
       children: [
-        { key: 'news/list', label: 'Tin tức', path: '/admin/news/list' },
-        { key: 'news/add', label: 'Thêm tin tức', path: '/admin/news/add' },
+        { key: '/admin/news/list', label: <span className="text-[15px]">Tin tức</span> },
+        { key: '/admin/news/add', label: <span className="text-[15px]">Thêm tin tức</span> },
       ],
-
     },
     {
-      key: 'Biến thể',
-      label: 'Quản lý Biến thể',
-      icon: <FolderOpenOutlined />,
-      children: [
-        { key: 'variant/list', label: 'Biến thể sản phẩm', path: '/admin/variant/list' },
-
-      ],
-
+      key: 'variant',
+      icon: <BranchesOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý Biến thể</span>,
+      children: [{ key: '/admin/variant/list', label: <span className="text-[15px]">Biến thể sản phẩm</span> }],
     },
-    
     {
       key: 'promotion',
-      label: 'Quản lý khuyến mãi',
-      icon: <GiftOutlined />,
+      icon: <GiftOutlined className="text-xl" />,
+      label: <span className="text-[17px] font-semibold">Quản lý khuyến mãi</span>,
       children: [
-        { key: 'promotion/list', label: 'Khuyến mãi', path: '/admin/promotion/list' },
-        { key: 'promotion/add', label: 'Thêm khuyến mãi', path: '/admin/promotion/add' },
+        { key: '/admin/promotion/list', label: <span className="text-[15px]">Khuyến mãi</span> },
+        { key: '/admin/promotion/add', label: <span className="text-[15px]">Thêm khuyến mãi</span> },
       ],
     },
   ];
 
-  const isActive = (path: string) => pathname.startsWith(path);
-
-  const getExpandedMenus = () => {
-    return menuItems
-      .filter(item =>
-        item.children?.some(child => pathname.startsWith(child.path))
-      )
-      .map(item => item.key);
-  };
-
-  const [openKeys, setOpenKeys] = useState<string[]>(getExpandedMenus());
-
-  const toggleMenu = (key: string) => {
-    setOpenKeys(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-  };
-
-  // ✅ Sửa tại đây: Không reload, dùng state để trigger refetch ở component
-  const handleClick = (path?: string) => {
-    if (typeof path === 'string') {
-      if (path === pathname) {
-        // Nếu cùng route thì truyền thêm state mới
-        navigate(path, { state: { forceReload: Date.now() } });
-      } else {
-        navigate(path);
+  const findOpenKey = () => {
+    for (const item of menuItems) {
+      if (item.children) {
+        if (item.children.some((child) => pathname.startsWith(child.key))) {
+          return item.key;
+        }
       }
+    }
+    return '';
+  };
+
+  const [openKeys, setOpenKeys] = useState<string[]>([findOpenKey()]);
+
+  const handleClick = ({ key }: { key: string }) => {
+    if (key === pathname) {
+      navigate(key, { state: { forceReload: Date.now() } });
+    } else {
+      navigate(key);
     }
   };
 
   return (
-    <aside className="w-1/5 min-w-[280px] h-screen bg-green-700 overflow-y-auto sticky top-0 left-0">
-      <nav className="py-4">
-        {menuItems.map((item) => {
-          const isExpanded = openKeys.includes(item.key);
-          return (
-            <div key={item.key} className="mb-1">
-              {item.children ? (
-                <>
-                  <div
-                    className={`px-6 py-3 flex items-center justify-between cursor-pointer ${
-                      isExpanded ? 'bg-green-800 text-white' : 'text-green-100 hover:bg-green-600'
-                    }`}
-                    onClick={() => toggleMenu(item.key)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="text-lg">{item.icon}</span>
-                      <span className="font-medium">{item.label}</span>
-                    </div>
-                    <span className={`transform transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
-                      ›
-                    </span>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="bg-green-800 py-1">
-                      {item.children.map((child) => (
-                        <div
-                          key={child.key}
-                          className={`pl-14 pr-6 py-2 cursor-pointer ${
-                            isActive(child.path)
-                              ? 'bg-green-900 text-white border-l-2 border-white'
-                              : 'text-green-200 hover:bg-green-700'
-                          }`}
-                          onClick={() => handleClick(child.path)}
-                        >
-                          <span className="text-sm">{child.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div
-                  className={`px-6 py-3 flex items-center gap-3 cursor-pointer ${
-                    isActive(item.path || '')
-                      ? 'bg-green-800 text-white border-l-2 border-white'
-                      : 'text-green-100 hover:bg-green-600'
-                  }`}
-                  onClick={() => handleClick(item.path)}
-                >
-                  <span className="text-lg">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
+    <Sider
+      width={280}
+      className="h-screen sticky top-0 left-0 bg-green-700"
+      theme="dark"
+    >
+      <Menu
+        mode="inline"
+        selectedKeys={[pathname]}
+        openKeys={openKeys}
+        onOpenChange={(keys) => setOpenKeys(keys)}
+        onClick={handleClick}
+        items={menuItems}
+        className="bg-green-700 text-white text-[16px]
+          [&_.ant-menu-item]:!text-white
+          [&_.ant-menu-submenu-title]:!text-white
+          [&_.ant-menu-item-selected]:!bg-green-900
+          [&_.ant-menu-item-selected]:!text-white
+          [&_.ant-menu-item:hover]:!bg-green-600
+          [&_.ant-menu-submenu-title:hover]:!bg-green-600
+          py-5
+          "
+      />
+    </Sider>
   );
 };
 
