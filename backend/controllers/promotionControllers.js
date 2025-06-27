@@ -145,10 +145,21 @@ exports.applyVoucherToOrder = async (req, res) => {
       return res.status(400).json({ message: "Mã khuyến mãi đã hết lượt sử dụng." });
     }
 
-    // Kiểm tra danh mục nếu có
+    // ===== ✅ Xử lý kiểm tra danh mục áp dụng
     if (voucher.applicableCategories?.length > 0) {
       const allowedCategories = voucher.applicableCategories.map(id => id.toString());
-      const valid = items.some((i) => allowedCategories.includes(i.categoryId));
+
+      const extractCategoryId = (categoryId) => {
+        if (!categoryId) return "";
+        if (typeof categoryId === "string") return categoryId;
+        if (typeof categoryId === "object" && categoryId.$oid) return categoryId.$oid;
+        return categoryId.toString();
+      };
+
+      const valid = items.some((i) =>
+        allowedCategories.includes(extractCategoryId(i.categoryId))
+      );
+
       if (!valid) {
         return res.status(400).json({
           message: "Mã này không áp dụng cho sản phẩm trong đơn hàng.",
@@ -156,15 +167,14 @@ exports.applyVoucherToOrder = async (req, res) => {
       }
     }
 
-    // Tính giảm giá
+    // ===== ✅ Tính giảm giá
     let discountAmount = 0;
 
     if (voucher.discountType === "fixed") {
-      discountAmount = 200000;
+      discountAmount = voucher.discountValue || 200000;
     } else if (voucher.discountType === "percent") {
       discountAmount = (voucher.discountValue / 100) * total;
 
-      // Áp dụng giới hạn giảm tối đa nếu có
       if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
         discountAmount = voucher.maxDiscount;
       }
@@ -172,7 +182,6 @@ exports.applyVoucherToOrder = async (req, res) => {
       discountAmount = 40000;
     }
 
-    // Không cho giảm quá tổng tiền
     if (discountAmount > total) {
       discountAmount = total;
     }

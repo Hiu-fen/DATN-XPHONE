@@ -212,6 +212,8 @@ exports.createOrder = async (req, res) => {
       notes,
       isPaid,
       userId,
+      voucherCode,
+      discountAmount: req.body.discountAmount || 0, // 👈 thêm dòng này nếu có
       status: "Chờ xác nhận",
       statusHistory: [{ status: "Chờ xác nhận", timestamp: new Date() }],
     });
