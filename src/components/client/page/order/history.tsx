@@ -56,10 +56,14 @@ const OrderHistory = () => {
   const [ratings, setRatings] = useState<{ [key: string]: number }>({});
   const [reviewLoading, setReviewLoading] = useState(false);
 
-  // Thêm state cho hình ảnh sản phẩm
   const [productImages, setProductImages] = useState<{ [key: string]: string }>(
     {}
   );
+
+  const [reviewedOrders, setReviewedOrders] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem("reviewedOrders");
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
 
   const user: User | null = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -250,6 +254,19 @@ const OrderHistory = () => {
 
       message.success(`Đánh giá sản phẩm "${productName}" thành công!`);
 
+      // Lưu trạng thái đã đánh giá
+      if (selectedOrder) {
+        const newReviewedOrders = new Set([
+          ...reviewedOrders,
+          selectedOrder._id,
+        ]);
+        setReviewedOrders(newReviewedOrders);
+        localStorage.setItem(
+          "reviewedOrders",
+          JSON.stringify([...newReviewedOrders])
+        );
+      }
+
       if (currentProductIndex < uniqueProducts.length - 1) {
         setCurrentProductIndex((prev) => prev + 1);
       } else {
@@ -262,7 +279,6 @@ const OrderHistory = () => {
       setReviewLoading(false);
     }
   };
-
 
   // Đóng modal
   const handleCloseReviewModal = () => {
@@ -393,14 +409,21 @@ const OrderHistory = () => {
                             <FaEye className="w-4 h-4" />
                             Xem chi tiết
                           </Link>
-                          {isOrderCompleted(order.status) && (
-                            <button
-                              onClick={() => openReviewModal(order)}
-                              className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200"
-                            >
+                          {isOrderCompleted(order.status) &&
+                            !reviewedOrders.has(order._id) && (
+                              <button
+                                onClick={() => openReviewModal(order)}
+                                className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200"
+                              >
+                                <FaStar className="w-4 h-4" />
+                                Đánh giá
+                              </button>
+                            )}
+                          {reviewedOrders.has(order._id) && (
+                            <div className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-green-100 text-green-700 font-medium rounded-lg">
                               <FaStar className="w-4 h-4" />
-                              Đánh giá
-                            </button>
+                              Đã đánh giá
+                            </div>
                           )}
                         </div>
                       </div>
@@ -445,13 +468,10 @@ const OrderHistory = () => {
                           key={order._id}
                           className="hover:bg-gray-50 transition-colors duration-200"
                         >
-                          <td className="px-5 py-4">
-                            <Link
-                              to={`/history/${order._id}`}
-                              className="text-blue-600 font-semibold hover:underline truncate block max-w-[160px]"
-                            >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="font-semibold text-gray-900">
                               #{order.orderCode}
-                            </Link>
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -491,21 +511,21 @@ const OrderHistory = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="flex gap-2 justify-center">
-                              <Link
-                                to={`/history/${order._id}`}
-                                className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-                              >
-                                <FaEye className="w-4 h-4" />
-                                Xem
-                              </Link>
-                              {isOrderCompleted(order.status) && (
-                                <button
-                                  onClick={() => openReviewModal(order)}
-                                  className="inline-flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors duration-200"
-                                >
+                              {isOrderCompleted(order.status) &&
+                                !reviewedOrders.has(order._id) && (
+                                  <button
+                                    onClick={() => openReviewModal(order)}
+                                    className="inline-flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors duration-200"
+                                  >
+                                    <FaStar className="w-4 h-4" />
+                                    Đánh giá
+                                  </button>
+                                )}
+                              {reviewedOrders.has(order._id) && (
+                                <span className="inline-flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
                                   <FaStar className="w-4 h-4" />
-                                  Đánh giá
-                                </button>
+                                  Đã đánh giá
+                                </span>
                               )}
                             </div>
                           </td>
