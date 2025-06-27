@@ -3,10 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { message } from "antd";
-import BannerClient from "../componentChild/Home/banner";
-import { IProduct } from "../../../interface/product";
-import { ICategory } from "../../../interface/category";
-import { useCart } from "../context/CartContext";
+import BannerClient from "../../componentChild/Home/banner";
+import { IProduct } from "../../../../interface/product";
+import { ICategory } from "../../../../interface/category";
+import { useCart } from "../../context/CartContext";
 
 interface CartItem {
   productId: string;

@@ -26,9 +26,9 @@ import {
   getUserUnreadCount,
   markAllUserNotiAsRead,
   markOneUserNotiAsRead,
-} from '../../../api/admin/notificationApi';
+} from '../../../../api/admin/notificationApi';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiNotificationItem } from '../../admin/utils/notification';
+import { ApiNotificationItem } from '../../../admin/utils/notification';
 
 const { Title } = Typography;
 

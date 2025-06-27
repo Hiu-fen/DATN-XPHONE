@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { message } from "antd";
-import { useUser } from "../context/UserContext";
-import { ICartItem } from "../../../interface/cart";
-import { IProduct } from "../../../interface/product";
+import { message, Modal } from "antd";
+import { useUser } from "../../context/UserContext";
+import { ICartItem } from "../../../../interface/cart";
+import { IProduct } from "../../../../interface/product";
 import axios, { AxiosError } from "axios";
 
 interface CartItem {
@@ -33,8 +33,22 @@ const Checkout = () => {
   const selectedItems = location.state?.selectedItems as ICartItem[] | undefined;
   const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
 
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [addressList, setAddressList] = useState<any[]>([]);
+
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const SHIPPING_FEE = 35000;
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (currentUser?._id) {
+        const res = await axios.get(`http://localhost:5000/api/addresses/${currentUser._id}`);
+        setAddressList(res.data);
+      }
+    };
+    fetchAddresses();
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchCartAndProducts = async () => {
@@ -124,7 +138,7 @@ const Checkout = () => {
     (sum, item) => sum + item.price * item.soluong,
     0
   );
-const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
+  const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
 
   const [form, setForm] = useState({
     name: currentUser?.name || "",
@@ -156,68 +170,68 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
   };
 
   const handleOrder = async () => {
-  if (!user) {
-    message.error("Vui lòng đăng nhập để đặt hàng");
-    navigate("/login");
-    return;
-  }
-
-  if (!form.sdt || !form.address) {
-    message.error("Vui lòng cập nhật số điện thoại và địa chỉ trước khi đặt hàng.");
-    setTimeout(() => navigate("/accounts"), 1000);
-    return;
-  }
-
-  if (!form.name || !form.email) {
-    message.error("Vui lòng điền đầy đủ thông tin bắt buộc.");
-    return;
-  }
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(form.email)) {
-    message.error("Email không hợp lệ");
-    return;
-  }
-
-  const orderCode = `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-  const newOrder = {
-  orderCode,
-  customerName: form.name,
-  phone: form.sdt,
-  address: form.address,
-  email: form.email,
-  notes: form.note,
-  paymentMethod: form.paymentMethod,
-  shippingProvider: form.shippingProvider,
-  total: Number(totalWithShipping), // 👈 ép chắc chắn là số
-  status: "Chờ xác nhận",
-  date: new Date().toISOString(),
-  isPaid: false,
-  refunded: false,
-  items: cart.map((item) => ({
-    productId: item.productId,
-    productName: item.productName,
-    soluong: Number(item.soluong), // 👈 đảm bảo là số
-    price: Number(item.price), // 👈 đảm bảo là số
-    color: item.color || "",
-    storage: item.storage || "",
-  })),
-  userId: user._id,
-};
-
-  console.log("🛒 Đơn hàng chuẩn bị gửi:", newOrder); // 👉 THÊM DÒNG NÀY ĐỂ LOG RA CHI TIẾT
-
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      message.error("Không tìm thấy token xác thực. Vui lòng đăng nhập lại.");
+    if (!user) {
+      message.error("Vui lòng đăng nhập để đặt hàng");
       navigate("/login");
       return;
     }
 
-    await axios.post("http://localhost:5000/api/orders", newOrder, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    if (!form.sdt || !form.address) {
+      message.error("Vui lòng cập nhật số điện thoại và địa chỉ trước khi đặt hàng.");
+      setTimeout(() => navigate("/accounts"), 1000);
+      return;
+    }
+
+    if (!form.name || !form.email) {
+      message.error("Vui lòng điền đầy đủ thông tin bắt buộc.");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(form.email)) {
+      message.error("Email không hợp lệ");
+      return;
+    }
+
+    const orderCode = `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+    const newOrder = {
+      orderCode,
+      customerName: form.name,
+      phone: form.sdt,
+      address: form.address,
+      email: form.email,
+      notes: form.note,
+      paymentMethod: form.paymentMethod,
+      shippingProvider: form.shippingProvider,
+      total: Number(totalWithShipping), // 👈 ép chắc chắn là số
+      status: "Chờ xác nhận",
+      date: new Date().toISOString(),
+      isPaid: false,
+      refunded: false,
+      items: cart.map((item) => ({
+        productId: item.productId,
+        productName: item.productName,
+        soluong: Number(item.soluong), // 👈 đảm bảo là số
+        price: Number(item.price), // 👈 đảm bảo là số
+        color: item.color || "",
+        storage: item.storage || "",
+      })),
+      userId: user._id,
+    };
+
+    console.log("🛒 Đơn hàng chuẩn bị gửi:", newOrder); // 👉 THÊM DÒNG NÀY ĐỂ LOG RA CHI TIẾT
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        message.error("Không tìm thấy token xác thực. Vui lòng đăng nhập lại.");
+        navigate("/login");
+        return;
+      }
+
+      await axios.post("http://localhost:5000/api/orders", newOrder, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (form.paymentMethod === "Momo") {
         message.info(
           "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
@@ -317,22 +331,70 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-4 py-3"
             />
-                       <input
-              type="tel"
-              name="sdt"
-              placeholder="Số điện thoại *"
-              value={form.sdt}
-              disabled
-              className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 cursor-not-allowed"
-            />
-            <input
-  type="text"
-  name="address"
-  placeholder="Địa chỉ nhận hàng *"
-  value={form.address}
-  disabled
-  className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-3 cursor-not-allowed"
-/>
+            {form.address && form.sdt ? (
+              <div className="bg-gray-100 p-3 rounded mb-3">
+                <p><strong>{form.name}</strong> – {form.sdt}</p>
+                <p>{form.address}</p>
+                <button
+                  type="button"
+                  className="text-blue-600 underline mt-2"
+                  onClick={() => setShowAddressModal(true)}
+                >
+                  Đổi địa chỉ
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={() => setShowAddressModal(true)}
+              >
+                Chọn địa chỉ giao hàng
+              </button>
+            )}
+
+                <Modal
+              open={showAddressModal}
+              title="Chọn địa chỉ giao hàng"
+              onCancel={() => setShowAddressModal(false)}
+              footer={null}
+            >
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">Địa chỉ đã lưu</h3>
+                <button
+                  type="button"
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  onClick={() => navigate('/accounts/my-addresses')}
+                >
+                  Thêm địa chỉ
+                </button>
+              </div>
+              <ul className="space-y-2 max-h-[300px] overflow-y-auto">
+                {addressList.map((addr) => (
+                  <li key={addr._id} className="border p-3 rounded-lg flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold">{addr.name} - {addr.phone}</p>
+                      <p className="text-sm text-gray-600">{addr.address}</p>
+                    </div>
+                    <button
+                      className="text-blue-600 hover:underline"
+                      onClick={() => {
+                        setForm((prev) => ({
+                          ...prev,
+                          name: addr.name,
+                          sdt: addr.phone,
+                          address: addr.address,
+                        }));
+                        setShowAddressModal(false);
+                      }}
+                    >
+                      Chọn
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </Modal>
+
 
             <input
               type="email"
@@ -459,7 +521,7 @@ const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
       </div>
     </div>
   );
-  
+
 };
 
 export default Checkout;

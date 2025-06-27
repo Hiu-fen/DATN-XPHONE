@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { HeartFilled } from '@ant-design/icons'
 import { Card, Image, Tag, Rate, Spin, message } from 'antd'
 import axios from 'axios'
-import { IProduct } from '../../../interface/product'
+import { IProduct } from '../../../../interface/product'
 import { useNavigate } from 'react-router-dom'
 
 const Wishlist = () => {

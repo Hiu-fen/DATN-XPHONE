@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { IProduct } from "../../../interface/product";
-import { ICartItem } from "../../../interface/cart";
-import { useUser } from "../context/UserContext";
+import { IProduct } from "../../../../interface/product";
+import { ICartItem } from "../../../../interface/cart";
+import { useUser } from "../../context/UserContext";
 import {
   FaShoppingCart,
   FaTrash,

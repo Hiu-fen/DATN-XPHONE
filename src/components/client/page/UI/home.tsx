@@ -1,15 +1,15 @@
-import BannerClient from "../componentChild/Home/banner"
-import HotSaleSection from "../componentChild/Home/hotSale";
-import ProductCategory from "../componentChild/Home/CategoryProduct";
-import SmallBanner from "../componentChild/Home/SmallBanner";
-import ProductInfo from "../componentChild/Home/ProductInfo";
-import NewsletterForm from "../componentChild/Home/NewsletterForm";
+import BannerClient from "../../componentChild/Home/banner"
+import HotSaleSection from "../../componentChild/Home/hotSale";
+import ProductCategory from "../../componentChild/Home/CategoryProduct";
+import SmallBanner from "../../componentChild/Home/SmallBanner";
+import ProductInfo from "../../componentChild/Home/ProductInfo";
+import NewsletterForm from "../../componentChild/Home/NewsletterForm";
 import { useQuery } from "@tanstack/react-query";
-import { getAllProducts } from "../../../api/client/productApiClient";
+import { getAllProducts } from "../../../../api/client/productApiClient";
 import { useEffect, useState } from "react";
-import IphoneProducts from "../componentChild/Home/iPhoneProduct";
-import SamSung from "../componentChild/Home/SamSungProducts";
-import Chatbot from "../componentChild/Home/ChatBot";
+import IphoneProducts from "../../componentChild/Home/iPhoneProduct";
+import SamSung from "../../componentChild/Home/SamSungProducts";
+import Chatbot from "../../componentChild/Home/ChatBot";
 
 const Home = () => {
   // Sử dụng useQuery để lấy danh sách sản phẩm
