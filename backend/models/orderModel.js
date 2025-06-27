@@ -56,6 +56,8 @@ const OrderSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now },
     },
   ],
+  voucherCode: { type: String, default: null },
+  discountAmount: { type: Number, default: 0 },
   userId: { type: String },
   restored: { type: Boolean, default: false },
 });

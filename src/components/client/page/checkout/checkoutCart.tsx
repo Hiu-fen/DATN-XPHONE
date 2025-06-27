@@ -43,14 +43,13 @@ const Checkout = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const SHIPPING_FEE = 35000;
 
-   const [discountAmount, setDiscountAmount] = useState<number>(0); // Giảm giá áp dụng
-  const [voucherCode, setVoucherCode] = useState<string>("");       // Mã đang áp dụng
-  const [finalPrice, setFinalPrice] = useState<number>(0);
-  const [voucherInfo, setVoucherInfo] = useState<{
+   const [discountAmount, setDiscountAmount] = useState<number>(0); 
+   const [voucherCode, setVoucherCode] = useState<string>("");       
+   const [finalPrice, setFinalPrice] = useState<number>(0);
+   const [voucherInfo, setVoucherInfo] = useState<{
     name: string;
     discountValue: string;
-
-  } | null>(null);
+   } | null>(null);
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -95,6 +94,7 @@ const Checkout = () => {
               image: product?.image || "",
               color: item.color || "",
               storage: item.storage || "",
+              categoryId: item.categoryId || product?.categoryId || "",
             };
           });
 
@@ -132,6 +132,7 @@ const Checkout = () => {
               image: product?.image || "",
               color: item.color || "",
               storage: item.storage || "",
+              categoryId: item.categoryId || product?.categoryId || "",
             };
           });
 
@@ -230,7 +231,10 @@ const Checkout = () => {
         price: Number(item.price), // 👈 đảm bảo là số
         color: item.color || "",
         storage: item.storage || "",
+        categoryId: item?.categoryId || "",
       })),
+      voucherCode: voucherCode || null,
+      discountAmount: discountAmount || 0,
       userId: user._id,
     };
 
@@ -329,7 +333,7 @@ const Checkout = () => {
     try {
       const itemsPayload = cart.map((item) => ({
         productId: item.productId,
-        categoryId: item.categoryId,
+        categoryId: String(item.categoryId),
         quantity: item.soluong,
         price: item.price,
       }));
@@ -342,7 +346,7 @@ const Checkout = () => {
 
       const { discountAmount, finalPrice, voucherCode, voucherInfo } = response.data;
       message.success("Áp dụng mã thành công");
-      setDiscountAmount(discountAmount);
+      setDiscountAmount(discountAmount)
       setVoucherCode(voucherCode);
       setFinalPrice(finalPrice);
       setVoucherInfo(voucherInfo);
@@ -350,7 +354,6 @@ const Checkout = () => {
       const errorMsg = err?.response?.data?.message || "Không áp dụng được mã khuyến mãi";
       message.error(errorMsg);
       setDiscountAmount(0);
-      setVoucherCode("");
     }
   };
 
@@ -540,9 +543,23 @@ const Checkout = () => {
 
           <div className="mt-6 border-t border-gray-300 pt-4 space-y-2">
             <div className="flex justify-between text-gray-600 text-lg">
-              <span>Tổng tiền:</span>
+              <span>Tạm tính:</span>
               <span>{totalPrice.toLocaleString("vi-VN")} VND</span>
             </div>
+
+            {discountAmount > 0 && (
+              <>
+                <div className="flex justify-between text-green-600 text-lg font-medium">
+                  <span>Khuyến mãi:</span>
+                  <span>-{discountAmount.toLocaleString("vi-VN")} VND</span>
+                </div>
+                <div className="text-sm text-green-700 italic">
+                  Mã giảm giá: <strong>{voucherCode}</strong>{" "}
+                  {voucherInfo?.name && `– ${voucherInfo.name}`}
+                </div>
+              </>
+            )}
+
             <div className="flex justify-between text-gray-600 text-lg">
               <span>Phí vận chuyển:</span>
               <span>{SHIPPING_FEE.toLocaleString("vi-VN")} VND</span>
