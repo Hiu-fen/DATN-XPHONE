@@ -349,4 +349,39 @@ exports.getDailyRevenueInMonth = async (req, res) => {
     console.error('Lỗi thống kê doanh thu từng ngày:', error);
     res.status(500).json({ message: 'Lỗi khi lấy thống kê doanh thu từng ngày' });
   }
+};
+
+// Thống kê top 3 sản phẩm bán chạy nhất
+exports.getTopSellingProducts = async (req, res) => {
+  try {
+    const sortOrder = req.query.sort === 'asc' ? 1 : -1;
+    // Lấy tổng số lượng bán ra của từng sản phẩm từ tất cả đơn hàng (không chỉ giao thành công)
+    const soldAgg = await Order.aggregate([
+      { $unwind: '$items' },
+      { $group: {
+          _id: '$items.productId',
+          totalSold: { $sum: '$items.soluong' }
+        }
+      }
+    ]);
+    // Lấy toàn bộ sản phẩm
+    const products = await Product.find();
+    // Gộp số lượng bán vào từng sản phẩm
+    const productsWithSold = products.map(prod => {
+      const sold = soldAgg.find(s => s._id.toString() === prod._id.toString());
+      return {
+        productId: prod._id,
+        totalSold: sold ? sold.totalSold : 0,
+        name: prod.name,
+        image: prod.image,
+        price: prod.price
+      };
+    });
+    // Sắp xếp và lấy 3 sản phẩm theo yêu cầu
+    const result = productsWithSold.sort((a, b) => sortOrder * (a.totalSold - b.totalSold)).slice(0, 3);
+    res.json(result);
+  } catch (error) {
+    console.error('Lỗi thống kê top sản phẩm bán chạy:', error);
+    res.status(500).json({ message: 'Lỗi khi lấy top sản phẩm bán chạy' });
+  }
 }; 

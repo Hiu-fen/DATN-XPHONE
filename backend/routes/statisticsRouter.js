@@ -14,4 +14,7 @@ router.get('/range', statisticsController.getStatsByDateRange);
 // Thống kê doanh thu từng ngày trong tháng
 router.get('/daily-in-month', statisticsController.getDailyRevenueInMonth);
 
+// Thống kê top 3 sản phẩm bán chạy nhất
+router.get('/top-selling-products', statisticsController.getTopSellingProducts);
+
 module.exports = router; 
