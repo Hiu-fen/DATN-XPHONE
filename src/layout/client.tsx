@@ -1,5 +1,5 @@
-import ClientHeader from '../components/client/header'
-import ClientFooter from '../components/client/footer'
+import ClientHeader from '../components/client/layout/header'
+import ClientFooter from '../components/client/layout/footer'
 import { Outlet } from 'react-router-dom'
 
 const ClientLayout = () => {

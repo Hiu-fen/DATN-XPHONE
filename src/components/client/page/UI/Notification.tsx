@@ -20,8 +20,8 @@ import {
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiNotificationItem } from '../../admin/utils/notification';
-import { deleteAllUserNotifications, deleteUserNotification, getUserNotifications, getUserUnreadCount, markAllUserNotiAsRead, markOneUserNotiAsRead } from '../../../api/client/nofitationApiClient';
+import { ApiNotificationItem } from '../../../admin/utils/notification';
+import { deleteAllUserNotifications, deleteUserNotification, getUserNotifications, getUserUnreadCount, markAllUserNotiAsRead, markOneUserNotiAsRead } from '../../../../api/client/nofitationApiClient';
 
 const { Title } = Typography;
 

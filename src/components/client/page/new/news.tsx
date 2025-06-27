@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { newsApi } from '../../../api/newsApi';
-import { INews } from '../../../interface/News';
+import { newsApi } from '../../../../api/newsApi';
+import { INews } from '../../../../interface/News';
 
 const NewsClient = () => {
     const [news, setNews] = useState<INews[]>([]);

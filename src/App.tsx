@@ -42,22 +42,22 @@ import DetailPromotion from './components/admin/Promotion/PromotionDetail'
 import AdminDashboard from './components/admin/Aside/AdminDashboard'
 
 import useReloadIfBlank from "./components/admin/Aside/useReloadIfBlank";
-import About from "./components/client/page/about";
-import Home from "./components/client/page/home";
-import Contact from "./components/client/page/contact";
-import Product from "./components/client/page/product";
+import About from "./components/client/page/about/about";
+import Home from "./components/client/page/UI/home";
+import Contact from "./components/client/page/contact/contact";
+import Product from "./components/client/page/product/product";
 
 
-import Categorys from './components/client/page/categorys';
-import Cart from './components/client/page/cart';
+import Categorys from './components/client/page/category/categorys';
+import Cart from './components/client/page/cart/cart';
 import Account from './components/client/page/account/account';
-import Details from './components/client/page/details';
+import Details from './components/client/page/UI/details';
 import ProductDetail from './components/admin/Product/Detail';
 import AccountSibaLayout from './components/AccountSibaLayout';
 // import AccountSiba from './components/client/page/account/siba';
 import AddAccountAdmin from './components/client/page/account/add-admin';
 import { CartProvider } from './components/client/context/CartContext';
-import Checkout from './components/client/page/checkoutCart';
+import Checkout from './components/client/page/checkout/checkoutCart';
 import { UserProvider } from './components/client/context/UserContext';
 
 
@@ -67,21 +67,23 @@ import ColorEdit from './components/admin/Variant/color/ColorEdit';
 import RamAdd from './components/admin/Variant/ram/RamAdd';
 import RamEdit from './components/admin/Variant/ram/RamEdit';
 import VariantList from './components/admin/Variant/variantList';
-import NotFound from './components/client/page/notfound';
+import NotFound from './components/client/page/UI/notfound';
+import AddressManager from './components/client/page/account/AddressManager';
 // import VariantList from './components/admin/Variant/VariantList';
 
 
 import NewsList from './components/admin/News/NewsList';
 import NewsAdd from './components/admin/News/NewsAdd';
 import NewsEdit from './components/admin/News/NewsEdit';
-import NewsClient from './components/client/page/news';
-import NewsDetail from './components/client/page/NewsDetail';
-import Notification from './components/client/page/Notification';
-import Wishlist from './components/client/page/Wishlist';
+import NewsClient from './components/client/page/new/news';
+import NewsDetail from './components/client/page/new/NewsDetail';
+import Notification from './components/client/page/UI/Notification';
+import Wishlist from './components/client/page/UI/Wishlist';
 import Deleted_products from './components/admin/Product/Deleted-products';
-import OrderHistory from './components/client/page/history';
-import OrderDetailClient from './components/client/page/orderDetailClient';
+import OrderHistory from './components/client/page/order/history';
+import OrderDetailClient from './components/client/page/order/orderDetailClient';
 import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
+
 
 
 
@@ -112,7 +114,8 @@ const App = () => {
           children: [
             { index: true, element: <Account /> }, // ✅ Đây là mặc định
             { path: "account", element: <Account /> },
-            { path: "addaccountadmin", element: <AddAccountAdmin /> }, // nếu có
+            { path: "addaccountadmin", element: <AddAccountAdmin /> },
+            { path: "my-addresses", element: <AddressManager /> },
           ],
         },
         { path : "notification" , element : <Notification/>},

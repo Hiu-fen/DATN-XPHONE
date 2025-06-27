@@ -1,4 +1,4 @@
-import { UserOutlined, PlusOutlined } from '@ant-design/icons';
+import { UserOutlined, PlusOutlined, PushpinOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
@@ -19,6 +19,12 @@ const AccountSiba = () => {
       label: 'Đăng ký tài khoản admin',
       icon: <PlusOutlined />,
       path: '/accounts/addaccountadmin',
+    },
+    {
+      key: 'AddressManager',
+      label: 'Quản lý địa chỉ',
+      icon: <PushpinOutlined />,
+      path: '/accounts/my-addresses',
     },
   ];
 

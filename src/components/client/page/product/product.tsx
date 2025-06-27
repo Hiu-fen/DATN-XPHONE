@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { IProduct } from '../../../interface/product';
-import { ICategory } from '../../../interface/category';
+import { IProduct } from '../../../../interface/product';
+import { ICategory } from '../../../../interface/category';
 
 import { Card, Row, Col, Typography, Tag, Spin, Select, Input, Space, Divider, InputNumber, Button, Dropdown } from 'antd';
 
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { FilterOutlined } from '@ant-design/icons';
-import BannerClient from "../componentChild/Home/banner"
+import BannerClient from "../../componentChild/Home/banner"
 
 const { Title, Text } = Typography;
 const { Search } = Input;

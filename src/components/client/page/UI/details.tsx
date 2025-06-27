@@ -4,13 +4,13 @@ import {
 import { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
-import { IProduct } from "../../../interface/product";
+import { IProduct } from "../../../../interface/product";
 import { message } from "antd";
 import { useQuery } from "@tanstack/react-query";
-import CommentSection from "../componentChild/Detail/CommentSection";
-import RelatedProducts from "../componentChild/Detail/RelatedProducts";
-import PromotionSection from "../componentChild/Detail/PromotionSection";
-import SupportPolicy from "../componentChild/Detail/SupportPolicy";
+import CommentSection from "../../componentChild/Detail/CommentSection";
+import RelatedProducts from "../../componentChild/Detail/RelatedProducts";
+import PromotionSection from "../../componentChild/Detail/PromotionSection";
+import SupportPolicy from "../../componentChild/Detail/SupportPolicy";
 
 
 const Details = () => {
