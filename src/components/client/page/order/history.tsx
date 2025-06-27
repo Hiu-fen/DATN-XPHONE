@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
-import { FaEye, FaMapMarkerAlt, FaCreditCard, FaBoxOpen, FaShoppingBag } from 'react-icons/fa';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Link } from "react-router-dom";
+import {
+  FaEye,
+  FaMapMarkerAlt,
+  FaCreditCard,
+  FaBoxOpen,
+  FaShoppingBag,
+} from "react-icons/fa";
 
 interface Order {
   _id: string;
@@ -17,7 +23,7 @@ interface Order {
 const OrderHistory = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     if (user?._id) {
@@ -28,7 +34,7 @@ const OrderHistory = () => {
           setLoading(false);
         })
         .catch((err) => {
-          console.error('Lỗi khi tải lịch sử:', err);
+          console.error("Lỗi khi tải lịch sử:", err);
           setLoading(false);
         });
     } else {
@@ -38,33 +44,33 @@ const OrderHistory = () => {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
-      case 'chờ xử lý':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'processing':
-      case 'đang xử lý':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'shipped':
-      case 'đang giao':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'delivered':
-      case 'đã giao':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'cancelled':
-      case 'đã hủy':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case "pending":
+      case "chờ xử lý":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "processing":
+      case "đang xử lý":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "shipped":
+      case "đang giao":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "delivered":
+      case "đã giao":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "cancelled":
+      case "đã hủy":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getPaymentMethodIcon = (method: string) => {
     switch (method?.toLowerCase()) {
-      case 'cod':
-      case 'tiền mặt':
+      case "cod":
+      case "tiền mặt":
         return <FaBoxOpen className="w-4 h-4 text-orange-500" />;
-      case 'card':
-      case 'thẻ':
+      case "card":
+      case "thẻ":
         return <FaCreditCard className="w-4 h-4 text-blue-500" />;
       default:
         return <FaCreditCard className="w-4 h-4 text-gray-500" />;
@@ -94,9 +100,13 @@ const OrderHistory = () => {
           <div className="mb-8 pt-8">
             <div className="flex items-center gap-3 mb-2">
               <FaShoppingBag className="w-8 h-8 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-900">Lịch sử đơn hàng</h1>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Lịch sử đơn hàng
+              </h1>
             </div>
-            <p className="text-gray-600">Quản lý và theo dõi tất cả đơn hàng của bạn</p>
+            <p className="text-gray-600">
+              Quản lý và theo dõi tất cả đơn hàng của bạn
+            </p>
           </div>
 
           {orders.length === 0 ? (
@@ -105,8 +115,12 @@ const OrderHistory = () => {
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FaShoppingBag className="w-12 h-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Chưa có đơn hàng nào</h3>
-              <p className="text-gray-500 mb-6">Bạn chưa thực hiện đơn hàng nào. Hãy bắt đầu mua sắm ngay!</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Chưa có đơn hàng nào
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Bạn chưa thực hiện đơn hàng nào. Hãy bắt đầu mua sắm ngay!
+              </p>
               <Link
                 to="/products"
                 className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
@@ -121,36 +135,55 @@ const OrderHistory = () => {
               <div className="block lg:hidden">
                 <div className="divide-y divide-gray-200">
                   {orders.map((order) => (
-                    <div key={order._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                    <div
+                      key={order._id}
+                      className="p-6 hover:bg-gray-50 transition-colors duration-200"
+                    >
                       <div className="flex justify-between items-start mb-4">
                         <div>
-                          <h3 className="font-semibold text-gray-900 text-lg">#{order.orderCode}</h3>
-                          <p className="text-sm text-gray-500">{new Date(order.date).toLocaleDateString('vi-VN')}</p>
+                          <h3 className="font-semibold text-gray-900 text-lg">
+                            #{order.orderCode}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {new Date(order.date).toLocaleDateString("vi-VN")}
+                          </p>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                            order.status
+                          )}`}
+                        >
                           {order.status}
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
                           <p className="text-sm text-gray-500">Số sản phẩm</p>
-                          <p className="font-medium text-gray-900">{order.items?.length || 0} sản phẩm</p>
+                          <p className="font-medium text-gray-900">
+                            {order.items?.length || 0} sản phẩm
+                          </p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-500">Tổng tiền</p>
-                          <p className="font-semibold text-green-600 text-lg">{order.total.toLocaleString()} đ</p>
+                          <p className="font-semibold text-green-600 text-lg">
+                            {order.total.toLocaleString()} đ
+                          </p>
                         </div>
                       </div>
 
                       <div className="mb-4">
                         <div className="flex items-center gap-2 mb-2">
-                          {getPaymentMethodIcon(order.paymentMethod || '')}
-                          <span className="text-sm text-gray-700">{order.paymentMethod || 'Chưa rõ'}</span>
+                          {getPaymentMethodIcon(order.paymentMethod || "")}
+                          <span className="text-sm text-gray-700">
+                            {order.paymentMethod || "Chưa rõ"}
+                          </span>
                         </div>
                         <div className="flex items-start gap-2">
                           <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-700 line-clamp-2">{order.address}</span>
+                          <span className="text-sm text-gray-700 line-clamp-2">
+                            {order.address}
+                          </span>
                         </div>
                       </div>
 
@@ -168,79 +201,53 @@ const OrderHistory = () => {
 
               {/* Desktop View */}
               <div className="hidden lg:block overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="w-full table-auto divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Mã đơn hàng
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Mã đơn
                       </th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                         Số SP
                       </th>
-                      <th className="px-6 py-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                         Tổng tiền
                       </th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                         Trạng thái
-                      </th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ngày đặt
-                      </th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Thanh toán
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Địa chỉ
-                      </th>
-                      <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Hành động
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-gray-100">
                     {orders.map((order) => (
-                      <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="font-semibold text-gray-900">#{order.orderCode}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {order.items?.length || 0}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <span className="text-lg font-semibold text-green-600">
-                            {order.total.toLocaleString()} đ
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
-                          {new Date(order.date).toLocaleDateString('vi-VN')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            {getPaymentMethodIcon(order.paymentMethod || '')}
-                            <span className="text-sm text-gray-700">{order.paymentMethod || 'Chưa rõ'}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
-                          <div className="flex items-start gap-2">
-                            <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                            <span className="truncate">{order.address}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <tr
+                        key={order._id}
+                        className="hover:bg-gray-50 transition duration-150"
+                      >
+                        <td className="px-5 py-4">
                           <Link
                             to={`/history/${order._id}`}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                            className="text-blue-600 font-semibold hover:underline truncate block max-w-[160px]"
                           >
-                            <FaEye className="w-4 h-4" />
-                            Xem
+                            #{order.orderCode}
                           </Link>
+                        </td>
+                        <td className="px-5 py-4 text-center">
+                          <span className="text-sm font-medium text-gray-900">
+                            {order.items.length}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right text-green-600 font-bold text-base">
+                          {order.total.toLocaleString()} đ
+                        </td>
+                        <td className="px-5 py-4 text-center">
+                          <span
+                            className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(
+                              order.status
+                            )}`}
+                          >
+                            {order.status}
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -259,8 +266,12 @@ const OrderHistory = () => {
                     <FaShoppingBag className="w-8 h-8 text-blue-600" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Tổng đơn hàng</p>
-                    <p className="text-2xl font-semibold text-gray-900">{orders.length}</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Tổng đơn hàng
+                    </p>
+                    <p className="text-2xl font-semibold text-gray-900">
+                      {orders.length}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -271,9 +282,14 @@ const OrderHistory = () => {
                     <FaCreditCard className="w-8 h-8 text-green-600" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Tổng chi tiêu</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Tổng chi tiêu
+                    </p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      {orders.reduce((sum, order) => sum + order.total, 0).toLocaleString()} đ
+                      {orders
+                        .reduce((sum, order) => sum + order.total, 0)
+                        .toLocaleString()}{" "}
+                      đ
                     </p>
                   </div>
                 </div>
@@ -285,9 +301,17 @@ const OrderHistory = () => {
                     <FaBoxOpen className="w-8 h-8 text-purple-600" />
                   </div>
                   <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Đã hoàn thành</p>
+                    <p className="text-sm font-medium text-gray-500">
+                      Đã hoàn thành
+                    </p>
                     <p className="text-2xl font-semibold text-gray-900">
-                      {orders.filter(order => order.status.toLowerCase().includes('giao') || order.status.toLowerCase().includes('delivered')).length}
+                      {
+                        orders.filter(
+                          (order) =>
+                            order.status.toLowerCase().includes("giao") ||
+                            order.status.toLowerCase().includes("delivered")
+                        ).length
+                      }
                     </p>
                   </div>
                 </div>

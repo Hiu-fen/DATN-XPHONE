@@ -77,14 +77,23 @@ exports.updateOrderStatus = async (req, res) => {
 // Yêu cầu trả hàng
 exports.updateOrderReturn = async (req, res) => {
   try {
-    const { returnStatus, returnReason } = req.body;
+    const { returnStatus, returnReason, note } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
+    // Cập nhật thông tin yêu cầu trả hàng
     order.returnStatus = returnStatus;
     if (returnReason) order.returnReason = returnReason;
+    if (note) order.returnNote = note;
 
+    // xử lý ảnh nếu có
+    if (req.file) {
+      order.returnImage = req.file.path; 
+    }
+
+    // ✅ Nếu admin đã duyệt yêu cầu
     if (returnStatus === "Đã duyệt") {
+      // Gọi API để cộng lại số lượng hàng về kho
       await axios.post("http://localhost:5000/api/products/restore-quantity", {
         items: order.items.map((item) => ({
           productId: item.productId,
@@ -94,20 +103,27 @@ exports.updateOrderReturn = async (req, res) => {
         })),
       });
 
+      // Cập nhật trạng thái đơn hàng
       order.status = "Trả hàng/Hoàn tiền";
+
+      // Ghi lịch sử trạng thái
       order.statusHistory = [
         ...(order.statusHistory || []),
         { status: "Trả hàng/Hoàn tiền", timestamp: new Date() },
       ];
+
+      // Đánh dấu đã hoàn tiền nếu đơn đã thanh toán
       if (order.isPaid) order.refunded = true;
     }
 
     await order.save();
     res.json(order);
   } catch (error) {
-    res.status(500).json({ message: "Lỗi khi xử lý trả hàng" });
+    console.error("❌ Lỗi updateOrderReturn:", error);
+    res.status(500).json({ message: "Lỗi khi xử lý trả hàng", error: error.message });
   }
 };
+
 
 // Tạo đơn hàng mới
 
