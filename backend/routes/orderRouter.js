@@ -1,5 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
+const upload = multer({ dest: "uploads/return-photos/" }); 
 const orderController = require("../controllers/orderController");
 
 // Lấy danh sách đơn hàng
@@ -12,7 +14,7 @@ router.get("/:id", orderController.getOrderById);
 router.patch("/:id", orderController.updateOrderStatus);
 
 // Xử lý yêu cầu trả hàng
-router.patch("/:id/return", orderController.updateOrderReturn);
+router.patch("/:id/return", upload.array("images", 10), orderController.updateOrderReturn);
 // Thêm đơn hàng
 router.post("/", orderController.createOrder);
 // Cập nhật trạng thái thanh toán

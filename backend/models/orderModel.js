@@ -50,6 +50,8 @@ const OrderSchema = new mongoose.Schema({
   notes: { type: String },
   returnStatus: { type: String },
   returnReason: { type: String },
+  returnNote: { type: String },     
+  returnImages: [{ type: String }],  
   statusHistory: [
     {
       status: { type: String, required: true },

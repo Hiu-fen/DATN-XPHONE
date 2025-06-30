@@ -83,7 +83,12 @@ import Deleted_products from './components/admin/Product/Deleted-products';
 import OrderHistory from './components/client/page/order/history';
 import OrderDetailClient from './components/client/page/order/orderDetailClient';
 import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
+
 import VnpayReturn from './components/client/page/checkout/VnpayReturn';
+
+import ReturnDetail from './components/admin/Order/ReturnDetail';
+import ReturnRequestDetail from './components/client/page/order/ReturnDetail';
+
 
 
 
@@ -108,6 +113,8 @@ const App = () => {
         { path: "news/:id", element: <NewsDetail /> },
         { path: 'history', element: <OrderHistory /> },
         { path: "history/:id", element: <OrderDetailClient /> },
+        // Trả hàng
+        { path: "return/:id", element: <ReturnRequestDetail /> },
 
         { path: "*", element: <NotFound /> },
         {
@@ -175,6 +182,8 @@ const App = () => {
         //admin
         { path: "orders", element: <OrderList /> },
         { path: "orders/:id", element: <OrderDetail /> },
+        { path: "orders/:id/return", element: <ReturnDetail /> },
+
 
         /// Router quản lý Khuyễn mãi
         { path: "promotion/list", element: <GetPromotion /> },

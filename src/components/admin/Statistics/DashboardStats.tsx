@@ -10,7 +10,7 @@ import {
   CalendarOutlined,
   BarChartOutlined
 } from '@ant-design/icons';
-import { getDashboardStats, getStatsByDateRange, getDailyRevenueInMonth, type DashboardStats as DashboardStatsType, type DateRangeStats, type DailyRevenueInMonth } from '../../../api/admin/statisticsApi';
+import { getDashboardStats, getStatsByDateRange, getDailyRevenueInMonth, getTopSellingProducts, type DashboardStats as DashboardStatsType, type DateRangeStats, type DailyRevenueInMonth, type TopSellingProduct } from '../../../api/admin/statisticsApi';
 import { Line, Bar, Pie } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
 
@@ -24,6 +24,9 @@ const DashboardStats: React.FC = () => {
   const [viewMode, setViewMode] = useState<'dashboard' | 'range'>('dashboard');
   const [selectedMonth, setSelectedMonth] = useState<number>(now.month() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(now.year());
+  const [topProducts, setTopProducts] = useState<TopSellingProduct[]>([]);
+  const [loadingTop, setLoadingTop] = useState(false);
+  const [topSort, setTopSort] = useState<'asc' | 'desc'>('desc');
 
   // Query thống kê dashboard
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
@@ -50,6 +53,17 @@ const DashboardStats: React.FC = () => {
     queryKey: ['daily-revenue-in-month', selectedMonth, selectedYear],
     queryFn: () => getDailyRevenueInMonth(selectedMonth, selectedYear),
   });
+
+  const fetchTopProducts = React.useCallback((sort: 'asc' | 'desc') => {
+    setLoadingTop(true);
+    getTopSellingProducts(sort)
+      .then(data => setTopProducts(data))
+      .finally(() => setLoadingTop(false));
+  }, []);
+
+  React.useEffect(() => {
+    fetchTopProducts(topSort);
+  }, [fetchTopProducts, topSort]);
 
   // Format số tiền
   const formatCurrency = (amount: number) => {
@@ -262,6 +276,43 @@ const DashboardStats: React.FC = () => {
               </Card>
             </Col>
           </Row>
+
+          {/* Top 3 sản phẩm bán chạy nhất */}
+          <div className="my-8">
+            <Card title="Top 3 Sản Phẩm Bán Chạy/Nhất Kém Nhất" style={{ minHeight: 200 }}
+              extra={
+                <Select value={topSort} style={{ width: 180 }} onChange={v => setTopSort(v)}>
+                  <Option value="desc">Top 3 Bán Chạy Nhất</Option>
+                  <Option value="asc">Top 3 Bán Kém Nhất</Option>
+                </Select>
+              }
+            >
+              {loadingTop ? (
+                <div className="flex justify-center items-center h-32">
+                  <Spin size="large" />
+                </div>
+              ) : topProducts.length > 0 ? (
+                <Row gutter={[16, 16]}>
+                  {topProducts.map((prod, idx) => (
+                    <Col xs={24} sm={12} lg={8} key={prod.productId}>
+                      <Card hoverable bordered style={{ height: 220 }}>
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <img src={prod.image} alt={prod.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
+                          <div className="font-semibold text-base mb-1 text-center">{idx + 1}. {prod.name}</div>
+                          <div className="text-gray-500 mb-1">Đã bán: <span className="font-bold text-blue-600">{prod.totalSold}</span></div>
+                          <div className="text-red-500 font-semibold">{formatCurrency(prod.price)}</div>
+                        </div>
+                      </Card>
+                    </Col>
+                  ))}
+                </Row>
+              ) : (
+                <div className="flex justify-center items-center h-32 text-gray-500">
+                  Không có dữ liệu sản phẩm bán chạy
+                </div>
+              )}
+            </Card>
+          </div>
 
           {/* Biểu đồ doanh thu từng ngày trong tháng */}
           <div className="my-8">

@@ -51,7 +51,12 @@ app.use('/api/news', newsRoutes);
 app.use('/api/statistics', statisticsRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use("/api/addresses", addressRouter);
+
 app.use("/api/vnpay", vnpayRouter);
+
+app.use("/uploads", express.static("uploads"));
+
+
 
 require('./cron');
 
