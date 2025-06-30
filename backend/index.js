@@ -19,6 +19,7 @@ const statisticsRouter = require('./routes/statisticsRouter');
 const notificationRoutes = require('./routes/notificationRouters');
 
 const addressRouter = require("./routes/address");
+const vnpayRouter = require("./routes/vnpayRoutes")
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,7 +51,11 @@ app.use('/api/news', newsRoutes);
 app.use('/api/statistics', statisticsRouter);
 app.use('/api/notifications', notificationRoutes);
 app.use("/api/addresses", addressRouter);
+
+app.use("/api/vnpay", vnpayRouter);
+
 app.use("/uploads", express.static("uploads"));
+
 
 
 require('./cron');
