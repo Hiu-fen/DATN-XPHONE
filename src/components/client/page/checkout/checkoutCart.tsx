@@ -43,13 +43,13 @@ const Checkout = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const SHIPPING_FEE = 35000;
 
-   const [discountAmount, setDiscountAmount] = useState<number>(0); 
-   const [voucherCode, setVoucherCode] = useState<string>("");       
-   const [finalPrice, setFinalPrice] = useState<number>(0);
-   const [voucherInfo, setVoucherInfo] = useState<{
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [voucherCode, setVoucherCode] = useState<string>("");
+  const [finalPrice, setFinalPrice] = useState<number>(0);
+  const [voucherInfo, setVoucherInfo] = useState<{
     name: string;
     discountValue: string;
-   } | null>(null);
+  } | null>(null);
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -153,7 +153,7 @@ const Checkout = () => {
   );
   // const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
   const totalWithDiscountAndShipping =
-  (discountAmount > 0 ? finalPrice : totalPrice) + SHIPPING_FEE;
+    (discountAmount > 0 ? finalPrice : totalPrice) + SHIPPING_FEE;
 
   const [form, setForm] = useState({
     name: currentUser?.name || "",
@@ -247,10 +247,25 @@ const Checkout = () => {
         navigate("/login");
         return;
       }
+      if (form.paymentMethod === "VNPAY") {
+        try {
+          const vnpRes = await axios.post("http://localhost:5000/api/vnpay/create_payment_url", {
+            amount: newOrder.total,
+            orderCode: newOrder.orderCode,
+          });
+          const { paymentUrl } = vnpRes.data;
+          window.location.href = paymentUrl; // 👉 redirect sang VNPAY
+          return;
+        } catch (err) {
+          console.error("Lỗi khi tạo VNPAY URL:", err);
+          message.error("Không thể chuyển hướng sang VNPAY.");
+        }
+      }
 
       await axios.post("http://localhost:5000/api/orders", newOrder, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (form.paymentMethod === "Momo") {
         message.info(
           "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
@@ -329,7 +344,7 @@ const Checkout = () => {
       </div>
     );
   }
-    const handleApplyVoucher = async (code: string) => {
+  const handleApplyVoucher = async (code: string) => {
     try {
       const itemsPayload = cart.map((item) => ({
         productId: item.productId,
@@ -399,7 +414,7 @@ const Checkout = () => {
               </button>
             )}
 
-                <Modal
+            <Modal
               open={showAddressModal}
               title="Chọn địa chỉ giao hàng"
               onCancel={() => setShowAddressModal(false)}
@@ -441,7 +456,6 @@ const Checkout = () => {
               </ul>
             </Modal>
 
-
             <input
               type="email"
               name="email"
@@ -475,7 +489,7 @@ const Checkout = () => {
               Phương thức thanh toán
             </h3>
             <div className="flex flex-col space-y-3">
-              {["COD", "Momo", "Bank"].map((method) => (
+              {["COD", "Momo", "Bank", "VNPAY"].map((method) => (
                 <label key={method} className="inline-flex items-center">
                   <input
                     type="radio"

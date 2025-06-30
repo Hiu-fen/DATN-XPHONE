@@ -83,6 +83,7 @@ import Deleted_products from './components/admin/Product/Deleted-products';
 import OrderHistory from './components/client/page/order/history';
 import OrderDetailClient from './components/client/page/order/orderDetailClient';
 import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
+import VnpayReturn from './components/client/page/checkout/VnpayReturn';
 
 
 
@@ -100,6 +101,7 @@ const App = () => {
         { path: "contact", element: <Contact /> },
         { path: "cart/:id", element: <Cart /> },
         { path: "checkout", element: <Checkout /> },
+        { path: "vnpay_return", element: <VnpayReturn /> },
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
         { path: "news", element: <NewsClient /> },
@@ -124,8 +126,8 @@ const App = () => {
         { path: "product", element: <Product /> },
       ],
     },
-     { path: "login", element: <Login /> },
-        { path: "register", element: <Register /> },
+    { path: "login", element: <Login /> },
+    { path: "register", element: <Register /> },
     {
       path: "/admin/login",
       element: <LoginAdmin />,
