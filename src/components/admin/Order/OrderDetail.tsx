@@ -50,6 +50,7 @@ interface IOrder {
   notes?: string;
   returnStatus?: string;
   returnReason?: string;
+  paymentStatus?: string;
   statusHistory?: { status: string; timestamp: string }[];
 }
 
@@ -297,6 +298,22 @@ const OrderDetail = () => {
               />
             </Space>
           </Descriptions.Item>
+
+          <Descriptions.Item label="Trạng thái thanh toán">
+            <span
+              style={{
+                color:
+                  order.paymentStatus === "Đã thanh toán"
+                    ? "#4caf50"
+                    : order.paymentStatus === "Đã hoàn tiền"
+                      ? "#ff9800"
+                      : "#f44336",
+                fontWeight: 500,
+              }}
+            >
+              {order.paymentStatus || "Chưa xác định"}
+            </span>
+          </Descriptions.Item>
           <Descriptions.Item label="Trạng thái trả hàng">
             <Space>
               <span>{order.returnStatus || "Không có"}</span>
@@ -312,6 +329,7 @@ const OrderDetail = () => {
               )}
             </Space>
           </Descriptions.Item>
+
           <Descriptions.Item label="Lý do trả hàng">
             {order.returnReason || "Không có"}
           </Descriptions.Item>
