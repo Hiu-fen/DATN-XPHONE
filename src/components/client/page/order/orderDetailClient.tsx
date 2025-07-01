@@ -36,6 +36,7 @@ interface Order {
   paymentMethod?: string;
   address: string;
   returnStatus?: string;
+  paymentStatus?: string;
   statusHistory?: { status: string; timestamp: string }[];
   returnStatusHistory?: { status: string; timestamp: string }[]; 
 }
@@ -270,6 +271,26 @@ const OrderDetail = () => {
                   </span>
                 </div>
               </div>
+              <div className="flex items-start gap-3">
+  <FaCreditCard className="w-5 h-5 text-gray-500 mt-1" />
+  <div>
+    <p className="text-sm font-medium text-gray-500 mb-1">
+      Trạng thái thanh toán
+    </p>
+    <span
+      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium border ${
+        order.paymentStatus === "Đã thanh toán"
+          ? "bg-green-100 text-green-800 border-green-200"
+          : order.paymentStatus === "Đã hoàn tiền"
+          ? "bg-yellow-100 text-yellow-800 border-yellow-200"
+          : "bg-gray-100 text-gray-800 border-gray-200"
+      }`}
+    >
+      {order.paymentStatus || "Chưa rõ"}
+    </span>
+  </div>
+</div>
+
               {order.returnStatus && (
                 <div className="flex items-start gap-3">
                   <FaBox className="w-5 h-5 text-gray-500 mt-1" />

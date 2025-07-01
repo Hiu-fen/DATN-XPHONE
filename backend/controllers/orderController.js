@@ -169,10 +169,15 @@ exports.createOrder = async (req, res) => {
       return `ORD-${code}`;
     };
 
-    let orderCode = generateOrderCode();
-    while (await Order.findOne({ orderCode })) {
-      orderCode = generateOrderCode();
-    }
+    let orderCode = req.body.orderCode;
+
+if (!orderCode) {
+  // Nếu không được gửi từ FE thì mới tạo mới
+  orderCode = generateOrderCode();
+  while (await Order.findOne({ orderCode })) {
+    orderCode = generateOrderCode();
+  }
+}
 
     for (const item of items) {
       const product = await Product.findById(item.productId);
