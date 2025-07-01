@@ -192,8 +192,9 @@ exports.createOrder = async (req, res) => {
       }
 
       // ✅ Lưu cả color và storage vào item ngoài snapshot
-     item.color = item.color || item.variant?.color || item.snapshot?.color || "";
-item.storage = item.storage || item.variant?.ram || item.snapshot?.storage || "";
+const color = item.color || item.snapshot?.color || "";
+const ram = item.storage || item.snapshot?.storage || "";
+
 
 console.log("📦 Final order items:", items);
 
@@ -307,14 +308,61 @@ exports.markAsPaid = async (req, res) => {
         .json({ message: "Không thể thanh toán ở trạng thái hiện tại" });
     }
 
+    // ✅ Trừ số lượng tồn kho
+    try {
+      const reduceItems = order.items.map((item) => ({
+        productId: item.productId,
+        color: item.color || item.snapshot?.color || "",
+        storage: item.storage || item.snapshot?.storage || "",
+        soluong: item.soluong,
+        categoryId: item.categoryId || "", // thêm nếu cần
+      }));
+
+      console.log("🔻 Danh sách cần trừ tồn kho:", reduceItems);
+
+      const response = await axios.post(
+        "http://localhost:5000/api/products/reduce-quantity",
+        { items: reduceItems }
+      );
+
+      console.log("✅ Đã trừ tồn kho:", response.data.message);
+    } catch (err) {
+      console.error("❌ Lỗi khi trừ tồn kho:", err?.response?.data || err.message);
+      return res
+        .status(500)
+        .json({ message: "Lỗi khi trừ số lượng tồn kho sản phẩm" });
+    }
+
+    // ✅ Cập nhật trạng thái thanh toán
     order.isPaid = true;
+    order.paymentStatus = "Đã thanh toán";
     await order.save();
 
     res.json({ message: "Thanh toán thành công", order });
   } catch (error) {
+    console.error("❌ Lỗi markAsPaid:", error);
     res.status(500).json({ message: "Lỗi khi cập nhật thanh toán" });
   }
 };
+
+// Lấy đơn hàng theo mã đơn hàng
+const getOrderByCode = async (req, res) => {
+  const { orderCode } = req.params;
+  try {
+    const order = await Order.findOne({ orderCode });  // Tìm đơn hàng theo orderCode
+
+    if (!order) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng với mã này" });
+    }
+
+    res.json(order);  // Trả về đơn hàng
+  } catch (err) {
+    console.error("Lỗi khi lấy đơn hàng theo mã:", err);
+    res.status(500).json({ message: "Lỗi server khi lấy đơn hàng" });
+  }
+};
+
+
 
 // Lấy đơn hàng theo người dùng
 exports.getOrdersByUser = async (req, res) => {

@@ -326,6 +326,43 @@ exports.updateProductQuantity = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi cập nhật số lượng" });
   }
 };
+exports.reduceVariantQuantity = async (req, res) => {
+  try {
+    const items = req.body.items;
+
+    for (const item of items) {
+      const { productId, color, storage, soluong } = item;
+
+      const product = await Product.findById(productId);
+      if (!product) continue;
+
+      const variant = product.variants.find(
+        (v) =>
+          v.color?.trim().toLowerCase() === color?.trim().toLowerCase() &&
+          v.ram?.trim().toLowerCase() === storage?.trim().toLowerCase()
+      );
+
+      if (!variant) continue;
+
+      variant.soluong = Math.max(0, variant.soluong - Number(soluong));
+      product.markModified("variants");
+
+      // Cập nhật lại tổng tồn kho
+      product.soluong = product.variants.reduce(
+        (sum, v) => sum + v.soluong,
+        0
+      );
+
+      await product.save();
+    }
+
+    res.json({ message: "Đã trừ số lượng tồn kho thành công" });
+  } catch (error) {
+    console.error("❌ Lỗi khi trừ tồn kho:", error);
+    res.status(500).json({ message: "Lỗi server khi trừ tồn kho" });
+  }
+};
+
 
 
 
