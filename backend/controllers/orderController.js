@@ -171,13 +171,13 @@ exports.createOrder = async (req, res) => {
 
     let orderCode = req.body.orderCode;
 
-if (!orderCode) {
-  // Nếu không được gửi từ FE thì mới tạo mới
-  orderCode = generateOrderCode();
-  while (await Order.findOne({ orderCode })) {
-    orderCode = generateOrderCode();
-  }
-}
+    if (!orderCode) {
+      // Nếu không được gửi từ FE thì mới tạo mới
+      orderCode = generateOrderCode();
+      while (await Order.findOne({ orderCode })) {
+        orderCode = generateOrderCode();
+      }
+    }
 
     for (const item of items) {
       const product = await Product.findById(item.productId);
@@ -192,8 +192,11 @@ if (!orderCode) {
       }
 
       // ✅ Lưu cả color và storage vào item ngoài snapshot
-      item.color = item.color || "";
-      item.storage = item.storage || "";
+     item.color = item.color || item.variant?.color || item.snapshot?.color || "";
+item.storage = item.storage || item.variant?.ram || item.snapshot?.storage || "";
+
+console.log("📦 Final order items:", items);
+
 
       item.snapshot = {
         name: item.productName,

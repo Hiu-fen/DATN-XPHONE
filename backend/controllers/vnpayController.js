@@ -4,6 +4,8 @@ const qs = require("qs");
 require("dotenv").config();
 
 const Order = require("../models/orderModel"); // Đảm bảo đã có model Order
+const Product = require("../models/productModels");
+
 
 // Hàm encode theo chuẩn VNPAY
 const encodeValue = (value) => {
@@ -84,9 +86,7 @@ const vnpayReturn = async (req, res) => {
   const secretKey = process.env.VNP_HASHSECRET.trim();
 
   const sortedParams = Object.fromEntries(
-    Object.entries(vnp_Params)
-      .filter(([_, v]) => v != null && v !== "")
-      .sort()
+    Object.entries(vnp_Params).filter(([_, v]) => v != null && v !== "").sort()
   );
 
   const encodedParams = Object.fromEntries(
@@ -94,10 +94,7 @@ const vnpayReturn = async (req, res) => {
   );
 
   const signData = qs.stringify(encodedParams, { encode: false });
-  const calculatedHash = crypto
-    .createHmac("sha512", secretKey)
-    .update(signData)
-    .digest("hex");
+  const calculatedHash = crypto.createHmac("sha512", secretKey).update(signData).digest("hex");
 
   const isValid = receivedHash === calculatedHash;
 
@@ -108,8 +105,8 @@ const vnpayReturn = async (req, res) => {
   if (vnp_Params.vnp_ResponseCode === "00") {
     try {
       const orderCode = vnp_Params.vnp_TxnRef;
-
       const order = await Order.findOne({ orderCode });
+
       if (!order) {
         return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng." });
       }
@@ -117,8 +114,37 @@ const vnpayReturn = async (req, res) => {
       order.isPaid = true;
       order.paymentStatus = "Đã thanh toán";
       order.status = "Chờ xác nhận";
-
       await order.save();
+
+      // ✅ Trừ tồn kho biến thể (lấy từ item hoặc snapshot)
+for (const item of order.items) {
+  const color = item.color || item.snapshot?.color;
+  const storage = item.storage || item.snapshot?.storage;
+
+  if (!color || !storage) {
+    console.warn(`⚠️ Không có đủ thông tin biến thể cho sản phẩm ${item.productName}`);
+    continue;
+  }
+
+  const result = await Product.updateOne(
+    {
+      _id: item.productId,
+      "variants.color": color,
+      "variants.ram": storage,
+    },
+    {
+      $inc: {
+        "variants.$.soluong": -Number(item.soluong),
+      },
+    }
+  );
+
+  if (result.modifiedCount === 0) {
+    console.warn(`⚠️ Không tìm thấy biến thể để trừ tồn kho cho sản phẩm ${item.productName}`);
+  } else {
+    console.log(`✅ Đã trừ tồn kho: ${item.productName} | ${color} - ${storage} - SL: ${item.soluong}`);
+  }
+}
 
       return res.json({ success: true, orderCode });
     } catch (error) {
