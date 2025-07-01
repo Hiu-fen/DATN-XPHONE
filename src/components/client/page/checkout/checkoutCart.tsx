@@ -483,7 +483,7 @@ const Checkout = () => {
               Phương thức thanh toán
             </h3>
             <div className="flex flex-col space-y-3">
-              {["COD", "Momo", "Bank", "VNPAY"].map((method) => (
+              {["COD", "Momo", "VNPAY"].map((method) => (
                 <label key={method} className="inline-flex items-center">
                   <input
                     type="radio"
@@ -498,7 +498,7 @@ const Checkout = () => {
                       ? "Thanh toán khi nhận hàng (COD)"
                       : method === "Momo"
                         ? "Thanh toán qua Momo"
-                        : "Chuyển khoản ngân hàng"}
+                        : "Thanh toán VNPay"}
                   </span>
                 </label>
               ))}
@@ -581,9 +581,9 @@ const Checkout = () => {
           <div className="mt-6 bg-blue-50 p-4 rounded-lg text-blue-900 text-sm">
             {form.paymentMethod === "COD" && "Bạn sẽ thanh toán khi nhận hàng."}
             {form.paymentMethod === "Momo" &&
-              "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"}
-            {form.paymentMethod === "Bank" &&
-              "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"}
+              "Bạn sẽ chuyển đến trang thanh toán MoMo"}
+            {form.paymentMethod === "VNPAY" &&
+              "Bạn sẽ chuyển đến trang thanh toán VNPAY"}
           </div>
           <VoucherInput onApply={handleApplyVoucher} />
         </div>
