@@ -17,6 +17,7 @@ router.get("/:id/check-in-order", productController.checkProductInOrder);
 
 router.patch('/:id/update-quantity', productController.updateProductQuantity);
 router.post("/restore-quantity", productController.restoreProductQuantity);
+router.post('/reduce-quantity', productController.reduceVariantQuantity);
 
 
 

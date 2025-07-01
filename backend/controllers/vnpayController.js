@@ -3,7 +3,8 @@ const moment = require("moment");
 const qs = require("qs");
 require("dotenv").config();
 
-const Order = require("../models/orderModel"); // Đảm bảo đã có model Order
+const Order = require("../models/orderModel");
+const Product = require("../models/productModels");
 
 // Hàm encode theo chuẩn VNPAY
 const encodeValue = (value) => {
@@ -30,10 +31,7 @@ const createVnpayUrl = (req, res) => {
   const orderCode = (req.body.orderCode || "").trim();
 
   const amount = parseInt(req.body.amount) * 100;
-
-  const rawOrderCode = (req.body.orderCode || "").trim();
-  const prefix = "Thanh toan don hang";
-  const orderInfo = `${prefix} ${rawOrderCode}`;
+  const orderInfo = `Thanh toan don hang ${orderCode}`;
 
   const vnp_Params = {
     vnp_Version: "2.1.0",
@@ -61,10 +59,7 @@ const createVnpayUrl = (req, res) => {
   );
 
   const signData = qs.stringify(encodedParams, { encode: false });
-  const secureHash = crypto
-    .createHmac("sha512", secretKey)
-    .update(signData)
-    .digest("hex");
+  const secureHash = crypto.createHmac("sha512", secretKey).update(signData).digest("hex");
 
   sortedParams.vnp_SecureHash = secureHash;
 
@@ -73,7 +68,7 @@ const createVnpayUrl = (req, res) => {
   res.json({ paymentUrl });
 };
 
-// ===== CALLBACK XÁC NHẬN SAU KHI THANH TOÁN VNPAY =====
+// ===== API CALLBACK XÁC NHẬN TỪ VNPAY (KHÔNG dùng cho React) =====
 const vnpayReturn = async (req, res) => {
   const vnp_Params = { ...req.query };
   const receivedHash = vnp_Params.vnp_SecureHash;
@@ -84,9 +79,7 @@ const vnpayReturn = async (req, res) => {
   const secretKey = process.env.VNP_HASHSECRET.trim();
 
   const sortedParams = Object.fromEntries(
-    Object.entries(vnp_Params)
-      .filter(([_, v]) => v != null && v !== "")
-      .sort()
+    Object.entries(vnp_Params).filter(([_, v]) => v).sort()
   );
 
   const encodedParams = Object.fromEntries(
@@ -94,10 +87,7 @@ const vnpayReturn = async (req, res) => {
   );
 
   const signData = qs.stringify(encodedParams, { encode: false });
-  const calculatedHash = crypto
-    .createHmac("sha512", secretKey)
-    .update(signData)
-    .digest("hex");
+  const calculatedHash = crypto.createHmac("sha512", secretKey).update(signData).digest("hex");
 
   const isValid = receivedHash === calculatedHash;
 
@@ -106,48 +96,70 @@ const vnpayReturn = async (req, res) => {
   }
 
   if (vnp_Params.vnp_ResponseCode === "00") {
-    try {
-      const orderCode = vnp_Params.vnp_TxnRef;
+    const orderCode = vnp_Params.vnp_TxnRef;
+    const order = await Order.findOne({ orderCode });
+    if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
 
-      const order = await Order.findOne({ orderCode });
-      if (!order) {
-        return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng." });
+    if (!order.isPaid) {
+      // Đảm bảo trừ đúng biến thể
+      for (const item of order.items) {
+        const color = item.color || item.snapshot?.color;
+        const storage = item.storage || item.snapshot?.storage;
+
+        if (!color || !storage) continue;
+
+        // Tìm biến thể đúng
+        const result = await Product.updateOne(
+          {
+            _id: item.productId,
+            "variants.color": color,
+            "variants.ram": storage,  // Sử dụng đúng giá trị color và storage để tìm biến thể
+          },
+          {
+            $inc: { "variants.$.soluong": -Number(item.soluong) },  // Trừ số lượng biến thể
+          }
+        );
+
+        if (result.modifiedCount === 0) {
+          console.warn(`⚠️ Không trừ được số lượng cho biến thể: ${item.productName} | Màu: ${color} - Bộ nhớ: ${storage}`);
+        } else {
+          console.log(`✅ Đã trừ số lượng cho biến thể: ${item.productName} | Màu: ${color} - Bộ nhớ: ${storage}`);
+        }
+
+        // Trừ số lượng tổng của sản phẩm chính
+        await Product.updateOne(
+          { _id: item.productId },
+          { $inc: { soluong: -Number(item.soluong) } }  // Trừ số lượng tổng của sản phẩm chính
+        );
       }
-
-      order.isPaid = true;
-      order.paymentStatus = "Đã thanh toán";
-      order.status = "Chờ xác nhận";
-
-      await order.save();
-
-      return res.json({ success: true, orderCode });
-    } catch (error) {
-      console.error("Lỗi cập nhật đơn hàng:", error);
-      return res.status(500).json({ success: false, message: "Lỗi server." });
     }
-  } else {
-    return res.json({ success: false, message: "Thanh toán thất bại." });
+
+    order.isPaid = true;
+    order.paymentStatus = "Đã thanh toán";
+    order.status = "Chờ xác nhận"; // Hoặc trạng thái bạn muốn
+    await order.save();
+
+    return res.json({ success: true, orderCode });
   }
+
+  return res.json({ success: false, message: "Thanh toán thất bại." });
 };
 
-// ✅ Đây là API JSON dùng cho React gọi
+
+
+// ===== API JSON DÙNG CHO FE (React) GỌI LẠI SAU KHI THANH TOÁN =====
 const verifyVnpayReturn = async (req, res) => {
   try {
     const vnp_Params = { ...req.query };
-    console.log("Query received:", vnp_Params);
-
     const receivedHash = vnp_Params.vnp_SecureHash;
 
     delete vnp_Params.vnp_SecureHash;
     delete vnp_Params.vnp_SecureHashType;
 
-    const secretKey = process.env.VNP_HASHSECRET;
-    console.log("VNP_HASHSECRET:", secretKey);
+    const secretKey = process.env.VNP_HASHSECRET?.trim();
+    if (!secretKey) return res.status(500).json({ message: "Thiếu secret key" });
 
-    if (!secretKey) {
-      return res.status(500).json({ success: false, message: "Secret key không được cấu hình." });
-    }
-
+    // Kiểm tra và xác thực checksum
     const sortedParams = Object.fromEntries(
       Object.entries(vnp_Params).filter(([_, v]) => v).sort()
     );
@@ -156,34 +168,56 @@ const verifyVnpayReturn = async (req, res) => {
       Object.entries(sortedParams).map(([k, v]) => [k, encodeURIComponent(v).replace(/%20/g, "+")])
     );
 
-    const signData = require("qs").stringify(encodedParams, { encode: false });
-    console.log("SignData:", signData);
-
-    const calculatedHash = require("crypto")
-      .createHmac("sha512", secretKey.trim())
-      .update(signData)
-      .digest("hex");
-
-    console.log("Calculated Hash:", calculatedHash);
-    console.log("Received Hash:", receivedHash);
+    const signData = qs.stringify(encodedParams, { encode: false });
+    const calculatedHash = crypto.createHmac("sha512", secretKey).update(signData).digest("hex");
 
     if (calculatedHash !== receivedHash) {
       return res.status(400).json({ success: false, message: "Checksum không hợp lệ" });
     }
 
+    // Kiểm tra mã phản hồi từ VNPAY
     if (vnp_Params.vnp_ResponseCode === "00") {
       const orderCode = vnp_Params.vnp_TxnRef;
       const order = await Order.findOne({ orderCode });
-      console.log("Order findOne result:", order);
+      if (!order) return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
 
-      if (!order) {
-        return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng" });
+      if (!order.isPaid) {
+        // Trừ số lượng biến thể và số lượng tổng
+        for (const item of order.items) {
+          const color = item.color || item.snapshot?.color;
+          const storage = item.storage || item.snapshot?.storage;
+
+          if (!color || !storage) continue;
+
+          const result = await Product.updateOne(
+            {
+              _id: item.productId,
+              "variants.color": color,
+              "variants.ram": storage,
+            },
+            {
+              $inc: { "variants.$.soluong": -Number(item.soluong) },  // Trừ số lượng biến thể
+            }
+          );
+
+          console.log(
+            result.modifiedCount > 0
+              ? `✅ Trừ tồn kho: ${item.productName} | ${color} - ${storage} - SL: ${item.soluong}`
+              : `⚠️ Không trừ được sản phẩm ${item.productName}`
+          );
+
+          // Trừ số lượng tổng của sản phẩm chính
+          await Product.updateOne(
+            { _id: item.productId },
+            { $inc: { soluong: -Number(item.soluong) } }  // Trừ số lượng tổng của sản phẩm chính
+          );
+        }
       }
 
+      // Cập nhật trạng thái thanh toán
       order.isPaid = true;
       order.paymentStatus = "Đã thanh toán";
-      order.status = "Chờ xác nhận";
-
+      order.status = "Chờ xác nhận";  // Hoặc trạng thái mà bạn muốn
       await order.save();
 
       return res.json({ success: true, orderCode });
@@ -195,8 +229,6 @@ const verifyVnpayReturn = async (req, res) => {
     return res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
-
-
 
 
 
