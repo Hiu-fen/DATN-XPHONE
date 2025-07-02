@@ -12,6 +12,7 @@ export interface Promotion {
   condition?: string;  // Điều kiện áp dụng
   quantity: number; // Số lượng khuyến mãi
   usageCount?: number; // Số lần đã sử dụng
+  maxUsagePerUser:number;
   startDate: Date; // Ngày bắt đầu khuyến mãi
   endDate: Date; // Ngày kết thúc khuyến mãi 
   status: boolean; // Trạng thái khuyến mãi

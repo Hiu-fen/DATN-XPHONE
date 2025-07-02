@@ -350,6 +350,7 @@ const Checkout = () => {
       const response = await applyVoucherToOrder({
         code,
         total: totalPrice,
+        userId: currentUser?._id || "",
         items: itemsPayload,
       });
 

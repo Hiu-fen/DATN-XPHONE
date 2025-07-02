@@ -3,7 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Promotion } from "../../../interface/promotion";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DatePicker, Form, Input, Switch, Button, message, Typography, Select } from "antd";
+import { DatePicker, Form, Input, Switch, Button, message, Typography, Select, InputNumber } from "antd";
 import {
   getAllCategory,
   getPromotionById,
@@ -212,11 +212,11 @@ const PutEditPromotion = () => {
               />
             </Form.Item>
 
-            <Form.Item
-              label="Giảm tối đa (VNĐ)"
-              validateStatus={errors.maxDiscount ? 'error' : ''}
-              help={errors.maxDiscount?.message}
-            >
+              <Form.Item
+                label="Giảm tối đa (VNĐ)"
+                validateStatus={errors.maxDiscount ? 'error' : ''}
+                help={errors.maxDiscount?.message}
+              >
               <Controller
                 name="maxDiscount"
                 control={control}
@@ -224,7 +224,18 @@ const PutEditPromotion = () => {
                   required: "Vui lòng nhập mức giảm tối đa",
                   min: { value: 1000, message: "Tối thiểu 1.000 VNĐ" },
                 }}
-                render={({ field }) => <Input type="number" placeholder="Ví dụ: 500000" {...field} />}
+                render={({ field }) => (
+                  <InputNumber
+                    {...field}
+                    min={1000}
+                    style={{ width: "100%" }}
+                    placeholder="Ví dụ: 500000"
+                    formatter={(value) =>
+                      `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    }
+                    parser={(value) => Number(value?.replace(/,/g, "") || 0)}
+                  />
+                )}
               />
             </Form.Item>
           </>
@@ -271,6 +282,22 @@ const PutEditPromotion = () => {
             control={control}
             rules={{ required: "Không được để trống", min: { value: 1, message: "Phải lớn hơn 0" } }}
             render={({ field }) => <Input type="number" {...field} />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Giới hạn lượt dùng mỗi người"
+          validateStatus={errors.maxUsagePerUser ? 'error' : ''}
+          help={errors.maxUsagePerUser?.message}
+        >
+          <Controller
+            name="maxUsagePerUser"
+            control={control}
+            rules={{
+              required: "Không được để trống",
+              min: { value: 1, message: "Phải lớn hơn 0" },
+            }}
+            render={({ field }) => <Input type="number" placeholder="Ví dụ: 1, 2, 3" {...field} />}
           />
         </Form.Item>
 

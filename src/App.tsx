@@ -71,7 +71,6 @@ import NotFound from './components/client/page/UI/notfound';
 import AddressManager from './components/client/page/account/AddressManager';
 // import VariantList from './components/admin/Variant/VariantList';
 
-
 import NewsList from './components/admin/News/NewsList';
 import NewsAdd from './components/admin/News/NewsAdd';
 import NewsEdit from './components/admin/News/NewsEdit';
@@ -83,14 +82,10 @@ import Deleted_products from './components/admin/Product/Deleted-products';
 import OrderHistory from './components/client/page/order/history';
 import OrderDetailClient from './components/client/page/order/orderDetailClient';
 import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
-
 import VnpayReturn from './components/client/page/checkout/VnpayReturn';
-
 import ReturnDetail from './components/admin/Order/ReturnDetail';
 import ReturnRequestDetail from './components/client/page/order/ReturnDetail';
-
-
-
+import PromotionPageClient from './components/client/page/promotion/PromotionPageClient';
 
 
 const App = () => {
@@ -101,9 +96,9 @@ const App = () => {
       element: <ClientLayout />,
       children: [
         { path: "/", element: <Home /> },
-       
         { path: "about", element: <About /> },
         { path: "contact", element: <Contact /> },
+        { path: "promotion", element: <PromotionPageClient /> },
         { path: "cart/:id", element: <Cart /> },
         { path: "checkout", element: <Checkout /> },
         { path: "vnpay_return", element: <VnpayReturn /> },
@@ -115,8 +110,6 @@ const App = () => {
         { path: "history/:id", element: <OrderDetailClient /> },
         // Trả hàng
         { path: "return/:id", element: <ReturnRequestDetail /> },
-
-        { path: "*", element: <NotFound /> },
         {
           path: "accounts",
           element: <AccountSibaLayout />,
@@ -133,6 +126,7 @@ const App = () => {
         { path: "product", element: <Product /> },
       ],
     },
+    { path: "*", element: <NotFound type="client" /> },
     { path: "login", element: <Login /> },
     { path: "register", element: <Register /> },
     {
@@ -218,7 +212,8 @@ const App = () => {
         ] },
       ],
     },
-    
+    { path: "/admin/*", element: <NotFound type="admin" /> },
+
   ]);
   return (
     <UserProvider>
