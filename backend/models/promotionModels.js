@@ -16,6 +16,10 @@ const promotionSchema = new mongoose.Schema({
   condition: { type: String },
   quantity: { type: Number, required: true },
   usageCount: { type: Number, default: 0 }, // Số lần đã sử dụng
+  maxUsagePerUser: {
+    type: Number,
+    default: 1,
+  },
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   status: { type: Boolean, default: true },
