@@ -31,7 +31,7 @@ const OrderSchema = new mongoose.Schema({
     type: String,
     enum: [
       "Chờ xác nhận",
-      "Đang chuẩn bị",
+      "Đang xử lý",
       "Đang giao",
       "Giao thành công",
       "Hoàn thành",

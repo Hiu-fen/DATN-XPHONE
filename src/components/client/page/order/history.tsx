@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import axios from "axios"
 import { Link } from "react-router-dom"
 import { FaEye, FaMapMarkerAlt, FaCreditCard, FaBoxOpen, FaShoppingBag, FaStar } from "react-icons/fa"
@@ -59,42 +59,50 @@ const OrderHistory = () => {
     return saved ? new Set(JSON.parse(saved)) : new Set()
   })
 
-  const user: User | null = JSON.parse(localStorage.getItem("user") || "null")
+  const user: User | null = useMemo(() => {
+  return JSON.parse(localStorage.getItem("user") || "null")
+}, [])
 
-  useEffect(() => {
-    if (user?._id) {
-      axios
-        .get(`http://localhost:5000/api/orders/user/${user?._id}`)
-        .then(async (res) => {
-          setOrders(res.data)
+useEffect(() => {
+  if (!user?._id) {
+    setLoading(false)
+    return
+  }
 
-          // Load hình ảnh sản phẩm
-          const allProductIds = res.data.flatMap((order: Order) => order.items.map((item) => item.productId))
-          const uniqueProductIds = [...new Set(allProductIds)]
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/orders/user/${user._id}`)
+      setOrders(res.data)
 
-          if (uniqueProductIds.length > 0) {
-            const imagePromises = uniqueProductIds.map((id) => axios.get(`http://localhost:5000/api/products/${id}`))
-            const imageResponses = await Promise.all(imagePromises)
+      const allProductIds = res.data.flatMap((order: Order) =>
+        order.items.map((item) => item.productId)
+      )
+      const uniqueProductIds = [...new Set(allProductIds)] as string[]
 
-            const imageMap: { [key: string]: string } = {}
-            imageResponses.forEach((res, index) => {
-              if (res.data) {
-                imageMap[uniqueProductIds[index] as string ] = res.data.image || "/placeholder-image.png"
-              }
-            })
-            setProductImages(imageMap)
+      if (uniqueProductIds.length > 0) {
+        const imagePromises = uniqueProductIds.map((id) =>
+          axios.get(`http://localhost:5000/api/products/${id}`)
+        )
+        const imageResponses = await Promise.all(imagePromises)
+
+        const imageMap: { [key: string]: string } = {}
+        imageResponses.forEach((res, index) => {
+          if (res.data) {
+            imageMap[uniqueProductIds[index]] = res.data.image || "/placeholder-image.png"
           }
-
-          setLoading(false)
         })
-        .catch((err) => {
-          console.error("Lỗi khi tải lịch sử:", err)
-          setLoading(false)
-        })
-    } else {
+        setProductImages(imageMap)
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải lịch sử:", err)
+    } finally {
       setLoading(false)
     }
-  }, [user])
+  }
+
+  fetchOrders()
+}, [user?._id])
+
 
   // Tạo danh sách sản phẩm duy nhất từ đơn hàng
   const getUniqueProducts = (order: Order): UniqueProduct[] => {
