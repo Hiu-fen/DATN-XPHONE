@@ -21,5 +21,8 @@ export const updatePromotionStatus = (id: string, status: boolean) => {
   return axios.patch(`${BASE_URL}/${id}/status`, { status });
 };
 
+export const getUsersUsedPromotion = (code: string) =>
+  axios.get(`${BASE_URL}/${code}/used-by`).then((res) => res.data.users);
+
  
  

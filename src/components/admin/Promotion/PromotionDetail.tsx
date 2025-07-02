@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getPromotionById } from "../../../api/admin/promotionApi";
+import { getPromotionById, getUsersUsedPromotion } from "../../../api/admin/promotionApi";
 import { Promotion } from "../../../interface/promotion";
 import {
   Card,
@@ -13,6 +13,7 @@ import {
   Tooltip,
   Spin,
   Result,
+  Drawer,
 } from "antd";
 import {
   FiCopy,
@@ -20,13 +21,14 @@ import {
   FiCheckCircle,
   FiXCircle,
 } from "react-icons/fi";
-import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, EditOutlined, TeamOutlined } from "@ant-design/icons";
 
 const DetailPromotion = () => {
   const params = useParams();
   const nav = useNavigate();
   const [copySuccess, setCopySuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const { data: promotion, isLoading, isError, error } = useQuery<Promotion>({
     queryKey: ["promotions", params.id],
@@ -35,6 +37,12 @@ const DetailPromotion = () => {
       return data;
     },
     enabled: !!params.id,
+  });
+
+  const { data: usedOrders, isLoading: isLoadingOrders } = useQuery({
+    queryKey: ["used-orders", promotion?.code],
+    queryFn: () => getUsersUsedPromotion(promotion!.code),
+    enabled: isDrawerOpen && !!promotion?.code,
   });
 
   useEffect(() => {
@@ -81,6 +89,21 @@ const DetailPromotion = () => {
     }
   };
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "Chờ xác nhận":
+      return "processing";
+    case "Đã giao":
+      return "success";
+    case "Đã huỷ":
+      return "error";
+    default:
+      return "default";
+  }
+};
+
+
+
   if (isLoading)
     return (
       <div className="text-center mt-20">
@@ -117,113 +140,177 @@ const DetailPromotion = () => {
     );
 
   return (
-    <Card
-      title={
-        <div className="text-2xl font-bold text-blue-600">
-          Chi tiết khuyến mãi
-        </div>
-      }
-      variant="borderless"
-      className="mx-auto mt-10 shadow border-2"
-    >
-      <Descriptions layout="vertical" column={2} bordered>
-        <Descriptions.Item label="Tên khuyến mãi" span={2}>
-          {promotion.name}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Mã khuyến mãi">
-          <div className="flex items-center gap-2">
-            {promotion.code}
-            <Tooltip title="Sao chép mã">
-              <Button
-                shape="circle"
-                icon={copySuccess ? <FiCheck /> : <FiCopy />}
-                size="small"
-                onClick={handleCopyCode}
-              />
-            </Tooltip>
+    <>
+      <Card
+        title={
+          <div className="text-2xl font-bold text-blue-600">
+            Chi tiết khuyến mãi
           </div>
-        </Descriptions.Item>
+        }
+        variant="borderless"
+        className="mx-auto mt-10 shadow border-2"
+      >
+        <Descriptions layout="vertical" column={1} bordered>
+          <Descriptions.Item label="Tên khuyến mãi" span={2}>
+            {promotion.name}
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Loại giảm giá">
-          {promotion.discountType === "free_ship" && "Miễn phí ship"}
-          {promotion.discountType === "fixed" && "Giảm giá cố định"}
+          <Descriptions.Item label="Mã khuyến mãi">
+            <div className="flex items-center gap-2">
+              {promotion.code}
+              <Tooltip title="Sao chép mã">
+                <Button
+                  shape="circle"
+                  icon={copySuccess ? <FiCheck /> : <FiCopy />}
+                  size="small"
+                  onClick={handleCopyCode}
+                />
+              </Tooltip>
+            </div>
+          </Descriptions.Item>
+
+          <Descriptions.Item label="Loại giảm giá">
+            {promotion.discountType === "free_ship" && "Miễn phí ship"}
+            {promotion.discountType === "fixed" && "Giảm giá cố định"}
+            {promotion.discountType === "percent" &&
+              `Giảm ${promotion.discountValue}%`}
+          </Descriptions.Item>
+
           {promotion.discountType === "percent" &&
-            `Giảm ${promotion.discountValue}%`}
-        </Descriptions.Item>
+            promotion.maxDiscount && (
+              <Descriptions.Item label="Giảm tối đa">
+                {promotion.maxDiscount.toLocaleString()} VNĐ
+              </Descriptions.Item>
+            )}
 
-        {promotion.discountType === "percent" &&
-          promotion.maxDiscount && (
-            <Descriptions.Item label="Giảm tối đa">
-              {promotion.maxDiscount.toLocaleString()} VNĐ
-            </Descriptions.Item>
-          )}
+          <Descriptions.Item label="Sản phẩm áp dụng" span={2}>
+            {promotion.applicableCategories?.length
+              ? promotion.applicableCategories.map((cat) => cat.name).join(", ")
+              : "Không có"}
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Sản phẩm áp dụng" span={2}>
-          {promotion.applicableCategories?.length
-            ? promotion.applicableCategories.map((cat) => cat.name).join(", ")
-            : "Không có"}
-        </Descriptions.Item>
+          <Descriptions.Item label="Điều kiện áp dụng">
+            {promotion.condition || "Không có"}
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Điều kiện áp dụng">
-          {promotion.condition || "Không có"}
-        </Descriptions.Item>
+          <Descriptions.Item label="Số lượng khuyến mãi">
+            {promotion.quantity ?? "Không có"}
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Số lượng khuyến mãi">
-          {promotion.quantity ?? "Không có"}
-        </Descriptions.Item>
+          <Descriptions.Item label="Giới hạn mỗi người">
+            {promotion.maxUsagePerUser
+              ? `${promotion.maxUsagePerUser} lần`
+              : "Không giới hạn"}
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Số lần đã sử dụng">
-          {promotion.usageCount ?? 0}
-        </Descriptions.Item>
+          <Descriptions.Item label="Số người đã sử dụng">
+            <div className="flex items-center gap-2">
+              {promotion.usageCount ?? 0}
+              <Tooltip title="Xem chi tiết người đã sử dụng">
+                <Button
+                  size="small"
+                  shape="circle"
+                  icon={<TeamOutlined />}
+                  onClick={() => setIsDrawerOpen(true)}
+                />
+              </Tooltip>
+            </div>
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Thời gian còn lại">
-          <Typography.Text type="danger">
-            {formatTimeLeft(timeLeft)}
-          </Typography.Text>
-        </Descriptions.Item>
+          <Descriptions.Item label="Thời gian còn lại">
+            <Typography.Text type="danger">
+              {formatTimeLeft(timeLeft)}
+            </Typography.Text>
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Ngày bắt đầu">
-          {formatDate(promotion.startDate)}
-        </Descriptions.Item>
+          <Descriptions.Item label="Ngày bắt đầu">
+            {formatDate(promotion.startDate)}
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Ngày kết thúc">
-          {formatDate(promotion.endDate)}
-        </Descriptions.Item>
+          <Descriptions.Item label="Ngày kết thúc">
+            {formatDate(promotion.endDate)}
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Mô tả" span={2}>
-          <Typography.Paragraph>{promotion.description}</Typography.Paragraph>
-        </Descriptions.Item>
+          <Descriptions.Item label="Mô tả" span={2}>
+            <Typography.Paragraph>{promotion.description}</Typography.Paragraph>
+          </Descriptions.Item>
 
-        <Descriptions.Item label="Trạng thái khuyến mãi" span={2}>
-          <Tag color={promotion.status ? "success" : "error"}>
-            <span className="flex items-center gap-1">
-              {promotion.status ? <FiCheckCircle /> : <FiXCircle />}
-              {promotion.status ? "Hoạt động" : "Hết hạn"}
-            </span>
-          </Tag>
-        </Descriptions.Item>
-      </Descriptions>
+          <Descriptions.Item label="Trạng thái khuyến mãi" span={2}>
+            <Tag color={promotion.status ? "success" : "error"}>
+              <span className="flex items-center gap-1">
+                {promotion.status ? <FiCheckCircle /> : <FiXCircle />}
+                {promotion.status ? "Hoạt động" : "Hết hạn"}
+              </span>
+            </Tag>
+          </Descriptions.Item>
+        </Descriptions>
 
-      <div className="flex justify-end gap-2 mt-6">
-        <Tooltip title="Quay lại">
-          <Button
-            shape="circle"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => nav(-1)}
-          />
-        </Tooltip>
+        <div className="flex justify-end gap-2 mt-6">
+          <Tooltip title="Quay lại">
+            <Button
+              shape="circle"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => nav(-1)}
+            />
+          </Tooltip>
 
-        <Tooltip title="Chỉnh sửa">
-          <Button
-            shape="circle"
-            icon={<EditOutlined />}
-            onClick={() => nav(`/admin/promotion/edit/${promotion._id}`)}
-            type="primary"
-          />
-        </Tooltip>
-      </div>
-    </Card>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              shape="circle"
+              icon={<EditOutlined />}
+              onClick={() => nav(`/admin/promotion/edit/${promotion._id}`)}
+              type="primary"
+            />
+          </Tooltip>
+        </div>
+      </Card>
+
+      <Drawer
+        title={`Đơn hàng đã dùng mã "${promotion.code}"`}
+        placement="right"
+        width={700}
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+      >
+        {isLoadingOrders ? (
+          <Spin tip="Đang tải..." />
+        ) : usedOrders?.length ? (
+          <ul className="space-y-3">
+            {usedOrders.map((order: any) => (
+              <li
+                key={order._id}
+                className="border p-3 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                onClick={() => nav(`/admin/orders/${order._id}`)}
+              >
+                <div className="flex justify-between items-center">
+                  <strong>{order.customerName}</strong>
+                  <Tag color={getStatusColor(order.status)}>{order.status}</Tag>
+                </div>
+                <p>Email: {order.email}</p>
+                <p>Điện thoại: {order.phone}</p>
+                <p>Mã đơn: <strong>{order.orderCode}</strong></p>
+                <p>Ngày đặt: {new Date(order.date).toLocaleString("vi-VN")}</p>
+                <p>
+                  Thanh toán:{" "}
+                  <Tag color={order.isPaid ? "green" : "red"}>
+                    {order.isPaid ? "Đã thanh toán" : "Chưa thanh toán"}
+                  </Tag>
+                </p>
+                <p>Phương thức: {order.paymentMethod}</p>
+            <p>
+              Tổng tiền:{" "}
+              {typeof order.total === "number"
+                ? order.total.toLocaleString() + "₫"
+                : "Không rõ"}
+            </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>Chưa có đơn hàng nào sử dụng mã này.</p>
+        )}
+      </Drawer>
+    </>
   );
 };
 

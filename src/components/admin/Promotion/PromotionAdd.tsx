@@ -3,7 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Promotion } from "../../../interface/promotion";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { message, Switch, Form, Input, Button, Typography, Select } from "antd";
+import { message, Switch, Form, Input, Button, Typography, Select, InputNumber } from "antd";
 import { addPromotion, getAllCategory, getRandomCode } from "../../../api/admin/promotionApi";
 import { useState } from "react";
 import { ICategory } from "../../../interface/category";
@@ -193,7 +193,16 @@ const PostAddPromotion = () => {
                   min: { value: 1000, message: "Tối thiểu 1.000 VNĐ" },
                 }}
                 render={({ field }) => (
-                  <Input type="number" placeholder="Ví dụ: 500000" {...field} />
+                  <InputNumber
+                    {...field}
+                    min={1000}
+                    style={{ width: "100%" }}
+                    placeholder="Ví dụ: 500000"
+                    formatter={(value) =>
+                      `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                    }
+                    parser={(value) => Number(value?.replace(/,/g, "") || 0)}
+                  />
                 )}
               />
             </Form.Item>
@@ -240,6 +249,22 @@ const PostAddPromotion = () => {
             control={control}
             rules={{ required: "Không được để trống", min: { value: 1, message: "Phải lớn hơn 0" } }}
             render={({ field }) => <Input type="number" {...field} />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Giới hạn lượt dùng mỗi người"
+          validateStatus={errors.maxUsagePerUser ? 'error' : ''}
+          help={errors.maxUsagePerUser?.message}
+        >
+          <Controller
+            name="maxUsagePerUser"
+            control={control}
+            rules={{
+              required: "Không được để trống",
+              min: { value: 1, message: "Phải lớn hơn 0" },
+            }}
+            render={({ field }) => <Input type="number" placeholder="Ví dụ: 1, 2, 3" {...field} />}
           />
         </Form.Item>
 

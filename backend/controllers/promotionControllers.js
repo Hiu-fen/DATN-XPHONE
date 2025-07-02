@@ -48,6 +48,42 @@ exports.getAllPromotions = async (req, res) => {
   }
 };
 
+exports.getUsersUsedPromotion = async (req, res) => {
+  try {
+    const code = req.params.code;
+
+    // Tìm các đơn hàng có dùng mã khuyến mãi
+    const orders = await Order.find({ voucherCode: code })
+      .select("customerName phone email orderCode date total isPaid paymentMethod status")
+      .lean();
+
+    res.json({ users: orders });
+  } catch (err) {
+    console.error("❌ Lỗi lấy danh sách người dùng mã:", err);
+    res.status(500).json({ message: "Lỗi server khi lấy dữ liệu sử dụng mã" });
+  }
+};
+
+exports.getActivePromotions = async (req, res) => {
+  try {
+    const now = new Date();
+
+    const promotions = await Promotion.find({
+      status: true,
+      startDate: { $lte: now },
+      endDate: { $gte: now },
+      quantity: { $gt: 0 },
+    })
+      .populate("applicableCategories", "name") 
+      .select("-__v"); // loại bỏ __v
+
+    res.json(promotions);
+  } catch (err) {
+    res.status(500).json({ message: "Lỗi khi lấy khuyến mãi", error: err.message });
+  }
+};
+
+
 // Hàm để tạo khuyến mãi mới
 exports.createPromotion = async (req, res) => {
   try {
@@ -126,7 +162,7 @@ exports.autoDisableExpiredPromotions = async () => {
 // Hàm xử lý khi áp mã giảm giá
 exports.applyVoucherToOrder = async (req, res) => {
   try {
-    const { code, total, items } = req.body;
+    const { code, total, items, userId } = req.body;
 
     if (!code || !total || !items || items.length === 0) {
       return res.status(400).json({ message: "Thiếu thông tin." });
@@ -134,6 +170,18 @@ exports.applyVoucherToOrder = async (req, res) => {
 
     const voucher = await Promotion.findOne({ code });
     if (!voucher) return res.status(404).json({ message: "Không tìm thấy mã khuyến mãi." });
+
+    // Kiểm tra người dùng đã dùng mã này bao nhiêu lần
+    const usedCount = await Order.countDocuments({
+      userId, 
+      voucherCode: code,
+    });
+
+    if (voucher.maxUsagePerUser && usedCount >= voucher.maxUsagePerUser) {
+      return res.status(400).json({
+        message: "Bạn đã dùng mã này quá số lần cho phép.",
+      });
+    }
 
     if (!voucher.status) return res.status(400).json({ message: "Mã khuyến mãi đã bị khóa." });
 
