@@ -60,6 +60,7 @@ const OrderSchema = new mongoose.Schema({
   returnStatus: { type: String },
   returnReason: { type: String },
   returnNote: { type: String },
+  cancelReason: { type: String },
   returnImages: [{ type: String }],
   statusHistory: [
     {

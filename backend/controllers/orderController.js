@@ -32,7 +32,7 @@ exports.getOrderById = async (req, res) => {
 // Cập nhật trạng thái đơn hàng
 exports.updateOrderStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, cancelReason } = req.body;
     const order = await Order.findById(req.params.id);
     if (!order)
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
@@ -72,6 +72,10 @@ exports.updateOrderStatus = async (req, res) => {
     }
 
     order.status = status;
+     if (cancelReason) {
+      order.cancelReason = cancelReason;
+    }
+
     order.statusHistory = [
       ...(order.statusHistory || []),
       { status, timestamp: new Date() },
