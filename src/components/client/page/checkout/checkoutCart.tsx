@@ -246,16 +246,21 @@ const Checkout = () => {
       }
 
       // 👉 Tạo đơn 1 lần duy nhất
-      await axios.post("http://localhost:5000/api/orders", newOrder, {
+      const orderResponse = await axios.post("http://localhost:5000/api/orders", newOrder, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const createdOrder = orderResponse.data;
+      const orderId = createdOrder._id;
+
 
       // 👉 Nếu là VNPAY thì redirect và return luôn
       if (form.paymentMethod === "VNPAY") {
         const vnpRes = await axios.post("http://localhost:5000/api/vnpay/create_payment_url", {
           amount: newOrder.total,
           orderCode: newOrder.orderCode,
+          orderId, // 👉 Gửi cả orderId để sau thanh toán redirect về chi tiết đơn
         });
+
         const { paymentUrl } = vnpRes.data;
         window.location.href = paymentUrl;
         return;
@@ -306,9 +311,9 @@ const Checkout = () => {
         localStorage.removeItem("cartItems");
       }
 
-      message.success("Đặt hàng thành công!");
+      // message.success("Đặt hàng thành công!");
       setCart([]);
-      navigate("/");
+      navigate(`/cod_return?orderId=${orderId}&orderCode=${createdOrder.orderCode}`);
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;
       console.error("Lỗi khi đặt hàng:", error);

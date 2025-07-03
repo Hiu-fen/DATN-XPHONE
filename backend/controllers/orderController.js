@@ -296,7 +296,7 @@ exports.markAsPaid = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
     if (order.isPaid)
-      return res.status(400).json({ message: "Đơn hàng đã được thanh toán" });
+      return res.status(200).json({ message: "Đơn hàng đã được thanh toán" });
 
     if (order.paymentMethod === "COD") {
       return res

@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { message, Result, Button } from "antd";
+import { Button, Spin } from "antd";
 import Confetti from "react-confetti";
+import {
+  LoadingOutlined,
+  CheckCircleTwoTone,
+  CloseCircleTwoTone,
+} from "@ant-design/icons";
 
 const VnpayReturn = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
+  const [orderId, setOrderId] = useState<string | null>(null);
   const [orderCode, setOrderCode] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [isNotified, setIsNotified] = useState(false); // Thêm biến để tránh gọi thông báo nhiều lần
 
   useEffect(() => {
     const confirmVnpay = async () => {
@@ -17,89 +23,92 @@ const VnpayReturn = () => {
         const res = await fetch(`http://localhost:5000/api/vnpay/verify_return${location.search}`);
         const result = await res.json();
 
-        if (result.success) {
-          setStatus("success");
+        if (result.success && result.orderCode && result.orderId) {
           setOrderCode(result.orderCode);
+          setOrderId(result.orderId);
+          setStatus("success");
           setShowConfetti(true);
 
-          // Kiểm tra nếu chưa thông báo thì gửi thông báo thành công
-          if (!isNotified) {
-            message.success(`🎉 Thanh toán thành công! Mã đơn: ${result.orderCode}`);
-            setIsNotified(true); // Đánh dấu đã thông báo
-          }
+          // 👉 Hậu xử lý: đánh dấu đã thanh toán + xoá giỏ hàng
+          (async () => {
+            try {
+              // ✅ Gọi API cập nhật trạng thái đã thanh toán
+              await fetch(`http://localhost:5000/api/orders/${result.orderId}/paid`, {
+  method: "PATCH",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({}) // ✅ thêm body rỗng
+});
 
-          try {
-            const orderRes = await fetch(`http://localhost:5000/api/orders/by-code/${result.orderCode}`);
-            const order = await orderRes.json();
-            if (order?._id) {
-              await fetch(`http://localhost:5000/api/orders/mark-as-paid/${order._id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-              });
-              console.log("✅ Đã gọi markAsPaid thành công");
-            } else {
-              console.warn("⚠️ Không tìm thấy đơn hàng theo orderCode");
+              // ✅ Xoá giỏ hàng
+              const token = localStorage.getItem("token");
+              const user = JSON.parse(localStorage.getItem("user") || "{}");
+              if (user?._id && token) {
+                await fetch(`http://localhost:5000/api/carts/${user._id}`, {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                });
+                localStorage.removeItem("cartItems");
+              }
+            } catch (postProcessError) {
+              console.warn("⚠️ Hậu xử lý lỗi (giỏ hàng / mark-as-paid):", postProcessError);
             }
-          } catch (err) {
-            console.error("❌ Lỗi khi gọi markAsPaid:", err);
-          }
-
-          // Chuyển trang sau 2 giây
-          setTimeout(() => navigate("/"), 2000);
+          })();
         } else {
           setStatus("error");
-          if (!isNotified) {
-            message.error(result.message || "Thanh toán thất bại.");
-            setIsNotified(true); // Đánh dấu đã thông báo
-          }
-          setTimeout(() => navigate("/"), 5000);
         }
       } catch (err) {
+        console.error("❌ Lỗi xác minh thanh toán:", err);
         setStatus("error");
-        if (!isNotified) {
-          message.error("⚠️ Có lỗi xảy ra khi xác minh thanh toán.");
-          setIsNotified(true); // Đánh dấu đã thông báo
-        }
-        setTimeout(() => navigate("/"), 5000);
       }
     };
 
     confirmVnpay();
-  }, [location.search, navigate, isNotified]); // Thêm isNotified vào dependency để theo dõi
+  }, [location.search]);
+
+  const goToDetailOrder = () => {
+    if (orderId) {
+      navigate(`/history/${orderId}`);
+    } else {
+      navigate("/");
+    }
+  };
 
   return (
-    <div className="flex justify-center items-center h-screen relative">
+    <div className="flex flex-col justify-center items-center h-screen text-center relative bg-white gap-4">
       {showConfetti && <Confetti />}
+
       {status === "processing" && (
-        <Result
-          status="info"
-          title="Đang xử lý kết quả thanh toán..."
-          subTitle="Vui lòng chờ trong giây lát."
-        />
+        <>
+          <Spin indicator={<LoadingOutlined style={{ fontSize: 60, color: "#1890ff" }} spin />} />
+          <h2 className="text-lg font-semibold text-gray-700">Đang xác minh thanh toán...</h2>
+          <p className="text-gray-500 text-sm">Vui lòng chờ trong giây lát.</p>
+        </>
       )}
+
       {status === "success" && (
-        <Result
-          status="success"
-          title="Thanh toán thành công!"
-          subTitle={`Mã đơn hàng: ${orderCode}`}
-          extra={[
-            <Button type="primary" key="home" onClick={() => navigate("/")}>
-              Về trang chủ
-            </Button>,
-          ]}
-        />
+        <>
+          <CheckCircleTwoTone twoToneColor="#52c41a" style={{ fontSize: 80 }} />
+          <h2 className="text-2xl font-bold text-green-600">🎉 Thanh toán thành công!</h2>
+          {orderCode && <p>Mã đơn hàng: <strong>{orderCode}</strong></p>}
+          <Button type="primary" onClick={goToDetailOrder}>
+            Xem chi tiết đơn hàng
+          </Button>
+        </>
       )}
+
       {status === "error" && (
-        <Result
-          status="error"
-          title="Thanh toán thất bại"
-          subTitle="Có lỗi xảy ra khi xác minh hoặc giao dịch không thành công."
-          extra={[
-            <Button key="home" onClick={() => navigate("/")}>
-              Về trang chủ
-            </Button>,
-          ]}
-        />
+        <>
+          <CloseCircleTwoTone twoToneColor="#f5222d" style={{ fontSize: 80 }} />
+          <h2 className="text-2xl font-bold text-red-500">Thanh toán thất bại</h2>
+          <p>Giao dịch không thành công hoặc có lỗi xảy ra.</p>
+          <Button type="default" onClick={() => navigate("/")}>
+            Về trang chủ
+          </Button>
+        </>
       )}
     </div>
   );

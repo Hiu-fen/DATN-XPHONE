@@ -220,7 +220,12 @@ const verifyVnpayReturn = async (req, res) => {
       order.status = "Chờ xác nhận";  // Hoặc trạng thái mà bạn muốn
       await order.save();
 
-      return res.json({ success: true, orderCode });
+      return res.json({
+  success: true,
+  orderCode,
+  orderId: order._id, // ← thêm dòng này để FE nhận được
+});
+
     }
 
     return res.json({ success: false, message: "Thanh toán thất bại" });

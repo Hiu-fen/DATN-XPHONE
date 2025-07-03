@@ -86,6 +86,7 @@ import VnpayReturn from './components/client/page/checkout/VnpayReturn';
 import ReturnDetail from './components/admin/Order/ReturnDetail';
 import ReturnRequestDetail from './components/client/page/order/ReturnDetail';
 import PromotionPageClient from './components/client/page/promotion/PromotionPageClient';
+import CodReturn from './components/client/page/checkout/CodReturn';
 
 
 const App = () => {
@@ -102,6 +103,7 @@ const App = () => {
         { path: "cart/:id", element: <Cart /> },
         { path: "checkout", element: <Checkout /> },
         { path: "vnpay_return", element: <VnpayReturn /> },
+        { path: "cod_return", element: <CodReturn /> },
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
         { path: "news", element: <NewsClient /> },
