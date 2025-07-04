@@ -13,8 +13,14 @@ import {
 import { getDashboardStats, getStatsByDateRange, getDailyRevenueInMonth, getTopSellingProducts, type DashboardStats as DashboardStatsType, type DateRangeStats, type DailyRevenueInMonth, type TopSellingProduct } from '../../../api/admin/statisticsApi';
 import { Line, Bar, Pie } from '@ant-design/plots';
 import dayjs, { Dayjs } from 'dayjs';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+dayjs.extend(weekOfYear);
+dayjs.extend(isoWeek);
+dayjs.extend(advancedFormat);
 
-const { RangePicker } = DatePicker;
+const { RangePicker, WeekPicker } = DatePicker;
 const { Option } = Select;
 
 const now = dayjs();
@@ -24,6 +30,8 @@ const DashboardStats: React.FC = () => {
   const [viewMode, setViewMode] = useState<'dashboard' | 'range'>('dashboard');
   const [selectedMonth, setSelectedMonth] = useState<number>(now.month() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(now.year());
+  const [selectedWeek, setSelectedWeek] = useState<Dayjs>(now);
+  const [selectedDay, setSelectedDay] = useState<Dayjs>(now);
   const [topProducts, setTopProducts] = useState<TopSellingProduct[]>([]);
   const [loadingTop, setLoadingTop] = useState(false);
   const [topSort, setTopSort] = useState<'asc' | 'desc'>('desc');
@@ -54,16 +62,16 @@ const DashboardStats: React.FC = () => {
     queryFn: () => getDailyRevenueInMonth(selectedMonth, selectedYear),
   });
 
-  const fetchTopProducts = React.useCallback((sort: 'asc' | 'desc') => {
+  const fetchTopProducts = React.useCallback((options: {sort: 'asc' | 'desc', day?: Dayjs}) => {
     setLoadingTop(true);
-    getTopSellingProducts(sort)
+    getTopSellingProducts(options.sort, options.day ? options.day.startOf('day').format('YYYY-MM-DD') : undefined)
       .then(data => setTopProducts(data))
       .finally(() => setLoadingTop(false));
   }, []);
 
   React.useEffect(() => {
-    fetchTopProducts(topSort);
-  }, [fetchTopProducts, topSort]);
+    fetchTopProducts({ sort: topSort, day: selectedDay });
+  }, [fetchTopProducts, topSort, selectedDay]);
 
   // Format số tiền
   const formatCurrency = (amount: number) => {
@@ -277,14 +285,22 @@ const DashboardStats: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Top 3 sản phẩm bán chạy nhất */}
+          {/* Top 4 sản phẩm bán chạy nhất */}
           <div className="my-8">
-            <Card title="Top 3 Sản Phẩm Bán Chạy/Nhất Kém Nhất" style={{ minHeight: 200 }}
+            <Card title="Top 4 Sản Phẩm Bán Chạy/Nhất Kém Nhất Theo Ngày" style={{ minHeight: 200 }}
               extra={
-                <Select value={topSort} style={{ width: 180 }} onChange={v => setTopSort(v)}>
-                  <Option value="desc">Top 3 Bán Chạy Nhất</Option>
-                  <Option value="asc">Top 3 Bán Kém Nhất</Option>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={topSort} style={{ width: 150 }} onChange={v => setTopSort(v)}>
+                    <Option value="desc">Top 4 Bán Chạy Nhất</Option>
+                    <Option value="asc">Top 4 Bán Kém Nhất</Option>
+                  </Select>
+                  <DatePicker
+                    value={selectedDay}
+                    onChange={date => setSelectedDay(date || now)}
+                    format="DD/MM/YYYY"
+                    placeholder="Chọn ngày"
+                  />
+                </div>
               }
             >
               {loadingTop ? (
@@ -292,15 +308,15 @@ const DashboardStats: React.FC = () => {
                   <Spin size="large" />
                 </div>
               ) : topProducts.length > 0 ? (
-                <Row gutter={[16, 16]}>
+                <Row gutter={[16, 16]} justify="center">
                   {topProducts.map((prod, idx) => (
-                    <Col xs={24} sm={12} lg={8} key={prod.productId}>
-                      <Card hoverable bordered style={{ height: 220 }}>
+                    <Col xs={24} sm={12} lg={6} key={prod.productId}>
+                      <Card hoverable bordered style={{ height: 180 }}>
                         <div className="flex flex-col items-center justify-center h-full">
-                          <img src={prod.image} alt={prod.name} style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
-                          <div className="font-semibold text-base mb-1 text-center">{idx + 1}. {prod.name}</div>
+                          <img src={prod.image} alt={prod.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
+                          <div className="font-semibold text-sm mb-1 text-center">{idx + 1}. {prod.name}</div>
                           <div className="text-gray-500 mb-1">Đã bán: <span className="font-bold text-blue-600">{prod.totalSold}</span></div>
-                          <div className="text-red-500 font-semibold">{formatCurrency(prod.price)}</div>
+                          <div className="text-red-500 font-semibold" style={{ fontSize: 14 }}>{formatCurrency(prod.price)}</div>
                         </div>
                       </Card>
                     </Col>

@@ -19,7 +19,7 @@ const NewsletterForm = () => {
   };
 
   return (
-    <div className="bg-[#f7f7f7] py-8 px-4 text-center w-full">
+    <div className=" py-8 px-4 text-center w-full">
       <h3 className="text-2xl md:text-3xl font-semibold mb-2">
         Đăng ký nhận tin từ <TenThuongHieu />
       </h3>
