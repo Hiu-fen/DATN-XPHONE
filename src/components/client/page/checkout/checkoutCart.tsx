@@ -33,26 +33,15 @@ const Checkout = () => {
   const location = useLocation();
   const { user } = useUser();
   const currentUser = user as IUserExtended | null;
-  const selectedItems = location.state?.selectedItems as
-    | ICartItem[]
-    | undefined;
+  const selectedItems = location.state?.selectedItems as ICartItem[] | undefined;
   const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
 
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressList, setAddressList] = useState<any[]>([]);
 
+
   const [cart, setCart] = useState<CartItem[]>([]);
-
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [wards, setWards] = useState<any[]>([]);
-
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const [selectedWard, setSelectedWard] = useState("");
-  const [customAddress, setCustomAddress] = useState("");
-
-  const [shippingFee, setShippingFee] = useState<number>(35000);
+  const SHIPPING_FEE = 35000;
 
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [voucherCode, setVoucherCode] = useState<string>("");
@@ -65,9 +54,7 @@ const Checkout = () => {
   useEffect(() => {
     const fetchAddresses = async () => {
       if (currentUser?._id) {
-        const res = await axios.get(
-          `http://localhost:5000/api/addresses/${currentUser._id}`
-        );
+        const res = await axios.get(`http://localhost:5000/api/addresses/${currentUser._id}`);
         setAddressList(res.data);
       }
     };
@@ -83,25 +70,17 @@ const Checkout = () => {
         }
 
         if (selectedItems && selectedItems.length > 0) {
-          const productsResponse = await axios.get(
-            "http://localhost:5000/api/products"
-          );
+          const productsResponse = await axios.get("http://localhost:5000/api/products");
           const productsData = productsResponse.data;
 
           const enrichedCartItems = selectedItems.map((item: ICartItem) => {
-            const product = productsData.find(
-              (p: IProduct) => p._id === item.productId
-            );
+            const product = productsData.find((p: IProduct) => p._id === item.productId);
             let price = item.price || (product ? product.price : 0);
 
             if (product?.variants && item.color && item.storage) {
               const variant = product.variants.find(
-                (v: {
-                  color: string;
-                  ram: string;
-                  price: number;
-                  soluong: number;
-                }) => v.color === item.color && v.ram === item.storage
+                (v: { color: string; ram: string; price: number; soluong: number }) =>
+                  v.color === item.color && v.ram === item.storage
               );
               price = variant ? Number(variant.price) : price;
             }
@@ -133,19 +112,13 @@ const Checkout = () => {
           const productsData = productsResponse.data;
 
           const enrichedCartItems = cartItems.map((item: ICartItem) => {
-            const product = productsData.find(
-              (p: IProduct) => p._id === item.productId
-            );
+            const product = productsData.find((p: IProduct) => p._id === item.productId);
             let price = item.price || (product ? product.price : 0);
 
             if (product?.variants && item.color && item.storage) {
               const variant = product.variants.find(
-                (v: {
-                  color: string;
-                  ram: string;
-                  price: number;
-                  soluong: number;
-                }) => v.color === item.color && v.ram === item.storage
+                (v: { color: string; ram: string; price: number; soluong: number }) =>
+                  v.color === item.color && v.ram === item.storage
               );
               price = variant ? Number(variant.price) : price;
             }
@@ -180,7 +153,7 @@ const Checkout = () => {
   );
   // const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
   const totalWithDiscountAndShipping =
-    (discountAmount > 0 ? finalPrice : totalPrice) + shippingFee;
+    (discountAmount > 0 ? finalPrice : totalPrice) + SHIPPING_FEE;
 
   const [form, setForm] = useState({
     name: currentUser?.name || "",
@@ -219,9 +192,7 @@ const Checkout = () => {
     }
 
     if (!form.sdt || !form.address) {
-      message.error(
-        "Vui lòng cập nhật số điện thoại và địa chỉ trước khi đặt hàng."
-      );
+      message.error("Vui lòng cập nhật số điện thoại và địa chỉ trước khi đặt hàng.");
       setTimeout(() => navigate("/accounts"), 1000);
       return;
     }
@@ -237,10 +208,7 @@ const Checkout = () => {
       return;
     }
 
-    const orderCode = `ORD-${Math.random()
-      .toString(36)
-      .substr(2, 5)
-      .toUpperCase()}`;
+    const orderCode = `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
     const newOrder = {
       orderCode,
       customerName: form.name,
@@ -250,20 +218,18 @@ const Checkout = () => {
       notes: form.note,
       paymentMethod: form.paymentMethod,
       shippingProvider: form.shippingProvider,
-      total:
-        Number(discountAmount > 0 ? finalPrice : totalPrice) +
-        Number(shippingFee),
+      total: Number((discountAmount > 0 ? finalPrice : totalPrice)) + Number(SHIPPING_FEE),
       status: "Chờ xác nhận",
       date: new Date().toISOString(),
       isPaid: false,
       refunded: false,
       items: cart.map((item) => ({
         productId: item.productId,
-        productName: item.productName,
+        productName: item.productName.trim(),
         soluong: Number(item.soluong),
         price: Number(item.price),
-        color: item.color || "",
-        storage: item.storage || "",
+        color: item.color?.trim() || "", // 🔧 Sửa tại đây
+        storage: item.storage?.trim() || "", // 🔧 Và tại đây
         categoryId: item?.categoryId || "",
       })),
       voucherCode: voucherCode || null,
@@ -280,19 +246,21 @@ const Checkout = () => {
       }
 
       // 👉 Tạo đơn 1 lần duy nhất
-      await axios.post("http://localhost:5000/api/orders", newOrder, {
+      const orderResponse = await axios.post("http://localhost:5000/api/orders", newOrder, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      const createdOrder = orderResponse.data;
+      const orderId = createdOrder._id;
+
 
       // 👉 Nếu là VNPAY thì redirect và return luôn
       if (form.paymentMethod === "VNPAY") {
-        const vnpRes = await axios.post(
-          "http://localhost:5000/api/vnpay/create_payment_url",
-          {
-            amount: newOrder.total,
-            orderCode: newOrder.orderCode,
-          }
-        );
+        const vnpRes = await axios.post("http://localhost:5000/api/vnpay/create_payment_url", {
+          amount: newOrder.total,
+          orderCode: newOrder.orderCode,
+          orderId, // 👉 Gửi cả orderId để sau thanh toán redirect về chi tiết đơn
+        });
+
         const { paymentUrl } = vnpRes.data;
         window.location.href = paymentUrl;
         return;
@@ -300,38 +268,35 @@ const Checkout = () => {
 
       // 👉 Nếu KHÔNG phải VNPAY thì xử lý hậu đơn hàng ở đây
       if (form.paymentMethod === "Momo") {
-        message.info(
-          "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
-        );
+        message.info("Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)");
       } else if (form.paymentMethod === "Bank") {
-        message.info(
-          "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"
-        );
+        message.info("Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)");
       } else if (form.paymentMethod === "COD") {
         message.info("Bạn sẽ thanh toán khi nhận hàng.");
       }
 
       // ✅ Cập nhật tồn kho
-      for (const item of cart) {
-        await axios.patch(
-          `http://localhost:5000/api/products/${item.productId}/update-quantity`,
-          {
-            color: item.color,
-            ram: item.storage,
-            soluong: -Number(item.soluong),
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      // ✅ Chỉ gọi update-quantity nếu KHÔNG phải VNPAY
+      if (form.paymentMethod !== "VNPAY") {
+        for (const item of cart) {
+          await axios.patch(
+            `http://localhost:5000/api/products/${item.productId}/update-quantity`,
+            {
+              color: item.color,
+              ram: item.storage,
+              soluong: -Number(item.soluong),
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
       }
+
 
       // ✅ Xử lý giỏ hàng
       if (!buyNowItem && selectedItems) {
-        const cartResponse = await axios.get(
-          `http://localhost:5000/api/carts/${user._id}`
-        );
+        const cartResponse = await axios.get(`http://localhost:5000/api/carts/${user._id}`);
         const remainingItems = cartResponse.data.items.filter(
-          (item: ICartItem) =>
-            !cart.some((selected) => selected._id === item._id)
+          (item: ICartItem) => !cart.some((selected) => selected._id === item._id)
         );
         await axios.put(
           `http://localhost:5000/api/carts/${user._id}`,
@@ -346,9 +311,9 @@ const Checkout = () => {
         localStorage.removeItem("cartItems");
       }
 
-      message.success("Đặt hàng thành công!");
+      // message.success("Đặt hàng thành công!");
       setCart([]);
-      navigate("/");
+      navigate(`/cod_return?orderId=${orderId}&orderCode=${createdOrder.orderCode}`);
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;
       console.error("Lỗi khi đặt hàng:", error);
@@ -357,37 +322,7 @@ const Checkout = () => {
       );
     }
   };
-  useEffect(() => {
-    const fetchProvinces = async () => {
-      const res = await axios.get("http://localhost:5000/api/ghn/provinces");
-      setProvinces(res.data);
-    };
-    fetchProvinces();
-  }, []);
-  useEffect(() => {
-    if (!selectedProvince) return;
-    const fetchDistricts = async () => {
-      const res = await axios.get(
-        `http://localhost:5000/api/ghn/districts/${selectedProvince}`
-      );
-      setDistricts(res.data);
-      setSelectedDistrict("");
-      setWards([]);
-      setSelectedWard("");
-    };
-    fetchDistricts();
-  }, [selectedProvince]);
-  useEffect(() => {
-    if (!selectedDistrict) return;
-    const fetchWards = async () => {
-      const res = await axios.get(
-        `http://localhost:5000/api/ghn/wards/${selectedDistrict}`
-      );
-      setWards(res.data);
-      setSelectedWard("");
-    };
-    fetchWards();
-  }, [selectedDistrict]);
+
 
   if (!user) {
     return (
@@ -395,8 +330,8 @@ const Checkout = () => {
         Vui lòng{" "}
         <a href="/login" className="text-blue-600 hover:underline">
           đăng nhập
-        </a>{" "}
-        Vui lòng chuyển khoản qua Momo để thanh toán.
+        </a>{" "}Vui lòng chuyển khoản qua Momo
+        để thanh toán.
       </div>
     );
   }
@@ -424,35 +359,16 @@ const Checkout = () => {
         items: itemsPayload,
       });
 
-      const { discountAmount, finalPrice, voucherCode, voucherInfo } =
-        response.data;
+      const { discountAmount, finalPrice, voucherCode, voucherInfo } = response.data;
       message.success("Áp dụng mã thành công");
-      setDiscountAmount(discountAmount);
+      setDiscountAmount(discountAmount)
       setVoucherCode(voucherCode);
       setFinalPrice(finalPrice);
       setVoucherInfo(voucherInfo);
     } catch (err: any) {
-      const errorMsg =
-        err?.response?.data?.message || "Không áp dụng được mã khuyến mãi";
+      const errorMsg = err?.response?.data?.message || "Không áp dụng được mã khuyến mãi";
       message.error(errorMsg);
       setDiscountAmount(0);
-    }
-  };
-  const fetchShippingFee = async (districtId: string, wardCode: string) => {
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/ghn/calculate-fee",
-        {
-          toDistrictId: districtId,
-          toWardCode: wardCode,
-        }
-      );
-
-      setShippingFee(res.data.fee);
-    } catch (err) {
-      console.error("Lỗi tính phí vận chuyển:", err);
-      message.warning("Không thể tính phí vận chuyển. Dùng phí mặc định.");
-      setShippingFee(35000);
     }
   };
 
@@ -478,9 +394,7 @@ const Checkout = () => {
             />
             {form.address && form.sdt ? (
               <div className="bg-gray-100 p-3 rounded mb-3">
-                <p>
-                  <strong>{form.name}</strong> – {form.sdt}
-                </p>
+                <p><strong>{form.name}</strong> – {form.sdt}</p>
                 <p>{form.address}</p>
                 <button
                   type="button"
@@ -506,93 +420,40 @@ const Checkout = () => {
               onCancel={() => setShowAddressModal(false)}
               footer={null}
             >
-              <div className="border-t mt-4 pt-4">
-                <h4 className="font-semibold text-gray-700 mb-2">
-                  Chọn địa chỉ mới
-                </h4>
-
-                <select
-                  className="w-full mb-2 border p-2 rounded"
-                  value={selectedProvince}
-                  onChange={(e) => setSelectedProvince(e.target.value)}
-                >
-                  <option value="">-- Chọn Tỉnh/Thành phố --</option>
-                  {provinces.map((p) => (
-                    <option key={p.ProvinceID} value={p.ProvinceID}>
-                      {p.ProvinceName}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  className="w-full mb-2 border p-2 rounded"
-                  value={selectedDistrict}
-                  onChange={(e) => setSelectedDistrict(e.target.value)}
-                  disabled={!selectedProvince}
-                >
-                  <option value="">-- Chọn Quận/Huyện --</option>
-                  {districts.map((d) => (
-                    <option key={d.DistrictID} value={d.DistrictID}>
-                      {d.DistrictName}
-                    </option>
-                  ))}
-                </select>
-
-                <select
-                  className="w-full mb-2 border p-2 rounded"
-                  value={selectedWard}
-                  onChange={(e) => setSelectedWard(e.target.value)}
-                  disabled={!selectedDistrict}
-                >
-                  <option value="">-- Chọn Phường/Xã --</option>
-                  {wards.map((w) => (
-                    <option key={w.WardCode} value={w.WardCode}>
-                      {w.WardName}
-                    </option>
-                  ))}
-                </select>
-
-                <input
-                  type="text"
-                  className="w-full border p-2 rounded"
-                  placeholder="Số nhà, tên đường..."
-                  value={customAddress}
-                  onChange={(e) => setCustomAddress(e.target.value)}
-                />
-
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">Địa chỉ đã lưu</h3>
                 <button
-                  className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                  onClick={() => {
-                    const province = provinces.find(
-                      (p) => p.ProvinceID == selectedProvince
-                    );
-                    const district = districts.find(
-                      (d) => d.DistrictID == selectedDistrict
-                    );
-                    const ward = wards.find((w) => w.WardCode == selectedWard);
-
-                    const fullAddress = `${customAddress}, ${ward?.WardName}, ${district?.DistrictName}, ${province?.ProvinceName}`;
-
-                    setForm((prev) => ({
-                      ...prev,
-                      address: fullAddress,
-                    }));
-
-                    // ✅ Gọi tính phí ship
-                    fetchShippingFee(selectedDistrict, selectedWard);
-
-                    setShowAddressModal(false);
-                  }}
-                  disabled={
-                    !customAddress ||
-                    !selectedProvince ||
-                    !selectedDistrict ||
-                    !selectedWard
-                  }
+                  type="button"
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  onClick={() => navigate('/accounts/my-addresses')}
                 >
-                  Dùng địa chỉ này
+                  Thêm địa chỉ
                 </button>
               </div>
+              <ul className="space-y-2 max-h-[300px] overflow-y-auto">
+                {addressList.map((addr) => (
+                  <li key={addr._id} className="border p-3 rounded-lg flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold">{addr.name} - {addr.phone}</p>
+                      <p className="text-sm text-gray-600">{addr.address}</p>
+                    </div>
+                    <button
+                      className="text-blue-600 hover:underline"
+                      onClick={() => {
+                        setForm((prev) => ({
+                          ...prev,
+                          name: addr.name,
+                          sdt: addr.phone,
+                          address: addr.address,
+                        }));
+                        setShowAddressModal(false);
+                      }}
+                    >
+                      Chọn
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </Modal>
 
             <input
@@ -628,7 +489,7 @@ const Checkout = () => {
               Phương thức thanh toán
             </h3>
             <div className="flex flex-col space-y-3">
-              {["COD", "Momo", "Bank", "VNPAY"].map((method) => (
+              {["COD", "Momo", "VNPAY"].map((method) => (
                 <label key={method} className="inline-flex items-center">
                   <input
                     type="radio"
@@ -639,14 +500,11 @@ const Checkout = () => {
                     className="form-radio h-5 w-5 text-green-600"
                   />
                   <span className="ml-3 capitalize text-gray-700">
-                    {
-                      {
-                        COD: "Thanh toán khi nhận hàng (COD)",
-                        Momo: "Thanh toán qua Momo",
-                        Bank: "Chuyển khoản ngân hàng",
-                        VNPAY: "Thanh toán online qua VNPAY",
-                      }[method]
-                    }
+                    {method === "COD"
+                      ? "Thanh toán khi nhận hàng (COD)"
+                      : method === "Momo"
+                        ? "Thanh toán qua Momo"
+                        : "Thanh toán VNPay"}
                   </span>
                 </label>
               ))}
@@ -668,9 +526,7 @@ const Checkout = () => {
           <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
             {cart.map((item) => (
               <li
-                key={`${item.productId}-${item.color || ""}-${
-                  item.storage || ""
-                }`}
+                key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
                 className="flex items-center py-4"
               >
                 <img
@@ -679,9 +535,7 @@ const Checkout = () => {
                   className="w-16 h-16 rounded-lg object-cover mr-4 border border-gray-300"
                 />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-800">
-                    {item.productName}
-                  </p>
+                  <p className="font-medium text-gray-800">{item.productName}</p>
                   <p className="text-sm text-gray-500">
                     Số lượng: {item.soluong}
                   </p>
@@ -722,36 +576,27 @@ const Checkout = () => {
 
             <div className="flex justify-between text-gray-600 text-lg">
               <span>Phí vận chuyển:</span>
-              <span>{shippingFee.toLocaleString("vi-VN")} VND</span>
+              <span>{SHIPPING_FEE.toLocaleString("vi-VN")} VND</span>
             </div>
             <div className="flex justify-between text-xl font-bold text-gray-900">
               <span>Tổng cộng:</span>
-              <span>
-                {totalWithDiscountAndShipping.toLocaleString("vi-VN")} VND
-              </span>
+              <span>{totalWithDiscountAndShipping.toLocaleString("vi-VN")} VND</span>
             </div>
           </div>
 
           <div className="mt-6 bg-blue-50 p-4 rounded-lg text-blue-900 text-sm">
             {form.paymentMethod === "COD" && "Bạn sẽ thanh toán khi nhận hàng."}
             {form.paymentMethod === "Momo" &&
-              "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"}
-            {form.paymentMethod === "Bank" &&
-              "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"}
-            {
-              {
-                COD: "Bạn sẽ thanh toán khi nhận hàng.",
-                Momo: "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)",
-                Bank: "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)",
-                VNPAY: "Bạn sẽ được chuyển đến cổng thanh toán VNPAY.",
-              }[form.paymentMethod]
-            }
+              "Bạn sẽ chuyển đến trang thanh toán MoMo"}
+            {form.paymentMethod === "VNPAY" &&
+              "Bạn sẽ chuyển đến trang thanh toán VNPAY"}
           </div>
           <VoucherInput onApply={handleApplyVoucher} />
         </div>
       </div>
     </div>
   );
+
 };
 
 export default Checkout;
