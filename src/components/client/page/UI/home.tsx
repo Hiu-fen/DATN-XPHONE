@@ -131,6 +131,7 @@ const Home = () => {
         {/* Form đăng ký nhận tin */}
         <NewsletterForm />
         {/* <Chatbot /> */}
+        <Chatbot />
       </div>
     </>
   )

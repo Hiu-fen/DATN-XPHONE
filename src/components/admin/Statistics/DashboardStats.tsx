@@ -323,8 +323,8 @@ const DashboardStats: React.FC = () => {
                   ))}
                 </Row>
               ) : (
-                <div className="flex justify-center items-center h-32 text-gray-500">
-                  Không có dữ liệu sản phẩm bán chạy
+                <div className="flex justify-center items-center h-32 text-gray-500 font-bold text-xl">
+                  Hôm nay ế 😢
                 </div>
               )}
             </Card>
