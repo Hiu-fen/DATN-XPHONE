@@ -386,8 +386,11 @@ exports.getTopSellingProducts = async (req, res) => {
         price: prod.price
       };
     });
-    // Sắp xếp và lấy 4 sản phẩm theo yêu cầu
-    const result = productsWithSold.sort((a, b) => sortOrder * (a.totalSold - b.totalSold)).slice(0, 4);
+    // Sắp xếp, lọc và lấy 4 sản phẩm có bán ra
+    const result = productsWithSold
+      .filter(p => p.totalSold > 0)
+      .sort((a, b) => sortOrder * (a.totalSold - b.totalSold))
+      .slice(0, 4);
     res.json(result);
   } catch (error) {
     console.error('Lỗi thống kê top sản phẩm bán chạy:', error);
