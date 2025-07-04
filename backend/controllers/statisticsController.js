@@ -355,8 +355,17 @@ exports.getDailyRevenueInMonth = async (req, res) => {
 exports.getTopSellingProducts = async (req, res) => {
   try {
     const sortOrder = req.query.sort === 'asc' ? 1 : -1;
-    // Lấy tổng số lượng bán ra của từng sản phẩm từ tất cả đơn hàng (không chỉ giao thành công)
+    // Xử lý lọc theo tuần nếu có
+    let matchOrder = {};
+    if (req.query.weekStart) {
+      const start = new Date(req.query.weekStart);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 7);
+      matchOrder.date = { $gte: start, $lt: end };
+    }
+    // Lấy tổng số lượng bán ra của từng sản phẩm từ các đơn hàng trong tuần (nếu có)
     const soldAgg = await Order.aggregate([
+      ...(Object.keys(matchOrder).length ? [{ $match: matchOrder }] : []),
       { $unwind: '$items' },
       { $group: {
           _id: '$items.productId',
@@ -377,8 +386,8 @@ exports.getTopSellingProducts = async (req, res) => {
         price: prod.price
       };
     });
-    // Sắp xếp và lấy 3 sản phẩm theo yêu cầu
-    const result = productsWithSold.sort((a, b) => sortOrder * (a.totalSold - b.totalSold)).slice(0, 3);
+    // Sắp xếp và lấy 4 sản phẩm theo yêu cầu
+    const result = productsWithSold.sort((a, b) => sortOrder * (a.totalSold - b.totalSold)).slice(0, 4);
     res.json(result);
   } catch (error) {
     console.error('Lỗi thống kê top sản phẩm bán chạy:', error);

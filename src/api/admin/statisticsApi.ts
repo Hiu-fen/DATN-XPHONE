@@ -104,9 +104,9 @@ export const getDailyRevenueInMonth = async (month: number, year: number): Promi
   return response.data;
 };
 
-export const getTopSellingProducts = async (sort: 'asc' | 'desc' = 'desc'): Promise<TopSellingProduct[]> => {
-  const response = await axios.get(`${API_URL}/top-selling-products`, {
-    params: { sort }
-  });
+export const getTopSellingProducts = async (sort: 'asc' | 'desc' = 'desc', weekStart?: string): Promise<TopSellingProduct[]> => {
+  const params: any = { sort };
+  if (weekStart) params.weekStart = weekStart;
+  const response = await axios.get(`${API_URL}/top-selling-products`, { params });
   return response.data;
 }; 

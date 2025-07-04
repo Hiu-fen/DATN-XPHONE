@@ -10,6 +10,9 @@ import { useEffect, useState } from "react";
 import IphoneProducts from "../../componentChild/Home/iPhoneProduct";
 import SamSung from "../../componentChild/Home/SamSungProducts";
 import Chatbot from "../../componentChild/Home/ChatBot";
+import { FaShippingFast } from "react-icons/fa";
+import { MdAutorenew, MdSupportAgent } from "react-icons/md";
+import { RiShieldCheckFill } from "react-icons/ri";
 
 const Home = () => {
   // Sử dụng useQuery để lấy danh sách sản phẩm
@@ -65,7 +68,7 @@ const Home = () => {
 
   return (
     <>
-      <div className="w-full">
+      <div className="w-full bg-white">
         {/* Banner */}
         <BannerClient />
 
@@ -100,9 +103,33 @@ const Home = () => {
           totalProducts={SamSungProducts.length}
         />
 
+        
+        
+        {/* 4 chính sách hỗ trợ */}
+        <div className="w-full mt-10 mb-6 flex flex-wrap justify-center gap-6">
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px]">
+            <FaShippingFast className="text-red-500 mb-3" size={48} />
+            <h3 className="font-bold text-lg mb-1">Giao hàng nhanh</h3>
+            <p className="text-gray-600 text-center text-sm">Nhận hàng trong 2h tại nội thành, 1-3 ngày toàn quốc.</p>
+          </div>
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px]">
+            <MdAutorenew className="text-blue-500 mb-3" size={48} />
+            <h3 className="font-bold text-lg mb-1">Đổi trả dễ dàng</h3>
+            <p className="text-gray-600 text-center text-sm">Đổi trả miễn phí trong 7 ngày nếu sản phẩm lỗi hoặc không đúng mô tả.</p>
+          </div>
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px]">
+            <RiShieldCheckFill className="text-green-500 mb-3" size={48} />
+            <h3 className="font-bold text-lg mb-1">Bảo hành chính hãng</h3>
+            <p className="text-gray-600 text-center text-sm">Cam kết sản phẩm chính hãng, bảo hành toàn quốc 12-24 tháng.</p>
+          </div>
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px]">
+            <MdSupportAgent className="text-yellow-500 mb-3" size={48} />
+            <h3 className="font-bold text-lg mb-1">Hỗ trợ 24/7</h3>
+            <p className="text-gray-600 text-center text-sm">Đội ngũ tư vấn viên luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.</p>
+          </div>
+        </div>
         {/* Form đăng ký nhận tin */}
         <NewsletterForm />
-        
         {/* <Chatbot /> */}
       </div>
     </>
