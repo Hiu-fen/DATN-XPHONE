@@ -189,8 +189,21 @@ const getStatusColor = (status: string) => {
               : "Không có"}
           </Descriptions.Item>
 
-          <Descriptions.Item label="Điều kiện áp dụng">
-            {promotion.condition || "Không có"}
+          <Descriptions.Item label="Điều kiện áp dụng" span={2}>
+            {promotion.condition ? (
+              <>
+                <p>
+                  Đơn hàng tối thiểu:{" "}
+                    {promotion.condition.minOrderValue?.toLocaleString()} VNĐ
+                </p>
+                <p>
+                  Số lượng sản phẩm tối thiểu:{" "}
+                  {promotion.condition.minQuantity} sản phẩm
+                </p>
+              </>
+            ) : (
+              "Không có"
+            )}
           </Descriptions.Item>
 
           <Descriptions.Item label="Số lượng khuyến mãi">

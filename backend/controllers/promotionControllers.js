@@ -41,7 +41,9 @@ exports.updateStatus = async (req, res) => {
 // Hàm để lấy tất cả danh sách khuyến mãi
 exports.getAllPromotions = async (req, res) => {
   try {
-    const promotions = await Promotion.find().populate('applicableCategories', '_id name');
+    const promotions = await Promotion.find()
+      .sort({ status: -1, createdAt: -1 })
+      .populate('applicableCategories', '_id name');
     res.json(promotions);
   } catch (err) {
     res.status(500).json({ message: "Lỗi máy chủ, không thể lấy danh sách khuyến mãi." });
@@ -82,7 +84,6 @@ exports.getActivePromotions = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi lấy khuyến mãi", error: err.message });
   }
 };
-
 
 // Hàm để tạo khuyến mãi mới
 exports.createPromotion = async (req, res) => {
@@ -159,6 +160,22 @@ exports.autoDisableExpiredPromotions = async () => {
   }
 };
 
+const checkCondition = (condition, order) => {
+  // Kiểm tra tổng giá trị đơn hàng
+  if (condition.minOrderValue && order.total < condition.minOrderValue) {
+    return `Đơn hàng phải từ ${condition.minOrderValue} VNĐ để áp dụng mã.`;
+  }
+
+  // Kiểm tra số lượng sản phẩm
+  const totalQuantity = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  if (condition.minQuantity && totalQuantity < condition.minQuantity) {
+    return `Bạn phải mua ít nhất ${condition.minQuantity} sản phẩm để áp dụng mã.`;
+  }
+
+  return null;
+};
+
+
 // Hàm xử lý khi áp mã giảm giá
 exports.applyVoucherToOrder = async (req, res) => {
   try {
@@ -213,6 +230,12 @@ exports.applyVoucherToOrder = async (req, res) => {
           message: "Mã này không áp dụng cho sản phẩm trong đơn hàng.",
         });
       }
+    }
+
+    // ✅ Check điều kiện trường condition
+    const error = checkCondition(voucher.condition, { total, items });
+    if (error) {
+      return res.status(400).json({ message: error });
     }
 
     // ===== ✅ Tính giảm giá

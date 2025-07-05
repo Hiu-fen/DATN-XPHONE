@@ -373,7 +373,7 @@ const Checkout = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-8 bg-white shadow-lg rounded-lg mt-12 mb-12">
+    <div className="mx-4 p-8 bg-white rounded-lg mt-12 mb-12 border-2">
       <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
         Xác nhận đơn hàng
       </h1>

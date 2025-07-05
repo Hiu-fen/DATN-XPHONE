@@ -88,7 +88,6 @@ import ReturnRequestDetail from './components/client/page/order/ReturnDetail';
 import PromotionPageClient from './components/client/page/promotion/PromotionPageClient';
 import CodReturn from './components/client/page/checkout/CodReturn';
 
-
 const App = () => {
   useReloadIfBlank();
   const routes = useRoutes([
