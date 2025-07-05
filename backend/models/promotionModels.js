@@ -13,7 +13,10 @@ const promotionSchema = new mongoose.Schema({
   maxDiscount: { type: Number, default: null }, // Giảm tối đa cho mã phần trăm
   description: { type: String },
   applicableCategories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
-  condition: { type: String },
+  condition: {
+    minOrderValue: { type: Number, default: 0 }, // Giá trị đơn hàng tối thiểu (VNĐ)
+    minQuantity: { type: Number, default: 0 },   // Số lượng sản phẩm tối thiểu
+  },
   quantity: { type: Number, required: true },
   usageCount: { type: Number, default: 0 }, // Số lần đã sử dụng
   maxUsagePerUser: {

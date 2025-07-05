@@ -64,9 +64,9 @@ const PromotionPageClient = () => {
   }
 
   return (
-    <div className="mx-auto px-4 py-8">
-      <h2 className="text-center text-blue-600 text-3xl font-semibold mb-6">
-        Mã khuyến mãi đang hoạt động
+    <div className="mx-auto px-4 py-8 font-sans">
+      <h2 className="text-center text-green-700 text-4xl font-bold mb-6">
+        Mã khuyến mãi
       </h2>
 
       {/* Bộ lọc loại khuyến mãi */}
@@ -84,7 +84,7 @@ const PromotionPageClient = () => {
       </div>
 
       {filteredPromotions?.length === 0 ? (
-        <p className="text-center">Không có mã khuyến mãi nào.</p>
+        <p className="text-center text-gray-600 text-lg">Không có mã khuyến mãi nào.</p>
       ) : (
         <Row gutter={[24, 24]}>
           {filteredPromotions.map((promo: any) => (
@@ -93,10 +93,10 @@ const PromotionPageClient = () => {
                 <Card
                   hoverable
                   variant="outlined"
-                  className="flex flex-col h-full min-h-[340px]"
+                  className="flex flex-col h-full min-h-[360px] rounded-lg shadow-md transition-all bg-green-50 border border-green-500"
                   title={
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-lg">
+                      <span className="font-semibold text-xl text-blue-600">
                         {promo.name}
                       </span>
                       <Tooltip title="Sao chép mã">
@@ -106,9 +106,9 @@ const PromotionPageClient = () => {
                           type="text"
                           icon={
                             copiedCode === promo.code ? (
-                              <FiCheck />
+                              <FiCheck className="text-green-600 text-lg" />
                             ) : (
-                              <FiCopy />
+                              <FiCopy className="text-green-600 text-lg" />
                             )
                           }
                           onClick={() => handleCopy(promo.code)}
@@ -117,25 +117,25 @@ const PromotionPageClient = () => {
                     </div>
                   }
                 >
-                  <Tag color={getColor(promo.discountType)} className="mb-2">
+                  <Tag color={getColor(promo.discountType)} className="mb-3 text-base">
                     {getDiscountText(promo)}
                   </Tag>
 
-                  <p>
+                  <p className="text-green-900 text-base mb-2">
                     <strong>Mã:</strong>{" "}
-                    <Tag color="blue" className="font-mono">
+                    <Tag color="blue" className="font-mono text-base">
                       {promo.code}
                     </Tag>
                   </p>
 
                   {typeof promo.maxDiscount === "number" && (
-                    <p>
+                    <p className="text-gray-700 text-base mb-2">
                       <strong>Giảm tối đa:</strong>{" "}
                       {promo.maxDiscount.toLocaleString()}₫
                     </p>
                   )}
 
-                  <p>
+                  <p className="text-gray-700 text-base mb-2">
                     <strong>Áp dụng cho:</strong>{" "}
                     {promo.applicableCategories?.length > 0
                       ? promo.applicableCategories
@@ -145,7 +145,7 @@ const PromotionPageClient = () => {
                   </p>
 
                   <div className="mt-auto">
-                    <p>
+                    <p className="text-gray-600 text-sm">
                       <strong>Hạn sử dụng:</strong>{" "}
                       {new Date(promo.endDate).toLocaleDateString("vi-VN")}
                     </p>

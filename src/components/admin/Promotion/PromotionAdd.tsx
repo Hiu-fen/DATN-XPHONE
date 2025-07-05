@@ -234,14 +234,61 @@ const PostAddPromotion = () => {
             )}
           />
         </Form.Item>
+        <Typography.Title level={4} className="mt-4 !mb-2">
+          Điều kiện áp dụng
+        </Typography.Title>
 
-        <Form.Item label="Điều kiện áp dụng">
-          <Controller
-            name="condition"
-            control={control}
-            render={({ field }) => <Input {...field} placeholder="Không bắt buộc" />}
-          />
-        </Form.Item>
+        <div className="grid grid-cols-2 gap-4">
+          <Form.Item
+            label="Áp dụng cho đơn hàng tối thiểu (VNĐ)"
+            validateStatus={errors.condition?.minOrderValue ? 'error' : ''}
+            help={errors.condition?.minOrderValue?.message}
+          >
+            <Controller
+              name="condition.minOrderValue"
+              control={control}
+              rules={{
+                required: "Vui lòng nhập giá trị tối thiểu",
+                min: { value: 1000, message: "Giá trị tối thiểu phải từ 1.000 VNĐ" },
+              }}
+              render={({ field }) => (
+                <InputNumber
+                  {...field}
+                  min={0}
+                  placeholder="Ví dụ: 100000"
+                  style={{ width: "100%" }}
+                  formatter={(value) =>
+                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  }
+                  parser={(value) => Number(value?.replace(/,/g, "") || 0)}
+                />
+              )}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Áp dụng số lượng sản phẩm tối thiểu"
+            validateStatus={errors.condition?.minQuantity ? 'error' : ''}
+            help={errors.condition?.minQuantity?.message}
+          >
+            <Controller
+              name="condition.minQuantity"
+              control={control}
+              rules={{
+                required: "Vui lòng nhập số lượng tối thiểu",
+                min: { value: 1, message: "Số lượng tối thiểu phải từ 1 sản phẩm" },
+              }}
+              render={({ field }) => (
+                <InputNumber
+                  {...field}
+                  min={0}
+                  placeholder="Ví dụ: 2"
+                  style={{ width: "100%" }}
+                />
+              )}
+            />
+          </Form.Item>
+        </div>
 
         <Form.Item label="Số lượng khuyến mãi" validateStatus={errors.quantity ? 'error' : ''} help={errors.quantity?.message}>
           <Controller

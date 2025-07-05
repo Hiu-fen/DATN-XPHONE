@@ -9,7 +9,10 @@ export interface Promotion {
   maxDiscount?: number;
   description: string; // Mô tả khuyến mãi
   applicableCategories : ICategory[]; // Các sản phẩm áp dụng
-  condition?: string;  // Điều kiện áp dụng
+  condition?: {
+    minOrderValue?: number; // Giá trị đơn tối thiểu (VNĐ)
+    minQuantity?: number;   // Số lượng sản phẩm tối thiểu
+  };  
   quantity: number; // Số lượng khuyến mãi
   usageCount?: number; // Số lần đã sử dụng
   maxUsagePerUser:number;
