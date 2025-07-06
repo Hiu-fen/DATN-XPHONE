@@ -9,6 +9,10 @@ const addressSchema = new mongoose.Schema({
   name: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String, required: true },
+  detail: { type: String, default: "" },
+  province_id: { type: String, default: "" },
+  district_id: { type: String, default: "" },
+  ward_code: { type: String, default: "" },
   isDefault: { type: Boolean, default: false },
 });
 

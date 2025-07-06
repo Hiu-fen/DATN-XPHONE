@@ -49,17 +49,17 @@ const AddressManager = () => {
   }, [district]);
 
   const getNameById = (id: number | string, list: any[]) => {
-  const province = list.find(item => item.ProvinceID == id);
-  if (province) return province.ProvinceName;
+    const province = list.find(item => item.ProvinceID == id);
+    if (province) return province.ProvinceName;
 
-  const district = list.find(item => item.DistrictID == id);
-  if (district) return district.DistrictName;
+    const district = list.find(item => item.DistrictID == id);
+    if (district) return district.DistrictName;
 
-  const ward = list.find(item => item.WardCode == id);
-  if (ward) return ward.WardName;
+    const ward = list.find(item => item.WardCode == id);
+    if (ward) return ward.WardName;
 
-  return "";
-};
+    return "";
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -76,12 +76,11 @@ const AddressManager = () => {
     if (address) {
       setEditingAddress(address);
       form.setFieldsValue(address);
-      const parts = address.address.split(',').map((s: string) => s.trim());
-      setDetail(parts[0] || '');
       setProvince(address.province_id || '');
-setDistrict(address.district_id || '');
-setWard(address.ward_code || '');
-setDetail(address.detail || '');
+      setDistrict(address.district_id || '');
+      setWard(address.ward_code || '');
+      setDetail(address.detail || '');
+
 
     } else {
       form.resetFields();
@@ -219,32 +218,43 @@ setDetail(address.detail || '');
               <Input />
             </Form.Item>
 
-            <Form.Item label="Tỉnh/Thành phố" required>
-              <Select value={province} onChange={setProvince} placeholder="Chọn Tỉnh/TP">
+            <Form.Item name="province_id" label="Tỉnh/Thành phố" rules={[{ required: true }]}>
+              <Select value={province} onChange={value => {
+                setProvince(value);
+                form.setFieldValue('province_id', value); // Cập nhật lại cho form
+              }} placeholder="Chọn Tỉnh/TP">
                 {provinces.map(p => (
                   <Select.Option key={p.ProvinceID} value={p.ProvinceID}>{p.ProvinceName}</Select.Option>
                 ))}
               </Select>
             </Form.Item>
 
-            <Form.Item label="Quận/Huyện" required>
-              <Select value={district} onChange={setDistrict} placeholder="Chọn Quận/Huyện">
+            <Form.Item name="district_id" label="Quận/Huyện" rules={[{ required: true }]}>
+              <Select value={district} onChange={value => {
+                setDistrict(value);
+                form.setFieldValue('district_id', value);
+              }} placeholder="Chọn Quận/Huyện">
                 {districts.map(d => (
                   <Select.Option key={d.DistrictID} value={d.DistrictID}>{d.DistrictName}</Select.Option>
                 ))}
               </Select>
             </Form.Item>
 
-            <Form.Item label="Phường/Xã" required>
-              <Select value={ward} onChange={setWard} placeholder="Chọn Phường/Xã">
+            <Form.Item name="ward_code" label="Phường/Xã" rules={[{ required: true }]}>
+              <Select value={ward} onChange={value => {
+                setWard(value);
+                form.setFieldValue('ward_code', value);
+              }} placeholder="Chọn Phường/Xã">
                 {wards.map(w => (
                   <Select.Option key={w.WardCode} value={w.WardCode}>{w.WardName}</Select.Option>
                 ))}
               </Select>
             </Form.Item>
+
             <Form.Item label="Số nhà, tên đường" required>
               <Input value={detail} onChange={e => setDetail(e.target.value)} />
             </Form.Item>
+
 
             <Form.Item name="isDefault" valuePropName="checked">
               <Radio>Đặt làm địa chỉ chính</Radio>
