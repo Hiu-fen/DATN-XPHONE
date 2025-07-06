@@ -54,7 +54,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use("/api/addresses", addressRouter);
 
 app.use("/api/vnpay", vnpayRouter);
-app.use('/api', ghnRoutes);
+app.use('/api/ghn', ghnRoutes);
 
 
 app.use("/uploads", express.static("uploads"));
