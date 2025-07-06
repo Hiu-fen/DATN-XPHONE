@@ -1,7 +1,15 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { calculateShippingFee } = require("../controllers/ghnController");
+const {
+  getProvinces,
+  getDistricts,
+  getWards,
+  calculateShippingFee
+} = require('../controllers/ghnController');
 
-router.post("/calculate-fee", calculateShippingFee);
+router.get('/provinces', getProvinces);
+router.get('/districts', getDistricts);
+router.get('/wards', getWards);
+router.post('/calculate-fee', calculateShippingFee);
 
 module.exports = router;

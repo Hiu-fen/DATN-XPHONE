@@ -41,7 +41,9 @@ const Checkout = () => {
 
 
   const [cart, setCart] = useState<CartItem[]>([]);
-  const SHIPPING_FEE = 35000;
+  // const SHIPPING_FEE = 35000;
+  const [shippingFee, setShippingFee] = useState<number>(35000);
+
 
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [voucherCode, setVoucherCode] = useState<string>("");
@@ -50,7 +52,6 @@ const Checkout = () => {
     name: string;
     discountValue: string;
   } | null>(null);
-  
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -148,13 +149,15 @@ const Checkout = () => {
     fetchCartAndProducts();
   }, [currentUser, buyNowItem, selectedItems]);
 
+
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.soluong,
     0
   );
   // const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
   const totalWithDiscountAndShipping =
-    (discountAmount > 0 ? finalPrice : totalPrice) + SHIPPING_FEE;
+  (discountAmount > 0 ? finalPrice : totalPrice) + shippingFee;
+
 
   const [form, setForm] = useState({
     name: currentUser?.name || "",
@@ -164,7 +167,30 @@ const Checkout = () => {
     note: "",
     paymentMethod: "COD",
     shippingProvider: "Giao hàng tiêu chuẩn",
+    to_district_id: "",     // ← thêm
+  to_ward_code: "",       // ← thêm
   });
+    useEffect(() => {
+  const { to_district_id, to_ward_code, shippingProvider } = form;
+  if (!to_district_id || !to_ward_code) return;
+
+  const weight = cart.reduce((sum, i) => sum + i.soluong * 1000, 0);
+
+  if (shippingProvider === "GHN") {
+    axios.post("/api/ghn/calculate-fee", {
+      to_district_id,
+      to_ward_code,
+      weight,
+      insurance_value: totalPrice,
+    })
+      .then(res => setShippingFee(res.data.shippingFee))
+      .catch(() => setShippingFee(35000));
+  } else {
+    // các loại khác bạn có thể gán phí ship cố định
+    setShippingFee(35000);
+  }
+}, [form.to_district_id, form.to_ward_code, form.shippingProvider, cart, totalPrice]);
+
 
   useEffect(() => {
     setForm((prev) => ({
@@ -219,7 +245,8 @@ const Checkout = () => {
       notes: form.note,
       paymentMethod: form.paymentMethod,
       shippingProvider: form.shippingProvider,
-      total: Number((discountAmount > 0 ? finalPrice : totalPrice)) + Number(SHIPPING_FEE),
+      total: Number((discountAmount > 0 ? finalPrice : totalPrice)) + Number(shippingFee),
+
       status: "Chờ xác nhận",
       date: new Date().toISOString(),
       isPaid: false,
@@ -446,6 +473,8 @@ const Checkout = () => {
                           name: addr.name,
                           sdt: addr.phone,
                           address: addr.address,
+                           to_district_id: addr.to_district_id,  // ← thêm
+    to_ward_code: addr.to_ward_code       // ← thêm
                         }));
                         setShowAddressModal(false);
                       }}
@@ -474,15 +503,16 @@ const Checkout = () => {
               className="w-full border border-gray-300 rounded-lg px-4 py-3 resize-none"
             ></textarea>
             <select
-              name="shippingProvider"
-              value={form.shippingProvider}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3"
-            >
-              <option value="Giao hàng tiêu chuẩn">Giao Hàng Tiêu Chuẩn</option>
-              <option value="J&T Express">J&T Express</option>
-              <option value="GHN">Giao Hàng Nhanh</option>
-            </select>
+  name="shippingProvider"
+  value={form.shippingProvider}
+  onChange={handleChange}
+  className="border p-2 rounded"
+>
+  <option value="Giao hàng tiêu chuẩn">Giao hàng tiêu chuẩn</option>
+  <option value="GHN">Giao hàng nhanh</option> {/* ← thêm lựa chọn này */}
+  <option value="J&T">J&T Express</option>
+</select>
+
           </div>
 
           <div className="mt-8">
@@ -577,7 +607,8 @@ const Checkout = () => {
 
             <div className="flex justify-between text-gray-600 text-lg">
               <span>Phí vận chuyển:</span>
-              <span>{SHIPPING_FEE.toLocaleString("vi-VN")} VND</span>
+              <span>{shippingFee.toLocaleString("vi-VN")} VND</span>
+
             </div>
             <div className="flex justify-between text-xl font-bold text-gray-900">
               <span>Tổng cộng:</span>

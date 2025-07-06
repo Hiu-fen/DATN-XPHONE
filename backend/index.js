@@ -20,7 +20,7 @@ const notificationRoutes = require('./routes/notificationRouters');
 
 const addressRouter = require("./routes/address");
 const vnpayRouter = require("./routes/vnpayRoutes")
-const ghnRoutes = require("./routes/ghnRoutes");
+const ghnRoutes = require('./routes/ghnRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -54,7 +54,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use("/api/addresses", addressRouter);
 
 app.use("/api/vnpay", vnpayRouter);
-app.use("/api/ghn", ghnRoutes);
+app.use('/api/ghn', ghnRoutes);
+
 
 app.use("/uploads", express.static("uploads"));
 
