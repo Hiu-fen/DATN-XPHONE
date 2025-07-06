@@ -79,7 +79,7 @@ const NewsAdd = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+        <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-800">Thêm tin tức mới</h2>
                 <Button 

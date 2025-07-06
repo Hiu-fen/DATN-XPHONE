@@ -77,7 +77,7 @@ const PutEditCategory = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white shadow-md rounded-lg mt-10">
+    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
       <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Cập nhật danh mục</h2>
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         <Form.Item

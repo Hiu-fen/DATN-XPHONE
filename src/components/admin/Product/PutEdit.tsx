@@ -288,7 +288,7 @@ const PutEdit: React.FC = () => {
     <Form
       layout="vertical"
       onFinish={handleSubmit(onSubmit)}
-      className="max-w-lg mx-auto p-6 bg-white rounded shadow-md"
+      className="mx-auto mt-10 p-6 bg-white shadow rounded border-2"
     >
       <h2 className="text-xl font-semibold text-center mb-4">Cập nhật sản phẩm</h2>
 
