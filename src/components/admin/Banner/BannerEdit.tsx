@@ -137,7 +137,7 @@ const BannerEdit = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-lg border-2">
+    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
       <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">Cập nhật Banner</h2>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>

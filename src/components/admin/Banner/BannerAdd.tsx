@@ -114,7 +114,7 @@ const BannerAdd = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 bg-white p-6 rounded-lg border-2">
+    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
       <h2 className="text-3xl text-blue-500 font-bold mb-6 text-center">Thêm Banner</h2>
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
         {/* Tên banner */}
