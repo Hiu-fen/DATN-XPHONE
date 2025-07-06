@@ -50,6 +50,7 @@ const Checkout = () => {
     name: string;
     discountValue: string;
   } | null>(null);
+  
 
   useEffect(() => {
     const fetchAddresses = async () => {
