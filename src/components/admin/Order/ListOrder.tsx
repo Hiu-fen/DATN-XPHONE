@@ -8,8 +8,7 @@ import {
   Tag,
   Input,
   Button,
-  Space,
-  Tooltip,
+  Radio,
 } from "antd";
 import { useNavigate } from "react-router-dom";
 
@@ -54,14 +53,15 @@ const statusOptions = [
   "Đang xử lý",
   "Đang giao",
   "Giao thành công",
-  "Hoàn thành",
   "Đã huỷ",
   "Trả hàng/Hoàn tiền",
+  
 ];
 
 const OrderList = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const getValidStatusOptions = (
     currentStatus: string,
@@ -177,12 +177,30 @@ const OrderList = () => {
     returnMutation.mutate({ id, returnStatus });
   };
 
+  const handleMarkAsPaid = (id: string) => {
+    markAsPaidMutation.mutate(id);
+  };
+
+  const markAsPaidMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.patch(`http://localhost:5000/api/orders/${id}/paid`);
+    },
+    onSuccess: () => {
+      message.success("Cập nhật thanh toán thành công");
+      refetch();
+    },
+    onError: () => {
+      message.error("Lỗi khi cập nhật thanh toán");
+    },
+  });
+
   const filteredOrders = orders
     ?.filter((o) =>
       `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`
         .toLowerCase()
         .includes(searchText.toLowerCase())
     )
+    .filter((o) => statusFilter === "all" || o.status === statusFilter)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const columns = [
@@ -267,7 +285,6 @@ const OrderList = () => {
         return <span>.</span>;
       },
     },
-
     {
       title: "Trạng thái đơn hàng",
       key: "status",
@@ -291,35 +308,40 @@ const OrderList = () => {
     },
   ];
 
-  const handleMarkAsPaid = (id: string) => {
-    markAsPaidMutation.mutate(id);
-  };
-
-  const markAsPaidMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await axios.patch(`http://localhost:5000/api/orders/${id}/paid`);
-    },
-    onSuccess: () => {
-      message.success("Cập nhật thanh toán thành công");
-      refetch();
-    },
-    onError: () => {
-      message.error("Lỗi khi cập nhật thanh toán");
-    },
-  });
-
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Danh sách đơn hàng</h2>
+ <div>
+   {/* Bộ lọc theo trạng thái đơn hàng */}
+      <div className="flex justify-center  mr-[250px] mb-[-33px]">
+        <Radio.Group
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          buttonStyle="solid"
+        >
+          <Radio.Button value="all">Tất cả</Radio.Button>
+          {statusOptions.map((status) => (
+            <Radio.Button key={status} value={status}>
+              {status}
+            </Radio.Button>
+          ))}
+        </Radio.Group>
+      </div>
+
+      {/* Tìm kiếm đơn hàng */}
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <Input.Search
           placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
           className="mb-4"
-          style={{ width: 300 }}
+          style={{ width: 250 }}
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
         />
       </div>
+ </div>
+     
+
+      {/* Bảng danh sách đơn */}
       <Table
         dataSource={filteredOrders}
         columns={columns}
