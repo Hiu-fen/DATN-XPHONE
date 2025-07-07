@@ -19,6 +19,15 @@ interface CartItem {
   storage?: string;
   categoryId?: string;
 }
+interface IAddress {
+  _id: string;
+  name: string;
+  phone: string;
+  address: string;
+  district_id: string;
+  ward_code: string;
+  default?: boolean;
+}
 
 interface IUserExtended {
   _id: string;
@@ -39,7 +48,8 @@ const Checkout = () => {
   const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
 
   const [showAddressModal, setShowAddressModal] = useState(false);
-  const [addressList, setAddressList] = useState<any[]>([]);
+
+const [addressList, setAddressList] = useState<IAddress[]>([]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   // const SHIPPING_FEE = 35000;
@@ -53,17 +63,39 @@ const Checkout = () => {
     discountValue: string;
   } | null>(null);
 
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      if (currentUser?._id) {
-        const res = await axios.get(
-          `http://localhost:5000/api/addresses/${currentUser._id}`
-        );
-        setAddressList(res.data);
-      }
-    };
-    fetchAddresses();
-  }, [currentUser]);
+useEffect(() => {
+  const fetchAddresses = async () => {
+
+    if (currentUser?._id) {
+      const res = await axios.get(
+        `http://localhost:5000/api/addresses/${currentUser._id}`
+      );
+      const addresses = res.data;
+      setAddressList(addresses);
+
+      // ✅ Tìm địa chỉ mặc định (default: true)
+   
+
+
+      const defaultAddr = addresses.find((addr: IAddress) => addr.default === true) || addresses[0];
+
+if (defaultAddr) {
+  setForm((prev) => ({
+    ...prev,
+    name: defaultAddr.name,
+    sdt: defaultAddr.phone,
+    address: defaultAddr.address,
+    to_district_id: defaultAddr.district_id,
+    to_ward_code: defaultAddr.ward_code,
+  }));
+}
+
+    }
+  };
+  fetchAddresses();
+}, [currentUser]);
+
+
 
   useEffect(() => {
     const fetchCartAndProducts = async () => {
@@ -219,16 +251,16 @@ const Checkout = () => {
     totalPrice,
   ]);
 
-  useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      name: currentUser?.name || prev.name,
-      email: currentUser?.email || prev.email,
-      sdt: currentUser?.sdt || prev.sdt,
-      address: currentUser?.address || prev.address,
+  // useEffect(() => {
+  //   setForm((prev) => ({
+  //     ...prev,
+  //     name: currentUser?.name || prev.name,
+  //     email: currentUser?.email || prev.email,
+  //     sdt: currentUser?.sdt || prev.sdt,
+  //     address: currentUser?.address || prev.address,
       
-    }));
-  }, [currentUser]);
+  //   }));
+  // }, [currentUser]);
 
   const handleChange = (
     e: React.ChangeEvent<
