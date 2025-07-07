@@ -1,6 +1,3 @@
-
-
-
 const createVnpayUrl = (req, res) => {
   const orderCode = req.body.orderCode || "FAKE123";
   const fakePaymentUrl = `http://localhost:5000/api/vnpay/vnpay_return?vnp_ResponseCode=00&vnp_TxnRef=${orderCode}&vnp_SecureHash=FAKE`;
