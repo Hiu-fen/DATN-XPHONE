@@ -163,29 +163,39 @@ const OrderDetail = () => {
     }
   }, [id]);
 
-  const handleCancelOrder = async () => {
-    if (!cancelReason) {
-      showToastMessage("Vui lòng chọn lý do hủy đơn hàng", "warning");
+ const handleCancelOrder = async () => {
+  if (!cancelReason) {
+    showToastMessage("Vui lòng chọn lý do hủy đơn hàng", "warning");
+    return;
+  }
+  if (cancelReason === "Khác") {
+    const reason = customReason.trim();
+    if (!reason) {
+      showToastMessage("Vui lòng nhập lý do hủy đơn hàng!", "warning");
       return;
     }
-
-    try {
-      await axios.patch(`http://localhost:5000/api/orders/${id}`, {
-        status: "Đã huỷ",
-        cancelReason: cancelReason === "Khác" ? customReason : cancelReason,
-      });
-
-      showToastMessage("Đơn hàng đã được hủy thành công", "success");
-      setOrder((prevOrder) =>
-        prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder
-      );
-      setIsModalOpen(false);
-      setIsCancelDisabled(true);
-    } catch (err) {
-      console.error("Lỗi khi hủy đơn:", err);
-      showToastMessage("Không thể hủy đơn hàng. Vui lòng thử lại", "error");
+    if (reason.length < 6) {
+      showToastMessage("Lý do hủy đơn hàng phải tối thiểu 6 ký tự!", "warning");
+      return;
     }
-  };
+  }
+  try {
+    await axios.patch(`http://localhost:5000/api/orders/${id}`, {
+      status: "Đã huỷ",
+      cancelReason: cancelReason === "Khác" ? customReason : cancelReason,
+    });
+
+    showToastMessage("Đơn hàng đã được hủy thành công", "success");
+    setOrder((prevOrder) =>
+      prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder
+    );
+    setIsModalOpen(false);
+    setIsCancelDisabled(true);
+  } catch (err) {
+    console.error("Lỗi khi hủy đơn:", err);
+    showToastMessage("Không thể hủy đơn hàng. Vui lòng thử lại", "error");
+  }
+};
 
   if (loading) {
     return (
@@ -711,7 +721,7 @@ const OrderDetail = () => {
                         />
                         <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
                           <span className="text-red-400 italic">
-                            Tối đa 200 ký tự
+                           Lí do phải tối thiểu 6 ký tự và tối đa 200 ký tự
                           </span>
                           <span>{customReason.length}/200</span>
                         </div>
