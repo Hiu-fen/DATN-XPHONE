@@ -189,7 +189,7 @@ const Checkout = () => {
 
     if (!to_district_id || !to_ward_code) return; // Đảm bảo có district_id và ward_code
 
-    const weight = cart.reduce((sum, i) => sum + i.soluong * 1000, 0); // 1000g mỗi sp
+    const weight = cart.reduce((sum, i) => sum + i.soluong * 300, 0); // 1000g mỗi sp
 
     if (shippingProvider === "GHN") {
       console.log("✅ Chọn địa chỉ:", to_district_id, to_ward_code);
@@ -199,7 +199,7 @@ const Checkout = () => {
           to_district_id: Number(to_district_id),
           to_ward_code: String(to_ward_code),
           weight,
-          insurance_value: totalPrice || 10000,
+           insurance_value: Math.min(totalPrice, 10000000),
         })
         .then((res) => {
           setShippingFee(res.data.shippingFee);
@@ -226,7 +226,7 @@ const Checkout = () => {
       email: currentUser?.email || prev.email,
       sdt: currentUser?.sdt || prev.sdt,
       address: currentUser?.address || prev.address,
-      // ❌ Không set `addr` ở đây vì chưa chọn địa chỉ
+      
     }));
   }, [currentUser]);
 
