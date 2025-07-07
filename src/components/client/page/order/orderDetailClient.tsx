@@ -49,6 +49,7 @@ interface Order {
   paymentStatus?: string;
   statusHistory?: { status: string; timestamp: string }[];
   returnStatusHistory?: { status: string; timestamp: string }[];
+  shippingFee?: number;
 }
 
 const OrderDetail = () => {
@@ -638,6 +639,10 @@ const OrderDetail = () => {
                 </Link>
               </div>
               <div className="text-right">
+                <p className="text-sm text-gray-500 mb-2">Phí vận chuyển</p>
+                <p className="text-lg text-gray-800 font-semibold mb-2">
+                  {order.shippingFee?.toLocaleString() || "0"} đ
+                </p>
                 <p className="text-sm text-gray-500 mb-2">Tổng thanh toán</p>
                 <div className="flex items-center gap-3 text-3xl font-bold text-green-600">
                   <DollarSign className="w-8 h-8" />

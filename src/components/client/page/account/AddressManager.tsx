@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Button,
@@ -94,46 +94,51 @@ const AddressManager = () => {
   };
 
   const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const fullAddress = `${detail}, ${getNameById(ward, wards)}, ${getNameById(district, districts)}, ${getNameById(province, provinces)}`;
+  try {
+    const values = await form.validateFields();
 
-      const payload = {
-        ...values,
-        userId,
-        isDefault: values.isDefault || false,
-        address: fullAddress,
-        detail,
-        province_id: province,
-        district_id: district,
-        ward_code: ward
-      };
-
-
-      if (editingAddress) {
-        await axios.patch(`http://localhost:5000/api/addresses/${editingAddress._id}`, payload);
-        message.success("Cập nhật địa chỉ thành công");
-      } else {
-        await axios.post("http://localhost:5000/api/addresses", payload);
-        message.success("Thêm địa chỉ mới thành công");
-      }
-
-      // Nếu là địa chỉ mặc định thì cập nhật thông tin người dùng
-      if (payload.isDefault) {
-        await axios.patch(`http://localhost:5000/api/users/${userId}`, {
-          address: payload.address,
-          sdt: payload.phone
-        });
-
-        localStorage.setItem("user", JSON.stringify({ ...user, address: payload.address, sdt: payload.phone }));
-      }
-
-      setIsModalVisible(false);
-      fetchAddresses();
-    } catch {
-      message.error("Vui lòng điền đầy đủ thông tin");
+    // ✅ Check nếu thiếu bất kỳ phần nào
+    if (!province || !district || !ward || !detail) {
+      message.error("Vui lòng chọn đầy đủ Tỉnh, Huyện, Phường và nhập địa chỉ chi tiết");
+      return;
     }
-  };
+
+    const fullAddress = `${detail}, ${getNameById(ward, wards)}, ${getNameById(district, districts)}, ${getNameById(province, provinces)}`;
+
+    const payload = {
+      ...values,
+      userId,
+      isDefault: values.isDefault || false,
+      address: fullAddress,
+      detail,
+      province_id: province,
+      district_id: district,
+      ward_code: ward
+    };
+
+    if (editingAddress) {
+      await axios.patch(`http://localhost:5000/api/addresses/${editingAddress._id}`, payload);
+      message.success("Cập nhật địa chỉ thành công");
+    } else {
+      await axios.post("http://localhost:5000/api/addresses", payload);
+      message.success("Thêm địa chỉ mới thành công");
+    }
+
+    if (payload.isDefault) {
+      await axios.patch(`http://localhost:5000/api/users/${userId}`, {
+        address: payload.address,
+        sdt: payload.phone
+      });
+
+      localStorage.setItem("user", JSON.stringify({ ...user, address: payload.address, sdt: payload.phone }));
+    }
+
+    setIsModalVisible(false);
+    fetchAddresses();
+  } catch {
+    message.error("Vui lòng điền đầy đủ thông tin");
+  }
+};
 
   const handleDelete = async (id: string) => {
     try {

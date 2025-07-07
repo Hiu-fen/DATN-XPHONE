@@ -50,6 +50,7 @@ const OrderSchema = new mongoose.Schema({
 
   items: [OrderItemSchema],
   total: { type: Number, required: true },
+   shippingFee: {type: Number, default: 0,},
   isPaid: { type: Boolean, default: false }, // Vẫn giữ để tiện filter
   refunded: { type: Boolean, default: false },
   paymentMethod: { type: String }, // VNPAY / COD

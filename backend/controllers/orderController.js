@@ -21,13 +21,14 @@ exports.getAllOrders = async (req, res) => {
 exports.getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
-    if (!order)
-      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
-    res.json(order);
+    if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+
+    res.json(order); 
   } catch (error) {
     res.status(500).json({ message: "Lỗi server" });
   }
 };
+
 
 // Cập nhật trạng thái đơn hàng
 exports.updateOrderStatus = async (req, res) => {
@@ -156,6 +157,7 @@ exports.createOrder = async (req, res) => {
       notes,
       isPaid = false,
       userId = null,
+      shippingFee: calculatedShippingFee,
     } = req.body;
 
     const { voucherCode } = req.body;
@@ -226,6 +228,7 @@ console.log("📦 Final order items:", items);
       isPaid,
       userId,
       voucherCode,
+      shippingFee: calculatedShippingFee || 0,
       discountAmount: req.body.discountAmount || 0, // 👈 thêm dòng này nếu có
       status: "Chờ xác nhận",
       statusHistory: [{ status: "Chờ xác nhận", timestamp: new Date() }],
