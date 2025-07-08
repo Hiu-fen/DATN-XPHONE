@@ -1,4 +1,3 @@
-import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
@@ -42,6 +41,7 @@ interface IOrder {
   status: string;
   items: OrderItem[];
   total: number;
+  shippingFee?: number;
   isPaid: boolean;
   paymentMethod?: string;
   shippingProvider?: string;
@@ -52,6 +52,8 @@ interface IOrder {
   returnReason?: string;
   cancelReason?: string;
   paymentStatus?: string;
+  voucherCode?: string;
+  discountAmount?: number;
   statusHistory?: { status: string; timestamp: string }[];
 }
 
@@ -105,7 +107,6 @@ const OrderDetail = () => {
     queryKey: ["order", id],
     queryFn: async () => {
       const res = await axios.get(`http://localhost:5000/api/orders/${id}`);
-      console.log("Order detail from server:", res.data); // Debug dữ liệu server
       return res.data;
     },
     enabled: !!id,
@@ -118,35 +119,13 @@ const OrderDetail = () => {
       });
     },
     onSuccess: () => {
-      message.success("Cập nhật trạng thái thành công");
+      message.success("✅ Cập nhật trạng thái thành công");
       refetch();
     },
     onError: (error: any) => {
       message.error(
-        error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
+        error.response?.data?.message || "❌ Lỗi khi cập nhật trạng thái"
       );
-    },
-  });
-
-  const returnMutation = useMutation({
-    mutationFn: async ({
-      id,
-      returnStatus,
-    }: {
-      id: string;
-      returnStatus: string;
-    }) => {
-      return await axios.patch(
-        `http://localhost:5000/api/orders/${id}/return`,
-        { returnStatus }
-      );
-    },
-    onSuccess: () => {
-      message.success("Cập nhật trạng thái trả hàng thành công");
-      refetch();
-    },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || "Lỗi khi xử lý trả hàng");
     },
   });
 
@@ -163,10 +142,6 @@ const OrderDetail = () => {
       message.warning(`Không thể thay đổi từ trạng thái "${order.status}"`);
       return;
     }
-    if (order?.status === "Đang giao" && status === "Đã huỷ") {
-      message.warning("Không thể hủy đơn hàng đã giao");
-      return;
-    }
     const currentIndex = statusOptions.indexOf(order?.status || "");
     const newIndex = statusOptions.indexOf(status);
     if (
@@ -179,12 +154,6 @@ const OrderDetail = () => {
     }
     statusMutation.mutate({ id: id!, status });
   };
-
-  const handleReturnAction = (returnStatus: string) => {
-    returnMutation.mutate({ id: id!, returnStatus });
-  };
-
-  const shippingFee = 35000;
 
   const columns = [
     {
@@ -199,7 +168,7 @@ const OrderDetail = () => {
     {
       title: "Màu sắc",
       key: "color",
-      width: 150,
+      width: 120,
       render: (_: any, record: OrderItem) => record.snapshot?.color || "-",
     },
     {
@@ -230,18 +199,22 @@ const OrderDetail = () => {
     },
   ];
 
-  if (isLoading) return <Spin tip="Đang tải chi tiết đơn hàng..." />;
+  if (isLoading) return <Spin tip="🔄 Đang tải chi tiết đơn hàng..." />;
   if (isError || !order) {
-    return <Alert message="Không tìm thấy đơn hàng" type="error" showIcon />;
+    return (
+      <Alert message="❌ Không tìm thấy đơn hàng" type="error" showIcon />
+    );
   }
 
   const totalItemsPrice =
     order.items?.reduce(
-      (sum: number, item: OrderItem) => sum + item.price * item.soluong,
+      (sum, item) => sum + item.price * item.soluong,
       0
     ) || 0;
 
-  const totalPayment = totalItemsPrice + shippingFee;
+  const discount = order.discountAmount || 0;
+  const shippingFee = order.shippingFee || 0;
+  const totalPayment = order.total; // ✅ Lấy tổng từ backend
 
   return (
     <div>
@@ -256,12 +229,7 @@ const OrderDetail = () => {
       <Title level={3}>Chi tiết đơn hàng #{order.orderCode}</Title>
 
       <Card style={{ marginBottom: 24 }}>
-        <Descriptions
-          bordered
-          column={1}
-          size="middle"
-          title="Thông tin người nhận"
-        >
+        <Descriptions bordered column={1} size="middle">
           <Descriptions.Item label="Họ tên">
             {order.customerName}
           </Descriptions.Item>
@@ -280,6 +248,21 @@ const OrderDetail = () => {
           <Descriptions.Item label="Đơn vị vận chuyển">
             {order.shippingProvider || "Chưa chọn"}
           </Descriptions.Item>
+
+          {/* ✅ Voucher */}
+          <Descriptions.Item label="Mã giảm giá (Voucher)">
+            {order.voucherCode ? (
+              <>
+                <b>{order.voucherCode}</b> – Giảm{" "}
+                <span style={{ color: "#f5222d" }}>
+                  {discount.toLocaleString()} VND
+                </span>
+              </>
+            ) : (
+              "Không áp dụng"
+            )}
+          </Descriptions.Item>
+
           <Descriptions.Item label="Ghi chú">
             {order.notes || "Không có"}
           </Descriptions.Item>
@@ -288,7 +271,7 @@ const OrderDetail = () => {
               <Select
                 value={order.status}
                 onChange={(value) => handleStatusChange(value)}
-                style={{ width: 160 }}
+                style={{ width: 180 }}
                 options={getValidStatusOptions(order.status)}
                 placeholder="Chọn trạng thái"
                 disabled={
@@ -336,9 +319,14 @@ const OrderDetail = () => {
           <p>
             <b>Phí vận chuyển:</b> {shippingFee.toLocaleString()} VND
           </p>
+          {discount > 0 && (
+            <p style={{ color: "#f5222d" }}>
+              <b>Giảm giá:</b> -{discount.toLocaleString()} VND
+            </p>
+          )}
           <p>
             <b>Tổng thanh toán:</b>{" "}
-            <span style={{ color: "#e53935" }}>
+            <span style={{ color: "#e53935", fontWeight: 600 }}>
               {totalPayment.toLocaleString()} VND
             </span>
           </p>
@@ -355,7 +343,8 @@ const OrderDetail = () => {
                 title: "Thời gian",
                 dataIndex: "timestamp",
                 key: "timestamp",
-                render: (date: string) => new Date(date).toLocaleString(),
+                render: (date: string) =>
+                  new Date(date).toLocaleString(),
               },
             ]}
             pagination={false}

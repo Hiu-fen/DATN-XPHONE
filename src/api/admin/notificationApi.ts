@@ -56,3 +56,8 @@ export const purgeReadAndDeletedNotifications = () => {
   return axios.delete(`${BASE_URL}/purge-read-deleted`);
 };
 
+// Đếm tổng số thông báo đã đọc hoặc xoá mềm
+export const countReadOrDeletedNotifications = () => {
+  return axios.get(`${BASE_URL}/count-read-deleted`);
+};
+

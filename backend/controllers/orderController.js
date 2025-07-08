@@ -276,22 +276,40 @@ console.log("📦 Final order items:", items);
       console.error("Lỗi khi gửi email xác nhận:", emailError.message);
     }
 
-    // ✅ Tạo thông báo cho người dùng
-    if (userId) {
-      const notification = new Notification({
-        userId, // phải là ObjectId
-        message: `Bạn đã đặt hàng thành công với mã đơn ${orderCode}`,
-        type: "order",
-        role: "user",
-        relatedId: order._id,
-      });
+  // ✅ Tạo thông báo cho người dùng
+  if (userId) {
+    const notification = new Notification({
+      userId, // phải là ObjectId
+      message: `Bạn đã đặt hàng thành công với mã đơn ${orderCode}`,
+      type: "order",
+      role: "user",
+      relatedId: order._id,
+    });
 
-      try {
-        await notification.save();
-      } catch (err) {
-        console.error("Lỗi khi tạo thông báo đặt hàng:", err.message);
-      }
+  try {
+      await notification.save();
+      // console.log("📢 Đã tạo thông báo cho User");
+    } catch (err) {
+      console.error("❌ Lỗi khi tạo thông báo user:", err.message);
     }
+  }
+
+  // ✅ Tạo thông báo cho admin
+  const adminNotification = new Notification({
+    message: `Khách hàng vừa đặt đơn hàng mới (Mã: ${orderCode})`,
+    type: "order",
+    role: "admin",
+    scope: "admin",
+    relatedId: order._id,
+  });
+
+  try {
+    await adminNotification.save();
+    // console.log("📢 Đã tạo thông báo cho Admin");
+  } catch (err) {
+    console.error("❌ Lỗi khi tạo thông báo admin:", err.message);
+  }
+
 
     res.status(201).json(order);
   } catch (error) {

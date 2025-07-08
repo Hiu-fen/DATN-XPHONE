@@ -5,7 +5,7 @@ import { useUser } from "../../context/UserContext";
 import { ICartItem } from "../../../../interface/cart";
 import { IProduct } from "../../../../interface/product";
 import axios, { AxiosError } from "axios";
-import VoucherInput from "../../componentChild/Checkout/VoucherInput";
+import VoucherInput from "./VoucherInput";
 import { applyVoucherToOrder } from "../../../../api/client/promotionApiClient";
 
 interface CartItem {

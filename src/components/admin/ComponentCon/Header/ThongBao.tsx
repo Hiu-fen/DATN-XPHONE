@@ -139,9 +139,26 @@ export default function NotificationBell() {
 
   const navigate = useNavigate();
 
-  const handleClickPromotion = (id: string) => {
+  const handleClickNotification = (item: ApiNotificationItem) => {
     setOpen(false);
-    navigate(`/admin/promotion/detail/${id}`);
+
+    switch (item.type) {
+      case "order":
+        navigate(`/admin/orders/${item.relatedId}`);
+        break;
+      case "product":
+        navigate(`/admin/product/detail/${item.relatedId}`);
+        break;
+      case "promotion":
+        navigate(`/admin/promotion/detail/${item.relatedId}`);
+        break;
+      case "user":
+        navigate(`/admin/user/detail/${item.relatedId}`);
+        break;
+      default:
+        message.info('Loại thông báo này chưa được hỗ trợ điều hướng');
+        break;
+    }
   };
 
   const unreadCount = data?.data?.count ?? 0;
@@ -152,6 +169,8 @@ export default function NotificationBell() {
         return <CheckCircleOutlined className="text-green-500" />;
       case 'product':
         return <CheckCircleOutlined className="text-purple-500" />;
+      case 'promotion':
+        return <InfoCircleOutlined className="text-pink-500" />;
       case 'info':
         return <InfoCircleOutlined className="text-cyan-500" />;
       case 'error':
@@ -225,7 +244,7 @@ export default function NotificationBell() {
                         <div className="text-sm text-gray-800 font-medium">
                           {item.relatedId ? (
                             <button
-                              onClick={() => handleClickPromotion(item.relatedId)}
+                              onClick={() => handleClickNotification(item)}
                               className="hover:underline text-left w-full"
                             >
                               {item.message}
