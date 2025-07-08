@@ -6,6 +6,7 @@ const Promotion = require("../models/promotionModels");
 const axios = require("axios");
 
 const { sendOrderConfirmation } = require("../utils/emailService");
+const { sendDeliverySuccessEmail } = require("../utils/emailService");
 
 // Danh sách đơn hàng
 exports.getAllOrders = async (req, res) => {
@@ -82,6 +83,14 @@ exports.updateOrderStatus = async (req, res) => {
       { status, timestamp: new Date() },
     ];
     await order.save();
+    if (status === "Giao thành công") {
+      try {
+        await sendDeliverySuccessEmail(order.email, order);
+        console.log("✅ Đã gửi email giao hàng thành công.");
+      } catch (err) {
+        console.error("❌ Lỗi gửi email giao thành công:", err.message);
+      }
+    }
     res.json(order);
   } catch (error) {
     res.status(500).json({ message: "Lỗi khi cập nhật trạng thái đơn hàng" });
@@ -261,6 +270,7 @@ console.log("📦 Final order items:", items);
         total,
         paymentMethod,
         items,
+        phone,
       });
     } catch (emailError) {
       console.error("Lỗi khi gửi email xác nhận:", emailError.message);
