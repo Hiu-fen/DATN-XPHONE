@@ -34,7 +34,7 @@ const Login = () => {
 
       await createNotificationForUser({
         userId: user._id,
-        message: `Tài khoản "${user.email}" đã đăng nhập hệ thống`,
+        message: `Xin chào ${user.name}! Bạn vừa đăng nhập thành công. Chúc bạn có trải nghiệm tuyệt vời!`,
         type: 'info'
       });
 

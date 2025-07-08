@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Input, Button, Divider, Card, Spin, message } from "antd";
+import { Input, Button, Divider, Card, Spin, message, Tag } from "antd";
 import {
   DownOutlined,
   UpOutlined,
@@ -12,18 +12,21 @@ import { FiCopy, FiCheck } from "react-icons/fi";
 import dayjs from "dayjs";
 import { getPublicPromotions } from "../../../../api/client/promotionApiClient";
 
-const VoucherInput = ({ onApply }: { onApply: (code: string) => void }) => {
+const VoucherInput = ({
+  onApply,
+}: {
+  onApply: (code: string) => void;
+}) => {
   const [code, setCode] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const toggleForm = () => setShowForm(!showForm);
 
-  // Fetch danh sách khuyến mãi
   const { data: promotions, isLoading } = useQuery({
     queryKey: ["public-promotions"],
     queryFn: getPublicPromotions,
-    enabled: showForm, // chỉ fetch khi mở
+    enabled: showForm,
   });
 
   const handleApply = () => {
@@ -46,7 +49,7 @@ const VoucherInput = ({ onApply }: { onApply: (code: string) => void }) => {
 
   return (
     <div className="mt-3 rounded-md overflow-hidden border border-green-600">
-      {/* Header Toggle */}
+      {/* Header */}
       <div
         onClick={toggleForm}
         className="flex justify-between items-center px-4 py-3 bg-green-600 cursor-pointer"
@@ -68,32 +71,57 @@ const VoucherInput = ({ onApply }: { onApply: (code: string) => void }) => {
               ) : promotions?.length ? (
                 <div
                   className={`flex flex-col gap-2 ${
-                    promotions.length > 2
-                      ? "max-h-52 overflow-y-auto pr-1"
-                      : ""
+                    promotions.length > 2 ? "max-h-52 overflow-y-auto pr-1" : ""
                   }`}
                 >
                   {promotions.map((promo: any) => (
                     <Card
                       key={promo._id}
                       size="small"
-                      className="hover:shadow-sm transition-all cursor-pointer border border-green-300 rounded-md p-2" // thêm p-2 để thay bodyStyle
                       onClick={() => handleSelectCode(promo.code)}
+                      className="transition-all rounded-md p-2 border bg-gradient-to-r from-green-500 to-green-600 border-green-500 cursor-pointer hover:shadow-lg"
+                      styles={{ body: { padding: 0 } }}
                     >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <h5 className="font-medium text-green-700 text-sm">
+                      <div className="flex justify-between items-start p-2">
+                        <div className="space-y-1">
+                          <h5 className="font-semibold text-sm text-white">
                             {promo.name}
                           </h5>
-                          <p className="text-xs text-gray-500 flex items-center gap-1 mb-0.5">
-                            <ClockCircleOutlined /> HSD: {dayjs(promo.endDate).format("DD/MM/YYYY")}
+                          <p className="text-xs flex items-center gap-1 text-white">
+                            <ClockCircleOutlined /> HSD:{" "}
+                            {dayjs(promo.endDate).format("DD/MM/YYYY")}
                           </p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1 mb-0">
-                            <TeamOutlined /> Còn: {promo.quantity} lượt
+                          <p className="text-xs flex items-center gap-1 text-white">
+                            <TeamOutlined /> Còn {promo.quantity} lượt
                           </p>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {promo.discountType === "percent" && (
+                              <Tag color="yellow">
+                                Giảm {promo.discountValue}% tối đa{" "}
+                                {promo.maxDiscount?.toLocaleString()}₫
+                              </Tag>
+                            )}
+                            {promo.discountType === "fixed" && (
+                              <Tag color="yellow">Giảm tiền cố định</Tag>
+                            )}
+                            {promo.discountType === "free_ship" && (
+                              <Tag color="yellow">Miễn phí vận chuyển</Tag>
+                            )}
+                            {promo.condition?.minOrderValue && (
+                              <Tag color="blue">
+                                Giá từ{" "}
+                                {promo.condition.minOrderValue.toLocaleString()}₫
+                              </Tag>
+                            )}
+                            {promo.condition?.minQuantity && (
+                              <Tag color="blue">
+                                SL: {promo.condition.minQuantity} SP
+                              </Tag>
+                            )}
+                          </div>
                         </div>
                         <div className="flex flex-col items-center gap-1">
-                          <span className="font-semibold text-green-600 text-xs">
+                          <span className="font-semibold text-xs text-white">
                             {promo.code}
                           </span>
                           <Button
@@ -101,15 +129,16 @@ const VoucherInput = ({ onApply }: { onApply: (code: string) => void }) => {
                             type="link"
                             icon={
                               copiedCode === promo.code ? (
-                                <FiCheck />
+                                <FiCheck className="text-white" />
                               ) : (
-                                <FiCopy />
+                                <FiCopy className="text-white" />
                               )
                             }
                             onClick={(e) => {
                               e.stopPropagation();
                               handleCopyCode(promo.code);
                             }}
+                            className="text-white"
                           />
                         </div>
                       </div>
@@ -136,6 +165,7 @@ const VoucherInput = ({ onApply }: { onApply: (code: string) => void }) => {
                 <Button
                   type="primary"
                   onClick={handleApply}
+                  disabled={!code.trim()}
                   className="w-full py-1.5 font-medium bg-green-600 border-green-600 hover:!bg-green-700 hover:!border-green-700 text-sm"
                 >
                   Áp dụng

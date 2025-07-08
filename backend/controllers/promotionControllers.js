@@ -146,7 +146,7 @@ exports.autoDisableExpiredPromotions = async () => {
         await Notification.create({
           message: `Khuyến mãi "${promo.name}" đã hết hạn`,
           scope: 'admin',
-          type: 'warning',
+          type: 'promotion',
           relatedId: promo._id,
           role: 'admin',
         });
