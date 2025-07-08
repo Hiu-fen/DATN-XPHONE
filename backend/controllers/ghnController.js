@@ -69,14 +69,19 @@ exports.calculateShippingFee = async (req, res) => {
     shop_id: GHN_SHOP_ID, // ✅ THÊM vào body
     from_district: FROM_DISTRICT_ID,
     to_district: Number(to_district_id)
+    
   },
+  
   {
     headers: {
       'Content-Type': 'application/json',
       token: GHN_TOKEN // ✅ lưu ý chữ thường 'token'
     }
   }
+  
 );
+console.log("✅ GHN service list:", serviceRes.data.data);
+
     const service_id = serviceRes.data.data?.[0]?.service_id;
     if (!service_id) {
       return res.status(400).json({ message: 'Không tìm thấy dịch vụ GHN' });
