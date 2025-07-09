@@ -8,9 +8,8 @@ const {
   createVnpayUrl,
   vnpayReturn,
   verifyVnpayReturn,
-} = isDev
-  ? require("../controllers/fakeVnpayController")
-  : require("../controllers/vnpayController");
+} = require("../controllers/vnpayController");
+
 
 router.post("/create_payment_url", createVnpayUrl);
 router.get("/vnpay_return", vnpayReturn);
