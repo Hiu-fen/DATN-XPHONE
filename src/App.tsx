@@ -81,12 +81,12 @@ import Wishlist from './components/client/page/UI/Wishlist';
 import Deleted_products from './components/admin/Product/Deleted-products';
 import OrderHistory from './components/client/page/order/history';
 import OrderDetailClient from './components/client/page/order/orderDetailClient';
-import SettingAdmin from './components/admin/ComponentCon/Header/Setting';
 import VnpayReturn from './components/client/page/checkout/VnpayReturn';
 import ReturnDetail from './components/admin/Order/ReturnDetail';
 import ReturnRequestDetail from './components/client/page/order/ReturnDetail';
 import PromotionPageClient from './components/client/page/promotion/PromotionPageClient';
 import CodReturn from './components/client/page/checkout/CodReturn';
+import NotificationAdmin from './components/admin/ComponentCon/Header/Setting';
 
 const App = () => {
   useReloadIfBlank();
@@ -149,7 +149,7 @@ const App = () => {
         { index: true, element: <AdminDashboard /> },
         //Router Thống kê
         { path: "statistics", element: <AdminDashboard /> },
-        { path: "seting", element: <SettingAdmin /> },
+        { path: "SetNotification", element: <NotificationAdmin /> },
 
         //Router Danh mục
         { path: "category/list", element: <GetListCategory /> },

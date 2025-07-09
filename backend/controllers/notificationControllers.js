@@ -252,21 +252,21 @@ exports.getUnreadAdminNotificationCount = async (req, res) => {
 };
 
 // Xử lý chung
-const MAX_NOTIFICATIONS = 60;
+const MAX_NOTIFICATIONS = 100;
+
+// Biến lưu ngày cảnh báo gần nhất
+let lastCleanupWarningDate = null;
 
 exports.getAllNotifications = async (req, res) => {
   try {
-    const data = await Notification.find().sort({ createdAt: -1 });
+    const data = await Notification.find().sort({ createdAt: -1 }).populate('userId', 'name');;
 
     if (data.length >= MAX_NOTIFICATIONS) {
-      const existingWarning = await Notification.findOne({
-        message: { $regex: 'có.*thông báo.*dọn dẹp', $options: 'i' },
-        type: 'warning',
-        scope: 'admin',
-        createdAt: { $gte: new Date(new Date().setHours(0, 0, 0, 0)) } 
-      });
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset giờ phút giây
 
-      if (!existingWarning) {
+      // Nếu chưa từng cảnh báo hoặc lần gần nhất không phải hôm nay
+      if (!lastCleanupWarningDate || lastCleanupWarningDate.getTime() < today.getTime()) {
         const admins = await User.find({ role: 'admin' });
 
         await Promise.all(
@@ -280,6 +280,9 @@ exports.getAllNotifications = async (req, res) => {
             })
           )
         );
+
+        // Cập nhật ngày cảnh báo gần nhất
+        lastCleanupWarningDate = today;
       }
     }
 
@@ -289,8 +292,6 @@ exports.getAllNotifications = async (req, res) => {
   }
 };
 
-
-// Xóa cứng tất cả thông báo đã đọc + đã bị xóa mềm
 // Xóa cứng tất cả thông báo đã đọc + đã bị xóa mềm
 exports.purgeReadAndDeletedNotifications = async (req, res) => {
   try {
@@ -332,6 +333,29 @@ exports.deleteOneNotificationHard = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+// Đếm tổng số thông báo đã đọc hoặc đã xoá mềm
+exports.countReadOrDeletedNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find();
+
+    const count = notifications.filter(n => {
+      const readCount = Array.isArray(n.readBy) ? n.readBy.length : 0;
+      const deletedCount = Array.isArray(n.deletedBy) ? n.deletedBy.length : 0;
+
+      return readCount >= 1 || deletedCount >= 1;
+    }).length;
+
+    res.status(200).json({
+      message: 'Đếm số thông báo đã đọc hoặc đã xoá mềm',
+      count,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
 
 
 

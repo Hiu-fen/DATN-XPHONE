@@ -23,6 +23,7 @@ router.delete('/admin', noti.deleteAllAdminNotifications);
 
 // Xử lý chung
 router.get('/all', noti.getAllNotifications);
+router.get('/count-read-deleted', noti.countReadOrDeletedNotifications);
 router.delete('/purge-read-deleted', noti.purgeReadAndDeletedNotifications);
 router.delete('/:id', noti.deleteOneNotificationHard); 
 

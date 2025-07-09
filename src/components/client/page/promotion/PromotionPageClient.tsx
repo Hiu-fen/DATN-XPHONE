@@ -93,7 +93,7 @@ const PromotionPageClient = () => {
                 <Card
                   hoverable
                   variant="outlined"
-                  className="flex flex-col h-full min-h-[360px] rounded-lg shadow-md transition-all bg-green-50 border border-green-500"
+                  className="flex flex-col h-full min-h-[380px] rounded-lg shadow-md transition-all bg-green-50 border border-green-500"
                   title={
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-xl text-blue-600">
@@ -143,6 +143,28 @@ const PromotionPageClient = () => {
                           .join(", ")
                       : "Tất cả sản phẩm"}
                   </p>
+
+                  {/* ✅ Điều kiện áp dụng */}
+                  {promo.condition && (
+                    <div className="mb-2">
+                      <p className="text-gray-700 text-base">
+                        <strong>Điều kiện:</strong>
+                      </p>
+                      <ul className="list-disc pl-5 text-gray-600 text-sm">
+                        {promo.condition.minOrderValue && (
+                          <li>
+                            Đơn hàng tối thiểu{" "}
+                            {promo.condition.minOrderValue.toLocaleString()}₫
+                          </li>
+                        )}
+                        {promo.condition.minQuantity && (
+                          <li>
+                            Ít nhất {promo.condition.minQuantity} sản phẩm
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
 
                   <div className="mt-auto">
                     <p className="text-gray-600 text-sm">

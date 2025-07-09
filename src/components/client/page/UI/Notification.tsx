@@ -7,7 +7,6 @@ import {
   message,
   Spin,
   Empty,
-  Typography,
 } from 'antd';
 import {
   BellOutlined,
@@ -16,14 +15,20 @@ import {
   CheckCircleOutlined,
   WarningOutlined,
   InfoCircleOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiNotificationItem } from '../../../admin/utils/notification';
-import { deleteAllUserNotifications, deleteUserNotification, getUserNotifications, getUserUnreadCount, markAllUserNotiAsRead, markOneUserNotiAsRead } from '../../../../api/client/nofitationApiClient';
-
-const { Title } = Typography;
+import {
+  deleteAllUserNotifications,
+  deleteUserNotification,
+  getUserNotifications,
+  getUserUnreadCount,
+  markAllUserNotiAsRead,
+  markOneUserNotiAsRead,
+} from '../../../../api/client/nofitationApiClient';
 
 const Notification = () => {
   const [notifications, setNotifications] = useState<ApiNotificationItem[]>([]);
@@ -54,7 +59,7 @@ const Notification = () => {
     queryKey: ['unread-count', userId],
     queryFn: () => getUserUnreadCount(userId!),
     enabled: !!userId,
-    refetchInterval: 30000, 
+    refetchInterval: 30000,
   });
 
   const handleMarkAsRead = async (id: string) => {
@@ -137,7 +142,7 @@ const Notification = () => {
       case 'order':
         return <CheckCircleOutlined className="text-green-500" />;
       case 'product':
-        return <CheckCircleOutlined className="text-purple-500" />;
+        return <ShoppingOutlined className="text-purple-500" />;
       case 'info':
         return <InfoCircleOutlined className="text-cyan-500" />;
       case 'error':
@@ -150,14 +155,14 @@ const Notification = () => {
   const unreadCount = data?.data?.count ?? 0;
 
   return (
-    <div className="py-10 px-4 mx-auto font-sans">
-      <Title level={3} className="flex items-center gap-3">
-        <BellOutlined className="text-blue-600" />
-        Trung tâm Thông báo
-      </Title>
+    <div className="py-8 px-4 mx-auto">
+      <h2 className="text-blue-600 text-3xl font-semibold mb-6">
+        Trung tâm thông báo
+      </h2>
 
-      <div className="flex gap-3 mt-2 mb-4">
+      <div className="flex gap-3 mt-2 mb-6">
         <Button
+          type="primary"
           icon={<EyeOutlined />}
           onClick={handleMarkAllAsRead}
           disabled={notifications.every((n) => n.readBy?.includes(userId))}
@@ -173,9 +178,9 @@ const Notification = () => {
           Xoá tất cả thông báo
         </Button>
       </div>
-      
+
       {loading ? (
-        <div className="text-center my-16">
+        <div className="text-center my-20">
           <Spin size="large" />
         </div>
       ) : notifications.length === 0 ? (
@@ -190,9 +195,11 @@ const Notification = () => {
           }}
           renderItem={(note) => (
             <List.Item
-              className={`rounded-lg px-5 py-4 border border-gray-100 transition ${
-                note.readBy?.includes(userId) ? 'bg-white opacity-90' : 'bg-yellow-50'
-              } hover:shadow`}
+              className={`rounded-lg px-5 py-4 border border-gray-200 transition duration-300 ease-in-out ${
+                note.readBy?.includes(userId)
+                  ? 'bg-gray-50 hover:bg-gray-100'
+                  : 'bg-blue-50 hover:bg-blue-100'
+              }`}
               actions={[
                 !note.readBy?.includes(userId) && (
                   <Tooltip title="Đánh dấu đã đọc" key="read">
@@ -217,19 +224,26 @@ const Notification = () => {
                 avatar={<div className="text-2xl mt-1">{getIcon(note.type)}</div>}
                 title={
                   <div className="flex items-center gap-3">
-                    <span className="text-lg font-semibold">
-                      Thông báo
+                    <span className="text-lg font-medium">
+                      {note.type === 'order'
+                        ? 'Đơn hàng'
+                        : note.type === 'product'
+                        ? 'Sản phẩm'
+                        : 'Thông báo'}
                     </span>
-                    <Tag color={note.readBy?.includes(userId) ? 'green' : 'orange'} className="text-xs px-2">
+                    <Tag
+                      color={note.readBy?.includes(userId) ? 'success' : 'processing'}
+                      className="text-xs px-2"
+                    >
                       {note.readBy?.includes(userId) ? 'Đã đọc' : 'Chưa đọc'}
                     </Tag>
                   </div>
                 }
                 description={
-                  <div className="text-base leading-relaxed text-gray-800">
+                  <div className="text-base text-gray-700">
                     <Link
                       to={getNotificationLink(note)}
-                      className="hover:underline"
+                      className="hover:underline text-blue-600"
                     >
                       {note.message}
                     </Link>
