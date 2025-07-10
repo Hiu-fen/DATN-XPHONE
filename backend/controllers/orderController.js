@@ -7,11 +7,17 @@ const axios = require("axios");
 
 const { sendOrderConfirmation } = require("../utils/emailService");
 const { sendDeliverySuccessEmail } = require("../utils/emailService");
+const { sendVnpaySuccessEmail } = require("../utils/emailService");
 
 // Danh sách đơn hàng
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find();
+    const orders = await Order.find({
+      $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ]
+    });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: "Lỗi server" });
@@ -21,7 +27,14 @@ exports.getAllOrders = async (req, res) => {
 // Lấy đơn hàng theo ID
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findOne({
+  _id: req.params.id,
+  $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ]
+});
+
     if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
     res.json(order); 
@@ -261,20 +274,23 @@ console.log("📦 Final order items:", items);
       }
     }
 
-    // ✅ Gửi email xác nhận
-    try {
-      await sendOrderConfirmation(email, {
-        orderCode,
-        customerName,
-        address,
-        total,
-        paymentMethod,
-        items,
-        phone,
-      });
-    } catch (emailError) {
-      console.error("Lỗi khi gửi email xác nhận:", emailError.message);
-    }
+    // ✅ Gửi email xác nhận ngay nếu không phải VNPAY
+if (paymentMethod !== "VNPAY") {
+  try {
+    await sendOrderConfirmation(email, {
+      orderCode,
+      customerName,
+      address,
+      total,
+      paymentMethod,
+      items,
+      phone,
+    });
+  } catch (emailError) {
+    console.error("Lỗi khi gửi email xác nhận:", emailError.message);
+  }
+}
+
 
   // ✅ Tạo thông báo cho người dùng
   if (userId) {
@@ -372,8 +388,17 @@ exports.markAsPaid = async (req, res) => {
     order.isPaid = true;
     order.paymentStatus = "Đã thanh toán";
     await order.save();
-
+// ✅ Gửi email xác nhận thanh toán VNPAY
+if (order.paymentMethod === "VNPAY") {
+  try {
+    await sendVnpaySuccessEmail(order.email, order);
+    console.log("✅ Đã gửi email xác nhận thanh toán VNPAY");
+  } catch (emailErr) {
+    console.error("❌ Lỗi gửi email VNPAY:", emailErr.message);
+  }
+}
     res.json({ message: "Thanh toán thành công", order });
+    
   } catch (error) {
     console.error("❌ Lỗi markAsPaid:", error);
     res.status(500).json({ message: "Lỗi khi cập nhật thanh toán" });
@@ -384,7 +409,10 @@ exports.markAsPaid = async (req, res) => {
 const getOrderByCode = async (req, res) => {
   const { orderCode } = req.params;
   try {
-    const order = await Order.findOne({ orderCode });  // Tìm đơn hàng theo orderCode
+    const order = await Order.findOne({ orderCode , $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ] });  // Tìm đơn hàng theo orderCode
 
     if (!order) {
       return res.status(404).json({ message: "Không tìm thấy đơn hàng với mã này" });
@@ -403,7 +431,10 @@ const getOrderByCode = async (req, res) => {
 exports.getOrdersByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const orders = await Order.find({ userId }).sort({ date: -1 });
+    const orders = await Order.find({ userId , $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ] }).sort({ date: -1 });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: "Lỗi server khi lấy lịch sử đơn hàng" });
