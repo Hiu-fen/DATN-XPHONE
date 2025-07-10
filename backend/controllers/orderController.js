@@ -11,7 +11,12 @@ const { sendDeliverySuccessEmail } = require("../utils/emailService");
 // Danh sách đơn hàng
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await Order.find();
+    const orders = await Order.find({
+      $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ]
+    });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: "Lỗi server" });
@@ -21,7 +26,14 @@ exports.getAllOrders = async (req, res) => {
 // Lấy đơn hàng theo ID
 exports.getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findOne({
+  _id: req.params.id,
+  $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ]
+});
+
     if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
     res.json(order); 
@@ -384,7 +396,10 @@ exports.markAsPaid = async (req, res) => {
 const getOrderByCode = async (req, res) => {
   const { orderCode } = req.params;
   try {
-    const order = await Order.findOne({ orderCode });  // Tìm đơn hàng theo orderCode
+    const order = await Order.findOne({ orderCode , $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ] });  // Tìm đơn hàng theo orderCode
 
     if (!order) {
       return res.status(404).json({ message: "Không tìm thấy đơn hàng với mã này" });
@@ -403,7 +418,10 @@ const getOrderByCode = async (req, res) => {
 exports.getOrdersByUser = async (req, res) => {
   try {
     const { userId } = req.params;
-    const orders = await Order.find({ userId }).sort({ date: -1 });
+    const orders = await Order.find({ userId , $or: [
+    { paymentMethod: { $ne: "VNPAY" } },
+    { isPaid: true }
+  ] }).sort({ date: -1 });
     res.json(orders);
   } catch (error) {
     res.status(500).json({ message: "Lỗi server khi lấy lịch sử đơn hàng" });
