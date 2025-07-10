@@ -285,6 +285,7 @@ if (paymentMethod !== "VNPAY") {
       paymentMethod,
       items,
       phone,
+      date: order.date,
     });
   } catch (emailError) {
     console.error("Lỗi khi gửi email xác nhận:", emailError.message);
@@ -389,15 +390,20 @@ exports.markAsPaid = async (req, res) => {
     order.paymentStatus = "Đã thanh toán";
     await order.save();
 // ✅ Gửi email xác nhận thanh toán VNPAY
-if (order.paymentMethod === "VNPAY") {
+if (order.paymentMethod === "VNPAY" && order.isPaid) {
   try {
     await sendVnpaySuccessEmail(order.email, order);
     console.log("✅ Đã gửi email xác nhận thanh toán VNPAY");
-  } catch (emailErr) {
-    console.error("❌ Lỗi gửi email VNPAY:", emailErr.message);
+  } catch (err) {
+    console.error("❌ Lỗi gửi email VNPAY:", err.message);
   }
 }
-    res.json({ message: "Thanh toán thành công", order });
+
+return res.json({
+  success: true,
+  orderCode,
+  orderId: order._id,
+});
     
   } catch (error) {
     console.error("❌ Lỗi markAsPaid:", error);
