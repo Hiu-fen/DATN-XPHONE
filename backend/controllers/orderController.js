@@ -7,6 +7,7 @@ const axios = require("axios");
 
 const { sendOrderConfirmation } = require("../utils/emailService");
 const { sendDeliverySuccessEmail } = require("../utils/emailService");
+const { sendVnpaySuccessEmail } = require("../utils/emailService");
 
 // Danh sách đơn hàng
 exports.getAllOrders = async (req, res) => {
@@ -273,20 +274,23 @@ console.log("📦 Final order items:", items);
       }
     }
 
-    // ✅ Gửi email xác nhận
-    try {
-      await sendOrderConfirmation(email, {
-        orderCode,
-        customerName,
-        address,
-        total,
-        paymentMethod,
-        items,
-        phone,
-      });
-    } catch (emailError) {
-      console.error("Lỗi khi gửi email xác nhận:", emailError.message);
-    }
+    // ✅ Gửi email xác nhận ngay nếu không phải VNPAY
+if (paymentMethod !== "VNPAY") {
+  try {
+    await sendOrderConfirmation(email, {
+      orderCode,
+      customerName,
+      address,
+      total,
+      paymentMethod,
+      items,
+      phone,
+    });
+  } catch (emailError) {
+    console.error("Lỗi khi gửi email xác nhận:", emailError.message);
+  }
+}
+
 
   // ✅ Tạo thông báo cho người dùng
   if (userId) {
@@ -384,8 +388,17 @@ exports.markAsPaid = async (req, res) => {
     order.isPaid = true;
     order.paymentStatus = "Đã thanh toán";
     await order.save();
-
+// ✅ Gửi email xác nhận thanh toán VNPAY
+if (order.paymentMethod === "VNPAY") {
+  try {
+    await sendVnpaySuccessEmail(order.email, order);
+    console.log("✅ Đã gửi email xác nhận thanh toán VNPAY");
+  } catch (emailErr) {
+    console.error("❌ Lỗi gửi email VNPAY:", emailErr.message);
+  }
+}
     res.json({ message: "Thanh toán thành công", order });
+    
   } catch (error) {
     console.error("❌ Lỗi markAsPaid:", error);
     res.status(500).json({ message: "Lỗi khi cập nhật thanh toán" });
