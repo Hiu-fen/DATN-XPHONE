@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
+const { sendVnpaySuccessEmail } = require("../utils/emailService"); // Thêm dòng này ở đầu file
 
 // Hàm encode theo chuẩn VNPAY
 const encodeValue = (value) => {
@@ -139,6 +140,14 @@ const vnpayReturn = async (req, res) => {
     order.status = "Chờ xác nhận"; // Hoặc trạng thái bạn muốn
     await order.save();
 
+    // Gửi mail xác nhận thanh toán thành công VNPAY
+    try {
+      await sendVnpaySuccessEmail(order.email, order);
+      console.log("✅ Đã gửi email xác nhận thanh toán VNPAY");
+    } catch (err) {
+      console.error("❌ Lỗi gửi email VNPAY:", err.message);
+    }
+
     return res.json({ success: true, orderCode });
   }
 
@@ -220,12 +229,19 @@ const verifyVnpayReturn = async (req, res) => {
       order.status = "Chờ xác nhận";  // Hoặc trạng thái mà bạn muốn
       await order.save();
 
-      return res.json({
-  success: true,
-  orderCode,
-  orderId: order._id, // ← thêm dòng này để FE nhận được
-});
+      // Gửi mail xác nhận thanh toán thành công VNPAY
+      try {
+        await sendVnpaySuccessEmail(order.email, order);
+        console.log("✅ Đã gửi email xác nhận thanh toán VNPAY");
+      } catch (err) {
+        console.error("❌ Lỗi gửi email VNPAY:", err.message);
+      }
 
+      return res.json({
+        success: true,
+        orderCode,
+        orderId: order._id, // ← thêm dòng này để FE nhận được
+      });
     }
 
     return res.json({ success: false, message: "Thanh toán thất bại" });
