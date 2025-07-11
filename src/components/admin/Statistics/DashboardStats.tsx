@@ -62,16 +62,29 @@ const DashboardStats: React.FC = () => {
     queryFn: () => getDailyRevenueInMonth(selectedMonth, selectedYear),
   });
 
-  const fetchTopProducts = React.useCallback((options: {sort: 'asc' | 'desc', day?: Dayjs}) => {
+  const fetchTopProducts = React.useCallback((options: {sort: 'asc' | 'desc', startDate?: string, endDate?: string}) => {
     setLoadingTop(true);
-    getTopSellingProducts(options.sort, options.day ? options.day.startOf('day').format('YYYY-MM-DD') : undefined)
+    // Sử dụng ngày bắt đầu của khoảng thời gian để lấy top products
+    getTopSellingProducts(options.sort, options.startDate)
       .then(data => setTopProducts(data))
       .finally(() => setLoadingTop(false));
   }, []);
 
   React.useEffect(() => {
-    fetchTopProducts({ sort: topSort, day: selectedDay });
-  }, [fetchTopProducts, topSort, selectedDay]);
+    if (dateRange && viewMode === 'range') {
+      fetchTopProducts({ 
+        sort: topSort, 
+        startDate: dateRange[0].format('YYYY-MM-DD'),
+        endDate: dateRange[1].format('YYYY-MM-DD')
+      });
+    } else {
+      // Nếu ở chế độ dashboard, sử dụng ngày được chọn
+      fetchTopProducts({ 
+        sort: topSort, 
+        startDate: selectedDay.format('YYYY-MM-DD')
+      });
+    }
+  }, [fetchTopProducts, topSort, selectedDay, dateRange, viewMode]);
 
   // Format số tiền
   const formatCurrency = (amount: number) => {
@@ -391,7 +404,7 @@ const DashboardStats: React.FC = () => {
             </div>
           ) : rangeData ? (
             <>
-              {/* Thống kê tổng hợp */}
+              {/* Thống kê chính */}
               <Row gutter={[16, 16]} className="mb-6">
                 <Col xs={24} sm={12} lg={6}>
                   <Card>
@@ -401,6 +414,9 @@ const DashboardStats: React.FC = () => {
                       prefix={<UserOutlined />}
                       valueStyle={{ color: '#3f8600' }}
                     />
+                    <div className="text-sm text-gray-500 mt-2">
+                      Từ {dateRange?.[0].format('DD/MM/YYYY')} - {dateRange?.[1].format('DD/MM/YYYY')}
+                    </div>
                   </Card>
                 </Col>
                 
@@ -412,17 +428,9 @@ const DashboardStats: React.FC = () => {
                       prefix={<ShoppingCartOutlined />}
                       valueStyle={{ color: '#1890ff' }}
                     />
-                  </Card>
-                </Col>
-                
-                <Col xs={24} sm={12} lg={6}>
-                  <Card>
-                    <Statistic
-                      title="Đơn Hoàn Thành"
-                      value={rangeData.summary.completedOrders}
-                      prefix={<RiseOutlined />}
-                      valueStyle={{ color: '#52c41a' }}
-                    />
+                    <div className="text-sm text-gray-500 mt-2">
+                      {rangeData.summary.completedOrders} đã hoàn thành
+                    </div>
                   </Card>
                 </Col>
                 
@@ -434,40 +442,192 @@ const DashboardStats: React.FC = () => {
                       prefix={<DollarOutlined />}
                       valueStyle={{ color: '#cf1322' }}
                     />
+                    <div className="text-sm text-gray-500 mt-2">
+                      Trung bình: {rangeData.dailyStats.length > 0 
+                        ? formatCurrency(rangeData.summary.revenue / rangeData.dailyStats.length)
+                        : formatCurrency(0)
+                      }
+                    </div>
+                  </Card>
+                </Col>
+                
+                <Col xs={24} sm={12} lg={6}>
+                  <Card>
+                    <Statistic
+                      title="Tỷ Lệ Hoàn Thành"
+                      value={rangeData.summary.totalOrders > 0 
+                        ? ((rangeData.summary.completedOrders / rangeData.summary.totalOrders) * 100).toFixed(1)
+                        : '0.0'
+                      }
+                      prefix={<RiseOutlined />}
+                      suffix="%"
+                      valueStyle={{ color: '#52c41a' }}
+                    />
+                    <div className="text-sm text-gray-500 mt-2">
+                      {rangeData.summary.completedOrders}/{rangeData.summary.totalOrders} đơn hàng
+                    </div>
                   </Card>
                 </Col>
               </Row>
 
-              {/* Biểu đồ doanh thu theo ngày */}
-              <Card title="Doanh Thu Theo Ngày" style={{ height: 350 }}>
-                {dailyRevenueData.length > 0 ? (
-                  <Bar
-                    data={dailyRevenueData}
-                    xField="date"
-                    yField="revenue"
-                    height={280}
-                    seriesField="revenue"
-                    label={{
-                      position: 'middle',
-                      style: {
-                        fill: '#FFFFFF',
-                        opacity: 0.6,
-                      },
-                    }}
-                    xAxis={{
-                      label: {
-                        autoRotate: true,
-                        autoHide: true,
-                        autoEllipsis: true,
-                      },
-                    }}
-                  />
-                ) : (
-                  <div className="flex justify-center items-center h-full text-gray-500">
-                    Không có dữ liệu trong khoảng thời gian này
-                  </div>
-                )}
-              </Card>
+              {/* Thống kê chi tiết */}
+              <Row gutter={[16, 16]} className="mb-6">
+                <Col xs={24} sm={12} lg={8}>
+                  <Card title="Thống Kê Đơn Hàng" className="h-64">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Tổng đơn hàng:</span>
+                        <span className="font-semibold">{rangeData.summary.totalOrders}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Hoàn thành:</span>
+                        <span className="font-semibold text-green-600">{rangeData.summary.completedOrders}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Đang xử lý:</span>
+                        <span className="font-semibold text-blue-600">{rangeData.summary.totalOrders - rangeData.summary.completedOrders}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tỷ lệ hoàn thành:</span>
+                        <span className="font-semibold text-green-600">
+                          {rangeData.summary.totalOrders > 0 
+                            ? ((rangeData.summary.completedOrders / rangeData.summary.totalOrders) * 100).toFixed(1)
+                            : '0.0'
+                          }%
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+                
+                <Col xs={24} sm={12} lg={8}>
+                  <Card title="Thống Kê Doanh Thu" className="h-64">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Tổng doanh thu:</span>
+                        <span className="font-semibold">{formatCurrency(rangeData.summary.revenue)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Trung bình/ngày:</span>
+                        <span className="font-semibold">
+                          {rangeData.dailyStats.length > 0 
+                            ? formatCurrency(rangeData.summary.revenue / rangeData.dailyStats.length)
+                            : formatCurrency(0)
+                          }
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Số ngày có dữ liệu:</span>
+                        <span className="font-semibold">{rangeData.dailyStats.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Doanh thu cao nhất:</span>
+                        <span className="font-semibold text-green-600">
+                          {rangeData.dailyStats.length > 0 
+                            ? formatCurrency(Math.max(...rangeData.dailyStats.map(d => d.revenue)))
+                            : formatCurrency(0)
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+                
+                <Col xs={24} sm={12} lg={8}>
+                  <Card title="Thống Kê Người Dùng" className="h-64">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Người dùng mới:</span>
+                        <span className="font-semibold">{rangeData.summary.newUsers}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Trung bình/ngày:</span>
+                        <span className="font-semibold">
+                          {rangeData.dailyStats.length > 0 
+                            ? (rangeData.summary.newUsers / rangeData.dailyStats.length).toFixed(1)
+                            : '0.0'
+                          }
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Khoảng thời gian:</span>
+                        <span className="font-semibold text-blue-600">
+                          {dateRange?.[0].format('DD/MM')} - {dateRange?.[1].format('DD/MM')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Tổng số ngày:</span>
+                        <span className="font-semibold">{rangeData.dailyStats.length}</span>
+                      </div>
+                    </div>
+                  </Card>
+                </Col>
+              </Row>
+
+              {/* Top 4 sản phẩm bán chạy nhất theo khoảng thời gian */}
+              <div className="my-8">
+                <Card 
+                  title={`Top 4 Sản Phẩm Bán Chạy/Nhất Kém Nhất (${dateRange?.[0].format('DD/MM/YYYY')} - ${dateRange?.[1].format('DD/MM/YYYY')})`} 
+                  style={{ minHeight: 200 }}
+                  extra={
+                    <Select value={topSort} style={{ width: 200 }} onChange={v => setTopSort(v)}>
+                      <Option value="desc">Top 4 Bán Chạy Nhất</Option>
+                      <Option value="asc">Top 4 Bán Kém Nhất</Option>
+                    </Select>
+                  }
+                >
+                  {loadingTop ? (
+                    <div className="flex justify-center items-center h-32">
+                      <Spin size="large" />
+                    </div>
+                  ) : topProducts.length > 0 ? (
+                    <Row gutter={[16, 16]} justify="center">
+                      {topProducts.map((prod, idx) => (
+                        <Col xs={24} sm={12} lg={6} key={prod.productId}>
+                          <Card hoverable bordered style={{ height: 180 }}>
+                            <div className="flex flex-col items-center justify-center h-full">
+                              <img src={prod.image} alt={prod.name} style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }} />
+                              <div className="font-semibold text-sm mb-1 text-center">{idx + 1}. {prod.name}</div>
+                              <div className="text-gray-500 mb-1">Đã bán: <span className="font-bold text-blue-600">{prod.totalSold}</span></div>
+                              <div className="text-red-500 font-semibold" style={{ fontSize: 14 }}>{formatCurrency(prod.price)}</div>
+                            </div>
+                          </Card>
+                        </Col>
+                      ))}
+                    </Row>
+                  ) : (
+                    <div className="flex justify-center items-center h-32 text-gray-500 font-bold text-xl">
+                      Không có dữ liệu bán hàng trong khoảng thời gian này 😢
+                    </div>
+                  )}
+                </Card>
+              </div>
+
+              {/* Biểu đồ doanh thu theo ngày trong khoảng thời gian */}
+              <div className="my-8">
+                <Card title={`Doanh Thu Theo Ngày (${dateRange?.[0].format('DD/MM/YYYY')} - ${dateRange?.[1].format('DD/MM/YYYY')})`} style={{ height: 350 }}>
+                  {dailyRevenueData.length > 0 ? (
+                    <Line
+                      data={dailyRevenueData.map(item => ({
+                        day: item.date,
+                        revenue: item.revenue,
+                      }))}
+                      xField="day"
+                      yField="revenue"
+                      height={280}
+                      area={{ style: { fill: 'rgba(0, 123, 255, 0.15)' } }}
+                      lineStyle={{ stroke: 'rgba(0, 123, 255, 0.5)', lineWidth: 3 }}
+                      point={{ size: 4, shape: 'circle', style: { fill: 'rgba(0, 123, 255, 0.5)', stroke: 'rgba(0, 123, 255, 0.5)' } }}
+                      smooth
+                      label={false}
+                    />
+                  ) : (
+                    <div className="flex justify-center items-center h-full text-gray-500">
+                      Không có dữ liệu doanh thu trong khoảng thời gian này
+                    </div>
+                  )}
+                </Card>
+              </div>
             </>
           ) : (
             <div className="text-center text-gray-500 py-8">
