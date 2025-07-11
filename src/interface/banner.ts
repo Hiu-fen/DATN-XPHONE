@@ -6,6 +6,7 @@ export interface IBanner {
     link: string;
     startDate: Date;
     endDate: Date;
+    position: string;
     status: boolean;
     order: number;
 }

@@ -103,13 +103,22 @@ exports.updateBannerStatus = async (req, res) => {
   }
 };
 
-// Lấy banner có status = true và sắp xếp theo order
+// Lấy banner có status = true và lọc theo vị trí (nếu có)
 exports.getActiveBanners = async (req, res) => {
   try {
-    const banners = await Banner.find({ status: true }).sort({ order: 1 });
+    const { position } = req.query; // Lấy vị trí từ query param
+
+    const query = { status: true };
+
+    if (position) {
+      query.position = position; // Nếu có vị trí thì thêm vào query
+    }
+
+    const banners = await Banner.find(query).sort({ order: 1 });
     res.json(banners);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
+
 

@@ -53,7 +53,6 @@ const AdminSidebar = () => {
       label: <span className="text-[17px] font-semibold">Quản lý bình luận</span>,
       children: [
         { key: '/admin/comment/list', label: <span className="text-[15px]">Bình luận</span> },
-        { key: '/admin/comment/add', label: <span className="text-[15px]">Thêm bình luận</span> },
       ],
     },
     {
@@ -68,10 +67,9 @@ const AdminSidebar = () => {
     {
       key: 'banner',
       icon: <PictureOutlined className="text-xl" />,
-      label: <span className="text-[17px] font-semibold">Quản lý Banner</span>,
+      label: <span className="text-[17px] font-semibold">Quản lý ảnh</span>,
       children: [
-        { key: '/admin/banner/list', label: <span className="text-[15px]">Banner</span> },
-        { key: '/admin/banner/add', label: <span className="text-[15px]">Thêm Banner</span> },
+        { key: '/admin/banner/list', label: <span className="text-[15px]">Quản lý banner</span> },
       ],
     },
     {
@@ -80,7 +78,6 @@ const AdminSidebar = () => {
       label: <span className="text-[17px] font-semibold">Quản lý liên hệ</span>,
       children: [
         { key: '/admin/contact/list', label: <span className="text-[15px]">Liên hệ</span> },
-        { key: '/admin/contact/add', label: <span className="text-[15px]">Thêm liên hệ</span> },
       ],
     },
     {
@@ -90,12 +87,12 @@ const AdminSidebar = () => {
       children: [{ key: '/admin/orders', label: <span className="text-[15px]">Đơn hàng</span> }],
     },
     {
-      key: 'album',
+      key: 'address',
       icon: <FileImageOutlined className="text-xl" />,
-      label: <span className="text-[17px] font-semibold">Quản lý Album ảnh</span>,
+      label: <span className="text-[17px] font-semibold">Quản lý địa chỉ</span>,
       children: [
-        { key: '/admin/album/list', label: <span className="text-[15px]">Album ảnh</span> },
-        { key: '/admin/album/add', label: <span className="text-[15px]">Thêm Album ảnh</span> },
+        { key: '/admin/address/list', label: <span className="text-[15px]">Địa chỉ</span> },
+        { key: '/admin/address/add', label: <span className="text-[15px]">Thêm Địa chỉ</span> },
       ],
     },
     {
