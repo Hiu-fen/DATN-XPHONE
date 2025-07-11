@@ -18,8 +18,14 @@ import {
   Home,
   ShoppingBag,
   Clock,
+  CheckCircle,
 } from "lucide-react";
-import { getPaymentStatusColor, getStatusColor, getStatusIcon } from "./ItemOrderDetail";
+import {
+  getPaymentStatusColor,
+  getStatusColor,
+  getStatusIcon,
+} from "./ItemOrderDetail";
+import { message } from "antd";
 
 interface Item {
   productName: string;
@@ -33,6 +39,7 @@ interface Item {
 }
 
 interface Order {
+  _id: string;
   orderCode: string;
   total: number;
   status: string;
@@ -48,8 +55,8 @@ interface Order {
   statusHistory?: { status: string; timestamp: string }[];
   returnStatusHistory?: { status: string; timestamp: string }[];
   shippingFee?: number;
-  voucherCode?: string; 
-  voucherDiscount?: number; 
+  voucherCode?: string;
+  voucherDiscount?: number;
 }
 
 const OrderDetail = () => {
@@ -106,40 +113,55 @@ const OrderDetail = () => {
       fetchOrder();
     }
   }, [id]);
+  const confirmReceived = async () => {
+    if (!order) return;
+    try {
+      await axios.patch(`http://localhost:5000/api/orders/${order._id}`, {
+        status: "Đã nhận hàng",
+      });
+      message.success("Đã xác nhận bạn đã nhận hàng.");
+      setOrder((prev: any) => ({ ...prev, status: "Đã nhận hàng" }));
+    } catch (error) {
+      message.error("Xác nhận thất bại!");
+    }
+  };
 
- const handleCancelOrder = async () => {
-  if (!cancelReason) {
-    showToastMessage("Vui lòng chọn lý do hủy đơn hàng", "warning");
-    return;
-  }
-  if (cancelReason === "Khác") {
-    const reason = customReason.trim();
-    if (!reason) {
-      showToastMessage("Vui lòng nhập lý do hủy đơn hàng!", "warning");
+  const handleCancelOrder = async () => {
+    if (!cancelReason) {
+      showToastMessage("Vui lòng chọn lý do hủy đơn hàng", "warning");
       return;
     }
-    if (reason.length < 6) {
-      showToastMessage("Lý do hủy đơn hàng phải tối thiểu 6 ký tự!", "warning");
-      return;
+    if (cancelReason === "Khác") {
+      const reason = customReason.trim();
+      if (!reason) {
+        showToastMessage("Vui lòng nhập lý do hủy đơn hàng!", "warning");
+        return;
+      }
+      if (reason.length < 6) {
+        showToastMessage(
+          "Lý do hủy đơn hàng phải tối thiểu 6 ký tự!",
+          "warning"
+        );
+        return;
+      }
     }
-  }
-  try {
-    await axios.patch(`http://localhost:5000/api/orders/${id}`, {
-      status: "Đã huỷ",
-      cancelReason: cancelReason === "Khác" ? customReason : cancelReason,
-    });
+    try {
+      await axios.patch(`http://localhost:5000/api/orders/${id}`, {
+        status: "Đã huỷ",
+        cancelReason: cancelReason === "Khác" ? customReason : cancelReason,
+      });
 
-    showToastMessage("Đơn hàng đã được hủy thành công", "success");
-    setOrder((prevOrder) =>
-      prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder
-    );
-    setIsModalOpen(false);
-    setIsCancelDisabled(true);
-  } catch (err) {
-    console.error("Lỗi khi hủy đơn:", err);
-    showToastMessage("Không thể hủy đơn hàng. Vui lòng thử lại", "error");
-  }
-};
+      showToastMessage("Đơn hàng đã được hủy thành công", "success");
+      setOrder((prevOrder) =>
+        prevOrder ? { ...prevOrder, status: "Đã huỷ" } : prevOrder
+      );
+      setIsModalOpen(false);
+      setIsCancelDisabled(true);
+    } catch (err) {
+      console.error("Lỗi khi hủy đơn:", err);
+      showToastMessage("Không thể hủy đơn hàng. Vui lòng thử lại", "error");
+    }
+  };
 
   if (loading) {
     return (
@@ -246,7 +268,7 @@ const OrderDetail = () => {
                     )}`}
                   >
                     {order.status}
-                  </span>
+                  </span>               
                 </div>
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -591,6 +613,15 @@ const OrderDetail = () => {
                     ? "Đã yêu cầu trả hàng"
                     : "Yêu cầu trả hàng"}
                 </Link>
+                {order.status === "Giao thành công" && (
+                  <button
+                    onClick={confirmReceived}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-400"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Đã nhận hàng
+                  </button>
+                )}
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500 mb-2">Phí vận chuyển</p>
@@ -673,7 +704,7 @@ const OrderDetail = () => {
                         />
                         <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
                           <span className="text-red-400 italic">
-                           Lí do phải tối thiểu 6 ký tự và tối đa 200 ký tự
+                            Lí do phải tối thiểu 6 ký tự và tối đa 200 ký tự
                           </span>
                           <span>{customReason.length}/200</span>
                         </div>
