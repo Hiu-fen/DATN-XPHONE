@@ -49,6 +49,7 @@ import Product from "./components/client/page/product/product";
 
 
 import Categorys from './components/client/page/category/categorys';
+import CategoryDetail from './components/client/page/category/CategoryDetail';
 import Cart from './components/client/page/cart/cart';
 import Account from './components/client/page/account/account';
 import Details from './components/client/page/UI/details';
@@ -105,6 +106,7 @@ const App = () => {
         { path: "cod_return", element: <CodReturn /> },
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
+        { path: "category/:id", element: <CategoryDetail /> },
         { path: "news", element: <NewsClient /> },
         { path: "news/:id", element: <NewsDetail /> },
         { path: 'history', element: <OrderHistory /> },
