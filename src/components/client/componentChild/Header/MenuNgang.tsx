@@ -57,7 +57,7 @@ const MenuNgangHeader = () => {
 
       return (
         <div className="w-full">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          <h3 className="text-lg font-semibold text-blue-600 mb-4">
             Danh mục nổi bật
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
@@ -162,22 +162,10 @@ const MenuNgangHeader = () => {
           ))}
         </div>
 
-        {/* Overlay mờ nền khi submenu hiện */}
-        {renderedSubmenu && (
-          <div
-            className="absolute left-0 right-0 top-full z-[50] pointer-events-none"
-            /* Overlay mờ nền. 
-               Fix z-index thấp hơn submenu để không che dropdown */
-          >
-            <div className="w-full h-[500px] bg-black/50 transition duration-300 ease-in-out"></div>
-          </div>
-        )}
-
         {/* Submenu chính */}
         {renderedSubmenu !== null && (
           <div
             className="absolute left-0 w-full bg-white shadow-xl border-t z-[60] animate-slideDown"
-            /* Submenu có z-index cao hơn overlay */
           >
             <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {renderedSubmenu}

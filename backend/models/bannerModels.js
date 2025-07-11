@@ -28,9 +28,15 @@ const bannerSchema = new mongoose.Schema({
     type: Boolean,
      default: true 
   },
-  order: { 
+  order: 
+  { 
     type: Number,
     default: 0 
+  },
+    position: { 
+    type: String,
+    enum: ['banner', 'layout_home'], 
+    default: 'banner'
   }
 },
 {

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 const banners = ["banner1.webp", "banner2.webp", "banner3.webp"];
 
 const SmallBanner = () => (
-  <div className="mx-4 md:mx-24 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 my-8">
+  <div className="mx-4 md:mx-24 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
     {banners.map((src, i) => (
       <Link
         key={i}

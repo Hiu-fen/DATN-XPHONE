@@ -7,6 +7,7 @@ import {
   Form,
   Input,
   message,
+  Select,
   Spin,
   Switch,
   Tooltip,
@@ -304,6 +305,32 @@ const BannerEdit = () => {
             }}
             render={({ field }) => (
               <Input {...field} type="number" />
+            )}
+          />
+        </Form.Item>
+
+        {/* Vị trí hiển thị */}
+        <Form.Item
+          label="Vị trí hiển thị"
+          validateStatus={errors.position ? 'error' : ''}
+          help={errors.position?.message}
+        >
+          <Controller
+            name="position"
+            control={control}
+            rules={{ required: 'Chọn vị trí hiển thị' }}
+            render={({ field }) => (
+              <Select
+                {...field}
+                placeholder="Chọn vị trí hiển thị"
+                options={[
+                  { value: 'home', label: 'Trang chủ' },
+                  { value: 'product', label: 'Trang sản phẩm' },
+                  { value: 'footer', label: 'Footer' },
+                ]}
+                onChange={(value) => field.onChange(value)}
+                value={field.value}
+              />
             )}
           />
         </Form.Item>

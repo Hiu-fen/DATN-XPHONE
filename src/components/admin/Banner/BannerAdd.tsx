@@ -10,7 +10,8 @@ import {
   Upload,
   Input,
   Form,
-  AutoComplete
+  AutoComplete,
+  Select
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { IBanner } from '../../../interface/banner';
@@ -200,7 +201,6 @@ const BannerAdd = () => {
           )}
         />
 
-
         {/* Thời gian */}
         <div className="flex gap-4">
           <Form.Item
@@ -282,6 +282,31 @@ const BannerAdd = () => {
             }}
             render={({ field }) => (
               <Input {...field} type="number" />
+            )}
+          />
+        </Form.Item>
+
+        {/* Vị trí hiển thị */}
+        <Form.Item
+          label="Vị trí hiển thị"
+          validateStatus={errors.position ? 'error' : ''}
+          help={errors.position?.message}
+        >
+          <Controller
+            name="position"
+            control={control}
+            rules={{ required: 'Chọn vị trí hiển thị' }}
+            render={({ field }) => (
+              <Select
+                {...field}
+                placeholder="Chọn vị trí hiển thị"
+                options={[
+                  { value: 'banner', label: 'banner trang home' },
+                  { value: 'layout_home', label: 'layout 3 ảnh trang home' },
+                ]}
+                onChange={(value) => field.onChange(value)}
+                value={field.value}
+              />
             )}
           />
         </Form.Item>
