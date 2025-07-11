@@ -49,7 +49,7 @@ const Checkout = () => {
 
   const [showAddressModal, setShowAddressModal] = useState(false);
 
-const [addressList, setAddressList] = useState<IAddress[]>([]);
+  const [addressList, setAddressList] = useState<IAddress[]>([]);
 
   const [cart, setCart] = useState<CartItem[]>([]);
   // const SHIPPING_FEE = 35000;
@@ -62,40 +62,37 @@ const [addressList, setAddressList] = useState<IAddress[]>([]);
     name: string;
     discountValue: string;
   } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-useEffect(() => {
-  const fetchAddresses = async () => {
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (currentUser?._id) {
+        const res = await axios.get(
+          `http://localhost:5000/api/addresses/${currentUser._id}`
+        );
+        const addresses = res.data;
+        setAddressList(addresses);
 
-    if (currentUser?._id) {
-      const res = await axios.get(
-        `http://localhost:5000/api/addresses/${currentUser._id}`
-      );
-      const addresses = res.data;
-      setAddressList(addresses);
+        // ✅ Tìm địa chỉ mặc định (default: true)
 
-      // ✅ Tìm địa chỉ mặc định (default: true)
-   
+        const defaultAddr =
+          addresses.find((addr: IAddress) => addr.default === true) ||
+          addresses[0];
 
-
-      const defaultAddr = addresses.find((addr: IAddress) => addr.default === true) || addresses[0];
-
-if (defaultAddr) {
-  setForm((prev) => ({
-    ...prev,
-    name: defaultAddr.name,
-    sdt: defaultAddr.phone,
-    address: defaultAddr.address,
-    to_district_id: defaultAddr.district_id,
-    to_ward_code: defaultAddr.ward_code,
-  }));
-}
-
-    }
-  };
-  fetchAddresses();
-}, [currentUser]);
-
-
+        if (defaultAddr) {
+          setForm((prev) => ({
+            ...prev,
+            name: defaultAddr.name,
+            sdt: defaultAddr.phone,
+            address: defaultAddr.address,
+            to_district_id: defaultAddr.district_id,
+            to_ward_code: defaultAddr.ward_code,
+          }));
+        }
+      }
+    };
+    fetchAddresses();
+  }, [currentUser]);
 
   useEffect(() => {
     const fetchCartAndProducts = async () => {
@@ -231,7 +228,7 @@ if (defaultAddr) {
           to_district_id: Number(to_district_id),
           to_ward_code: String(to_ward_code),
           weight,
-          insurance_value: 0 ,  // Hoặc 0 nếu bạn không muốn tính bảo hiểm
+          insurance_value: 0, // Hoặc 0 nếu bạn không muốn tính bảo hiểm
         })
         .then((res) => {
           setShippingFee(res.data.shippingFee);
@@ -251,7 +248,6 @@ if (defaultAddr) {
     totalPrice,
   ]);
 
-
   // useEffect(() => {
   //   setForm((prev) => ({
   //     ...prev,
@@ -259,7 +255,7 @@ if (defaultAddr) {
   //     email: currentUser?.email || prev.email,
   //     sdt: currentUser?.sdt || prev.sdt,
   //     address: currentUser?.address || prev.address,
-      
+
   //   }));
   // }, [currentUser]);
 
@@ -273,9 +269,13 @@ if (defaultAddr) {
   };
 
   const handleOrder = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     if (!user) {
       message.error("Vui lòng đăng nhập để đặt hàng");
       navigate("/login");
+      setIsSubmitting(false);
       return;
     }
 
@@ -284,17 +284,20 @@ if (defaultAddr) {
         "Vui lòng cập nhật số điện thoại và địa chỉ trước khi đặt hàng."
       );
       setTimeout(() => navigate("/accounts"), 1000);
+      setIsSubmitting(false);
       return;
     }
 
     if (!form.name || !form.email) {
       message.error("Vui lòng điền đầy đủ thông tin bắt buộc.");
+      setIsSubmitting(false);
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(form.email)) {
       message.error("Email không hợp lệ");
+      setIsSubmitting(false);
       return;
     }
 
@@ -302,6 +305,7 @@ if (defaultAddr) {
       .toString(36)
       .substr(2, 5)
       .toUpperCase()}`;
+
     const newOrder = {
       orderCode,
       customerName: form.name,
@@ -324,8 +328,8 @@ if (defaultAddr) {
         productName: item.productName.trim(),
         soluong: Number(item.soluong),
         price: Number(item.price),
-        color: item.color?.trim() || "", // 🔧 Sửa tại đây
-        storage: item.storage?.trim() || "", // 🔧 Và tại đây
+        color: item.color?.trim() || "",
+        storage: item.storage?.trim() || "",
         categoryId: item?.categoryId || "",
       })),
       voucherCode: voucherCode || null,
@@ -338,10 +342,10 @@ if (defaultAddr) {
       if (!token) {
         message.error("Không tìm thấy token xác thực. Vui lòng đăng nhập lại.");
         navigate("/login");
+        setIsSubmitting(false);
         return;
       }
 
-      // 👉 Tạo đơn 1 lần duy nhất
       const orderResponse = await axios.post(
         "http://localhost:5000/api/orders",
         newOrder,
@@ -349,26 +353,26 @@ if (defaultAddr) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       const createdOrder = orderResponse.data;
       const orderId = createdOrder._id;
 
-      // 👉 Nếu là VNPAY thì redirect và return luôn
+      // 👉 Redirect sang VNPAY nếu chọn thanh toán online
       if (form.paymentMethod === "VNPAY") {
         const vnpRes = await axios.post(
           "http://localhost:5000/api/vnpay/create_payment_url",
           {
             amount: newOrder.total,
             orderCode: newOrder.orderCode,
-            orderId, // 👉 Gửi cả orderId để sau thanh toán redirect về chi tiết đơn
+            orderId,
           }
         );
-
         const { paymentUrl } = vnpRes.data;
         window.location.href = paymentUrl;
         return;
       }
 
-      // 👉 Nếu KHÔNG phải VNPAY thì xử lý hậu đơn hàng ở đây
+      // 👉 Nếu KHÔNG phải VNPAY
       if (form.paymentMethod === "Momo") {
         message.info(
           "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
@@ -382,7 +386,6 @@ if (defaultAddr) {
       }
 
       // ✅ Cập nhật tồn kho
-      // ✅ Chỉ gọi update-quantity nếu KHÔNG phải VNPAY
       if (form.paymentMethod !== "VNPAY") {
         for (const item of cart) {
           await axios.patch(
@@ -397,7 +400,7 @@ if (defaultAddr) {
         }
       }
 
-      // ✅ Xử lý giỏ hàng
+      // ✅ Cập nhật giỏ hàng
       if (!buyNowItem && selectedItems) {
         const cartResponse = await axios.get(
           `http://localhost:5000/api/carts/${user._id}`
@@ -419,7 +422,6 @@ if (defaultAddr) {
         localStorage.removeItem("cartItems");
       }
 
-      // message.success("Đặt hàng thành công!");
       setCart([]);
       navigate(
         `/cod_return?orderId=${orderId}&orderCode=${createdOrder.orderCode}`
@@ -430,6 +432,8 @@ if (defaultAddr) {
       message.error(
         error.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
       );
+    } finally {
+      setIsSubmitting(false); // ✅ Reset trạng thái
     }
   };
 
@@ -636,6 +640,7 @@ if (defaultAddr) {
 
           <button
             onClick={handleOrder}
+            disabled={isSubmitting}
             className="mt-10 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition"
           >
             Đặt hàng ngay

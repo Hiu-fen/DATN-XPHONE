@@ -48,6 +48,7 @@ const ReturnRequestDetail = () => {
     message: string;
   } | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   const reasons = [
     "Thiếu hàng",
@@ -109,7 +110,7 @@ const ReturnRequestDetail = () => {
     formData.append("returnStatus", "Đang chờ duyệt");
     formData.append("note", note);
     images.forEach((image) => formData.append("images", image));
-
+    setIsPageLoading(true);
     try {
       await axios.patch(
         `http://localhost:5000/api/orders/${id}/return`,
@@ -124,6 +125,7 @@ const ReturnRequestDetail = () => {
       setToast({ type: "error", message: "Gửi yêu cầu thất bại" });
     } finally {
       setShowConfirmModal(false);
+      setIsPageLoading(false); 
     }
   };
 
@@ -139,6 +141,17 @@ const ReturnRequestDetail = () => {
         <FaTimesCircle /> Không tìm thấy đơn hàng
       </div>
     );
+  
+    if (isPageLoading) {
+  return (
+    <div className="fixed inset-0 z-50 bg-white flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin h-12 w-12 border-4 border-blue-500 border-t-transparent rounded-full mb-4"></div>
+        <p className="text-gray-600">Đang gửi yêu cầu trả hàng...</p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className="pt-20 pb-8 px-4 max-w-3xl mx-auto animate-fade-in">

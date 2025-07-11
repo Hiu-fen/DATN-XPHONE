@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import {
-  Table,
-  Select,
-  message,
-  Tag,
-  Input,
-  Button,
-  Radio,
-} from "antd";
+import { Table, Select, message, Tag, Input, Button, Radio } from "antd";
 import { useNavigate } from "react-router-dom";
 
 interface OrderItem {
@@ -30,7 +22,7 @@ interface Order {
   _id: string;
   orderCode: string;
   customerName: string;
-  phone: number;
+  phone: string;
   address: string;
   date: string;
   status: string;
@@ -55,13 +47,15 @@ const statusOptions = [
   "Giao thành công",
   "Đã huỷ",
   "Trả hàng/Hoàn tiền",
-  
 ];
 
+const fullStatusOptions = [...statusOptions, "Đã nhận hàng"];
 const OrderList = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [loadingStatusUpdateId, setLoadingStatusUpdateId] = useState<string | null>(null);
+
 
   const getValidStatusOptions = (
     currentStatus: string,
@@ -148,20 +142,31 @@ const OrderList = () => {
     currentStatus: string,
     newStatus: string
   ) => {
+    if (loadingStatusUpdateId) {
+      message.warning("Đang cập nhật trạng thái, vui lòng chờ...");
+      return;
+    }
+
     if (!statusOptions.includes(newStatus)) {
       message.error("Trạng thái không hợp lệ");
       return;
     }
+
+    if (newStatus === "Đã nhận hàng") {
+      message.warning("Admin không được phép chuyển đơn sang trạng thái 'Đã nhận hàng'.");
+      return;
+    }
+
     if (
-      ["Giao thành công", "Đã huỷ", "Trả hàng/Hoàn tiền"].includes(
-        currentStatus
-      )
+      ["Giao thành công", "Đã huỷ", "Trả hàng/Hoàn tiền"].includes(currentStatus)
     ) {
       message.warning(`Không thể thay đổi từ trạng thái "${currentStatus}"`);
       return;
     }
+
     const currentIndex = statusOptions.indexOf(currentStatus);
     const newIndex = statusOptions.indexOf(newStatus);
+
     if (
       newStatus !== "Đã huỷ" &&
       newStatus !== "Trả hàng/Hoàn tiền" &&
@@ -170,12 +175,20 @@ const OrderList = () => {
       message.warning("Chỉ có thể chuyển sang trạng thái tiếp theo");
       return;
     }
-    mutation.mutate({ id, status: newStatus });
+
+    setLoadingStatusUpdateId(id); // ✅ chặn bấm lại
+
+    mutation.mutate(
+      { id, status: newStatus },
+      {
+        onSettled: () => setLoadingStatusUpdateId(null), // ✅ reset lại
+      }
+    );
   };
 
-  const handleReturnAction = (id: string, returnStatus: string) => {
-    returnMutation.mutate({ id, returnStatus });
-  };
+  // const handleReturnAction = (id: string, returnStatus: string) => {
+  //   returnMutation.mutate({ id, returnStatus });
+  // };
 
   const handleMarkAsPaid = (id: string) => {
     markAsPaidMutation.mutate(id);
@@ -240,16 +253,14 @@ const OrderList = () => {
       render: (_: any, record: Order) => {
         if (record.refunded) return <Tag color="red">Đã hoàn tiền</Tag>;
         if (record.paymentMethod === "COD") {
+          const isPaidStatus = record.status === "Đã nhận hàng";
           return (
-            <Tag
-              color={record.status === "Giao thành công" ? "green" : "orange"}
-            >
-              {record.status === "Giao thành công"
-                ? "COD - Đã thanh toán"
-                : "COD - Chưa thanh toán"}
+            <Tag color={isPaidStatus ? "green" : "orange"}>
+              {isPaidStatus ? "COD - Đã thanh toán" : "COD - Chưa thanh toán"}
             </Tag>
           );
         }
+
         if (record.isPaid) return <Tag color="green">Đã thanh toán</Tag>;
         return (
           <Select
@@ -295,6 +306,7 @@ const OrderList = () => {
             handleStatusChange(record._id, record.status, value)
           }
           style={{ width: 160 }}
+          loading={loadingStatusUpdateId === record._id}
           options={getValidStatusOptions(record.status, record.returnStatus)}
           placeholder="Chọn trạng thái"
           disabled={
@@ -311,35 +323,34 @@ const OrderList = () => {
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Danh sách đơn hàng</h2>
- <div>
-   {/* Bộ lọc theo trạng thái đơn hàng */}
-      <div className="flex justify-center  mr-[250px] mb-[-33px]">
-        <Radio.Group
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          buttonStyle="solid"
-        >
-          <Radio.Button value="all">Tất cả</Radio.Button>
-          {statusOptions.map((status) => (
-            <Radio.Button key={status} value={status}>
-              {status}
-            </Radio.Button>
-          ))}
-        </Radio.Group>
-      </div>
+      <div>
+        {/* Bộ lọc theo trạng thái đơn hàng */}
+        <div className="flex justify-center  mr-[250px] mb-[-33px]">
+          <Radio.Group
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            buttonStyle="solid"
+          >
+            <Radio.Button value="all">Tất cả</Radio.Button>
+            {fullStatusOptions.map((status) => (
+              <Radio.Button key={status} value={status}>
+                {status}
+              </Radio.Button>
+            ))}
+          </Radio.Group>
+        </div>
 
-      {/* Tìm kiếm đơn hàng */}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <Input.Search
-          placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
-          className="mb-4"
-          style={{ width: 250 }}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-        />
+        {/* Tìm kiếm đơn hàng */}
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Input.Search
+            placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
+            className="mb-4"
+            style={{ width: 250 }}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+          />
+        </div>
       </div>
- </div>
-     
 
       {/* Bảng danh sách đơn */}
       <Table
