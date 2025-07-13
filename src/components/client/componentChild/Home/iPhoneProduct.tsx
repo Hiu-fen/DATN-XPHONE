@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { FaEye, FaHeart, FaApple } from "react-icons/fa";
-import { Spin, message } from "antd";
+import {
+  FaEye,
+  FaHeart,
+  FaApple,
+  FaShippingFast,
+} from "react-icons/fa";
+import { Spin, message, Tag } from "antd";
 import { IProduct } from "../../../../interface/product";
 import { Link } from "react-router-dom";
 import SkeletonCard from "./SkeletonCard";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { getAllProducts } from "../../../../api/client/productApiClient";
+import dayjs from "dayjs";
 
 const IphoneProducts: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -15,24 +21,19 @@ const IphoneProducts: React.FC = () => {
   const [likedProducts, setLikedProducts] = useState<string[]>([]);
   const [showAll, setShowAll] = useState(false);
 
-  // 🚀 Lấy danh sách tất cả sản phẩm
   const { data: allProducts, isLoading } = useQuery({
     queryKey: ["products"],
     queryFn: getAllProducts,
     refetchOnWindowFocus: false,
   });
 
-  // 📱 Lọc các sản phẩm theo danh mục iPhone
   const iphoneProducts: IProduct[] =
-    allProducts?.filter(
-      (item) => item.danhmuc === "6841178c7543156eb6b12336"
-    ) || [];
+    allProducts?.filter((item) => item.danhmuc === "6841178c7543156eb6b12336") || [];
 
   const displayedIphoneProducts = showAll
     ? iphoneProducts
     : iphoneProducts.slice(0, 8);
 
-  // 🎯 Fetch sản phẩm yêu thích của user
   useEffect(() => {
     const fetchLikedProducts = async () => {
       if (!userId) return;
@@ -60,9 +61,7 @@ const IphoneProducts: React.FC = () => {
         `http://localhost:5000/api/users/${userId}/like`,
         { productId }
       );
-
       setLikedProducts(data.likeList);
-
       if (data.likeList.includes(productId)) {
         message.success("Đã thêm vào yêu thích");
       } else {
@@ -73,9 +72,14 @@ const IphoneProducts: React.FC = () => {
     }
   };
 
+  const isNewProduct = (createdAt: string): boolean => {
+    const createdDate = dayjs(createdAt);
+    const now = dayjs();
+    return now.diff(createdDate, "day") <= 5;
+  };
+
   return (
     <div className="mx-6 md:mx-20 py-6">
-      {/* Tiêu đề section */}
       <h3 className="text-center text-3xl font-bold mb-6 text-green-700 flex justify-center items-center gap-2">
         <FaApple className="text-green-600" />
         iPhone - Sản phẩm nổi bật
@@ -88,7 +92,6 @@ const IphoneProducts: React.FC = () => {
           </p>
         )}
 
-        {/* Danh sách sản phẩm */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mx-4">
           {isLoading && iphoneProducts.length === 0
             ? Array.from({ length: 4 }).map((_, idx) => (
@@ -99,14 +102,30 @@ const IphoneProducts: React.FC = () => {
                   key={product._id}
                   className="relative border rounded-xl shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group bg-green-50 hover:bg-green-100"
                 >
-                  {/* Hình ảnh sản phẩm */}
                   <div className="relative overflow-hidden rounded-t-xl">
                     <img
                       src={product.image}
                       alt={product.name}
                       className="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    {/* Icon khi hover */}
+
+                    {/* ✅ Tags nằm cạnh nhau sử dụng AntD */}
+                    <div className="absolute top-2 left-2 flex">
+                      {isNewProduct(product.createdAt!) && (
+                        <Tag color="red" className="px-2 py-0.5 text-xs">
+                          Mới
+                        </Tag>
+                      )}
+                      <Tag
+                        color="blue"
+                        className="px-2 py-0.5 text-xs flex items-center gap-1"
+                      >
+                        <FaShippingFast />
+                        Miễn phí ship
+                      </Tag>
+                    </div>
+
+                    {/* Nút xem & thích */}
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition duration-300">
                       <div className="flex flex-col gap-2 bg-green-600/30 p-1 rounded-full">
                         <Link
@@ -146,7 +165,6 @@ const IphoneProducts: React.FC = () => {
               ))}
         </div>
 
-        {/* Nút xem thêm / thu gọn */}
         {iphoneProducts.length > 8 && (
           <div className="flex justify-center mt-8">
             <button

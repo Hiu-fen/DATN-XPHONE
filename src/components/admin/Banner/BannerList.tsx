@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Table, Button, message, Input, Popconfirm, Switch, Tooltip, Image
+  Table, Button, message, Input, Popconfirm, Switch, Tooltip, Image, Tag
 } from 'antd';
 import {
   EyeOutlined, EditOutlined, DeleteOutlined,
@@ -93,7 +93,25 @@ const BannerList = () => {
       ),
     },
     {
-      title: 'Hiển thị',
+      title: 'Vị trí hiển thị',
+      dataIndex: 'position',
+      key: 'position',
+      render: (position: string) => {
+        // Dùng Tag với màu khác nhau
+        switch (position) {
+          case 'banner':
+            return <Tag color="green">Banner</Tag>;
+          case 'layout_home':
+            return <Tag color="blue">Trang chủ 3 ảnh</Tag>;
+          case 'layout_about':
+            return <Tag color="purple">Trang giới thiệu</Tag>;
+          default:
+            return <Tag color="default">Không xác định</Tag>;
+        }
+      },
+    },
+    {
+      title: 'Thứ tự',
       dataIndex: 'order',
       key: 'order',
     },
@@ -117,7 +135,7 @@ const BannerList = () => {
       key: 'actions',
       render: (_: any, record: IBanner) => (
         <div className="flex items-center gap-2">
-          <Tooltip title="Chỉnh sửa" color="blue">
+          <Tooltip title="Chỉnh sửa">
             <Button type="primary" onClick={() => navigate(`/admin/banner/edit/${record._id}`)}>
               <EditOutlined />
             </Button>
@@ -127,7 +145,7 @@ const BannerList = () => {
               <EyeOutlined />
             </Button>
           </Tooltip>
-          <Tooltip title="Xoá" color="red">
+          <Tooltip title="Xoá">
             <Popconfirm
               title="Bạn chắc chắn muốn xóa chứ?"
               onConfirm={() => deleteMutation.mutate(record._id)}

@@ -198,7 +198,7 @@ const OrderDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen mx-4 border-t border-gray-200 bg-gray-50">
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-6 right-6 z-50 animate-in slide-in-from-right">
