@@ -324,9 +324,8 @@ const BannerEdit = () => {
                 {...field}
                 placeholder="Chọn vị trí hiển thị"
                 options={[
-                  { value: 'home', label: 'Trang chủ' },
-                  { value: 'product', label: 'Trang sản phẩm' },
-                  { value: 'footer', label: 'Footer' },
+                  { value: 'banner', label: 'banner trang home' },
+                  { value: 'layout_home', label: 'layout 3 ảnh trang home' },
                 ]}
                 onChange={(value) => field.onChange(value)}
                 value={field.value}
