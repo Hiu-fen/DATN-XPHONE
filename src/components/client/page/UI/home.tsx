@@ -11,37 +11,34 @@ import { FaShippingFast } from "react-icons/fa";
 import HomeBannerLayout from "../../componentChild/Home/BannerLayout";
 
 const Home = () => {
-
-  // Refs cho các phần tử cần animation
   const categoryRef = useRef<HTMLDivElement>(null);
   const smallBannerRef = useRef<HTMLDivElement>(null);
   const hotSaleRef = useRef<HTMLDivElement>(null);
   const iphoneRef = useRef<HTMLDivElement>(null);
   const policiesRef = useRef<HTMLDivElement>(null);
 
-  // State để track các phần tử đã hiện
   const [visibleElements, setVisibleElements] = useState<Set<string>>(new Set());
+  const [showWelcome, setShowWelcome] = useState<boolean>(false);
 
-  // Intersection Observer để track các phần tử
+  // Animation khi cuộn
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const elementId = entry.target.getAttribute('data-animation-id');
+            const elementId = entry.target.getAttribute("data-animation-id");
             if (elementId) {
-              setVisibleElements(prev => new Set([...prev, elementId]));
+              setVisibleElements((prev) => new Set([...prev, elementId]));
             }
           }
         });
       },
       {
-        threshold: 0.1, // Trigger khi 10% phần tử hiện ra
-        rootMargin: '0px 0px -50px 0px' // Trigger sớm hơn 50px
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
       }
     );
 
-    // Observe tất cả các phần tử
     const elements = [
       categoryRef.current,
       smallBannerRef.current,
@@ -50,123 +47,164 @@ const Home = () => {
       policiesRef.current,
     ];
 
-    elements.forEach((element) => {
-      if (element) {
-        observer.observe(element);
-      }
-    });
+    elements.forEach((el) => el && observer.observe(el));
 
     return () => observer.disconnect();
   }, []);
 
-  // CSS classes cho animation
-  const getAnimationClass = (elementId: string) => {
-    const isVisible = visibleElements.has(elementId);
-    return `transition-all duration-1000 ease-out ${
-      isVisible 
-        ? 'opacity-100 translate-y-0' 
-        : 'opacity-0 translate-y-8'
-    }`;
+  // Hiện popup chào mừng
+  useEffect(() => {
+    setShowWelcome(true);
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 10000); // tự động tắt sau 10s
+    return () => clearTimeout(timer);
+  }, []);
+
+  const closePopup = () => {
+    setShowWelcome(false);
   };
+
+  const getAnimationClass = (id: string) =>
+    `transition-all duration-1000 ease-out ${visibleElements.has(id) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+    }`;
+  const [showChat, setShowChat] = useState(false);
+  const toggleChat = () => setShowChat(prev => !prev);
 
   return (
     <>
       <div className="w-full bg-white">
-        {/* Banner - Không cần animation vì đã hiện sẵn */}
-        <BannerClient position="banner"/>
+        {/* ✅ Popup Welcome */}
+        {showWelcome && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="relative bg-white max-w-xl w-[95%] p-8 rounded-2xl shadow-2xl animate-fade-in-up text-center">
+              {/* Nút đóng */}
+              <button
+                onClick={closePopup}
+                className="absolute top-3 right-3 text-gray-500 hover:text-red-500 text-xl font-bold"
+              >
+                &times;
+              </button>
 
-        {/* Category Product */}
-        <div 
-          ref={categoryRef}
-          data-animation-id="category"
-          className={getAnimationClass("category")}
-        >
+              <h2 className="text-3xl font-bold text-blue-600 mb-4">
+                🎉 Chào mừng bạn đến với XPHONE!
+              </h2>
+
+              <p className="text-gray-700 text-base mb-3 leading-relaxed">
+                Cảm ơn bạn đã ghé thăm trang web của chúng tôi!
+                <br />
+                Tại <strong>XPHONE</strong>, chúng tôi cam kết mang đến:
+              </p>
+
+              <ul className="text-gray-700 text-left text-sm sm:text-base list-disc pl-6 mb-4">
+                <li>Sản phẩm công nghệ chính hãng từ các thương hiệu lớn.</li>
+                <li>Ưu đãi HOT SALE mỗi ngày, quà tặng hấp dẫn.</li>
+                <li>Hỗ trợ tư vấn nhanh chóng & thân thiện 24/7.</li>
+                <li>Giao hàng nhanh, miễn phí toàn quốc.</li>
+              </ul>
+
+              <p className="text-sm text-gray-500 italic">
+                (Thông báo này sẽ tự động biến mất sau 10 giây)
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Banner */}
+        <BannerClient position="banner" />
+
+        {/* Category */}
+        <div ref={categoryRef} data-animation-id="category" className={getAnimationClass("category")}>
           <ProductCategory />
         </div>
 
-        {/* Banner phụ */}
-        <div 
-          ref={smallBannerRef}
-          data-animation-id="smallBanner"
-          className={getAnimationClass("smallBanner")}
-        >
+        {/* Small Banner */}
+        <div ref={smallBannerRef} data-animation-id="smallBanner" className={getAnimationClass("smallBanner")}>
           <SmallBanner />
         </div>
 
-        {/* Hot Sale  */}
-        <div 
-          ref={hotSaleRef}
-          data-animation-id="hotSale"
-          className={getAnimationClass("hotSale")}
-        >
+        {/* Hot Sale */}
+        <div ref={hotSaleRef} data-animation-id="hotSale" className={getAnimationClass("hotSale")}>
           <HotSaleSection />
         </div>
 
-        {/* iPhone */}
-        <div 
-          ref={iphoneRef}
-          data-animation-id="iphone"
-          className={getAnimationClass("iphone")}
-        >
+        {/* iPhone Product */}
+        <div ref={iphoneRef} data-animation-id="iphone" className={getAnimationClass("iphone")}>
           <IphoneProducts />
         </div>
 
-        <HomeBannerLayout position="layout_home"/>
+        {/* Banner layout home */}
+        <HomeBannerLayout position="layout_home" />
 
-        {/* 4 chính sách hỗ trợ */}
-        <div 
+        {/* Chính sách */}
+        <div
           ref={policiesRef}
           data-animation-id="policies"
           className={`w-full mt-10 mb-6 flex flex-wrap justify-center gap-6 ${getAnimationClass("policies")}`}
         >
-          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition-shadow duration-300 transform hover:scale-105">
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition duration-300 transform hover:scale-105">
             <FaShippingFast className="text-red-500 mb-3" size={48} />
             <h3 className="font-bold text-lg mb-1">Giao hàng nhanh</h3>
             <p className="text-gray-600 text-center text-sm">Nhận hàng trong 2h tại nội thành, 1-3 ngày toàn quốc.</p>
           </div>
-          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition-shadow duration-300 transform hover:scale-105">
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition duration-300 transform hover:scale-105">
             <MdAutorenew className="text-blue-500 mb-3" size={48} />
             <h3 className="font-bold text-lg mb-1">Đổi trả dễ dàng</h3>
             <p className="text-gray-600 text-center text-sm">Đổi trả miễn phí trong 7 ngày nếu sản phẩm lỗi hoặc không đúng mô tả.</p>
           </div>
-          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition-shadow duration-300 transform hover:scale-105">
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition duration-300 transform hover:scale-105">
             <RiShieldCheckFill className="text-green-500 mb-3" size={48} />
             <h3 className="font-bold text-lg mb-1">Bảo hành chính hãng</h3>
             <p className="text-gray-600 text-center text-sm">Cam kết sản phẩm chính hãng, bảo hành toàn quốc 12-24 tháng.</p>
           </div>
-          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition-shadow duration-300 transform hover:scale-105">
+          <div className="flex flex-col items-center bg-white rounded-lg shadow-md p-6 w-64 min-h-[180px] hover:shadow-lg transition duration-300 transform hover:scale-105">
             <MdSupportAgent className="text-yellow-500 mb-3" size={48} />
             <h3 className="font-bold text-lg mb-1">Hỗ trợ 24/7</h3>
             <p className="text-gray-600 text-center text-sm">Đội ngũ tư vấn viên luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.</p>
           </div>
         </div>
 
-        {/* Floating Elements Animation */}
+        {/* Floating Icon */}
         <div className="fixed bottom-32 right-8 z-40">
           <div className="space-y-4">
             <div className="bg-red-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce">
-              <span className="flex items-center">
-                🔥 Hot Sale
-              </span>
+              <span className="flex items-center">🔥 Hot Sale</span>
             </div>
-            <div className="bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce" style={{animationDelay: '1s'}}>
-              <span className="flex items-center">
-                🎁 Tặng quà
-              </span>
+            <div className="bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce" style={{ animationDelay: "1s" }}>
+              <span className="flex items-center">🎁 Tặng quà</span>
             </div>
-            <div className="bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce" style={{animationDelay: '2s'}}>
-              <span className="flex items-center">
-                🚚 Miễn phí ship
-              </span>
+            <div className="bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce" style={{ animationDelay: "2s" }}>
+              <span className="flex items-center">🚚 Miễn phí ship</span>
             </div>
           </div>
         </div>
 
-        {/* Chatbot */}
-        {/* <Chatbot /> */}
+{/* Nút bong bóng */}
+<div className="fixed bottom-4 right-4 z-50">
+  <button
+    onClick={toggleChat}
+    className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition"
+    title="Chat với XBot"
+  >
+    💬
+  </button>
+
+  {/* Khung chat hiển thị khi showChat = true */}
+  {showChat && (
+    <div className="mt-2 w-[350px] h-[500px] border rounded-xl shadow-xl overflow-hidden bg-white animate-fade-in-up">
+      <iframe
+        src="http://localhost:5174"
+        title="Chatbot"
+        width="100%"
+        height="100%"
+        style={{ border: "none" }}
+      />
+    </div>
+  )}
+</div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

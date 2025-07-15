@@ -56,7 +56,7 @@ import Details from './components/client/page/UI/details';
 import ProductDetail from './components/admin/Product/Detail';
 import AccountSibaLayout from './components/AccountSibaLayout';
 // import AccountSiba from './components/client/page/account/siba';
-import AddAccountAdmin from './components/client/page/account/add-admin';
+
 import { CartProvider } from './components/client/context/CartContext';
 import Checkout from './components/client/page/checkout/checkoutCart';
 import { UserProvider } from './components/client/context/UserContext';
@@ -119,7 +119,7 @@ const App = () => {
           children: [
             { index: true, element: <Account /> }, // ✅ Đây là mặc định
             { path: "account", element: <Account /> },
-            { path: "addaccountadmin", element: <AddAccountAdmin /> },
+
             { path: "my-addresses", element: <AddressManager /> },
           ],
         },
