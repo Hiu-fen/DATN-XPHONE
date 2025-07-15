@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Table, Button, message, Input, Popconfirm, Switch, Tooltip, Image
+  Table, Button, message, Input, Popconfirm, Switch, Tooltip, Image, Tag
 } from 'antd';
 import {
-  EyeOutlined, EditOutlined, DeleteOutlined
+  EyeOutlined, EditOutlined, DeleteOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -79,22 +80,38 @@ const BannerList = () => {
       dataIndex: 'imageUrl',
       key: 'imageUrl',
       render: (imageUrl: string) => (
-        <Image
-          src={imageUrl}
-          alt="banner"
-          width={400}
-          height={120}
-          style={{
-            objectFit: 'cover',
-            borderRadius: 8,
-            border: '1px solid #f0f0f0',
-          }}
-          preview={{ mask: <EyeOutlined style={{ fontSize: 24, color: 'white' }} /> }}
-        />
+        <Tooltip title={imageUrl}>
+          <Image
+            src={imageUrl}
+            alt="banner"
+            width={400}
+            height={120}
+            className="object-cover rounded border border-gray-200"
+            preview={{ mask: <EyeOutlined className="text-white text-2xl" /> }}
+          />
+        </Tooltip>
       ),
     },
     {
-      title: 'Hiển thị',
+      title: 'Vị trí hiển thị',
+      dataIndex: 'position',
+      key: 'position',
+      render: (position: string) => {
+        // Dùng Tag với màu khác nhau
+        switch (position) {
+          case 'banner':
+            return <Tag color="green">Banner</Tag>;
+          case 'layout_home':
+            return <Tag color="blue">Trang chủ 3 ảnh</Tag>;
+          case 'layout_about':
+            return <Tag color="purple">Trang giới thiệu</Tag>;
+          default:
+            return <Tag color="default">Không xác định</Tag>;
+        }
+      },
+    },
+    {
+      title: 'Thứ tự',
       dataIndex: 'order',
       key: 'order',
     },
@@ -118,7 +135,7 @@ const BannerList = () => {
       key: 'actions',
       render: (_: any, record: IBanner) => (
         <div className="flex items-center gap-2">
-          <Tooltip title="Chỉnh sửa" color="blue">
+          <Tooltip title="Chỉnh sửa">
             <Button type="primary" onClick={() => navigate(`/admin/banner/edit/${record._id}`)}>
               <EditOutlined />
             </Button>
@@ -128,7 +145,7 @@ const BannerList = () => {
               <EyeOutlined />
             </Button>
           </Tooltip>
-          <Tooltip title="Xoá" color="red">
+          <Tooltip title="Xoá">
             <Popconfirm
               title="Bạn chắc chắn muốn xóa chứ?"
               onConfirm={() => deleteMutation.mutate(record._id)}
@@ -147,13 +164,20 @@ const BannerList = () => {
 
   return (
     <div className="p-5 font-sans text-base text-gray-700">
-      <h2 className="text-2xl font-bold mb-4">Danh sách Banner</h2>
+      <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách Banner</h2>
 
-      <div className="flex justify-end items-center gap-2 mb-4">
+      <div className="flex justify-between items-center gap-2 mb-4">
+        <button
+          onClick={() => navigate('/admin/banner/add')}
+          className="flex items-center gap-2 px-4 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition duration-200"
+        >
+          <PlusOutlined />
+          Thêm Banner
+        </button>
         <Input.Search
           placeholder="Tìm theo tên..."
           allowClear
-          style={{ width: 300 }}
+          className="w-80"
           onChange={(e) => setSearchText(e.target.value)}
         />
       </div>

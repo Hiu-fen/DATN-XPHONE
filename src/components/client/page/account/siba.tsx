@@ -14,12 +14,7 @@ const AccountSiba = () => {
       icon: <UserOutlined />,
       path: '/accounts/account',
     },
-    {
-      key: 'register-admin',
-      label: 'Đăng ký tài khoản admin',
-      icon: <PlusOutlined />,
-      path: '/accounts/addaccountadmin',
-    },
+
     {
       key: 'AddressManager',
       label: 'Quản lý địa chỉ',

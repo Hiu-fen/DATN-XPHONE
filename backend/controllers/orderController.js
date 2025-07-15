@@ -54,6 +54,13 @@ exports.updateOrderStatus = async (req, res) => {
 
     const currentStatus = order.status;
 
+    // ✅ CHẶN ADMIN cập nhật thủ công sang "Đã nhận hàng"
+    if (status === "Đã nhận hàng" && currentStatus !== "Giao thành công") {
+      return res.status(400).json({
+        message: "Không được phép cập nhật trạng thái 'Đã nhận hàng' theo cách này.",
+      });
+    }
+
     // ✅ Nếu chuyển sang huỷ hoặc trả hàng và chưa từng huỷ/trả
     if (
       (status === "Đã huỷ" || status === "Trả hàng/Hoàn tiền") &&

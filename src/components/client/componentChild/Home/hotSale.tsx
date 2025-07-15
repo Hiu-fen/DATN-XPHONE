@@ -1,4 +1,4 @@
-import { FaFire, FaEye, FaHeart, FaArrowRight  } from "react-icons/fa";
+import { FaFire, FaEye, FaHeart  } from "react-icons/fa";
 import { useQuery } from "@tanstack/react-query";
 import { getTopSellingProducts, TopSellingProduct } from "../../../../api/admin/statisticsApi";
 import { useNavigate } from "react-router-dom";

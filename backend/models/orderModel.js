@@ -34,7 +34,7 @@ const OrderSchema = new mongoose.Schema({
       "Đang xử lý",
       "Đang giao",
       "Giao thành công",
-      "Hoàn thành",
+      "Đã nhận hàng",
       "Đã huỷ",
       "Trả hàng/Hoàn tiền"
     ],

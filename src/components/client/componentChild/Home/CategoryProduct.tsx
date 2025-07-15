@@ -89,7 +89,7 @@ const ProductCategory = () => {
                   />
                 ) : (
                   <Link
-                    to={`/product`}
+                    to={`/category/${cat._id}`}
                     className="bg-gray-300 rounded-2xl shadow p-4 flex flex-col items-center hover:bg-gray-900 hover:text-white"
                   >
                     <img

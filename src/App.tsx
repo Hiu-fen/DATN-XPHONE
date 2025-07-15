@@ -49,13 +49,14 @@ import Product from "./components/client/page/product/product";
 
 
 import Categorys from './components/client/page/category/categorys';
+import CategoryDetail from './components/client/page/category/CategoryDetail';
 import Cart from './components/client/page/cart/cart';
 import Account from './components/client/page/account/account';
 import Details from './components/client/page/UI/details';
 import ProductDetail from './components/admin/Product/Detail';
 import AccountSibaLayout from './components/AccountSibaLayout';
 // import AccountSiba from './components/client/page/account/siba';
-import AddAccountAdmin from './components/client/page/account/add-admin';
+
 import { CartProvider } from './components/client/context/CartContext';
 import Checkout from './components/client/page/checkout/checkoutCart';
 import { UserProvider } from './components/client/context/UserContext';
@@ -105,6 +106,7 @@ const App = () => {
         { path: "cod_return", element: <CodReturn /> },
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
+        { path: "category/:id", element: <CategoryDetail /> },
         { path: "news", element: <NewsClient /> },
         { path: "news/:id", element: <NewsDetail /> },
         { path: 'history', element: <OrderHistory /> },
@@ -117,7 +119,7 @@ const App = () => {
           children: [
             { index: true, element: <Account /> }, // ✅ Đây là mặc định
             { path: "account", element: <Account /> },
-            { path: "addaccountadmin", element: <AddAccountAdmin /> },
+
             { path: "my-addresses", element: <AddressManager /> },
           ],
         },
