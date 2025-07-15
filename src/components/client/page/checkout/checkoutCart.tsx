@@ -231,7 +231,7 @@ if (defaultAddr) {
           to_district_id: Number(to_district_id),
           to_ward_code: String(to_ward_code),
           weight,
-          insurance_value: 0 ,  // Hoặc 0 nếu bạn không muốn tính bảo hiểm
+          insurance_value: 0 ,  
         })
         .then((res) => {
           setShippingFee(res.data.shippingFee);
