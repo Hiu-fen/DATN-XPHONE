@@ -1,0 +1,5 @@
+{
+  "name": "Xphone Chatbot",
+  "description": "An intelligent chatbot named Xphone that provides expert advice and answers about mobile phones, powered by the Gemini API.",
+  "requestFramePermissions": []
+}
