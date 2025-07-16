@@ -9,6 +9,15 @@ exports.getAddressesByUser = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi lấy địa chỉ" });
   }
 };
+exports.getAllAddresses = async (req, res) => {
+  try {
+    const addresses = await Address.find().populate('userId'); // Có thể populate để lấy thêm thông tin user nếu cần
+    res.json(addresses);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi server khi lấy tất cả địa chỉ" });
+  }
+};
+
 
 // POST: Thêm địa chỉ
 exports.addAddress = async (req, res) => {

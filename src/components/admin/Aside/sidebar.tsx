@@ -91,8 +91,8 @@ const AdminSidebar = () => {
       icon: <FileImageOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý địa chỉ</span>,
       children: [
-        { key: '/admin/address/list', label: <span className="text-[15px]">Địa chỉ</span> },
-        { key: '/admin/address/add', label: <span className="text-[15px]">Thêm Địa chỉ</span> },
+        { key: '/admin/addresses/list', label: <span className="text-[15px]">Địa chỉ</span> },
+        // { key: '/admin/address/add', label: <span className="text-[15px]">Thêm Địa chỉ</span> },
       ],
     },
     {

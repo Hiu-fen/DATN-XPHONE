@@ -88,6 +88,7 @@ import ReturnRequestDetail from './components/client/page/order/ReturnDetail';
 import PromotionPageClient from './components/client/page/promotion/PromotionPageClient';
 import CodReturn from './components/client/page/checkout/CodReturn';
 import NotificationAdmin from './components/admin/ComponentCon/Header/Setting';
+import AddressList from './components/admin/Addresses/AddressList';
 
 const App = () => {
   useReloadIfBlank();
@@ -213,6 +214,7 @@ const App = () => {
           { path: "add", element: <NewsAdd /> },
           { path: "edit/:id", element: <NewsEdit /> }
         ] },
+        { path: 'addresses/list', element: <AddressList /> },
       ],
     },
     { path: "/admin/*", element: <NotFound type="admin" /> },

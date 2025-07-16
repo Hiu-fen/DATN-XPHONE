@@ -34,19 +34,39 @@ router.get('/:id/liked-products', userController_getLikedProducts);
 
 
 // ✅ Lấy user theo email
+// router.get('/', async (req, res) => {
+//   try {
+//     const email = req.query.email;
+//     if (!email) return res.status(400).json({ message: 'Thiếu email' });
+
+//     const user = await User.findOne({ email });
+//     if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
+
+//     return res.json(user);
+//   } catch (error) {
+//     console.error('Lỗi server:', error);
+//     return res.status(500).json({ message: 'Lỗi server' });
+//   }
+// });
+// ✅ Lấy tất cả user (dùng cho lọc địa chỉ)
 router.get('/', async (req, res) => {
   try {
     const email = req.query.email;
-    if (!email) return res.status(400).json({ message: 'Thiếu email' });
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
+    if (email) {
+      const user = await User.findOne({ email });
+      if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
+      return res.json(user);
+    }
 
-    return res.json(user);
+    // ✅ Nếu không có email, trả về tất cả user (dùng cho dropdown lọc địa chỉ)
+    const users = await User.find({}, "_id name email");
+    return res.json(users);
   } catch (error) {
     console.error('Lỗi server:', error);
     return res.status(500).json({ message: 'Lỗi server' });
   }
 });
+
 
 module.exports = router;
