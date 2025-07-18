@@ -54,8 +54,9 @@ const OrderList = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [loadingStatusUpdateId, setLoadingStatusUpdateId] = useState<string | null>(null);
-
+  const [loadingStatusUpdateId, setLoadingStatusUpdateId] = useState<
+    string | null
+  >(null);
 
   const getValidStatusOptions = (
     currentStatus: string,
@@ -153,12 +154,16 @@ const OrderList = () => {
     }
 
     if (newStatus === "Đã nhận hàng") {
-      message.warning("Admin không được phép chuyển đơn sang trạng thái 'Đã nhận hàng'.");
+      message.warning(
+        "Admin không được phép chuyển đơn sang trạng thái 'Đã nhận hàng'."
+      );
       return;
     }
 
     if (
-      ["Giao thành công", "Đã huỷ", "Trả hàng/Hoàn tiền"].includes(currentStatus)
+      ["Giao thành công", "Đã huỷ", "Trả hàng/Hoàn tiền"].includes(
+        currentStatus
+      )
     ) {
       message.warning(`Không thể thay đổi từ trạng thái "${currentStatus}"`);
       return;
@@ -279,24 +284,6 @@ const OrderList = () => {
       render: (method: string) => method || "Chưa xác định",
     },
     {
-      title: "Trả Hàng",
-      dataIndex: "returnStatus",
-      key: "returnStatus",
-      render: (status: string, record: Order) => {
-        if (status) {
-          return (
-            <Button
-              type="link"
-              onClick={() => navigate(`/admin/orders/${record._id}/return`)}
-            >
-              Yêu Cầu Trả Hàng
-            </Button>
-          );
-        }
-        return <span>.</span>;
-      },
-    },
-    {
       title: "Trạng thái đơn hàng",
       key: "status",
       render: (_: any, record: Order) => (
@@ -317,6 +304,24 @@ const OrderList = () => {
           }
         />
       ),
+    },
+    {
+      title: "Trả Hàng",
+      dataIndex: "returnStatus",
+      key: "returnStatus",
+      render: (status: string, record: Order) => {
+        if (status) {
+          return (
+            <Button
+              type="link"
+              onClick={() => navigate(`/admin/orders/${record._id}/return`)}
+            >
+              Yêu Cầu Trả Hàng
+            </Button>
+          );
+        }
+        return <span>.</span>;
+      },
     },
   ];
 
