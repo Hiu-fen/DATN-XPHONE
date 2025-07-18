@@ -1,196 +1,229 @@
-import React, { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
-import axios from 'axios';
-import { message, Form, Input, Select, Button } from 'antd';
+import {
+    message, Form, Input, Select, Button, Upload, Spin
+} from 'antd';
+import { ArrowLeftOutlined, UploadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { INews } from '../../../interface/News';
-import type { RcFile } from 'antd/es/upload/interface';
+import { addNews } from '../../../api/admin/newAdmin';
+import { useState } from 'react';
 
 const { TextArea } = Input;
 
-const categories = [
-    { value: 'iPhone', label: 'iPhone' },
-    { value: 'Samsung', label: 'Samsung' },
-    { value: 'Xiaomi', label: 'Xiaomi' },
-    { value: 'Oppo', label: 'Oppo' },
-    { value: 'Vivo', label: 'Vivo' },
-    { value: 'Realme', label: 'Realme' },
-    { value: 'Phụ kiện', label: 'Phụ kiện' },
-  
-];
-
 const NewsAdd = () => {
     const navigate = useNavigate();
-    const { control, handleSubmit, formState: { errors }, setValue } = useForm<Omit<INews, '_id' | 'createdAt' | 'updatedAt'>>();
-    const [imageUrl, setImageUrl] = useState<string>('');
-    const [uploading, setUploading] = useState<boolean>(false);
+    const [uploading, setUploading] = useState(false);
 
-    const mutation = useMutation({
-        mutationFn: async (data: Omit<INews, '_id' | 'createdAt' | 'updatedAt'>) => {
-            const response = await axios.post('http://localhost:5000/api/news', {
-                ...data,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            });
-            return response.data;
-        },
-        onSuccess: () => {
-            message.success('Thêm tin tức thành công');
-            navigate('/admin/news/list');
-        },
-        onError: (error) => {
-            console.error('Error adding news:', error);
-            message.error('Thêm tin tức thất bại, vui lòng thử lại!');
+    const {
+        control,
+        handleSubmit,
+        formState: { errors },
+        watch,
+    } = useForm<INews>({
+        mode: 'onChange',
+        defaultValues: {
+            name: '',
+            content: '',
+            image: '',
+            author: '',
+            status: true,
         },
     });
 
-    const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        
+    const name = watch('name'); // Lấy tiêu đề để đặt public_id ảnh
+
+    const mutation = useMutation({
+        mutationFn: async (data: INews) => {
+            const payload = {
+                name: data.name,
+                content: data.content,
+                image: data.image,
+                author: data.author,
+                status: data.status,
+            };
+            return addNews(payload);
+        },
+        onSuccess: () => {
+            message.success('🎉 Thêm tin tức thành công!');
+            navigate('/admin/news/list');
+        },
+        onError: () => {
+            message.error('❌ Thêm tin tức thất bại!');
+        },
+    });
+
+    // ✅ Upload ảnh Cloudinary
+    const handleUpload = async (file: File, onChange: (url: string) => void) => {
+        if (!name.trim()) {
+            message.warning('⚠️ Vui lòng nhập tiêu đề trước khi tải ảnh!');
+            return;
+        }
         setUploading(true);
         const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", "datn-xphone");
+        const publicId = `news_${name.trim().toLowerCase().replace(/\s+/g, '_')}`;
+        const renamedFile = new File([file], publicId, { type: file.type });
+        formData.append('file', renamedFile);
+        formData.append('upload_preset', 'datn-xphone');
 
         try {
-            const { data } = await axios.post(
-                "https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload",
-                formData
-            );
-            setImageUrl(data.url);
-            setValue("image", data.url, { shouldValidate: true });
-            message.success("Tải ảnh lên thành công!");
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            message.error("Lỗi upload ảnh!");
+            const res = await fetch('https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload', {
+                method: 'POST',
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.secure_url) {
+                onChange(data.secure_url); // ✅ Gán URL vào field
+                message.success('✅ Tải ảnh thành công!');
+            } else {
+                throw new Error('Không lấy được URL ảnh');
+            }
+        } catch (err) {
+            console.error(err);
+            message.error('❌ Lỗi tải ảnh!');
         } finally {
             setUploading(false);
         }
     };
 
-    const onSubmit = (data: Omit<INews, '_id' | 'createdAt' | 'updatedAt'>) => {
-        if (!imageUrl) {
-            message.error('Vui lòng tải lên hình ảnh!');
-            return;
-        }
-        mutation.mutate({ ...data, image: imageUrl });
+    const onSubmit = (data: INews) => {
+        mutation.mutate(data);
     };
 
     return (
-        <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Thêm tin tức mới</h2>
-                <Button 
-                    type="text" 
-                    onClick={() => navigate('/admin/news/list')}
-                    icon={<span className="text-xl">×</span>}
-                />
-            </div>
+        <div className="p-6 bg-white shadow rounded-lg mx-auto border">
+            <h2 className="text-3xl text-blue-600 font-bold mb-6 text-center">Thêm tin tức</h2>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tiêu đề</label>
-                    <Controller
-                        name="title"
-                        control={control}
-                        rules={{ required: 'Vui lòng nhập tiêu đề' }}
-                        render={({ field }) => (
+            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+                {/* Tiêu đề */}
+                <Controller
+                    name="name"
+                    control={control}
+                    rules={{
+                        required: 'Vui lòng nhập tiêu đề',
+                        minLength: {
+                            value: 9,
+                            message: 'Tiêu đề phải có ít nhất 9 ký tự',
+                        },
+                    }}
+                    render={({ field }) => (
+                        <Form.Item
+                            label="Tiêu đề"
+                            validateStatus={errors.name ? 'error' : ''}
+                            help={errors.name?.message}
+                            required
+                        >
                             <Input {...field} placeholder="Nhập tiêu đề tin tức" />
-                        )}
-                    />
-                    {errors.title && <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nội dung</label>
-                    <Controller
-                        name="content"
-                        control={control}
-                        rules={{ required: 'Vui lòng nhập nội dung' }}
-                        render={({ field }) => (
-                            <TextArea {...field} rows={6} placeholder="Nhập nội dung tin tức" />
-                        )}
-                    />
-                    {errors.content && <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Hình ảnh</label>
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="block w-full text-sm text-gray-700"
-                        disabled={uploading}
-                    />
-                    {uploading && <p className="text-blue-500 text-sm mt-1">Đang tải ảnh lên...</p>}
-                    {imageUrl && (
-                        <img src={imageUrl} alt="Preview" className="mt-2 h-24 object-contain rounded" />
+                        </Form.Item>
                     )}
-                </div>
+                />
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tác giả</label>
-                    <Controller
-                        name="author"
-                        control={control}
-                        rules={{ required: 'Vui lòng nhập tên tác giả' }}
-                        render={({ field }) => (
+                {/* Nội dung */}
+                <Controller
+                    name="content"
+                    control={control}
+                    rules={{ required: 'Vui lòng nhập nội dung' }}
+                    render={({ field }) => (
+                        <Form.Item
+                            label="Nội dung"
+                            validateStatus={errors.content ? 'error' : ''}
+                            help={errors.content?.message}
+                            required
+                        >
+                            <TextArea {...field} rows={5} placeholder="Nhập nội dung tin tức" />
+                        </Form.Item>
+                    )}
+                />
+
+                {/* Hình ảnh */}
+                <Controller
+                    name="image"
+                    control={control}
+                    rules={{ required: 'Vui lòng tải lên hình ảnh' }}
+                    render={({ field }) => (
+                        <Form.Item
+                            label="Hình ảnh"
+                            validateStatus={errors.image ? 'error' : ''}
+                            help={errors.image?.message}
+                            required
+                        >
+                            <>
+                                <Upload
+                                    accept="image/*"
+                                    showUploadList={false}
+                                    beforeUpload={(file) => {
+                                        handleUpload(file, field.onChange); // ✅ Truyền onChange
+                                        return false;
+                                    }}
+                                >
+                                    <Button icon={<UploadOutlined />} disabled={uploading}>
+                                        {uploading ? <Spin size="small" /> : 'Chọn ảnh'}
+                                    </Button>
+                                </Upload>
+                                {field.value && (
+                                    <img
+                                        src={field.value}
+                                        alt="preview"
+                                        className="mt-3 w-48 h-32 object-cover rounded border"
+                                    />
+                                )}
+                            </>
+                        </Form.Item>
+                    )}
+                />
+
+                {/* Tác giả */}
+                <Controller
+                    name="author"
+                    control={control}
+                    rules={{ required: 'Vui lòng nhập tên tác giả' }}
+                    render={({ field }) => (
+                        <Form.Item
+                            label="Tác giả"
+                            validateStatus={errors.author ? 'error' : ''}
+                            help={errors.author?.message}
+                            required
+                        >
                             <Input {...field} placeholder="Nhập tên tác giả" />
-                        )}
-                    />
-                    {errors.author && <p className="text-red-500 text-sm mt-1">{errors.author.message}</p>}
-                </div>
+                        </Form.Item>
+                    )}
+                />
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
-                    <Controller
-                        name="category"
-                        control={control}
-                        rules={{ required: 'Vui lòng chọn danh mục' }}
-                        render={({ field }) => (
-                            <Select
-                                {...field}
-                                placeholder="Chọn danh mục"
-                                className="w-full"
-                                options={categories}
-                                showSearch
-                                optionFilterProp="label"
-                            />
-                        )}
-                    />
-                    {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
-                    <Controller
-                        name="status"
-                        control={control}
-                        defaultValue="draft"
-                        render={({ field }) => (
-                            <Select
-                                {...field}
-                                className="w-full"
-                            >
-                                <Select.Option value="draft">Bản nháp</Select.Option>
-                                <Select.Option value="published">Đã đăng</Select.Option>
+                {/* Trạng thái */}
+                <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                        <Form.Item label="Trạng thái" required>
+                            <Select {...field} placeholder="Chọn trạng thái">
+                                <Select.Option value={true}>Hiển thị</Select.Option>
+                                <Select.Option value={false}>Ẩn</Select.Option>
                             </Select>
-                        )}
-                    />
-                </div>
+                        </Form.Item>
+                    )}
+                />
 
-                <div className="flex justify-end space-x-4 pt-4">
-                    <Button onClick={() => navigate('/admin/news/list')}>
-                        Hủy
-                    </Button>
-                    <Button type="primary" htmlType="submit" loading={mutation.isPending}>
-                        Thêm tin tức
-                    </Button>
-                </div>
-            </form>
+                {/* Submit */}
+                <Form.Item>
+                    <div className="flex justify-between gap-4">
+                        <Button
+                            type="default"
+                            icon={<ArrowLeftOutlined />}
+                            onClick={() => navigate(-1)}
+                            >
+                            Quay lại
+                        </Button>
+
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            loading={mutation.isPending}
+                            >
+                            Thêm mới tin tức
+                        </Button>
+                    </div>
+                </Form.Item>
+            </Form>
         </div>
     );
 };

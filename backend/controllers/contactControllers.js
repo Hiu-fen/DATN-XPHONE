@@ -9,6 +9,23 @@ exports.getAllContact = async (req, res) =>{
         res.status(500).json({message:'Lỗi khi lấy liên hệ'})   
     }
 }
+
+exports.getContactById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const contact = await Contact.findById(id);
+
+    if (!contact) {
+      return res.status(404).json({ message: 'Không tìm thấy liên hệ' });
+    }
+
+    res.json(contact);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi lấy chi tiết liên hệ' });
+  }
+};
+
 exports.createContact = async (req, res) =>{
     try {
         // console.log(req.body);
@@ -56,3 +73,4 @@ exports.deleteContact = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi xóa liên hệ' });
   }
 };
+

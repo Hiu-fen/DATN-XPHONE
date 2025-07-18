@@ -1,93 +1,126 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { newsApi } from '../../../../api/newsApi';
 import { INews } from '../../../../interface/News';
+import { Card, Row, Col, Skeleton, Tag, message } from 'antd';
+import { getPublishedNews } from '../../../../api/client/newClient';
+
+const { Meta } = Card;
+
+const MAX_TITLE_LENGTH = 60; // độ dài tối đa tiêu đề
+const MAX_DESC_LENGTH = 100; // độ dài tối đa mô tả
+
+const truncateText = (text: string, maxLength: number): string =>
+  text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
 
 const NewsClient = () => {
-    const [news, setNews] = useState<INews[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState<INews[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchNews();
-    }, []);
+  useEffect(() => {
+    fetchNews();
+  }, []);
 
-    const fetchNews = async () => {
-        try {
-            const data = await newsApi.getAll();
-            // Sắp xếp tin tức theo thời gian tạo mới nhất
-            const sortedNews = data.sort((a, b) => 
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            );
-            setNews(sortedNews);
-        } catch (error) {
-            console.error('Failed to fetch news:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="flex justify-center items-center h-64">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                </div>
-            </div>
-        );
+  const fetchNews = async () => {
+    try {
+      const response = await getPublishedNews();
+      const sortedNews = response.data.sort(
+        (a: INews, b: INews) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      setNews(sortedNews);
+    } catch (error) {
+      console.error('Failed to fetch news:', error);
+      message.error('Không thể tải tin tức. Vui lòng thử lại sau!');
+    } finally {
+      setLoading(false);
     }
+  };
 
+  if (loading) {
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="max-w-6xl mx-auto">
-                <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Tin Tức</h1>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {news.map((item, index) => (
-                        <div key={item._id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                            <div className="relative">
-                                <img 
-                                    src={item.image} 
-                                    alt={item.title}
-                                    className="w-full h-48 object-cover"
-                                    onError={(e) => {
-                                        e.currentTarget.src = 'https://via.placeholder.com/400x300?text=No+Image';
-                                    }}
-                                />
-                                {index < 2 && (
-                                    <div className="absolute top-4 right-4">
-                                        <span className="px-3 py-1 text-xs font-bold rounded-full bg-red-500 text-white animate-pulse">
-                                            HOT
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-6">
-                                <div className="flex items-center justify-between mb-4">
-                                    <span className="text-sm text-gray-500">{item.category}</span>
-                                    <span className="text-sm text-gray-500">{new Date(item.createdAt).toLocaleDateString('vi-VN')}</span>
-                                </div>
-                                <h2 className="text-xl font-semibold mb-3 text-gray-800 hover:text-blue-600 transition-colors duration-300">
-                                    {item.title}
-                                </h2>
-                                <p className="text-gray-600 mb-4 line-clamp-3">{item.content}</p>
-                                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                                    <span className="text-sm text-gray-500">Tác giả: {item.author}</span>
-                                    <Link 
-                                        to={`/news/${item._id}`}
-                                        className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors duration-300"
-                                    >
-                                        Đọc thêm
-                                        <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <Skeleton active paragraph={{ rows: 6 }} />
+      </div>
     );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-[1280px] mx-auto">
+        <h2 className="text-center text-green-700 text-4xl font-bold mb-10">
+          Tin tức mới nhất
+        </h2>
+
+        <Row gutter={[24, 24]}>
+          {news.map((item, index) => (
+            <Col
+              key={item._id}
+              xs={24}
+              sm={12}
+              md={12}
+              lg={6}
+            >
+              <Card
+                hoverable
+                className="bg-green-50 rounded-lg shadow-md flex flex-col justify-between h-full"
+                cover={
+                  <div className="relative">
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="h-[200px] w-full object-cover rounded-t-lg"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          'https://via.placeholder.com/400x300?text=No+Image';
+                      }}
+                    />
+                    {index < 2 && (
+                      <Tag
+                        color="red"
+                        className="absolute top-2 right-2 font-semibold animate-pulse"
+                      >
+                        HOT
+                      </Tag>
+                    )}
+                  </div>
+                }
+              >
+                <Meta
+                  title={
+                    <Link
+                      to={`/news/${item._id}`}
+                      className="block text-lg font-semibold text-gray-800 hover:text-green-700 transition-colors"
+                    >
+                      {truncateText(item.name, MAX_TITLE_LENGTH)}
+                    </Link>
+                  }
+                  description={
+                    <>
+                      <p className="text-gray-700 mb-2">
+                        {truncateText(item.content, MAX_DESC_LENGTH)}
+                      </p>
+                      <p className="text-gray-500 text-sm italic">
+                        Ngày đăng: {new Date(item.createdAt).toLocaleDateString('vi-VN')}
+                      </p>
+                    </>
+                  }
+                />
+                <div className="flex justify-end mt-3">
+                  <Link to={`/news/${item._id}`}>
+                    <button
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded"
+                    >
+                      Đọc thêm
+                    </button>
+                  </Link>
+                </div>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </div>
+    </div>
+  );
 };
 
 export default NewsClient;

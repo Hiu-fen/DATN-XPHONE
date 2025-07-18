@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const newsSchema = new mongoose.Schema({
-    title: {
+    name: {
         type: String,
         required: true
     },
@@ -17,17 +17,22 @@ const newsSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    status: {
-        type: String,
-        enum: ['published', 'draft'],
-        default: 'draft'
+    status: {  
+        type: Boolean,
+        default: false
     },
-    category: {
-        type: String,
-        required: true
-    }
+    views: { 
+        type: Number, 
+        default: 0 
+    },
+    viewedBy: [
+        {
+            userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            viewedAt: { type: Date, default: Date.now }
+        }
+    ]
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('News', newsSchema); 
+module.exports = mongoose.model('News', newsSchema);
