@@ -21,14 +21,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       <div
         className={`rounded-2xl p-4 max-w-lg md:max-w-xl lg:max-w-2xl break-words ${
           isBot
-            ? 'bg-gray-800 text-gray-200 rounded-tl-none'
-            : 'bg-blue-600 text-white rounded-br-none'
-        }`}
+      ? 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'
+      : 'bg-blue-100 text-blue-800 rounded-br-none'
+  }`}
       >
         {message.text || <span className="animate-pulse">...</span>}
       </div>
        {!isBot && (
-        <div className="bg-gray-700 p-2 rounded-full flex-shrink-0">
+        <div className="bg-white-700 p-2 rounded-full flex-shrink-0">
           <UserIcon className="h-6 w-6 text-gray-300" />
         </div>
       )}

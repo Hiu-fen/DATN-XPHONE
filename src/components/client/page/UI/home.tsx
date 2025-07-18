@@ -180,28 +180,33 @@ const Home = () => {
         </div>
 
         {/* Nút bong bóng */}
-        <div className="fixed bottom-4 right-4 z-50">
-          <button
-            onClick={toggleChat}
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition"
-            title="Chat với XBot"
-          >
-            💬
-          </button>
+<div className="fixed bottom-4 right-4 z-50">
+  <button
+    onClick={toggleChat}
+    className="bg-white hover:shadow-xl border border-gray-300 rounded-full w-14 h-14 flex items-center justify-center shadow-lg transition"
+    title="Chat với XBot"
+  >
+    <img
+      src="/hi.png"
+      alt="Chatbot Icon"
+      className="w-8 h-8 object-contain"
+    />
+  </button>
 
-          {/* Khung chat hiển thị khi showChat = true */}
-          {showChat && (
-            <div className="mt-2 w-[350px] h-[500px] border rounded-xl shadow-xl overflow-hidden bg-white animate-fade-in-up">
-              <iframe
-                src="http://localhost:5174"
-                title="Chatbot"
-                width="100%"
-                height="100%"
-                style={{ border: "none" }}
-              />
-            </div>
-          )}
-        </div>
+  {/* Khung chat hiển thị khi showChat = true */}
+  {showChat && (
+    <div className="mt-2 w-[350px] h-[500px] border rounded-xl shadow-xl overflow-hidden bg-white animate-fade-in-up">
+      <iframe
+        src="http://localhost:5174"
+        title="Chatbot"
+        width="100%"
+        height="100%"
+        style={{ border: "none" }}
+      />
+    </div>
+  )}
+</div>
+
       </div>
     </>
   );
