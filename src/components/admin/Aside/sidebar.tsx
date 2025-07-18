@@ -101,7 +101,6 @@ const AdminSidebar = () => {
       label: <span className="text-[17px] font-semibold">Quản lý tin tức</span>,
       children: [
         { key: '/admin/news/list', label: <span className="text-[15px]">Tin tức</span> },
-        { key: '/admin/news/add', label: <span className="text-[15px]">Thêm tin tức</span> },
       ],
     },
     {

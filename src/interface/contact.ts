@@ -6,4 +6,6 @@ export interface IContact {
     message: string,
     date: string
     status: boolean,
+    createdAt: string,
+    updatedAt: string
 }

@@ -1,11 +1,11 @@
 export interface INews {
     _id: string;
-    title: string;
+    name: string;
     content: string;
     image: string;
     author: string;
     createdAt: string;
     updatedAt: string;
-    status: 'published' | 'draft';
-    category: string;
+    status: boolean;
+    views: number;
 } 
