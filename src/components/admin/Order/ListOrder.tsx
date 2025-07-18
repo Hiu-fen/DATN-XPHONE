@@ -257,6 +257,7 @@ const OrderList = () => {
       key: "isPaid",
       render: (_: any, record: Order) => {
         if (record.refunded) return <Tag color="red">Đã hoàn tiền</Tag>;
+
         if (record.paymentMethod === "COD") {
           const isPaidStatus = record.status === "Đã nhận hàng";
           return (
@@ -266,14 +267,21 @@ const OrderList = () => {
           );
         }
 
-        if (record.isPaid) return <Tag color="green">Đã thanh toán</Tag>;
+        if (
+          record.paymentMethod === "Momo" ||
+          record.paymentMethod === "VNPAY"
+        ) {
+          return (
+            <Tag color={record.isPaid ? "green" : "orange"}>
+              {record.isPaid
+                ? `${record.paymentMethod} - Đã thanh toán`
+                : `${record.paymentMethod} - Chưa thanh toán`}
+            </Tag>
+          );
+        }
+
         return (
-          <Select
-            value="Chưa thanh toán"
-            style={{ width: 140 }}
-            onChange={() => handleMarkAsPaid(record._id)}
-            options={[{ label: "Đã thanh toán", value: "paid" }]}
-          />
+          <Tag color="default">{record.paymentMethod || "Không xác định"}</Tag>
         );
       },
     },

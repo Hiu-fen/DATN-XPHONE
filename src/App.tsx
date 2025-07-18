@@ -89,8 +89,12 @@ import PromotionPageClient from './components/client/page/promotion/PromotionPag
 import CodReturn from './components/client/page/checkout/CodReturn';
 import NotificationAdmin from './components/admin/ComponentCon/Header/Setting';
 import AddressList from './components/admin/Addresses/AddressList';
+import MomoReturn from './components/client/page/checkout/momoReturn';
+import ThankYou from './components/client/page/checkout/ThankYou';
+
 import NewsDetailAdmin from './components/admin/News/NewDetail';
 import ContactDetail from './components/admin/Contact/ContactDetail';
+
 
 const App = () => {
   useReloadIfBlank();
@@ -107,6 +111,8 @@ const App = () => {
         { path: "checkout", element: <Checkout /> },
         { path: "vnpay_return", element: <VnpayReturn /> },
         { path: "cod_return", element: <CodReturn /> },
+        { path: "momo_return", element: <MomoReturn /> },
+        { path: "thank-you", element: <ThankYou /> },
         { path: 'detail/:id', element: <Details /> },
         { path: "categorys", element: <Categorys /> },
         { path: "category/:id", element: <CategoryDetail /> },
