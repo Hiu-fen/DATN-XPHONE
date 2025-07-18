@@ -408,7 +408,7 @@ if (order.paymentMethod === "VNPAY" && order.isPaid) {
 
 return res.json({
   success: true,
-  orderCode,
+  orderCode: order.orderCode,
   orderId: order._id,
 });
     
