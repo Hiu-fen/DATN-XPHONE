@@ -92,6 +92,10 @@ import AddressList from './components/admin/Addresses/AddressList';
 import MomoReturn from './components/client/page/checkout/momoReturn';
 import ThankYou from './components/client/page/checkout/ThankYou';
 
+import NewsDetailAdmin from './components/admin/News/NewDetail';
+import ContactDetail from './components/admin/Contact/ContactDetail';
+
+
 const App = () => {
   useReloadIfBlank();
   const routes = useRoutes([
@@ -193,9 +197,10 @@ const App = () => {
         { path: "promotion/edit/:id", element: <PutEditPromotion /> },
         { path: "promotion/detail/:id", element: <DetailPromotion /> },
 
-        /// Router quản lý lien he
+        /// Router quản lý liên hệ
         { path: "contact/add", element: <ContactAdd /> },
         { path: "contact/list", element: <ContactList /> },
+        { path: "contact/detail/:id", element: <ContactDetail /> },
 
         /// Router quản lý banner
         { path: "banner/add", element: <BannerAdd /> },
@@ -204,7 +209,6 @@ const App = () => {
         { path: "banner/detail/:id", element: <BannerDetail /> },
 
         // Router quản lý Color
-
         { path: 'color/add', element: <ColorAdd /> },
         { path: 'color/:id', element: <ColorEdit /> },
 
@@ -216,6 +220,7 @@ const App = () => {
         { path: "news", children: [
           { path: "list", element: <NewsList /> },
           { path: "add", element: <NewsAdd /> },
+          { path: "detail/:id", element: <NewsDetailAdmin /> },
           { path: "edit/:id", element: <NewsEdit /> }
         ] },
         { path: 'addresses/list', element: <AddressList /> },

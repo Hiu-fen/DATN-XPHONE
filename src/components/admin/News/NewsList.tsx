@@ -1,179 +1,219 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Button, message, Input, Popconfirm } from 'antd';
-import { DeleteOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Table,
+  Button,
+  message,
+  Input,
+  Popconfirm,
+  Switch,
+  Tooltip,
+  Image,
+  Space,
+} from 'antd';
+import {
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import {
+  deleteNews,
+  getAllNews,
+  updateNewsStatus,
+} from '../../../api/admin/newAdmin';
 import { INews } from '../../../interface/News';
 
-const NewsList: React.FC = () => {
-    const [news, setNews] = useState<INews[]>([]);
-    const [searchText, setSearchText] = useState('');
-    const [isLoading, setIsLoading] = useState(true);
-    const [deletingId, setDeletingId] = useState<string | null>(null);
+const NewsList = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchText, setSearchText] = useState('');
 
-    const fetchNews = async () => {
-        try {
-            setIsLoading(true);
-            const response = await axios.get('http://localhost:5000/api/news');
-            setNews(response.data);
-        } catch (error) {
-            message.error('Không thể tải danh sách tin tức, vui lòng thử lại!');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+  // 🔥 Fetch all news
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['news'],
+    queryFn: async () => {
+      const response = await getAllNews();
+      return response.data;
+    },
+  });
 
-    useEffect(() => {
-        fetchNews();
-    }, []);
+  useEffect(() => {
+    if (isError) {
+      message.error('Lỗi khi tải danh sách tin tức');
+    }
+  }, [isError]);
 
-    const handleDelete = async (id: string) => {
-        if (deletingId === id) return;
-        
-        try {
-            setDeletingId(id);
-            const response = await axios.delete(`http://localhost:5000/api/news/${id}`);
-            
-            if (response.data.success) {
-                setNews(prev => prev.filter(item => item._id !== id));
-                message.success('Xóa tin tức thành công!');
-            } else {
-                message.error(response.data.message || 'Xóa tin tức thất bại!');
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                message.error(error.response?.data?.message || 'Xóa tin tức thất bại, vui lòng thử lại!');
-            } else {
-                message.error('Có lỗi xảy ra, vui lòng thử lại!');
-            }
-        } finally {
-            setDeletingId(null);
-        }
-    };
+  // ✅ Mutation toggle status
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: boolean }) => {
+      return await updateNewsStatus(id, status);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news'] });
+      message.success('Cập nhật trạng thái thành công!');
+    },
+    onError: () => {
+      message.error('Không thể cập nhật trạng thái!');
+    },
+  });
 
-    const search = news?.filter((item: INews) => {
-        const text = `${item.title} ${item.author} ${item.category} ${item.content}`.toLowerCase();
-        return text.includes(searchText.toLowerCase());
-    });
+  // ✅ Mutation delete news
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await deleteNews(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['news'] });
+      message.success('Xóa tin tức thành công!');
+    },
+    onError: () => {
+      message.error('Không thể xóa tin tức!');
+    },
+  });
 
-    const columns = [
-        {
-            title: 'STT',
-            key: 'index',
-            render: (_: any, __: INews, index: number) => index + 1,
-        },
-        {
-            title: 'Tiêu đề',
-            dataIndex: 'title',
-            key: 'title',
-            render: (text: string, record: INews) => (
-                <div className="flex items-center">
-                    <img 
-                        src={record.image} 
-                        alt={text}
-                        className="w-10 h-10 rounded-full object-cover mr-3"
-                        onError={(e) => {
-                            e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9IiNFNUU3RUIiLz48cGF0aCBkPSJNMjAgMTlDMTguMzQzMSAxOSAxNyAxNy42NTY5IDE3IDE2QzE3IDE0LjM0MzEgMTguMzQzMSAxMyAyMCAxM0MyMS42NTY5IDEzIDIzIDE0LjM0MzEgMjMgMTZDMjMgMTcuNjU2OSAyMS42NTY5IDE5IDIwIDE5Wk0yMCAyMUMyMi4yMSAyMSAyNCAyMi4zNDMxIDI0IDI0VjI1SDI0QzI0IDI1IDE2IDI1IDE2IDI0QzE2IDIyLjM0MzEgMTcuNzkgMjEgMjAgMjFaIiBmaWxsPSIjNjY2Ii8+PC9zdmc+';
-                        }}
-                    />
-                    <span>{text}</span>
-                </div>
-            ),
-        },
-        {
-            title: 'Tác giả',
-            dataIndex: 'author',
-            key: 'author',
-        },
-        {
-            title: 'Danh mục',
-            dataIndex: 'category',
-            key: 'category',
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status: string) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                    {status === 'published' ? 'Đã đăng' : 'Bản nháp'}
-                </span>
-            ),
-        },
-        {
-            title: 'Ngày tạo',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
-        },
-        {
-            title: 'Thao tác',
-            key: 'action',
-            render: (_: any, record: INews) => (
-                <span>
-                    <Link to={`/news/${record._id}`}>
-                        <Button type="link" icon={<EyeOutlined />} />
-                    </Link>
-                    <Link to={`/admin/news/edit/${record._id}`}>
-                        <Button type="link" icon={<EditOutlined />} />
-                    </Link>
-                    <Popconfirm
-                        title="Xóa tin tức"
-                        description="Bạn có chắc chắn muốn xóa tin tức này?"
-                        onConfirm={() => handleDelete(record._id)}
-                        okText="Xóa"
-                        cancelText="Hủy"
-                        okButtonProps={{ 
-                            danger: true,
-                            loading: deletingId === record._id 
-                        }}
-                    >
-                        <Button 
-                            type="link" 
-                            danger 
-                            icon={<DeleteOutlined />}
-                            loading={deletingId === record._id}
-                        />
-                    </Popconfirm>
-                </span>
-            ),
-        },
-    ];
+  // 🔎 Filter by search text
+  const filteredNews = data?.filter((item: INews) =>
+    item.name.toLowerCase().includes(searchText.toLowerCase())
+  );
 
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Quản lý tin tức</h2>
-                <div className="flex gap-4">
-                    <Input.Search
-                        placeholder="Tìm kiếm tin tức..."
-                        className="w-64"
-                        onChange={(e) => setSearchText(e.target.value)}
-                        allowClear
-                    />
-                    <Link to="/admin/news/add">
-                        <Button type="primary">
-                            Thêm tin tức mới
-                        </Button>
-                    </Link>
-                </div>
-            </div>
-
-            <Table
-                columns={columns}
-                dataSource={search}
-                rowKey="_id"
-                loading={isLoading}
-                pagination={{
-                    pageSize: 10,
-                    showSizeChanger: false,
-                    pageSizeOptions: ['5', '10', '20'],
-                }}
+  // Table columns
+  const columns = [
+    {
+      title: 'STT',
+      key: 'index',
+      render: (_: any, __: INews, index: number) => index + 1,
+    },
+    {
+      title: 'Ảnh',
+      dataIndex: 'image',
+      key: 'image',
+      render: (src: string) => (
+        <Tooltip title="Click để xem ảnh">
+          <Image
+            src={src}
+            alt="news"
+            width={200}
+            height={120}
+            className="rounded-md border border-gray-200 object-cover"
+            preview={{ mask: <EyeOutlined className="text-white text-xl" /> }}
+          />
+        </Tooltip>
+      ),
+    },
+    {
+      title: 'Tiêu đề',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'Tác giả',
+      dataIndex: 'author',
+      key: 'author',
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: boolean, record: INews) => (
+        <Popconfirm
+          title={`Bạn có chắc chắn muốn ${
+            status ? 'ẩn' : 'hiển thị'
+          } tin này không?`}
+          okText="Có"
+          cancelText="Hủy"
+          icon={<ExclamationCircleOutlined className="text-yellow-500" />}
+          onConfirm={() =>
+            toggleStatusMutation.mutate({ id: record._id, status: !status })
+          }
+        >
+          <Switch
+            checked={status}
+            checkedChildren="Hiển thị"
+            unCheckedChildren="Ẩn"
+            className="bg-gray-200"
+          />
+        </Popconfirm>
+      ),
+    },
+    {
+      title: 'Thao tác',
+      key: 'actions',
+      render: (_: any, record: INews) => (
+        <Space>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              onClick={() => navigate(`/admin/news/edit/${record._id}`)}
             />
+          </Tooltip>
+          <Tooltip title="Chi tiết">
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/admin/news/detail/${record._id}`)}
+            />
+          </Tooltip>
+          <Tooltip title="Xoá">
+            <Popconfirm
+              title="Bạn chắc chắn muốn xoá tin này?"
+              onConfirm={() => deleteMutation.mutate(record._id)}
+              okText="Xoá"
+              cancelText="Hủy"
+              icon={<ExclamationCircleOutlined />}
+            >
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                loading={deleteMutation.isPending}
+              />
+            </Popconfirm>
+          </Tooltip>
+        </Space>
+      ),
+    },
+  ];
+
+  return (
+    <div className="p-5 font-sans text-base text-gray-700">
+      {/* Header */}
+      <div className="mb-4">
+        <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách tin tức</h2>
+
+        <div className="flex justify-between items-center">
+          <button
+            onClick={() => navigate('/admin/news/add')}
+            className="flex items-center gap-2 px-4 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition duration-200"
+          >
+            <PlusOutlined />
+            Thêm tin tức
+          </button>
+          <Input.Search
+            placeholder="Tìm kiếm tin tức..."
+            allowClear
+            onChange={(e) => setSearchText(e.target.value)}
+            className="w-80"
+          />
         </div>
-    );
+      </div>
+
+      {/* Table */}
+      <Table
+        columns={columns}
+        dataSource={filteredNews}
+        loading={isLoading}
+        rowKey="_id"
+        pagination={{
+          pageSize: 5,
+          showSizeChanger: false,
+          showTotal: (total) => `Tổng ${total} tin tức`,
+        }}
+        locale={{ emptyText: 'Chưa có tin tức nào' }}
+      />
+    </div>
+  );
 };
 
-export default NewsList; 
+export default NewsList;
