@@ -11,4 +11,12 @@ export interface User {
   role: 'admin' | 'user';
   notification?: string;
   createdAt: string; 
+   updateHistory?: {
+    updatedAt: string; // hoặc Date
+    changes: {
+      field: string;
+      oldValue: any;
+      newValue: any;
+    }[];
+  }[];
 }

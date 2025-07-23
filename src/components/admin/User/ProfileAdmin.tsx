@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { message } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +7,8 @@ import { addNotification } from "../utils/notification";
 import { User } from "../../../interface/user";
 
 const ProfileAdmin = () => {
+  const [showHistory, setShowHistory] = useState(false);
+
   const nav = useNavigate();
   const {
     register,
@@ -58,6 +60,20 @@ const ProfileAdmin = () => {
       console.error("Cập nhật thất bại:", error);
       message.error("Cập nhật thất bại!");
     }
+    const updateHistory = getValues("updateHistory");
+    if (updateHistory) {
+      updateHistory.push({
+        updatedAt: new Date().toISOString(),
+        changes: Object.entries(updatedFields).map(([field, newValue]) => ({
+          field,
+          oldValue: originalData[field as keyof User],
+          newValue,
+        })),
+      });
+      setValue("updateHistory", updateHistory);
+    }
+
+
   };
 
   return (
@@ -145,6 +161,40 @@ const ProfileAdmin = () => {
             </button>
           </div>
         </form>
+
+        {/* Lịch sử cập nhật */}
+
+
+        {/* Tôi muốn lịch sử cập nhật có thể ẩn hoặc hiện thị */}
+        <div className="mt-8">
+          <h3 className="text-xl font-semibold mb-4">Lịch sử cập nhật</h3>
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="mb-4 text-blue-600 hover:underline"
+          >
+            {showHistory ? "Ẩn lịch sử" : "Hiện lịch sử"}
+          </button>
+          {showHistory && (
+            <ul className="space-y-2">
+              {getValues("updateHistory")?.map((history, index) => (
+                <li key={index} className="bg-gray-100 p-4 rounded-md">
+                  <p className="text-sm text-gray-500 mb-2">
+                    Cập nhật lúc: {new Date(history.updatedAt).toLocaleString()}
+                  </p>
+                  <ul className="space-y-1">
+                    {history.changes.map((change, idx) => (
+                      <li key={idx} className="text-sm">
+                        <strong>{change.field}:</strong> từ{" "}
+                        <span className="text-red-500">{change.oldValue}</span> đến{" "}
+                        <span className="text-green-500">{change.newValue}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
