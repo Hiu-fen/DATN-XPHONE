@@ -11,6 +11,7 @@ import {
   FaCheck,
 } from "react-icons/fa";
 import { message, Radio } from "antd";
+import socket from "../../../../socket"; // <-- đường dẫn tới file socket.ts
 
 interface Order {
   _id: string;
@@ -80,6 +81,7 @@ const OrderHistory = () => {
   const user: User | null = useMemo(() => {
     return JSON.parse(localStorage.getItem("user") || "null");
   }, []);
+  
 
   const filteredOrders = useMemo(() => {
     let sorted = [...orders].sort(
@@ -95,6 +97,32 @@ const OrderHistory = () => {
     }
     return sorted;
   }, [orders, statusFilter]);
+  useEffect(() => {
+  const handleOrderUpdated = (updatedOrder: any) => {
+    // Chỉ nhận đơn của user hiện tại (phòng tránh đơn của người khác)
+     if (updatedOrder.userId !== user?._id) return;
+
+    console.log("🔄 Đơn hàng vừa được cập nhật:", updatedOrder);
+
+    setOrders(prev => {
+      const exists = prev.some(o => o._id === updatedOrder._id);
+      if (exists) {
+        // nếu đơn đã có → cập nhật lại thông tin
+        return prev.map(o => (o._id === updatedOrder._id ? { ...o, ...updatedOrder } : o));
+      }
+      // nếu đơn chưa có → thêm mới vào danh sách
+      return [updatedOrder, ...prev];
+    });
+  };
+
+  socket.on("orderUpdated", handleOrderUpdated);
+
+  return () => {
+    socket.off("orderUpdated", handleOrderUpdated);
+  };
+}, [user?._id]);
+
+  
   useEffect(() => {
     if (!user?._id) {
       setLoading(false);
