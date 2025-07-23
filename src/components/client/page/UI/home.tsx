@@ -10,6 +10,7 @@ import { RiShieldCheckFill } from "react-icons/ri";
 import { FaShippingFast } from "react-icons/fa";
 import HomeBannerLayout from "../../componentChild/Home/BannerLayout";
 
+
 const Home = () => {
   const categoryRef = useRef<HTMLDivElement>(null);
   const smallBannerRef = useRef<HTMLDivElement>(null);

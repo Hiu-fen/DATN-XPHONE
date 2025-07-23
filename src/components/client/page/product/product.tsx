@@ -10,6 +10,9 @@ import { useState, useMemo } from 'react';
 import { FilterOutlined } from '@ant-design/icons';
 // import BannerClient from "../../componentChild/Home/banner"
 
+import socket from '../../../../socket'; // Đường dẫn tuỳ thuộc bạn đặt file socket.ts ở đâu
+import { useEffect } from 'react';
+
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
@@ -105,6 +108,7 @@ if (selectedRams.length > 0) {
     setSelectedRams([]);
     setShowInStockOnly(false);
   };
+  
 
   // Tạo dropdown menu cho bộ lọc
   const filterDropdown = (
@@ -174,6 +178,29 @@ if (selectedRams.length > 0) {
       </div>
     );
   }
+  useEffect(() => {
+  socket.on("productCreated", (newProduct) => {
+    console.log("🟢 Sản phẩm mới:", newProduct);
+    // Có thể dùng refetch từ react-query hoặc thêm thủ công vào danh sách nếu cần
+  });
+
+  socket.on("productUpdated", (updatedProduct) => {
+    console.log("🟡 Sản phẩm được cập nhật:", updatedProduct);
+    // Có thể update lại react-query cache hoặc dùng refetch
+  });
+
+  socket.on("productDeleted", (deletedProductId) => {
+    console.log("🔴 Sản phẩm bị xoá:", deletedProductId);
+    // Có thể lọc ra khỏi danh sách hiện tại hoặc gọi refetch
+  });
+
+  return () => {
+    socket.off("productCreated");
+    socket.off("productUpdated");
+    socket.off("productDeleted");
+  };
+}, []);
+
 
   return (
   

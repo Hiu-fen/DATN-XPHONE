@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
+import socket from "../../../../socket"; // <-- đường dẫn tới file socket.ts
 import {
   ArrowLeft,
   DollarSign,
@@ -90,6 +91,7 @@ const OrderDetail = () => {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
+  
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -113,6 +115,29 @@ const OrderDetail = () => {
       fetchOrder();
     }
   }, [id]);
+  // 2. Lắng nghe realtime cập nhật
+  useEffect(() => {
+    if (!id) return;
+
+    const handleOrderUpdated = (updatedOrder: Order) => {
+      // Chỉ update khi event trả về đúng đơn hàng đang xem
+      if (updatedOrder._id === id) {
+        setOrder(updatedOrder);
+        showToastMessage("Đơn hàng đã được cập nhật từ Admin", "success");
+        // nếu status thay đổi, disable nút hủy
+        if (updatedOrder.status !== "Chờ xác nhận") {
+          setIsCancelDisabled(true);
+        }
+      }
+    };
+
+    socket.on("orderUpdated", handleOrderUpdated);
+
+    // Cleanup khi component unmount
+    return () => {
+      socket.off("orderUpdated", handleOrderUpdated);
+    };
+  }, [id]);
   const confirmReceived = async () => {
     if (!order) return;
     try {
@@ -125,6 +150,7 @@ const OrderDetail = () => {
       message.error("Xác nhận thất bại!");
     }
   };
+  
 
   const handleCancelOrder = async () => {
     if (!cancelReason) {
