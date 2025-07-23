@@ -94,6 +94,7 @@ import ThankYou from './components/client/page/checkout/ThankYou';
 
 import NewsDetailAdmin from './components/admin/News/NewDetail';
 import ContactDetail from './components/admin/Contact/ContactDetail';
+import RewardsPage from './components/client/page/rewards/RewardsPage';
 
 
 const App = () => {
@@ -134,6 +135,7 @@ const App = () => {
         },
         { path : "notification" , element : <Notification/>},
         { path : "wishlist" , element : <Wishlist/>},
+        { path : "rewards" , element : <RewardsPage/>},
 
         { path: "product", element: <Product /> },
       ],

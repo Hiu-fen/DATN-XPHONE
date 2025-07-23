@@ -1,4 +1,4 @@
-import { FaBars, FaHeart, FaBell, FaShoppingCart, FaHistory } from 'react-icons/fa';
+import { FaBars, FaHeart, FaBell, FaShoppingCart, FaHistory, FaCrown } from 'react-icons/fa';
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge, Button, Dropdown } from 'antd';
@@ -13,7 +13,7 @@ const HamburgerMenu = () => {
     queryKey: ['unread-count', userId],
     queryFn: () => getUserUnreadCount(userId!),
     enabled: !!userId,
-    refetchInterval: 30000, 
+    refetchInterval: 30000,
   });
 
   const unreadCount = data?.data?.count ?? 0;
@@ -52,9 +52,17 @@ const HamburgerMenu = () => {
       {
         key: 'history',
         label: (
-         <Link to="/history" className="flex items-center gap-2">
-          <FaHistory /> <span>Lịch sử mua hàng</span>
-        </Link>
+          <Link to="/history" className="flex items-center gap-2">
+            <FaHistory /> <span>Lịch sử mua hàng</span>
+          </Link>
+        ),
+      },
+      {
+        key: 'rewards',
+        label: (
+          <Link to="/rewards" className="flex items-center gap-2">
+            <FaCrown /> <span>Điểm thưởng & Xếp hạng</span>
+          </Link>
         ),
       },
     ],
@@ -65,7 +73,7 @@ const HamburgerMenu = () => {
       <Dropdown
         menu={menu}
         trigger={['click']}
-        placement='bottomRight'
+        placement="bottomRight"
         popupRender={(menuNode) => (
           <div className="min-w-[200px] bg-white rounded-md shadow-lg">
             {menuNode}
@@ -80,4 +88,4 @@ const HamburgerMenu = () => {
   );
 };
 
-export default HamburgerMenu
+export default HamburgerMenu;
