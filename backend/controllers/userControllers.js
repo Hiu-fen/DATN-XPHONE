@@ -85,6 +85,8 @@ exports.updateUserStatus = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi cập nhật người dùng' });
   }
 };
+
+// Lấy thông tin hồ sơ người dùng (profile) theo ID
 exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -95,37 +97,80 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// ✅ Cập nhật hồ sơ người dùng (profile)
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
 
-    const { name, email, password, avatar, sdt, address, notification } = req.body;
+    const { name, email, password, avatar, sdt, address, notification, gender, dob } = req.body;
+
+    const changes = [];
 
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ email });
-      if (existingUser) return res.status(400).json({ message: 'Email đã tồn tại' });
+      if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+        return res.status(400).json({ message: 'Email đã tồn tại' });
+      }
+      changes.push({ field: 'email', oldValue: user.email, newValue: email });
       user.email = email;
     }
 
-    if (name) user.name = name;
-    if (avatar) user.avatar = avatar;
-    if (sdt) user.sdt = sdt;
-    if (address) user.address = address;
-    if (notification) user.notification = notification;
+    if (name && name !== user.name) {
+      changes.push({ field: 'name', oldValue: user.name, newValue: name });
+      user.name = name;
+    }
+
+    if (avatar && avatar !== user.avatar) {
+      changes.push({ field: 'avatar', oldValue: user.avatar, newValue: avatar });
+      user.avatar = avatar;
+    }
+
+    if (sdt && sdt !== user.sdt) {
+      changes.push({ field: 'sdt', oldValue: user.sdt, newValue: sdt });
+      user.sdt = sdt;
+    }
+
+    if (address && address !== user.address) {
+      changes.push({ field: 'address', oldValue: user.address, newValue: address });
+      user.address = address;
+    }
+
+    if (notification && notification !== user.notification) {
+      changes.push({ field: 'notification', oldValue: user.notification, newValue: notification });
+      user.notification = notification;
+    }
+
+    if (gender && gender !== user.gender) {
+      changes.push({ field: 'gender', oldValue: user.gender, newValue: gender });
+      user.gender = gender;
+    }
+
+    if (dob && dob !== user.dob) {
+      changes.push({ field: 'dob', oldValue: user.dob, newValue: dob });
+      user.dob = dob;
+    }
 
     if (password && password !== '') {
-      user.password = await bcrypt.hash(password, 10);
+      const hashed = await bcrypt.hash(password, 10);
+      changes.push({ field: 'password', oldValue: '********', newValue: '********' });
+      user.password = hashed;
+    }
+
+    if (changes.length > 0) {
+      user.updateHistory.push({
+        updatedAt: new Date(),
+        changes,
+      });
     }
 
     await user.save();
-    res.json({ message: "Cập nhật thành công", user });
+    res.json({ message: 'Cập nhật thành công', user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+// Đăng ký với Google
 exports.registerWithGoogle = async (req, res) => {
   const { name, email, avatar } = req.body;
 
@@ -153,6 +198,7 @@ exports.registerWithGoogle = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+// Đăng nhập với Google
 exports.loginWithGoogle = async (req, res) => {
   const { email } = req.body;
 

@@ -103,6 +103,10 @@ exports.updateOrderStatus = async (req, res) => {
       { status, timestamp: new Date() },
     ];
     await order.save();
+// ✅ Gửi realtime cho client
+global._io.emit("orderUpdated", order);
+
+
     if (status === "Giao thành công") {
       try {
         await sendDeliverySuccessEmail(order.email, order);
@@ -116,6 +120,24 @@ exports.updateOrderStatus = async (req, res) => {
     res.status(500).json({ message: "Lỗi khi cập nhật trạng thái đơn hàng" });
   }
 };
+// exports.updateOrderStatus = async (req, res) => {
+//   try {
+//     const { status } = req.body;
+//     const order = await Order.findById(req.params.id);
+//     if (!order) return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+
+//     order.status = status;
+//     await order.save();
+
+//     // Gửi realtime tới client
+//     req.io.emit("orderUpdated", order);
+
+//     res.json(order);
+//   } catch (error) {
+//     res.status(500).json({ message: "Lỗi khi cập nhật đơn hàng" });
+//   }
+// };
+
 
 // Yêu cầu trả hàng
 exports.updateOrderReturn = async (req, res) => {
@@ -408,7 +430,7 @@ if (order.paymentMethod === "VNPAY" && order.isPaid) {
 
 return res.json({
   success: true,
-  orderCode,
+  orderCode: order.orderCode,
   orderId: order._id,
 });
     

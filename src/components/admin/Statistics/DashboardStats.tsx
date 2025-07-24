@@ -107,11 +107,46 @@ const DashboardStats: React.FC = () => {
   })) || [];
 
   // Dữ liệu cho biểu đồ doanh thu theo ngày (khi chọn khoảng thời gian)
-  const dailyRevenueData = rangeData?.dailyStats.map(item => ({
-    date: `${item._id.day}/${item._id.month}/${item._id.year}`,
-    revenue: item.revenue,
-    orders: item.orders,
-  })) || [];
+  let dailyRevenueData: { date: string, revenue: number, orders: number }[] = [];
+  if (dateRange && rangeData?.dailyStats) {
+    // Map đủ các ngày trong khoảng
+    const start = dateRange[0].startOf('day');
+    const end = dateRange[1].startOf('day');
+    const days: string[] = [];
+    let d = start.clone();
+    while (d.isBefore(end.add(1, 'day'))) {
+      days.push(d.format('D/M/YYYY'));
+      d = d.add(1, 'day');
+    }
+    const statsMap = new Map(
+      rangeData.dailyStats.map(item => [
+        `${item._id.day}/${item._id.month}/${item._id.year}`,
+        { revenue: item.revenue, orders: item.orders }
+      ])
+    );
+    dailyRevenueData = days.map(dateStr => {
+      const stat = statsMap.get(dateStr);
+      return {
+        date: dateStr,
+        revenue: stat ? stat.revenue : 0,
+        orders: stat ? stat.orders : 0
+      };
+    });
+  } else if (rangeData?.dailyStats) {
+    dailyRevenueData = rangeData.dailyStats.map(item => ({
+      date: `${item._id.day}/${item._id.month}/${item._id.year}`,
+      revenue: item.revenue,
+      orders: item.orders,
+    }));
+  }
+
+  // Trước khi render Line chart doanh thu theo ngày (range)
+  console.log('dailyRevenueData', dailyRevenueData);
+  const chartData = dailyRevenueData.map(item => ({
+    day: item.date,
+    revenue: Number(item.revenue) || 0,
+  }));
+  const hasRevenue = chartData.some(item => item.revenue > 0);
 
   const handleDateRangeChange = (dates: any) => {
     if (dates && dates[0] && dates[1]) {
@@ -606,12 +641,9 @@ const DashboardStats: React.FC = () => {
               {/* Biểu đồ doanh thu theo ngày trong khoảng thời gian */}
               <div className="my-8">
                 <Card title={`Doanh Thu Theo Ngày (${dateRange?.[0].format('DD/MM/YYYY')} - ${dateRange?.[1].format('DD/MM/YYYY')})`} style={{ height: 350 }}>
-                  {dailyRevenueData.length > 0 ? (
+                  {dailyRevenueData.length > 0 && hasRevenue ? (
                     <Line
-                      data={dailyRevenueData.map(item => ({
-                        day: item.date,
-                        revenue: item.revenue,
-                      }))}
+                      data={chartData}
                       xField="day"
                       yField="revenue"
                       height={280}

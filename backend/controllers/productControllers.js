@@ -79,6 +79,10 @@ exports.createProduct = async (req, res) => {
     const product = new Product(productData);
     const savedProduct = await product.save();
 
+
+    // ✅ Emit socket cho client
+global._io.emit("productCreated", savedProduct);
+
     // ✅ Tạo thông báo mới cho user
     await Notification.create({
       message: `Sản phẩm "${savedProduct.name}" vừa mới được ra mắt`,
@@ -145,6 +149,11 @@ exports.updateProduct = async (req, res) => {
     if (!updatedProduct) {
       return res.status(404).json({ message: "Không tìm thấy sản phẩm để cập nhật" });
     }
+
+    // ✅ Emit socket cập nhật sản phẩm
+global._io.emit("productUpdated", updatedProduct);
+
+
     res.json(updatedProduct);
   } catch (error) {
     console.error("❌ Lỗi khi cập nhật sản phẩm:", error);
@@ -196,6 +205,9 @@ exports.deleteProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
     }
+
+    // ✅ Emit socket xóa sản phẩm
+global._io.emit("productDeleted", product._id);
 
     res.json({ message: "Xóa mềm thành công", product });
   } catch (error) {

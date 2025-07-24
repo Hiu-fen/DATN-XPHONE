@@ -1,14 +1,17 @@
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ICategory } from "../../../../interface/category";
 import { getAllCategories } from "../../../../api/client/categoryApiClient";
 import { Spin, Skeleton, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import  socket  from "../../../../socket"; // chỉnh path đúng theo nơi bạn lưu socket.ts
 
 const ProductCategory = () => {
   const [isHovering, setIsHovering] = useState(false);
   const [displayData, setDisplayData] = useState<ICategory[]>([]);
+
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery<ICategory[]>({
     queryKey: ["categories"],
@@ -19,6 +22,30 @@ const ProductCategory = () => {
     refetchOnWindowFocus: false,
     refetchInterval: 60000,
   });
+
+useEffect(() => {
+  socket.on("categoryCreated", (newCategory: ICategory) => {
+    console.log("📦 Danh mục mới:", newCategory);
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+  });
+
+  socket.on("categoryUpdated", (updatedCategory: ICategory) => {
+    console.log("✏️ Danh mục cập nhật:", updatedCategory);
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+  });
+
+  socket.on("categoryDeleted", (deletedCategoryId: string) => {
+    console.log("🗑️ Danh mục xoá:", deletedCategoryId);
+    queryClient.invalidateQueries({ queryKey: ["categories"] });
+  });
+
+  return () => {
+    socket.off("categoryCreated");
+    socket.off("categoryUpdated");
+    socket.off("categoryDeleted");
+  };
+}, []);
+
 
   useEffect(() => {
     if (data) {
@@ -38,7 +65,6 @@ const ProductCategory = () => {
     setDisplayData(newData);
   };
 
-
   return (
     <div className="py-4 mx-24">
       <h3 className="text-center text-3xl font-semibold my-4">Danh mục sản phẩm</h3>
@@ -50,10 +76,10 @@ const ProductCategory = () => {
           onMouseLeave={() => setIsHovering(false)}
         >
           {/* Nút trái */}
-          <Tooltip title='Sang phải' placement="left">
+          <Tooltip title="Sang trái" placement="left">
             {isHovering && (
               <button
-                onClick={()=>rotate('left')}
+                onClick={() => rotate("left")}
                 className="absolute left-[-29px] top-1/2 transform -translate-y-1/2 z-10 bg-white p-2 rounded-full shadow hover:bg-gray-200"
               >
                 <FaChevronLeft />
@@ -62,10 +88,10 @@ const ProductCategory = () => {
           </Tooltip>
 
           {/* Nút phải */}
-          <Tooltip title='Sang phải' placement="right">
+          <Tooltip title="Sang phải" placement="right">
             {isHovering && (
               <button
-                onClick={()=>rotate('right')}
+                onClick={() => rotate("right")}
                 className="absolute right-[-21px] top-1/2 transform -translate-y-1/2 z-10 bg-white p-2 rounded-full shadow hover:bg-gray-200"
               >
                 <FaChevronRight />

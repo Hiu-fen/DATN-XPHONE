@@ -24,10 +24,8 @@ router.patch("/:id/paid", orderController.markAsPaid);
 router.get('/user/:userId', orderController.getOrdersByUser);
 // router.put('/orders/:id/status', updateOrderStatus);
 
+// router thanh toán momo
+router.patch("/:id/mark-paid", orderController.markAsPaid);
 
-
-
-
-//aloaloaloa nhwos đay nhé 
 
 module.exports = router;

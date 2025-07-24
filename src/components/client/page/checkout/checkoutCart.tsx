@@ -41,11 +41,28 @@ const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useUser();
-  const currentUser = user as IUserExtended | null;
   const selectedItems = location.state?.selectedItems as
     | ICartItem[]
     | undefined;
   const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
+
+  useEffect(() => {
+    const hasCartItems = localStorage.getItem("cartItems");
+    const hasPendingOrder = localStorage.getItem("pendingOrder");
+
+    const shouldRedirect =
+      !buyNowItem &&
+      (!selectedItems || selectedItems.length === 0) &&
+      !hasCartItems &&
+      !hasPendingOrder &&
+      !location.state;
+
+    if (shouldRedirect) {
+      navigate("/", { replace: true });
+    }
+  }, [buyNowItem, selectedItems, location.state]);
+
+  const currentUser = user as IUserExtended | null;
 
   const [showAddressModal, setShowAddressModal] = useState(false);
 
@@ -346,6 +363,14 @@ const Checkout = () => {
         return;
       }
 
+      // Nếu chọn Momo thì KHÔNG tạo đơn ngay
+      if (form.paymentMethod === "Momo") {
+        localStorage.setItem("pendingOrder", JSON.stringify(newOrder));
+        navigate(`/momo_return`, { replace: true });
+        setIsSubmitting(false); // reset nút đặt hàng
+        return;
+      }
+
       const orderResponse = await axios.post(
         "http://localhost:5000/api/orders",
         newOrder,
@@ -372,21 +397,8 @@ const Checkout = () => {
         return;
       }
 
-      // 👉 Nếu KHÔNG phải VNPAY
-      if (form.paymentMethod === "Momo") {
-        message.info(
-          "Vui lòng chuyển khoản qua Momo: 0866423127 (Hoang The Anh)"
-        );
-      } else if (form.paymentMethod === "Bank") {
-        message.info(
-          "Vui lòng chuyển khoản qua MBBank: 0866423127 (Hoang The Anh)"
-        );
-      } else if (form.paymentMethod === "COD") {
-        message.info("Bạn sẽ thanh toán khi nhận hàng.");
-      }
-
-      // ✅ Cập nhật tồn kho
-      if (form.paymentMethod !== "VNPAY") {
+      // Chỉ trừ số lượng nếu là COD
+      if (form.paymentMethod === "COD") {
         for (const item of cart) {
           await axios.patch(
             `http://localhost:5000/api/products/${item.productId}/update-quantity`,
