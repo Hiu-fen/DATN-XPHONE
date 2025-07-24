@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hiệu ứng của thông tin sản phẩm trong trang home */
+@keyframes float-natural {
+  0% {
+    transform: rotate(-30deg) translate(0, 0);
+  }
+  25% {
+    transform: rotate(-29.5deg) translate(5px, -5px);
+  }
+  50% {
+    transform: rotate(-30deg) translate(0, -8px);
+  }
+  75% {
+    transform: rotate(-30.5deg) translate(-5px, -5px);
+  }
+  100% {
+    transform: rotate(-30deg) translate(0, 0);
+  }
+}
+
+.floating-animation {
+  animation: float-natural 10s ease-in-out infinite;
+}
+/* index.css */
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.custom-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+/* Tùy chỉnh thanh cuộn cho Internet Explorer */
+body {
+  overflow-x: hidden;
+}
+
+@keyframes slideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hiệu ứng trượt xuống cho các phần tử khi tải trang */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.35s ease-out forwards;
+}
+
+/* Hiệu ứng ping cho các nút hoặc biểu tượng bên thông báo admin */
+@layer utilities {
+  .animate-ping-slow {
+    animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+
+
+
+

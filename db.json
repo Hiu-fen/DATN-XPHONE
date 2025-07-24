@@ -1,0 +1,483 @@
+{
+  "books": [],
+  "category": [
+    {
+      "name": "Iphone",
+      "mota": "Điện thoại táo",
+      "image": "https://cdnv2.tgdd.vn/mwg-static/common/News/1569702/iphone%2016%20pro%20-%203.jpg",
+      "id": 1
+    },
+    {
+      "name": "SamSung",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGGBzWOKOkHXbnNQobVpJlA2IKK266T1tE-Q&s",
+      "mota": "điện thoại androi",
+      "id": 2
+    },
+    {
+      "name": "op po",
+      "image": "https://tgs.vn/wp-content/uploads/2022/03/DSC8174.jpg",
+      "mota": "đập thoải moãi :v",
+      "id": 3
+    },
+    {
+      "name": "vivo  ",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfMW4kaQoFEXOAJO4O8BfZTbhTB0PKNSL0tw&s",
+      "mota": "Điện thoại mới nhất ",
+      "id": 4
+    },
+    {
+      "name": "rog phone ",
+      "image": "https://cellphones.com.vn/sforum/wp-content/uploads/2022/07/default_wallpaper_Rog6_picker_02.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 5
+    },
+    {
+      "name": "xiaomi",
+      "image": "https://cdn.tgdd.vn/Files/2022/08/15/1456491/redmi_k50_ultra_1280x1065-800-resize.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 6
+    },
+    {
+      "name": "Huawei",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxbB6CP9CeZcjRJnBzf_kZISCErKFgJHBC8A&s",
+      "mota": "Điện thoại mới nhất ",
+      "id": 7
+    },
+    {
+      "name": "OnePlus",
+      "image": "https://cdn.tgdd.vn/Products/Images/42/230770/oneplus-9-pro-600x600-1-600x600.jpg",
+      "mota": "Điện thoại mới nhất ",
+      "id": 8
+    },
+    {
+      "name": "Nokia",
+      "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
+      "mota": "Điện thoại mới nhất ",
+      "id": 9
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "1235656",
+      "id": 10
+    },
+    {
+      "name": "duong",
+      "image": "https://picsum.photos/200",
+      "mota": "SamSung  đây",
+      "id": 11
+    },
+    {
+      "name": "admin",
+      "image": "https://picsum.photos/200",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "id": 12
+    },
+    {
+      "name": "duong",
+      "image": "https://picsum.photos/200",
+      "mota": "SamSung  đây",
+      "id": 13
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "id": 14
+    },
+    {
+      "name": "Dương",
+      "image": "https://picsum.photos/200",
+      "mota": "123444444",
+      "id": 15
+    }
+  ],
+  "products": [
+    {
+      "id": 2,
+      "name": "sansung s20",
+      "price": "10.000000",
+      "mota": "sansung  đây",
+      "danhmuc": 2,
+      "trangthai": "hết hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": 5
+    },
+    {
+      "id": 3,
+      "name": "oppo 12",
+      "price": "4.000000",
+      "mota": "đập k bể",
+      "danhmuc": 3,
+      "trangthai": "còn hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": "5"
+    },
+    {
+      "id": 5,
+      "name": "iphone11",
+      "price": "6.000000",
+      "mota": "Điện thoại mới nhất ",
+      "danhmuc": 1,
+      "trangthai": "còn hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png",
+      "albumId": 4
+    },
+    {
+      "id": 7,
+      "name": "iphone",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "price": "5000000",
+      "mota": "sản phẩm chỉ mang tính chất tượng trưng ",
+      "danhmuc": "1",
+      "trangthai": "Còn hàng",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 8,
+      "name": "sansung s20",
+      "price": "10.000000",
+      "mota": "sansung  đây",
+      "danhmuc": 2,
+      "trangthai": "hết hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": 5
+    },
+    {
+      "id": 9,
+      "name": "oppo 12",
+      "price": "4.000000",
+      "mota": "đập k bể",
+      "danhmuc": 3,
+      "trangthai": "còn hàng",
+      "type": "simple",
+      "parent": 0,
+      "image": "https://cdn.tgdd.vn/Products/Images/42/232623/samsung-galaxy-a22-5g-600x600.jpg",
+      "albumId": "5"
+    },
+    {
+      "id": 10,
+      "name": "Huawei",
+      "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRxbB6CP9CeZcjRJnBzf_kZISCErKFgJHBC8A&s",
+      "price": "123456",
+      "mota": "aaa",
+      "danhmuc": 7,
+      "trangthai": "còn hàng",
+      "albumId": "5",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 11,
+      "name": "OnePlus",
+      "image": "https://cdn.tgdd.vn/Products/Images/42/230770/oneplus-9-pro-600x600-1-600x600.jpg",
+      "price": "123456",
+      "mota": "aaa",
+      "danhmuc": 8,
+      "trangthai": "còn hàng",
+      "albumId": "4",
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 12,
+      "name": "Nokia",
+      "image": "https://genk.mediacdn.vn/2018/2/25/photo-1-1519497165734805023856.png",
+      "price": "123456",
+      "mota": "áa",
+      "danhmuc": 9,
+      "trangthai": "còn hàng",
+      "albumId": 5,
+      "type": "simple",
+      "parent": 0
+    },
+    {
+      "id": 13,
+      "name": "rog",
+      "image": "https://png.pngtree.com/png-vector/20201030/ourlarge/pngtree-cute-teddy-bear-png-image_2383062.jpg",
+      "price": "123",
+      "mota": "aa",
+      "danhmuc": 5,
+      "trangthai": "còn hàng",
+      "albumId": 4,
+      "type": "simple",
+      "parent": 0
+    }
+  ],
+  "albums": [
+    {
+      "name": "iphone 12 ",
+      "description": "2 ảnh",
+      "image": [
+        "https://images2.thanhnien.vn/thumb_w/640/528068263637045248/2023/7/9/iphone-15-pro-16889466723621397905918.jpg",
+        "https://hoanglongmobile.vn/uploads/2023/08/hoanglongmobile.vn-iphone-12-xanh-dam-1.png"
+      ],
+      "id": 4
+    },
+    {
+      "name": "Iphone8",
+      "description": "3 ảnh",
+      "image": [
+        "https://thegioidoxachtay.com/wp-content/uploads/2022/09/iphone-8-plus-mat-lung.webp",
+        "https://product.hstatic.net/1000359786/product/vvvv_a983e96ac07c4654b51e44cba3842b5d_master.jpg",
+        "https://muabandienthoai24h.vn/storage/upload/images/iphone-8-64gb-den-1-org.jpg"
+      ],
+      "id": 5
+    }
+  ],
+  "variants": [],
+  "orders": [
+    {
+      "id": 1,
+      "orderCode": "ORD-4J8K9",
+      "customerName": "Thế Anh",
+      "phone": "0987654321",
+      "address": "40 Xuân Thủy, Hà Nội",
+      "date": "2025-05-14T10:30:00Z",
+      "status": "Đang xử lý",
+      "isPaid": false,
+      "items": [
+        {
+          "productId": 5,
+          "productName": "iPhone 11",
+          "quantity": 2,
+          "price": 6000000
+        },
+        {
+          "productId": 3,
+          "productName": "Oppo 12",
+          "quantity": 1,
+          "price": 4000000
+        }
+      ],
+      "total": 18000000
+    },
+    {
+      "id": 2,
+      "orderCode": "ORD-X9B7C",
+      "customerName": "Bảo Anh",
+      "phone": "0911223344",
+      "address": "Số 12, Vĩnh Phúc",
+      "date": "2025-05-13T15:00:00Z",
+      "status": "Đã giao",
+      "isPaid": true,
+      "items": [
+        {
+          "productId": 6,
+          "productName": "iPhone 8",
+          "quantity": 1,
+          "price": 5000000
+        }
+      ],
+      "total": 5000000
+    },
+    {
+      "id": 3,
+      "orderCode": "ORD-K2X1Y",
+      "customerName": "Tiến",
+      "phone": "0909988776",
+      "address": "Đông Tác, Hà Nội",
+      "date": "2025-05-12T11:00:00Z",
+      "status": "Đang xử lý",
+      "isPaid": true,
+      "items": [
+        {
+          "productId": 8,
+          "productName": "Xiaomi Redmi Note 11",
+          "quantity": 2,
+          "price": 3500000
+        }
+      ],
+      "total": 7000000
+    }
+  ],
+  "comments": [
+    {
+      "user": "hieu",
+      "content": "Sản phẩm rất tốt",
+      "product": "",
+      "status": false,
+      "date": "08/05/2025",
+      "id": 1,
+      "likes": 24
+    },
+    {
+      "user": "amthucv1",
+      "content": "123123123",
+      "sanpham": "5",
+      "date": "2025-05-14T09:34:29.709Z",
+      "likes": 27,
+      "id": 2,
+      "status": false
+    },
+    {
+      "user": "duong2906",
+      "content": "123123123ssfadsfd",
+      "sanpham": "8",
+      "date": "2025-05-27T07:32:08.551Z",
+      "likes": 0,
+      "id": 3
+    }
+  ],
+  "carts": [],
+  "banners": [
+    {
+      "name": "khuyến mãi 12-12",
+      "image": "https://picsum.photos/200",
+      "link": "https://www.thegioididong.com/",
+      "start_date": "2025-12-12",
+      "end_date": "2026-01-01",
+      "status": true,
+      "id": 3
+    },
+    {
+      "name": "Khuyến mãi mãi mãi",
+      "image": "https://picsum.photos/200",
+      "link": "http://localhost:5173/admin/banner/add",
+      "start_date": "2025-05-12",
+      "end_date": "2025-05-31",
+      "status": true,
+      "id": 5
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "ưet",
+      "status": true,
+      "date": "13/05/2025",
+      "id": 1
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "qt",
+      "status": true,
+      "date": "13/05/2025",
+      "id": 2
+    },
+    {
+      "name": "Lê Xuân Tùng",
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "dfgh",
+      "status": false,
+      "date": "13/05/2025",
+      "id": 3
+    },
+    {
+      "name": "tung",
+      "email": "tungle@gmail.com",
+      "phone": "123456789",
+      "message": "okokoko",
+      "status": false,
+      "date": "14/05/2025",
+      "id": 4
+    },
+    {
+      "name": "Trịnh Mạnh Dương",
+      "email": "trinhvanduong2005tq@gmail.com",
+      "phone": "0343452076",
+      "message": "12312312",
+      "status": true,
+      "date": "22/05/2025",
+      "id": 5
+    },
+    {
+      "email": "letung251205@gmail.com",
+      "phone": "1234567",
+      "message": "dfgh",
+      "status": false,
+      "id": 6
+    },
+    {
+      "name": "Trịnh Mạnh Dương tét",
+      "email": "trinhvanduong2005tq@gmail.com",
+      "phone": "0343452076",
+      "message": "12312312",
+      "status": false,
+      "date": "",
+      "id": 7
+    }
+  ],
+  "users": [
+    {
+      "email": "Adminxphone@gmail.com",
+      "password": "$2a$10$PVyo4x5j1MI7u1VtS1QlbOnZ7gENkjEtyShp5YEbRAQIGIcVDeJNK",
+      "name": "AdminXphone1",
+      "role": "admin",
+      "active": true,
+      "id": 1,
+      "avatar": "https://tse4.mm.bing.net/th?id=OIP.-Q0xswb54svfYXoOLrsY2wHaE7&pid=Api&P=0&h=180",
+      "sdt": "0987654321",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nộiiii",
+      "notification": ""
+    },
+    {
+      "email": "client@gmail.com",
+      "password": "$2a$10$zL8hS1TJ9JTQBMHY9JxN0uClyot0gqDaaJszKgZ2vCEzrQmg2g4Om",
+      "name": "client",
+      "role": "user",
+      "active": true,
+      "id": 2,
+      "sdt": "0123456789",
+      "address": "Số 6, Đại lộ Hòa Bình, Phường An Cư, Quận Ninh Kiều, Thành Phố Cần Thơ.",
+      "avatar": "blob:http://localhost:5173/1ba928e6-f8b4-4ceb-ac6b-4e5750a8eb3e"
+    },
+    {
+      "email": "1@gmail.com",
+      "password": "$2a$10$ssaFsghUS4Sicd/DmHc3m.fyuot4VK1N3FohnYcmmWzaLdUMLD7E2",
+      "name": "123",
+      "role": "admin",
+      "active": true,
+      "id": 3
+    },
+    {
+      "email": "test12@gmail.com",
+      "password": "$2a$10$rvwY533K9tSaD5GHTbRzZuJXCRE3qmGHcFX5Jry2WXNsSfBhtJLfK",
+      "name": "testne",
+      "role": "user",
+      "active": true,
+      "id": 4,
+      "avatar": "blob:http://localhost:5173/69a7e915-980f-4d47-8f0b-c73c0ff3f954",
+      "address": "173 C Trường Chinh, Thanh Xuân, Hà Nội"
+    }
+  ],
+  "promotions": [
+    {
+      "name": "Miễn phí vận chuyển",
+      "code": "FreeShip",
+      "discountType": "freeShip",
+      "applicableProducts": "Iphone",
+      "description": "Miễn phí vận chuyển cho đơn hàng trên 500.000đ",
+      "condition": "Áp dụng toàn bộ sản phẩm",
+      "startDate": "2025-05-15",
+      "endDate": "2026-05-15",
+      "status": "true",
+      "id": 1
+    },
+    {
+      "name": "nguyễn hồng quân tét",
+      "code": "FE",
+      "discountType": "sale50k",
+      "applicableProducts": "SamSung",
+      "startDate": "2025-05-15",
+      "endDate": "2025-08-15",
+      "description": "Quân test chức năng",
+      "status": "true",
+      "id": 2
+    }
+  ]
+}
