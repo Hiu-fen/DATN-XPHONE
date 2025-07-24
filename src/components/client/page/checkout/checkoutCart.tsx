@@ -245,7 +245,7 @@ const Checkout = () => {
           to_district_id: Number(to_district_id),
           to_ward_code: String(to_ward_code),
           weight,
-          insurance_value: 0, // Hoặc 0 nếu bạn không muốn tính bảo hiểm
+          insurance_value: 0, 
         })
         .then((res) => {
           setShippingFee(res.data.shippingFee);
@@ -719,7 +719,7 @@ const Checkout = () => {
             )}
 
             <div className="flex justify-between text-gray-600 text-lg">
-              <span>Phí vận chuyển:</span>
+              <span>Phí vận chuyển:</span> 
               <span>{shippingFee.toLocaleString("vi-VN")} VND</span>
             </div>
             <div className="flex justify-between text-xl font-bold text-gray-900">
