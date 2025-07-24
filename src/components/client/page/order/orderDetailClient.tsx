@@ -1,9 +1,8 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { useParams, Link } from "react-router-dom"
+import { createPortal } from "react-dom"
 import axios from "axios"
-import socket from "../../../../socket" // <-- đường dẫn tới file socket.ts
+import socket from "../../../../socket"
 import {
   ArrowLeft,
   DollarSign,
@@ -72,7 +71,7 @@ const OrderDetail = () => {
   const [customReason, setCustomReason] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoyaltyModalOpen, setIsLoyaltyModalOpen] = useState(false)
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false) // New state for invoice modal
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false)
   const [isCancelDisabled, setIsCancelDisabled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [showToast, setShowToast] = useState(false)
@@ -94,7 +93,6 @@ const OrderDetail = () => {
     setTimeout(() => setShowToast(false), 3000)
   }
 
-  // Function to handle invoice download/save
   const handleSaveInvoice = () => {
     const printContent = document.getElementById("invoice-content")
     if (printContent) {
@@ -102,11 +100,10 @@ const OrderDetail = () => {
       document.body.innerHTML = printContent.innerHTML
       window.print()
       document.body.innerHTML = originalContent
-      window.location.reload() // Reload to restore the original content
+      window.location.reload()
     }
   }
 
-  // Function to handle invoice print
   const handlePrintInvoice = () => {
     window.print()
   }
@@ -126,27 +123,25 @@ const OrderDetail = () => {
         setLoading(false)
       }
     }
+
     if (id) {
       fetchOrder()
     }
   }, [id])
 
-  // 2. Lắng nghe realtime cập nhật
   useEffect(() => {
     if (!id) return
     const handleOrderUpdated = (updatedOrder: Order) => {
-      // Chỉ update khi event trả về đúng đơn hàng đang xem
       if (updatedOrder._id === id) {
         setOrder(updatedOrder)
         showToastMessage("Đơn hàng đã được cập nhật từ Admin", "success")
-        // nếu status thay đổi, disable nút hủy
         if (updatedOrder.status !== "Chờ xác nhận") {
           setIsCancelDisabled(true)
         }
       }
     }
+
     socket.on("orderUpdated", handleOrderUpdated)
-    // Cleanup khi component unmount
     return () => {
       socket.off("orderUpdated", handleOrderUpdated)
     }
@@ -160,7 +155,6 @@ const OrderDetail = () => {
       })
       message.success("Đã xác nhận bạn đã nhận hàng.")
       setOrder((prev: any) => ({ ...prev, status: "Đã nhận hàng" }))
-      // Show loyalty point modal after successful confirmation
       setIsLoyaltyModalOpen(true)
     } catch (error) {
       message.error("Xác nhận thất bại!")
@@ -695,16 +689,12 @@ const OrderDetail = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
               <div className="p-8 text-center">
-                {/* Success Animation */}
                 <div className="mx-auto mb-6 w-20 h-20 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center animate-pulse">
                   <Gift className="w-10 h-10 text-white" />
                 </div>
-                {/* Title */}
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Chúc mừng bạn!</h3>
-                {/* Message */}
                 <div className="mb-6">
                   <p className="text-gray-600 text-lg mb-4">Bạn đã xác nhận nhận hàng thành công và được tặng</p>
-                  {/* Point Display */}
                   <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
                     <div className="flex items-center justify-center gap-3">
                       <div className="p-3 bg-yellow-100 rounded-full">
@@ -720,7 +710,6 @@ const OrderDetail = () => {
                     Điểm sẽ được cộng vào tài khoản của bạn và có thể sử dụng cho các đơn hàng tiếp theo
                   </p>
                 </div>
-                {/* Close Button */}
                 <button
                   onClick={() => setIsLoyaltyModalOpen(false)}
                   className="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-lg hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
@@ -731,12 +720,32 @@ const OrderDetail = () => {
             </div>
           </div>
         )}
+      </div>
 
-        {/* Invoice Modal */}
-        {isInvoiceModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+      {/* Invoice Modal using Portal */}
+      {isInvoiceModalOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4"
+            style={{
+              zIndex: 2147483647,
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              width: "100vw",
+              height: "100vh",
+            }}
+            onClick={() => setIsInvoiceModalOpen(false)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden relative"
+              onClick={(e) => e.stopPropagation()}
+              style={{ maxHeight: "95vh" }}
+            >
+              {/* Header - Sticky */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white sticky top-0 z-10 shadow-sm">
                 <h3 className="text-xl font-semibold text-gray-900">Hóa đơn điện tử</h3>
                 <div className="flex items-center gap-3">
                   <button
@@ -755,180 +764,185 @@ const OrderDetail = () => {
                   </button>
                   <button
                     onClick={() => setIsInvoiceModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                    className="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-lg"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              {/* Invoice Content */}
-              <div id="invoice-content" className="p-8 bg-white">
-                {/* Invoice Header */}
-                <div className="flex justify-between items-start mb-8">
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-3 bg-blue-100 rounded-xl">
-                        <Building className="w-8 h-8 text-blue-600" />
+              {/* Scrollable content */}
+              <div className="overflow-y-auto" style={{ maxHeight: "calc(95vh - 80px)" }}>
+                {/* Invoice Content */}
+                <div id="invoice-content" className="p-8 bg-white">
+                  {/* Invoice Header */}
+                  <div className="flex justify-between items-start mb-8">
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="p-3 bg-blue-100 rounded-xl">
+                          <Building className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <div>
+                          <h1 className="text-3xl font-bold text-gray-900">Xphone</h1>
+                          <p className="text-gray-600">Cửa hàng điện tử hàng đầu</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4" />
+                          <span>123 Đường ABC, Quận 1, TP.HCM</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone className="w-4 h-4" />
+                          <span>0123 456 789</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-4 h-4" />
+                          <span>contact@xphone.com</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">HÓA ĐƠN BÁN HÀNG</h2>
+                      <div className="space-y-1 text-sm">
+                        <p>
+                          <span className="font-medium">Số hóa đơn:</span> #{order.orderCode}
+                        </p>
+                        <p>
+                          <span className="font-medium">Ngày tạo:</span> {new Date().toLocaleDateString("vi-VN")}
+                        </p>
+                        <p>
+                          <span className="font-medium">Ngày đặt hàng:</span>{" "}
+                          {new Date(order.date).toLocaleDateString("vi-VN")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Customer Information */}
+                  <div className="bg-gray-50 rounded-xl p-6 mb-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin khách hàng</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Họ và tên</p>
+                        <p className="font-semibold text-gray-900">{order.customerName}</p>
                       </div>
                       <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Xphone</h1>
-                        <p className="text-gray-600">Cửa hàng điện tử hàng đầu</p>
+                        <p className="text-sm text-gray-500 mb-1">Số điện thoại</p>
+                        <p className="font-semibold text-gray-900">{order.phone}</p>
                       </div>
-                    </div>
-                    <div className="space-y-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <span>123 Đường ABC, Quận 1, TP.HCM</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4" />
-                        <span>0123 456 789</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
-                        <span>contact@xphone.com</span>
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-gray-500 mb-1">Địa chỉ</p>
+                        <p className="font-semibold text-gray-900">{order.address}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">HÓA ĐƠN BÁN HÀNG</h2>
-                    <div className="space-y-1 text-sm">
-                      <p>
-                        <span className="font-medium">Số hóa đơn:</span> #{order.orderCode}
-                      </p>
-                      <p>
-                        <span className="font-medium">Ngày tạo:</span> {new Date().toLocaleDateString("vi-VN")}
-                      </p>
-                      <p>
-                        <span className="font-medium">Ngày đặt hàng:</span>{" "}
-                        {new Date(order.date).toLocaleDateString("vi-VN")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Customer Information */}
-                <div className="bg-gray-50 rounded-xl p-6 mb-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin khách hàng</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Họ và tên</p>
-                      <p className="font-semibold text-gray-900">{order.customerName}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">Số điện thoại</p>
-                      <p className="font-semibold text-gray-900">{order.phone}</p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-gray-500 mb-1">Địa chỉ</p>
-                      <p className="font-semibold text-gray-900">{order.address}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Products Table */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Chi tiết sản phẩm</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-300">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 px-4 py-3 text-left font-semibold">STT</th>
-                          <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Tên sản phẩm</th>
-                          <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Thông số</th>
-                          <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Số lượng</th>
-                          <th className="border border-gray-300 px-4 py-3 text-right font-semibold">Đơn giá</th>
-                          <th className="border border-gray-300 px-4 py-3 text-right font-semibold">Thành tiền</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order.items.map((item, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 px-4 py-3 text-center">{index + 1}</td>
-                            <td className="border border-gray-300 px-4 py-3 font-medium">{item.productName}</td>
-                            <td className="border border-gray-300 px-4 py-3">
-                              <div className="space-y-1 text-sm">
-                                <div>Màu: {item.snapshot?.color || "N/A"}</div>
-                                <div>Bộ nhớ: {item.snapshot?.storage ? `${item.snapshot.storage} GB` : "N/A"}</div>
-                              </div>
-                            </td>
-                            <td className="border border-gray-300 px-4 py-3 text-center">{item.soluong}</td>
-                            <td className="border border-gray-300 px-4 py-3 text-right">
-                              {item.price.toLocaleString()} đ
-                            </td>
-                            <td className="border border-gray-300 px-4 py-3 text-right font-semibold">
-                              {(item.price * item.soluong).toLocaleString()} đ
-                            </td>
+                  {/* Products Table */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Chi tiết sản phẩm</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full border-collapse border border-gray-300">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold">STT</th>
+                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Tên sản phẩm</th>
+                            <th className="border border-gray-300 px-4 py-3 text-left font-semibold">Thông số</th>
+                            <th className="border border-gray-300 px-4 py-3 text-center font-semibold">Số lượng</th>
+                            <th className="border border-gray-300 px-4 py-3 text-right font-semibold">Đơn giá</th>
+                            <th className="border border-gray-300 px-4 py-3 text-right font-semibold">Thành tiền</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {order.items.map((item, index) => (
+                            <tr key={index} className="hover:bg-gray-50">
+                              <td className="border border-gray-300 px-4 py-3 text-center">{index + 1}</td>
+                              <td className="border border-gray-300 px-4 py-3 font-medium">{item.productName}</td>
+                              <td className="border border-gray-300 px-4 py-3">
+                                <div className="space-y-1 text-sm">
+                                  <div>Màu: {item.snapshot?.color || "N/A"}</div>
+                                  <div>Bộ nhớ: {item.snapshot?.storage ? `${item.snapshot.storage} GB` : "N/A"}</div>
+                                </div>
+                              </td>
+                              <td className="border border-gray-300 px-4 py-3 text-center">{item.soluong}</td>
+                              <td className="border border-gray-300 px-4 py-3 text-right">
+                                {item.price.toLocaleString()} đ
+                              </td>
+                              <td className="border border-gray-300 px-4 py-3 text-right font-semibold">
+                                {(item.price * item.soluong).toLocaleString()} đ
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
 
-                {/* Payment Summary */}
-                <div className="flex justify-end mb-8">
-                  <div className="w-full max-w-md">
-                    <div className="bg-gray-50 rounded-xl p-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Tổng kết thanh toán</h3>
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Tạm tính:</span>
-                          <span className="font-semibold">
-                            {order.items.reduce((sum, item) => sum + item.price * item.soluong, 0).toLocaleString()} đ
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Phí vận chuyển:</span>
-                          <span className="font-semibold">{order.shippingFee?.toLocaleString() || "0"} đ</span>
-                        </div>
-                        {order.voucherCode && (
-                          <div className="flex justify-between text-green-600">
-                            <span>Giảm giá ({order.voucherCode}):</span>
-                            <span className="font-semibold">-{order.voucherDiscount?.toLocaleString() || "0"} đ</span>
+                  {/* Payment Summary */}
+                  <div className="flex justify-end mb-8">
+                    <div className="w-full max-w-md">
+                      <div className="bg-gray-50 rounded-xl p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Tổng kết thanh toán</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Tạm tính:</span>
+                            <span className="font-semibold">
+                              {order.items.reduce((sum, item) => sum + item.price * item.soluong, 0).toLocaleString()} đ
+                            </span>
                           </div>
-                        )}
-                        <hr className="border-gray-300" />
-                        <div className="flex justify-between text-lg font-bold">
-                          <span>Tổng cộng:</span>
-                          <span className="text-green-600">{order.total.toLocaleString()} đ</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Phương thức thanh toán:</span>
-                          <span className="font-semibold">{order.paymentMethod || "Chưa rõ"}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Trạng thái thanh toán:</span>
-                          <span
-                            className={`font-semibold ${order.paymentStatus === "Đã thanh toán" ? "text-green-600" : "text-orange-600"}`}
-                          >
-                            {order.paymentStatus || "Chưa rõ"}
-                          </span>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Phí vận chuyển:</span>
+                            <span className="font-semibold">{order.shippingFee?.toLocaleString() || "0"} đ</span>
+                          </div>
+                          {order.voucherCode && (
+                            <div className="flex justify-between text-green-600">
+                              <span>Giảm giá ({order.voucherCode}):</span>
+                              <span className="font-semibold">-{order.voucherDiscount?.toLocaleString() || "0"} đ</span>
+                            </div>
+                          )}
+                          <hr className="border-gray-300" />
+                          <div className="flex justify-between text-lg font-bold">
+                            <span>Tổng cộng:</span>
+                            <span className="text-green-600">{order.total.toLocaleString()} đ</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Phương thức thanh toán:</span>
+                            <span className="font-semibold">{order.paymentMethod || "Chưa rõ"}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Trạng thái thanh toán:</span>
+                            <span
+                              className={`font-semibold ${
+                                order.paymentStatus === "Đã thanh toán" ? "text-green-600" : "text-orange-600"
+                              }`}
+                            >
+                              {order.paymentStatus || "Chưa rõ"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Footer */}
-                <div className="border-t border-gray-200 pt-6">
-                  <div className="flex justify-between items-center">
-                    <div className="text-sm text-gray-600">
-                      <p>Cảm ơn bạn đã mua hàng tại Xphone!</p>
-                      <p>Mọi thắc mắc xin liên hệ: 0123 456 789</p>
-                    </div>
-                    <div className="text-right text-sm text-gray-600">
-                      <p>Hóa đơn được tạo tự động</p>
-                      <p>Ngày in: {new Date().toLocaleString("vi-VN")}</p>
+                  {/* Footer */}
+                  <div className="border-t border-gray-200 pt-6">
+                    <div className="flex justify-between items-center">
+                      <div className="text-sm text-gray-600">
+                        <p>Cảm ơn bạn đã mua hàng tại Xphone!</p>
+                        <p>Mọi thắc mắc xin liên hệ: 0123 456 789</p>
+                      </div>
+                      <div className="text-right text-sm text-gray-600">
+                        <p>Hóa đơn được tạo tự động</p>
+                        <p>Ngày in: {new Date().toLocaleString("vi-VN")}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
-      </div>
     </div>
   )
 }
