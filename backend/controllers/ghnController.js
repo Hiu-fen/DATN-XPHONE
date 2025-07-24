@@ -6,8 +6,8 @@ const GHN_TOKEN = process.env.GHN_TOKEN;
 const GHN_SHOP_ID = Number(process.env.GHN_SHOP_ID);
 const FROM_DISTRICT_ID = Number(process.env.FROM_DISTRICT_ID);
 
-console.log('GHN_TOKEN:', GHN_TOKEN);
-console.log('SHOP_ID:', GHN_SHOP_ID);
+// console.log('GHN_TOKEN:', GHN_TOKEN);
+// console.log('SHOP_ID:', GHN_SHOP_ID);
 
 
 exports.getProvinces = async (req, res) => {
@@ -16,7 +16,7 @@ exports.getProvinces = async (req, res) => {
       'https://online-gateway.ghn.vn/shiip/public-api/master-data/province',
       { headers: { Token: GHN_TOKEN } }
     );
-    res.json(response.data.data);
+    res.json(response.data.data); 
   } catch (err) {
     console.error('Lỗi lấy tỉnh:', err.message);
     res.status(500).json({ error: 'Lỗi khi lấy danh sách tỉnh' });
@@ -75,7 +75,7 @@ exports.calculateShippingFee = async (req, res) => {
   {
     headers: {
       'Content-Type': 'application/json',
-      token: GHN_TOKEN // ✅ lưu ý chữ thường 'token'
+      token: GHN_TOKEN 
     }
   }
   
@@ -97,7 +97,6 @@ console.log("✅ GHN service list:", serviceRes.data.data);
       length: 15,
       width: 15,
       height: 15,
-      // ❌ Không cần truyền shop_id ở đây nữa
     };
 
     console.log("📦 Gửi body fee:", feeBody);
@@ -120,7 +119,7 @@ console.log("✅ GHN service list:", serviceRes.data.data);
   {
     headers: {
       'Content-Type': 'application/json',
-      token: GHN_TOKEN // ✅ viết thường
+      token: GHN_TOKEN 
     }
   }
 );

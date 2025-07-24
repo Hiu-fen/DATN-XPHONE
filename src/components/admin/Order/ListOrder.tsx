@@ -338,7 +338,7 @@ const OrderList = () => {
       <h2 className="text-2xl font-bold mb-4">Danh sách đơn hàng</h2>
       <div>
         {/* Bộ lọc theo trạng thái đơn hàng */}
-        <div className="flex justify-center  mr-[250px] mb-[-33px]">
+        <div className="flex justify-center  mr-[230px] mb-[-33px]">
           <Radio.Group
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -358,7 +358,7 @@ const OrderList = () => {
           <Input.Search
             placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
             className="mb-4"
-            style={{ width: 250 }}
+            style={{ width: 230 }}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
           />
