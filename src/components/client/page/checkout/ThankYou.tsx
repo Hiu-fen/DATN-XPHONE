@@ -5,6 +5,16 @@ import { useEffect, useState } from "react";
 const ThankYou = () => {
   const [params] = useSearchParams();
   const orderCode = params.get("orderCode");
+  const orderId = params.get("orderId");
+
+  const goToDetail = () => {
+    if (orderId) {
+      nav(`/history/${orderId}`);
+    } else {
+      nav("/");
+    }
+  };
+
   const [showConfetti, setShowConfetti] = useState(false);
   const nav = useNavigate();
   useEffect(() => {
@@ -103,6 +113,16 @@ const ThankYou = () => {
                 <p className="text-3xl font-bold text-green-700 font-mono tracking-wider bg-white px-6 py-3 rounded-xl inline-block shadow-sm">
                   {orderCode}
                 </p>
+                {orderId && (
+                  <div className="text-center mt-6">
+                    <button
+                      onClick={goToDetail}
+                      className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg font-semibold transition"
+                    >
+                      Xem chi tiết đơn hàng
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

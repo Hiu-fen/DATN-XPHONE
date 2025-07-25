@@ -37,7 +37,7 @@ const MomoReturn = () => {
       const orderId = createdOrder._id;
 
       await axios.patch(
-        `http://localhost:5000/api/orders/${orderId}/mark-paid`,
+        `http://localhost:5000/api/orders/${orderId}/paid`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -67,12 +67,11 @@ const MomoReturn = () => {
       localStorage.removeItem("pendingOrder");
       message.success("Thanh toán thành công!");
       if (createdOrder?.orderCode) {
-        window.location.replace(`/thank-you?orderCode=${createdOrder.orderCode}`);
-      } else {
-        console.error(
-          "Không có orderCode trong createdOrder:",
-          createdOrder
+        window.location.replace(
+          `/thank-you?orderCode=${createdOrder.orderCode}&orderId=${createdOrder._id}`
         );
+      } else {
+        console.error("Không có orderCode trong createdOrder:", createdOrder);
         message.error("Không thể điều hướng. Đơn hàng không có mã đơn.");
       }
     } catch (err: any) {
