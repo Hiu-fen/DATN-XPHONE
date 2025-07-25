@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
 import { CheckCircle, ArrowRight } from "lucide-react";
@@ -33,7 +34,7 @@ const MomoReturn = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      const createdOrder = response.data;
+      const { order: createdOrder, updatedCart } = response.data; // Lấy order và updatedCart
       const orderId = createdOrder._id;
 
       await axios.patch(
@@ -41,7 +42,7 @@ const MomoReturn = () => {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      localStorage.removeItem("pendingOrder");
+
       for (const item of pendingOrder.items) {
         await axios.patch(
           `http://localhost:5000/api/products/${item.productId}/update-quantity`,
@@ -54,14 +55,17 @@ const MomoReturn = () => {
         );
       }
 
-      if (!pendingOrder.buyNowItem) {
-        await axios.delete(
+      // Đồng bộ giỏ hàng từ backend
+      if (updatedCart) {
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart.items || []));
+        console.log("✅ Đã đồng bộ giỏ hàng từ backend:", updatedCart.items);
+      } else {
+        const cartResponse = await axios.get(
           `http://localhost:5000/api/carts/${pendingOrder.userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-        localStorage.removeItem("cartItems");
+        localStorage.setItem("cartItems", JSON.stringify(cartResponse.data.items || []));
+        console.log("✅ Đã đồng bộ giỏ hàng từ backend (GET):", cartResponse.data.items);
       }
 
       localStorage.removeItem("pendingOrder");
@@ -75,7 +79,8 @@ const MomoReturn = () => {
         message.error("Không thể điều hướng. Đơn hàng không có mã đơn.");
       }
     } catch (err: any) {
-      message.error("Có lỗi xảy ra. Vui lòng thử lại.");
+      console.error("Lỗi xử lý thanh toán Momo:", err);
+      message.error(err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
     } finally {
       setIsProcessing(false);
     }

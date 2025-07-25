@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { message, Modal } from "antd";
@@ -45,6 +46,7 @@ const Checkout = () => {
     | ICartItem[]
     | undefined;
   const buyNowItem = location.state?.buyNowItem as CartItem | undefined;
+  const isBuyNow = !!buyNowItem; // Xác định luồng "Mua ngay"
 
   useEffect(() => {
     const hasCartItems = localStorage.getItem("cartItems");
@@ -58,20 +60,17 @@ const Checkout = () => {
       !location.state;
 
     if (shouldRedirect) {
+      message.error("Không có sản phẩm để thanh toán.");
       navigate("/", { replace: true });
     }
-  }, [buyNowItem, selectedItems, location.state]);
+  }, [buyNowItem, selectedItems, location.state, navigate]);
 
   const currentUser = user as IUserExtended | null;
 
   const [showAddressModal, setShowAddressModal] = useState(false);
-
   const [addressList, setAddressList] = useState<IAddress[]>([]);
-
   const [cart, setCart] = useState<CartItem[]>([]);
-  // const SHIPPING_FEE = 35000;
   const [shippingFee, setShippingFee] = useState<number>(35000);
-
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [voucherCode, setVoucherCode] = useState<string>("");
   const [finalPrice, setFinalPrice] = useState<number>(0);
@@ -84,27 +83,30 @@ const Checkout = () => {
   useEffect(() => {
     const fetchAddresses = async () => {
       if (currentUser?._id) {
-        const res = await axios.get(
-          `http://localhost:5000/api/addresses/${currentUser._id}`
-        );
-        const addresses = res.data;
-        setAddressList(addresses);
+        try {
+          const res = await axios.get(
+            `http://localhost:5000/api/addresses/${currentUser._id}`
+          );
+          const addresses = res.data;
+          setAddressList(addresses);
 
-        // ✅ Tìm địa chỉ mặc định (default: true)
+          const defaultAddr =
+            addresses.find((addr: IAddress) => addr.default === true) ||
+            addresses[0];
 
-        const defaultAddr =
-          addresses.find((addr: IAddress) => addr.default === true) ||
-          addresses[0];
-
-        if (defaultAddr) {
-          setForm((prev) => ({
-            ...prev,
-            name: defaultAddr.name,
-            sdt: defaultAddr.phone,
-            address: defaultAddr.address,
-            to_district_id: defaultAddr.district_id,
-            to_ward_code: defaultAddr.ward_code,
-          }));
+          if (defaultAddr) {
+            setForm((prev) => ({
+              ...prev,
+              name: defaultAddr.name,
+              sdt: defaultAddr.phone,
+              address: defaultAddr.address,
+              to_district_id: defaultAddr.district_id,
+              to_ward_code: defaultAddr.ward_code,
+            }));
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy địa chỉ:", error);
+          message.error("Không thể tải danh sách địa chỉ.");
         }
       }
     };
@@ -215,7 +217,6 @@ const Checkout = () => {
     (sum, item) => sum + item.price * item.soluong,
     0
   );
-  // const totalWithShipping = Number(totalPrice) + Number(SHIPPING_FEE);
   const totalWithDiscountAndShipping =
     (discountAmount > 0 ? finalPrice : totalPrice) + shippingFee;
 
@@ -230,16 +231,16 @@ const Checkout = () => {
     to_district_id: "",
     to_ward_code: "",
   });
+
   useEffect(() => {
     const { to_district_id, to_ward_code, shippingProvider } = form;
 
-    if (!to_district_id || !to_ward_code) return; // Đảm bảo có district_id và ward_code
+    if (!to_district_id || !to_ward_code) return;
 
-    const weight = cart.reduce((sum, i) => sum + i.soluong * 300, 0); // 1000g mỗi sp
+    const weight = cart.reduce((sum, i) => sum + i.soluong * 300, 0);
 
     if (shippingProvider === "GHN") {
       console.log("✅ Chọn địa chỉ:", to_district_id, to_ward_code);
-
       axios
         .post("http://localhost:5000/api/ghn/calculate-fee", {
           to_district_id: Number(to_district_id),
@@ -252,29 +253,12 @@ const Checkout = () => {
         })
         .catch((err) => {
           console.error("❌ Lỗi tính phí GHN:", err);
-          setShippingFee(35000); // fallback phí cố định
+          setShippingFee(35000);
         });
     } else {
       setShippingFee(35000);
     }
-  }, [
-    form.to_district_id,
-    form.to_ward_code,
-    form.shippingProvider,
-    cart,
-    totalPrice,
-  ]);
-
-  // useEffect(() => {
-  //   setForm((prev) => ({
-  //     ...prev,
-  //     name: currentUser?.name || prev.name,
-  //     email: currentUser?.email || prev.email,
-  //     sdt: currentUser?.sdt || prev.sdt,
-  //     address: currentUser?.address || prev.address,
-
-  //   }));
-  // }, [currentUser]);
+  }, [form.to_district_id, form.to_ward_code, form.shippingProvider, cart]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -283,6 +267,37 @@ const Checkout = () => {
   ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleApplyVoucher = async (code: string) => {
+    try {
+      const itemsPayload = cart.map((item) => ({
+        productId: item.productId,
+        categoryId: String(item.categoryId),
+        quantity: item.soluong,
+        price: item.price,
+      }));
+
+      const response = await applyVoucherToOrder({
+        code,
+        total: totalPrice,
+        userId: currentUser?._id || "",
+        items: itemsPayload,
+      });
+
+      const { discountAmount, finalPrice, voucherCode, voucherInfo } =
+        response.data;
+      message.success("Áp dụng mã thành công");
+      setDiscountAmount(discountAmount);
+      setVoucherCode(voucherCode);
+      setFinalPrice(finalPrice);
+      setVoucherInfo(voucherInfo);
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message || "Không áp dụng được mã khuyến mãi";
+      message.error(errorMsg);
+      setDiscountAmount(0);
+    }
   };
 
   const handleOrder = async () => {
@@ -352,6 +367,7 @@ const Checkout = () => {
       voucherCode: voucherCode || null,
       discountAmount: discountAmount || 0,
       userId: user._id,
+      isBuyNow,
     };
 
     try {
@@ -363,11 +379,11 @@ const Checkout = () => {
         return;
       }
 
-      // Nếu chọn Momo thì KHÔNG tạo đơn ngay
       if (form.paymentMethod === "Momo") {
+        localStorage.setItem("fromBuyNow", JSON.stringify(isBuyNow));
         localStorage.setItem("pendingOrder", JSON.stringify(newOrder));
-        navigate(`/momo_return`, { replace: true });
-        setIsSubmitting(false); // reset nút đặt hàng
+        navigate(`/momo_return`, { state: { fromBuyNow: isBuyNow }, replace: true });
+        setIsSubmitting(false);
         return;
       }
 
@@ -379,11 +395,11 @@ const Checkout = () => {
         }
       );
 
-      const createdOrder = orderResponse.data;
+      const { order: createdOrder, updatedCart } = orderResponse.data;
       const orderId = createdOrder._id;
 
-      // 👉 Redirect sang VNPAY nếu chọn thanh toán online
       if (form.paymentMethod === "VNPAY") {
+        localStorage.setItem("fromBuyNow", JSON.stringify(isBuyNow));
         const vnpRes = await axios.post(
           "http://localhost:5000/api/vnpay/create_payment_url",
           {
@@ -397,7 +413,6 @@ const Checkout = () => {
         return;
       }
 
-      // Chỉ trừ số lượng nếu là COD
       if (form.paymentMethod === "COD") {
         for (const item of cart) {
           await axios.patch(
@@ -412,31 +427,24 @@ const Checkout = () => {
         }
       }
 
-      // ✅ Cập nhật giỏ hàng
-      if (!buyNowItem && selectedItems) {
+      // Đồng bộ giỏ hàng từ backend
+      if (updatedCart) {
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart.items || []));
+        console.log("✅ Đã đồng bộ giỏ hàng từ backend (Checkout):", updatedCart.items);
+      } else {
         const cartResponse = await axios.get(
-          `http://localhost:5000/api/carts/${user._id}`
-        );
-        const remainingItems = cartResponse.data.items.filter(
-          (item: ICartItem) =>
-            !cart.some((selected) => selected._id === item._id)
-        );
-        await axios.put(
           `http://localhost:5000/api/carts/${user._id}`,
-          { items: remainingItems },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        localStorage.setItem("cartItems", JSON.stringify(remainingItems));
-      } else if (!buyNowItem) {
-        await axios.delete(`http://localhost:5000/api/carts/${user._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        localStorage.removeItem("cartItems");
+        localStorage.setItem("cartItems", JSON.stringify(cartResponse.data.items || []));
+        console.log("✅ Đã đồng bộ giỏ hàng từ backend (GET):", cartResponse.data.items);
       }
 
       setCart([]);
+      message.success("Đặt hàng thành công!");
       navigate(
-        `/cod_return?orderId=${orderId}&orderCode=${createdOrder.orderCode}`
+        `/cod_return?orderId=${orderId}&orderCode=${createdOrder.orderCode}`,
+        { state: { fromBuyNow: isBuyNow } }
       );
     } catch (err: unknown) {
       const error = err as AxiosError<{ message: string }>;
@@ -445,7 +453,7 @@ const Checkout = () => {
         error.response?.data?.message || "Đặt hàng thất bại. Vui lòng thử lại."
       );
     } finally {
-      setIsSubmitting(false); // ✅ Reset trạng thái
+      setIsSubmitting(false);
     }
   };
 
@@ -456,7 +464,7 @@ const Checkout = () => {
         <a href="/login" className="text-blue-600 hover:underline">
           đăng nhập
         </a>{" "}
-        Vui lòng chuyển khoản qua Momo để thanh toán.
+        để tiếp tục.
       </div>
     );
   }
@@ -468,36 +476,6 @@ const Checkout = () => {
       </div>
     );
   }
-  const handleApplyVoucher = async (code: string) => {
-    try {
-      const itemsPayload = cart.map((item) => ({
-        productId: item.productId,
-        categoryId: String(item.categoryId),
-        quantity: item.soluong,
-        price: item.price,
-      }));
-
-      const response = await applyVoucherToOrder({
-        code,
-        total: totalPrice,
-        userId: currentUser?._id || "",
-        items: itemsPayload,
-      });
-
-      const { discountAmount, finalPrice, voucherCode, voucherInfo } =
-        response.data;
-      message.success("Áp dụng mã thành công");
-      setDiscountAmount(discountAmount);
-      setVoucherCode(voucherCode);
-      setFinalPrice(finalPrice);
-      setVoucherInfo(voucherInfo);
-    } catch (err: any) {
-      const errorMsg =
-        err?.response?.data?.message || "Không áp dụng được mã khuyến mãi";
-      message.error(errorMsg);
-      setDiscountAmount(0);
-    }
-  };
 
   return (
     <div className="mx-4 p-8 bg-white rounded-lg mt-12 mb-12 border-2">
@@ -564,7 +542,7 @@ const Checkout = () => {
                   <li
                     key={addr._id}
                     className="border p-3 rounded-lg flex justify-between items-start"
-                  >
+                    >
                     <div>
                       <p className="font-semibold">
                         {addr.name} - {addr.phone}
@@ -574,17 +552,16 @@ const Checkout = () => {
                     <button
                       className="text-blue-600 hover:underline"
                       onClick={() => {
-                        console.log("===> addr được chọn:", addr);
+                        console.log("✅ Chọn địa chỉ:", addr);
                         setForm((prev) => ({
                           ...prev,
                           name: addr.name,
                           sdt: addr.phone,
                           address: addr.address,
-                          to_district_id: addr.district_id, // ✅ sửa từ addr.to_district_id → addr.district_id
-                          to_ward_code: addr.ward_code, // ✅ sửa từ addr.to_ward_code → addr.ward_code
+                          to_district_id: addr.district_id,
+                          to_ward_code: addr.ward_code,
                         }));
                         setShowAddressModal(false);
-                        // console.log("Chọn địa chỉ:", addr.to_district_id, addr.to_ward_code);
                       }}
                     >
                       Chọn
@@ -617,8 +594,7 @@ const Checkout = () => {
               className="border p-2 rounded"
             >
               <option value="Giao hàng tiêu chuẩn">Giao hàng tiêu chuẩn</option>
-              <option value="GHN">Giao hàng nhanh</option>{" "}
-              {/* ← thêm lựa chọn này */}
+              <option value="GHN">Giao hàng nhanh</option>
               <option value="J&T">J&T Express</option>
             </select>
           </div>
@@ -666,9 +642,7 @@ const Checkout = () => {
           <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
             {cart.map((item) => (
               <li
-                key={`${item.productId}-${item.color || ""}-${
-                  item.storage || ""
-                }`}
+                key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
                 className="flex items-center py-4"
               >
                 <img
