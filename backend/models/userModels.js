@@ -1,11 +1,5 @@
 const mongoose = require('mongoose');
 
-// Schema con để lưu thông tin thay đổi
-const changeSchema = new mongoose.Schema({
-  field: String,
-  oldValue: mongoose.Schema.Types.Mixed,
-  newValue: mongoose.Schema.Types.Mixed,
-});
 
 // Schema chính cho User
 const userSchema = new mongoose.Schema({
@@ -25,13 +19,14 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: [],
   },
-  // Thêm lịch sử cập nhật
   updateHistory: [
-    {
-      updatedAt: { type: Date, default: Date.now },
-      changes: [changeSchema],
-    }
-  ],
+  {
+    content: String,
+    time: { type: Date, default: Date.now }
+  }
+],
+
+ 
 }, {
   timestamps: true,
 });

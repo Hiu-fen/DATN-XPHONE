@@ -71,6 +71,7 @@ exports.listClients = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+// lấy tất cả danh sách người dùng
 
 // Cập nhật trạng thái người dùng (active, role,...)
 exports.updateUserStatus = async (req, res) => {
@@ -97,6 +98,8 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+
+
 exports.updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -104,62 +107,61 @@ exports.updateProfile = async (req, res) => {
 
     const { name, email, password, avatar, sdt, address, notification, gender, dob } = req.body;
 
-    const changes = [];
+    const changes = []; // ✅ Khai báo mảng để lưu lịch sử thay đổi
 
     if (email && email !== user.email) {
       const existingUser = await User.findOne({ email });
       if (existingUser && existingUser._id.toString() !== user._id.toString()) {
         return res.status(400).json({ message: 'Email đã tồn tại' });
       }
-      changes.push({ field: 'email', oldValue: user.email, newValue: email });
+      changes.push(`Email: ${user.email} → ${email}`);
       user.email = email;
     }
 
     if (name && name !== user.name) {
-      changes.push({ field: 'name', oldValue: user.name, newValue: name });
+      changes.push(`Tên: ${user.name} → ${name}`);
       user.name = name;
     }
-
     if (avatar && avatar !== user.avatar) {
-      changes.push({ field: 'avatar', oldValue: user.avatar, newValue: avatar });
+      changes.push(`Ảnh đại diện đã thay đổi`);
       user.avatar = avatar;
     }
-
     if (sdt && sdt !== user.sdt) {
-      changes.push({ field: 'sdt', oldValue: user.sdt, newValue: sdt });
+      changes.push(`Số điện thoại: ${user.sdt || 'Chưa có'} → ${sdt}`);
       user.sdt = sdt;
     }
-
     if (address && address !== user.address) {
-      changes.push({ field: 'address', oldValue: user.address, newValue: address });
+      changes.push(`Địa chỉ: ${user.address || 'Chưa có'} → ${address}`);
       user.address = address;
+    }
+    if (gender && gender !== user.gender) {
+      changes.push(`Giới tính: ${user.gender || 'Chưa có'} → ${gender}`);
+      user.gender = gender;
+    }
+    if (dob && dob !== user.dob) {
+      changes.push(`Ngày sinh: ${user.dob || 'Chưa có'} → ${dob}`);
+      user.dob = dob;
+    }
+    if (password && password !== '') {
+      const hashed = await bcrypt.hash(password, 10);
+      user.password = hashed;
+      changes.push(`Đã thay đổi mật khẩu`);
     }
 
     if (notification && notification !== user.notification) {
-      changes.push({ field: 'notification', oldValue: user.notification, newValue: notification });
+      changes.push(`Thông báo: ${user.notification || 'Chưa có'} → ${notification}`);
       user.notification = notification;
     }
 
-    if (gender && gender !== user.gender) {
-      changes.push({ field: 'gender', oldValue: user.gender, newValue: gender });
-      user.gender = gender;
-    }
-
-    if (dob && dob !== user.dob) {
-      changes.push({ field: 'dob', oldValue: user.dob, newValue: dob });
-      user.dob = dob;
-    }
-
-    if (password && password !== '') {
-      const hashed = await bcrypt.hash(password, 10);
-      changes.push({ field: 'password', oldValue: '********', newValue: '********' });
-      user.password = hashed;
-    }
-
+    // ✅ Ghi lịch sử
     if (changes.length > 0) {
-      user.updateHistory.push({
-        updatedAt: new Date(),
-        changes,
+      if (!Array.isArray(user.updateHistory)) {
+        user.updateHistory = [];
+      }
+
+      user.updateHistory.unshift({
+        content: changes.join(' | '),
+        time: new Date(),
       });
     }
 
@@ -170,6 +172,20 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ message: 'Lỗi máy chủ' });
   }
 };
+
+
+exports.getUpdateHistory = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('updateHistory email');
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    res.json(user.updateHistory);
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+};
+
+
 // Đăng ký với Google
 exports.registerWithGoogle = async (req, res) => {
   const { name, email, avatar } = req.body;
