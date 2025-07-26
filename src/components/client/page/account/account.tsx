@@ -72,38 +72,42 @@ const Account = () => {
     }
   }
 
-  const handleSave = async () => {
-    if (!user || !originalUser) return
+const handleSave = async () => {
+  if (!user || !originalUser) return;
 
-    setIsSaving(true)
-    const updatedFields: any = {}
+  setIsSaving(true);
+  const updatedFields: any = {};
 
-    for (const key in user) {
-      if (user[key] !== originalUser[key]) {
-        updatedFields[key] = user[key]
-      }
-    }
-
-    if (Object.keys(updatedFields).length === 0) {
-      message.info("Không có thay đổi nào để lưu")
-      setIsEditing(false)
-      setIsSaving(false)
-      return
-    }
-
-    try {
-      const { data: updatedUser } = await axios.patch(`http://localhost:5000/api/users/${user._id}`, updatedFields)
-      setUser(updatedUser)
-      setOriginalUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-      setIsEditing(false)
-      message.success("Cập nhật thông tin thành công!")
-    } catch (error) {
-      message.error("Cập nhật thất bại. Vui lòng thử lại.")
-    } finally {
-      setIsSaving(false)
+  for (const key in user) {
+    if (user[key] !== originalUser[key]) {
+      updatedFields[key] = user[key];
     }
   }
+
+  if (Object.keys(updatedFields).length === 0) {
+    message.info("Không có thay đổi nào để lưu");
+    setIsEditing(false);
+    setIsSaving(false);
+    return;
+  }
+
+  try {
+    const { data } = await axios.put(`http://localhost:5000/api/users/profile/${user._id}`, updatedFields);
+
+    const updatedUser = data.user; // ✅ lấy đúng user từ backend trả về
+
+    setUser(updatedUser);
+    setOriginalUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser)); // ✅ lưu chính xác
+    setIsEditing(false);
+    message.success("Cập nhật thông tin thành công!");
+  } catch (error) {
+    message.error("Cập nhật thất bại. Vui lòng thử lại.");
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
   const handleCancel = () => {
     setUser(originalUser)

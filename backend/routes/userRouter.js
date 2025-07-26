@@ -10,6 +10,7 @@ const {
   updateProfile,
   registerWithGoogle,
   loginWithGoogle,
+  getUpdateHistory,
   User_likeProduct, // like handler bạn đã định nghĩa
   userController_getLikedProducts,
 } = require('../controllers/userControllers');
@@ -27,6 +28,7 @@ router.get('/clients', listClients);
 router.get('/profile/:id', getProfile);
 router.put('/profile/:id', updateProfile);
 router.patch('/:id', updateUserStatus);
+router.get('/:id/history', getUpdateHistory);
 
 // ✅ Route like sản phẩm
 router.patch('/:id/like', User_likeProduct);
@@ -60,7 +62,7 @@ router.get('/', async (req, res) => {
     }
 
     // ✅ Nếu không có email, trả về tất cả user (dùng cho dropdown lọc địa chỉ)
-    const users = await User.find({}, "_id name email");
+    const users = await User.find({}, "_id name email role ");
     return res.json(users);
   } catch (error) {
     console.error('Lỗi server:', error);

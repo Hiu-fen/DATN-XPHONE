@@ -95,6 +95,7 @@ import ThankYou from './components/client/page/checkout/ThankYou';
 import NewsDetailAdmin from './components/admin/News/NewDetail';
 import ContactDetail from './components/admin/Contact/ContactDetail';
 import RewardsPage from './components/client/page/rewards/RewardsPage';
+import HistoryPage from './components/admin/User/HistoryPage';
 
 
 const App = () => {
@@ -185,6 +186,7 @@ const App = () => {
         { path: "user/listadmin", element: <GetAdmin /> },
         { path: "user/profileadmin", element: <ProfileAdmin /> },
         { path: "user/listclient", element: <GetClient /> },
+        { path: "user/history", element: <HistoryPage/> },
 
         //Router Order
         //admin
