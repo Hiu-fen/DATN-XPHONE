@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
 import { message } from "antd"
-import AccountSiba from "./siba"
+import AccountSiba from "./siba" // Ensure this path is correct
 
 const Account = () => {
   const [user, setUser] = useState<any>(null)
@@ -72,42 +72,41 @@ const Account = () => {
     }
   }
 
-const handleSave = async () => {
-  if (!user || !originalUser) return;
+  const handleSave = async () => {
+    if (!user || !originalUser) return
 
-  setIsSaving(true);
-  const updatedFields: any = {};
+    setIsSaving(true)
+    const updatedFields: any = {}
 
-  for (const key in user) {
-    if (user[key] !== originalUser[key]) {
-      updatedFields[key] = user[key];
+    for (const key in user) {
+      if (user[key] !== originalUser[key]) {
+        updatedFields[key] = user[key]
+      }
+    }
+
+    if (Object.keys(updatedFields).length === 0) {
+      message.info("Không có thay đổi nào để lưu")
+      setIsEditing(false)
+      setIsSaving(false)
+      return
+    }
+
+    try {
+      const { data } = await axios.put(`http://localhost:5000/api/users/profile/${user._id}`, updatedFields)
+
+      const updatedUser = data.user // ✅ lấy đúng user từ backend trả về
+
+      setUser(updatedUser)
+      setOriginalUser(updatedUser)
+      localStorage.setItem("user", JSON.stringify(updatedUser)) // ✅ lưu chính xác
+      setIsEditing(false)
+      message.success("Cập nhật thông tin thành công!")
+    } catch (error) {
+      message.error("Cập nhật thất bại. Vui lòng thử lại.")
+    } finally {
+      setIsSaving(false)
     }
   }
-
-  if (Object.keys(updatedFields).length === 0) {
-    message.info("Không có thay đổi nào để lưu");
-    setIsEditing(false);
-    setIsSaving(false);
-    return;
-  }
-
-  try {
-    const { data } = await axios.put(`http://localhost:5000/api/users/profile/${user._id}`, updatedFields);
-
-    const updatedUser = data.user; // ✅ lấy đúng user từ backend trả về
-
-    setUser(updatedUser);
-    setOriginalUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser)); // ✅ lưu chính xác
-    setIsEditing(false);
-    message.success("Cập nhật thông tin thành công!");
-  } catch (error) {
-    message.error("Cập nhật thất bại. Vui lòng thử lại.");
-  } finally {
-    setIsSaving(false);
-  }
-};
-
 
   const handleCancel = () => {
     setUser(originalUser)
@@ -193,7 +192,10 @@ const handleSave = async () => {
                       <img
                         src={
                           user.avatar ||
-                          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face"
+                          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face" ||
+                          "/placeholder.svg" ||
+                          "/placeholder.svg" ||
+                          "/placeholder.svg"
                         }
                         alt="Avatar"
                         className="w-full h-full rounded-full object-cover bg-white"

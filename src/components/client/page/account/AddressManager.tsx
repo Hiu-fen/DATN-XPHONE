@@ -12,7 +12,7 @@ import {
   UserOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons"
-import AccountSiba from "./siba"
+import AccountSiba from "./siba" // Ensure this path is correct
 
 const AddressManager = () => {
   const [addresses, setAddresses] = useState<any[]>([])
@@ -159,10 +159,10 @@ const AddressManager = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="flex max-w-7xl mx-auto">
+      <div className="flex flex-col lg:flex-row font-sans text-gray-800 p-4 lg:p-8 gap-6">
         <AccountSiba />
 
-        <div className="flex-1 p-8">
+        <div className="flex-1">
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
