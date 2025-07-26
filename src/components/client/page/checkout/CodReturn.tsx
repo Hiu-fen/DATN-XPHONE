@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, Spin } from "antd";
+import { Button, Spin, message } from "antd";
 import Confetti from "react-confetti";
 import {
   LoadingOutlined,
@@ -27,18 +27,25 @@ const CodReturn = () => {
       setStatus("success");
       setShowConfetti(true);
 
-      // ✅ Xoá giỏ hàng sau khi đặt COD
+      // Đồng bộ giỏ hàng từ backend
       const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       if (user?._id && token) {
         fetch(`http://localhost:5000/api/carts/${user._id}`, {
-          method: "DELETE",
+          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
           },
         })
-          .then(() => localStorage.removeItem("cartItems"))
-          .catch((err) => console.warn("❌ Lỗi xoá giỏ hàng sau khi đặt COD:", err));
+          .then((response) => response.json())
+          .then((cart) => {
+            localStorage.setItem("cartItems", JSON.stringify(cart.items || []));
+            console.log("✅ Đã đồng bộ giỏ hàng từ backend:", cart.items);
+          })
+          .catch((err) => {
+            console.warn("❌ Lỗi khi lấy giỏ hàng từ backend:", err);
+            message.error("Không thể đồng bộ giỏ hàng. Vui lòng kiểm tra lại.");
+          });
       }
     } else {
       setStatus("error");

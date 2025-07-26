@@ -186,7 +186,16 @@ const OrderList = () => {
     mutation.mutate(
       { id, status: newStatus },
       {
-        onSettled: () => setLoadingStatusUpdateId(null), // ✅ reset lại
+        onSuccess: () => {
+          // Nếu là đơn COD và chuyển sang Giao thành công → đánh dấu đã thanh toán
+          if (newStatus === "Giao thành công") {
+            const order = orders?.find((o) => o._id === id);
+            if (order?.paymentMethod === "COD") {
+              handleMarkAsPaid(id);
+            }
+          }
+        },
+        onSettled: () => setLoadingStatusUpdateId(null),
       }
     );
   };
@@ -259,10 +268,9 @@ const OrderList = () => {
         if (record.refunded) return <Tag color="red">Đã hoàn tiền</Tag>;
 
         if (record.paymentMethod === "COD") {
-          const isPaidStatus = record.status === "Đã nhận hàng";
           return (
-            <Tag color={isPaidStatus ? "green" : "orange"}>
-              {isPaidStatus ? "COD - Đã thanh toán" : "COD - Chưa thanh toán"}
+            <Tag color={record.isPaid ? "green" : "orange"}>
+              {record.isPaid ? "COD - Đã thanh toán" : "COD - Chưa thanh toán"}
             </Tag>
           );
         }
