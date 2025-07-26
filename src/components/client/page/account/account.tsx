@@ -354,7 +354,7 @@ const handleSave = async () => {
                           isEditing
                             ? {
                                 text: "Cập nhật",
-                                onClick: () => navigate("/accounts/contact-info"),
+                                onClick: () => navigate("/accounts/my-addresses"),
                               }
                             : undefined
                         }
