@@ -38,7 +38,7 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái đơn hàng
+// Cập nhật đơn hàng sau khi hủy đơn
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, cancelReason } = req.body;
@@ -82,6 +82,16 @@ exports.updateOrderStatus = async (req, res) => {
         return res
           .status(500)
           .json({ message: "Lỗi khi khôi phục số lượng biến thể" });
+      }
+
+      // Nếu là MoMo hoặc VNPAY và đã thanh toán, cập nhật paymentStatus và total
+      if (
+        status === "Đã huỷ" &&
+        ["MoMo", "VNPAY"].includes(order.paymentMethod) &&
+        order.isPaid
+      ) {
+        order.paymentStatus = "Đã hoàn tiền";
+        order.total = 0;
       }
     }
 
@@ -144,6 +154,7 @@ exports.updateOrderReturn = async (req, res) => {
 
       order.status = "Trả hàng/Hoàn tiền";
       order.paymentStatus = "Đã hoàn tiền";
+      order.total = 0;
       order.statusHistory = [
         ...(order.statusHistory || []),
         { status: "Trả hàng/Hoàn tiền", timestamp: new Date() },

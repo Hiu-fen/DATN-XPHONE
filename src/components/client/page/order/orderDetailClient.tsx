@@ -669,6 +669,12 @@ const OrderDetail = () => {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500 mb-2">Phí vận chuyển</p>
+                <p className="text-lg text-gray-800 font-semibold mb-2">
+                  {order.paymentStatus === "Đã hoàn tiền"
+                    ? "0"
+                    : order.shippingFee?.toLocaleString() || "0"}{" "}
+                  đ
+                </p>
                 {order.voucherCode && (
                   <div className="mb-2">
                     <p className="text-sm text-gray-500">Voucher áp dụng</p>
@@ -677,13 +683,19 @@ const OrderDetail = () => {
                     </p>
                   </div>
                 )}
-                <p className="text-lg text-gray-800 font-semibold mb-2">
-                  {order.shippingFee?.toLocaleString() || "0"} đ
-                </p>
                 <p className="text-sm text-gray-500 mb-2">Tổng thanh toán</p>
                 <div className="flex items-center gap-3 text-3xl font-bold text-green-600">
                   <DollarSign className="w-8 h-8" />
-                  {order.total.toLocaleString()} đ
+                  {order.paymentStatus === "Đã hoàn tiền" ? (
+                    <span>
+                      0 đ{" "}
+                      <span className="text-sm text-gray-500">
+                        (Đã hoàn tiền)
+                      </span>
+                    </span>
+                  ) : (
+                    `${order.total.toLocaleString()} đ`
+                  )}
                 </div>
               </div>
             </div>
@@ -1034,72 +1046,74 @@ const OrderDetail = () => {
                   </div>
 
                   {/* Payment Summary */}
-                  <div className="flex justify-end mb-8">
-                    <div className="w-full max-w-md">
-                      <div className="bg-gray-50 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                          Tổng kết thanh toán
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Tạm tính:</span>
-                            <span className="font-semibold">
-                              {order.items
+                  <div className="bg-gray-50 rounded-xl p-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Tổng kết thanh toán
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tạm tính:</span>
+                        <span className="font-semibold">
+                          {order.paymentStatus === "Đã hoàn tiền"
+                            ? "0"
+                            : order.items
                                 .reduce(
                                   (sum, item) =>
                                     sum + item.price * item.soluong,
                                   0
                                 )
                                 .toLocaleString()}{" "}
-                              đ
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">
-                              Phí vận chuyển:
-                            </span>
-                            <span className="font-semibold">
-                              {order.shippingFee?.toLocaleString() || "0"} đ
-                            </span>
-                          </div>
-                          {order.voucherCode && (
-                            <div className="flex justify-between text-green-600">
-                              <span>Giảm giá ({order.voucherCode}):</span>
-                              <span className="font-semibold">
-                                -
-                                {order.voucherDiscount?.toLocaleString() || "0"}{" "}
-                                đ
-                              </span>
-                            </div>
-                          )}
-                          <hr className="border-gray-300" />
-                          <div className="flex justify-between text-lg font-bold">
-                            <span>Tổng cộng:</span>
-                            <span className="text-green-600">
-                              {order.total.toLocaleString()} đ
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">
-                              Phương thức thanh toán:
-                            </span>
-                            <span className="font-semibold">
-                              {order.paymentMethod || "Chưa rõ"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">
-                              Trạng thái thanh toán:
-                            </span>
-                            <span
-                              className={`font-semibold ${getPaymentStatusColor(
-                                order.paymentStatus || ""
-                              )}`}
-                            >
-                              {order.paymentStatus || "Chưa rõ"}
-                            </span>
-                          </div>
+                          đ
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Phí vận chuyển:</span>
+                        <span className="font-semibold">
+                          {order.paymentStatus === "Đã hoàn tiền"
+                            ? "0"
+                            : order.shippingFee?.toLocaleString() || "0"}{" "}
+                          đ
+                        </span>
+                      </div>
+                      {order.voucherCode && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Giảm giá ({order.voucherCode}):</span>
+                          <span className="font-semibold">
+                            {order.paymentStatus === "Đã hoàn tiền"
+                              ? "0"
+                              : `-${
+                                  order.voucherDiscount?.toLocaleString() || "0"
+                                }`}{" "}
+                            đ
+                          </span>
                         </div>
+                      )}
+                      <hr className="border-gray-300" />
+                      <div className="flex justify-between text-lg font-bold">
+                        <span>Tổng cộng:</span>
+                        <span className="text-green-600">
+                          {order.total.toLocaleString()} đ
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">
+                          Phương thức thanh toán:
+                        </span>
+                        <span className="font-semibold">
+                          {order.paymentMethod || "Chưa rõ"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">
+                          Trạng thái thanh toán:
+                        </span>
+                        <span
+                          className={`font-semibold ${getPaymentStatusColor(
+                            order.paymentStatus || ""
+                          )}`}
+                        >
+                          {order.paymentStatus || "Chưa rõ"}
+                        </span>
                       </div>
                     </div>
                   </div>
