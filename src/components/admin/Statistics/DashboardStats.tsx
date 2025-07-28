@@ -377,58 +377,64 @@ const DashboardStats: React.FC = () => {
               )}
             </Card>
           </div>
+{/* Biểu đồ doanh thu từng ngày trong tháng */}
+<div className="my-8">
+  <div className="flex items-center gap-4 mb-2">
+    <span className="font-semibold">Biểu đồ doanh thu từng ngày trong tháng:</span>
 
-          {/* Biểu đồ doanh thu từng ngày trong tháng */}
-          <div className="my-8">
-            <div className="flex items-center gap-4 mb-2">
-              <span className="font-semibold">Biểu đồ doanh thu từng ngày trong tháng:</span>
-              <Select
-                value={selectedMonth}
-                onChange={setSelectedMonth}
-                style={{ width: 120 }}
-              >
-                {[...Array(12)].map((_, i) => (
-                  <Option key={i + 1} value={i + 1}>Tháng {i + 1}</Option>
-                ))}
-              </Select>
-              <Select
-                value={selectedYear}
-                onChange={setSelectedYear}
-                style={{ width: 100 }}
-              >
-                {[now.year() - 1, now.year(), now.year() + 1].map(y => (
-                  <Option key={y} value={y}>{y}</Option>
-                ))}
-              </Select>
-            </div>
-            <Card style={{ height: 350 }}>
-              {loadingDailyMonth ? (
-                <div className="flex justify-center items-center h-full">
-                  <Spin size="large" />
-                </div>
-              ) : dailyRevenueMonth ? (
-                <Line
-                  data={dailyRevenueMonth.daily.map(item => ({
-                    day: item.day.toString(),
-                    revenue: item.total,
-                  }))}
-                  xField="day"
-                  yField="revenue"
-                  height={280}
-                  area={{ style: { fill: 'rgba(0, 123, 255, 0.15)' } }}
-                  lineStyle={{ stroke: 'rgba(0, 123, 255, 0.5)', lineWidth: 3 }}
-                  point={{ size: 4, shape: 'circle', style: { fill: 'rgba(0, 123, 255, 0.5)', stroke: 'rgba(0, 123, 255, 0.5)' } }}
-                  smooth
-                  label={false}
-                />
-              ) : (
-                <div className="flex justify-center items-center h-full text-gray-500">
-                  Không có dữ liệu doanh thu
-                </div>
-              )}
-            </Card>
-          </div>
-        </>
+    <Select value={selectedMonth} onChange={setSelectedMonth} style={{ width: 120 }}>
+      {[...Array(12)].map((_, i) => (
+        <Option key={i + 1} value={i + 1}>
+          Tháng {i + 1}
+        </Option>
+      ))}
+    </Select>
+
+    <Select value={selectedYear} onChange={setSelectedYear} style={{ width: 100 }}>
+      {[now.year() - 1, now.year(), now.year() + 1].map((y) => (
+        <Option key={y} value={y}>
+          {y}
+        </Option>
+      ))}
+    </Select>
+  </div>
+
+  <Card style={{ height: 350 }}>
+    {loadingDailyMonth ? (
+      <div className="flex justify-center items-center h-full">
+        <Spin size="large" />
+      </div>
+    ) : Array.isArray(dailyRevenueMonth?.daily) && dailyRevenueMonth.daily.length > 0 ? (
+      <Line
+        data={dailyRevenueMonth.daily.map((item) => ({
+          day: String(item?.day ?? ""),
+          revenue: item?.total ?? 0,
+        }))}
+        xField="day"
+        yField="revenue"
+        height={280}
+        smooth
+        area={{ style: { fill: "rgba(0, 123, 255, 0.15)" } }}
+        lineStyle={{ stroke: "rgba(0, 123, 255, 0.5)", lineWidth: 3 }}
+        point={{
+          size: 4,
+          shape: "circle",
+          style: {
+            fill: "rgba(0, 123, 255, 0.5)",
+            stroke: "rgba(0, 123, 255, 0.5)",
+          },
+        }}
+        label={false}
+      />
+    ) : (
+      <div className="flex justify-center items-center h-full text-gray-500">
+        Không có dữ liệu doanh thu
+      </div>
+    )}
+  </Card>
+</div>
+
+</>
       )}
 
       {viewMode === 'range' && (
