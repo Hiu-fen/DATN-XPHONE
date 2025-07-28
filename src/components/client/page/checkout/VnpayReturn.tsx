@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button, Spin } from "antd";
+import { Button, Spin, message } from "antd";
 import Confetti from "react-confetti";
 import {
   LoadingOutlined,
@@ -29,32 +30,35 @@ const VnpayReturn = () => {
           setStatus("success");
           setShowConfetti(true);
 
-          // 👉 Hậu xử lý: đánh dấu đã thanh toán + xoá giỏ hàng
+          // Hậu xử lý: đánh dấu đã thanh toán và đồng bộ giỏ hàng
           (async () => {
             try {
-              // ✅ Gọi API cập nhật trạng thái đã thanh toán
+              // Gọi API cập nhật trạng thái đã thanh toán
               await fetch(`http://localhost:5000/api/orders/${result.orderId}/paid`, {
-  method: "PATCH",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({}) // ✅ thêm body rỗng
-});
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({}),
+              });
 
-              // ✅ Xoá giỏ hàng
+              // Đồng bộ giỏ hàng từ backend
               const token = localStorage.getItem("token");
               const user = JSON.parse(localStorage.getItem("user") || "{}");
               if (user?._id && token) {
-                await fetch(`http://localhost:5000/api/carts/${user._id}`, {
-                  method: "DELETE",
+                const cartResponse = await fetch(`http://localhost:5000/api/carts/${user._id}`, {
+                  method: "GET",
                   headers: {
                     Authorization: `Bearer ${token}`,
                   },
                 });
-                localStorage.removeItem("cartItems");
+                const cart = await cartResponse.json();
+                localStorage.setItem("cartItems", JSON.stringify(cart.items || []));
+                console.log("✅ Đã đồng bộ giỏ hàng từ backend:", cart.items);
               }
             } catch (postProcessError) {
-              console.warn("⚠️ Hậu xử lý lỗi (giỏ hàng / mark-as-paid):", postProcessError);
+              console.warn("⚠️ Hậu xử lý lỗi (giữ giỏ hàng / mark-as-paid):", postProcessError);
+              message.error("Không thể đồng bộ giỏ hàng. Vui lòng kiểm tra lại.");
             }
           })();
         } else {

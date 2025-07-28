@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
 import { message } from "antd"
-import AccountSiba from "./siba"
+import AccountSiba from "./siba" // Ensure this path is correct
 
 const Account = () => {
   const [user, setUser] = useState<any>(null)
@@ -92,10 +92,13 @@ const Account = () => {
     }
 
     try {
-      const { data: updatedUser } = await axios.patch(`http://localhost:5000/api/users/${user._id}`, updatedFields)
+      const { data } = await axios.put(`http://localhost:5000/api/users/profile/${user._id}`, updatedFields)
+
+      const updatedUser = data.user // ✅ lấy đúng user từ backend trả về
+
       setUser(updatedUser)
       setOriginalUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
+      localStorage.setItem("user", JSON.stringify(updatedUser)) // ✅ lưu chính xác
       setIsEditing(false)
       message.success("Cập nhật thông tin thành công!")
     } catch (error) {
@@ -189,7 +192,10 @@ const Account = () => {
                       <img
                         src={
                           user.avatar ||
-                          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face"
+                          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face" ||
+                          "/placeholder.svg" ||
+                          "/placeholder.svg" ||
+                          "/placeholder.svg"
                         }
                         alt="Avatar"
                         className="w-full h-full rounded-full object-cover bg-white"
@@ -350,7 +356,7 @@ const Account = () => {
                           isEditing
                             ? {
                                 text: "Cập nhật",
-                                onClick: () => navigate("/accounts/contact-info"),
+                                onClick: () => navigate("/accounts/my-addresses"),
                               }
                             : undefined
                         }

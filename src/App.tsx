@@ -95,6 +95,8 @@ import ThankYou from './components/client/page/checkout/ThankYou';
 import NewsDetailAdmin from './components/admin/News/NewDetail';
 import ContactDetail from './components/admin/Contact/ContactDetail';
 import RewardsPage from './components/client/page/rewards/RewardsPage';
+import HistoryPage from './components/admin/User/HistoryPage';
+import ChangePassword from './components/client/page/account/change-password';
 
 
 const App = () => {
@@ -131,6 +133,7 @@ const App = () => {
             { path: "account", element: <Account /> },
 
             { path: "my-addresses", element: <AddressManager /> },
+            { path: "change-password", element: <ChangePassword /> },
           ],
         },
         { path : "notification" , element : <Notification/>},
@@ -185,6 +188,7 @@ const App = () => {
         { path: "user/listadmin", element: <GetAdmin /> },
         { path: "user/profileadmin", element: <ProfileAdmin /> },
         { path: "user/listclient", element: <GetClient /> },
+        { path: "user/history", element: <HistoryPage/> },
 
         //Router Order
         //admin
