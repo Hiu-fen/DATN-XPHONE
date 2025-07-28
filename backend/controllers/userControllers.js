@@ -174,14 +174,28 @@ exports.updateProfile = async (req, res) => {
 };
 
 
-exports.getUpdateHistory = async (req, res) => {
+exports.getAllUpdateHistories = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('updateHistory email');
-    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    const users = await User.find({ updateHistory: { $exists: true, $ne: [] } }, "email updateHistory");
+    const allHistories = [];
 
-    res.json(user.updateHistory);
+    users.forEach((user) => {
+      user.updateHistory.forEach((entry) => {
+        allHistories.push({
+          email: user.email,
+          time: entry.time,
+          content: entry.content,
+        });
+      });
+    });
+
+    // Sắp xếp theo thời gian mới nhất
+    allHistories.sort((a, b) => new Date(b.time) - new Date(a.time));
+
+    res.json(allHistories);
   } catch (error) {
-    res.status(500).json({ message: 'Lỗi máy chủ' });
+    console.error(error);
+    res.status(500).json({ message: "Lỗi khi lấy lịch sử" });
   }
 };
 

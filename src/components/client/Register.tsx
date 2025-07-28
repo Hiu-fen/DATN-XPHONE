@@ -49,13 +49,13 @@ const Register = () => {
       style={{ backgroundImage: `url('/register.png')` }}
     >
       <div className="w-[300px] h-[400px] sm:w-[550px] bg-white bg-opacity-0 rounded-xl p-6 shadow-xl backdrop-blur-md ml-[650px] mt-[-50px]">
-        <h2 className="text-3xl font-extrabold mb-6 text-gray-800 text-center">Đăng ký tài khoản</h2>
+        <h2 className="text-2xl font-extrabold mb-6 text-gray-800 text-center">Đăng ký tài khoản</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Tên và Email cùng hàng */}
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Tên */}
-            <div className="relative w-full">
+            <div className="relative w-full mt-[-20px]">
               <label htmlFor="name" className="block text-sm font-semibold text-gray-700">Tên</label>
               <input
                 id="name"
@@ -72,7 +72,7 @@ const Register = () => {
             </div>
 
             {/* Email */}
-            <div className="relative w-full">
+            <div className="relative w-full mt-[-20px]">
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700">Email</label>
               <input
                 id="email"
@@ -93,8 +93,8 @@ const Register = () => {
           </div>
 
           {/* Mật khẩu */}
-          <div className="relative">
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700">Mật khẩu</label>
+          <div className="relative ">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mt-[-20px]">Mật khẩu</label>
             <input
               id="password"
               {...register("password", {
