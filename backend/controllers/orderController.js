@@ -1,4 +1,3 @@
-
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
 const Notification = require("../models/notificationModels");
@@ -117,17 +116,22 @@ exports.updateOrderReturn = async (req, res) => {
   try {
     const { returnStatus, returnReason, note } = req.body;
     const order = await Order.findById(req.params.id);
+
     if (!order)
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
+    // 🟩 Gán thông tin cơ bản
     order.returnStatus = returnStatus;
     if (returnReason) order.returnReason = returnReason;
     if (note) order.returnNote = note;
 
+    // 🟩 Gán ảnh nếu có
     if (req.files && req.files.length > 0) {
-      order.returnImages = req.files.map((file) => file.path);
+      console.log("FILES RECEIVED:", req.files); // ⚠️ Log lại để debug nếu lỗi
+      order.returnImages = req.files.map((file) => file.path); // Đảm bảo path có
     }
 
+    // 🟩 Nếu yêu cầu được duyệt → hoàn hàng, hoàn tiền
     if (returnStatus === "Đã duyệt") {
       await axios.post("http://localhost:5000/api/products/restore-quantity", {
         items: order.items.map((item) => ({
@@ -139,21 +143,28 @@ exports.updateOrderReturn = async (req, res) => {
       });
 
       order.status = "Trả hàng/Hoàn tiền";
+      order.paymentStatus = "Đã hoàn tiền";
       order.statusHistory = [
         ...(order.statusHistory || []),
         { status: "Trả hàng/Hoàn tiền", timestamp: new Date() },
       ];
 
-      if (order.isPaid) order.refunded = true;
+      if (order.isPaid) {
+        order.refunded = true;
+      }
     }
 
     await order.save();
     res.json(order);
   } catch (error) {
-    console.error("❌ Lỗi updateOrderReturn:", error);
-    res
-      .status(500)
-      .json({ message: "Lỗi khi xử lý trả hàng", error: error.message });
+    console.error("❌ Lỗi updateOrderReturn:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      message: "Lỗi khi xử lý trả hàng",
+      error: error.message,
+    });
   }
 };
 
@@ -258,24 +269,28 @@ exports.createOrder = async (req, res) => {
 
           if (isBuyNow) {
             // Luồng "Mua ngay": Giảm số lượng sản phẩm trùng trong giỏ hàng
-            cart.items = cart.items.map((cartItem) => {
-              const matchingOrderItem = orderItemIds.find(
-                (orderItem) =>
-                  orderItem.productId.toString() === cartItem.productId.toString() &&
-                  orderItem.color === cartItem.color &&
-                  orderItem.storage === cartItem.storage
-              );
-              if (matchingOrderItem) {
-                cartItem.quantity -= matchingOrderItem.quantity;
-              }
-              return cartItem;
-            }).filter((cartItem) => cartItem.quantity > 0); // Xóa sản phẩm nếu quantity <= 0
+            cart.items = cart.items
+              .map((cartItem) => {
+                const matchingOrderItem = orderItemIds.find(
+                  (orderItem) =>
+                    orderItem.productId.toString() ===
+                      cartItem.productId.toString() &&
+                    orderItem.color === cartItem.color &&
+                    orderItem.storage === cartItem.storage
+                );
+                if (matchingOrderItem) {
+                  cartItem.quantity -= matchingOrderItem.quantity;
+                }
+                return cartItem;
+              })
+              .filter((cartItem) => cartItem.quantity > 0); // Xóa sản phẩm nếu quantity <= 0
           } else {
             // Luồng mua từ giỏ hàng: Xóa các sản phẩm trong đơn hàng
             cart.items = cart.items.filter((cartItem) => {
               return !orderItemIds.some(
                 (orderItem) =>
-                  orderItem.productId.toString() === cartItem.productId.toString() &&
+                  orderItem.productId.toString() ===
+                    cartItem.productId.toString() &&
                   orderItem.color === cartItem.color &&
                   orderItem.storage === cartItem.storage
               );
