@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { message, Modal, Spin } from "antd";
+import { message, Modal, Spin } from "antd";
 import { useUser } from "../../context/UserContext";
 import { ICartItem } from "../../../../interface/cart";
 import { IProduct } from "../../../../interface/product";
