@@ -183,7 +183,7 @@ const Cart = () => {
     return selectedItems.reduce((total, itemId) => {
       const item = cartItems.find((i) => i._id === itemId);
       if (!item) return total;
-      
+
       const product = getProductById(item.productId);
       const variant = product?.variants?.find(
         (v) => v.color === item.color && v.ram === item.storage
@@ -214,11 +214,10 @@ const Cart = () => {
         {/* Toast Notification */}
         {showToast && (
           <div className="fixed top-24 right-4 z-50 animate-slide-in-right">
-            <div className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg border ${
-              toastType === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-              toastType === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-              'bg-yellow-50 border-yellow-200 text-yellow-800'
-            }`}>
+            <div className={`flex items-center gap-3 px-6 py-4 rounded-lg shadow-lg border ${toastType === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
+                toastType === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+                  'bg-yellow-50 border-yellow-200 text-yellow-800'
+              }`}>
               {toastType === 'success' && <FaCheck className="w-5 h-5" />}
               {toastType === 'error' && <FaTimes className="w-5 h-5" />}
               {toastType === 'warning' && <FaExclamationTriangle className="w-5 h-5" />}
@@ -257,8 +256,8 @@ const Cart = () => {
             </div>
           ) : (
             <div className="space-y-6">
-       
-            
+
+
               <div className="block lg:hidden space-y-4">
                 {cartItems.map((item) => {
                   const product = getProductById(item.productId);
@@ -271,8 +270,8 @@ const Cart = () => {
                   const price = Number(variant?.price || product.price);
 
                   return (
-                    <div key={`${item.productId}-${item.color}-${item.storage}-${item.price}`} 
-                         className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                    <div key={`${item.productId}-${item.color}-${item.storage}-${item.price}`}
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                       <div className="flex items-start gap-4">
                         <input
                           type="checkbox"
@@ -280,16 +279,22 @@ const Cart = () => {
                           onChange={() => handleSelectItem(item._id)}
                           className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1"
                         />
-                        
-                        <img
-                          src={product.image || "/placeholder.svg"}
-                          alt={product.name}
-                          className="w-20 h-20 rounded-lg border border-gray-200 object-cover flex-shrink-0"
-                        />
-                        
+
+                        <Link to={`/detail/${product._id}`}>
+                          <img
+                            src={product.image || "/placeholder.svg"}
+                            alt={product.name}
+                            className="w-20 h-20 rounded-lg border border-gray-200 object-cover flex-shrink-0 hover:opacity-90 transition"
+                          />
+                        </Link>
+
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{product.name}</h3>
-                          
+                          <Link to={`/detail/${product._id}`} className="block">
+                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 hover:underline transition">
+                              {product.name}
+                            </h3>
+                          </Link>
+
                           <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
                             <div>
                               <span className="font-medium">Màu:</span> {item.color || '-'}
@@ -306,7 +311,7 @@ const Cart = () => {
                               </div>
                               <div className="text-xs text-gray-500">Tồn kho: {maxStock}</div>
                             </div>
-                            
+
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleQuantityChange(item.productId, item.color, item.storage, -1)}
@@ -379,8 +384,8 @@ const Cart = () => {
                         const price = Number(variant?.price || product.price);
 
                         return (
-                          <tr key={`${item.productId}-${item.color}-${item.storage}-${item.price}`} 
-                              className="hover:bg-gray-50 transition-colors duration-200">
+                          <tr key={`${item.productId}-${item.color}-${item.storage}-${item.price}`}
+                            className="hover:bg-gray-50 transition-colors duration-200">
                             <td className="px-6 py-4">
                               <input
                                 type="checkbox"
@@ -392,12 +397,19 @@ const Cart = () => {
                             <td className="px-6 py-4 text-center font-medium text-gray-900">{index + 1}</td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-4">
-                                <img
-                                  src={product.image || "/placeholder.svg"}
-                                  alt={product.name}
-                                  className="w-16 h-16 rounded-lg border border-gray-200 object-cover"
-                                />
-                                <span className="font-medium text-gray-900 line-clamp-2">{product.name}</span>
+                                <Link to={`/detail/${product._id}`}>
+                                  <img
+                                    src={product.image || "/placeholder.svg"}
+                                    alt={product.name}
+                                    className="w-16 h-16 rounded-lg border border-gray-200 object-cover hover:opacity-90 transition"
+                                  />
+                                </Link>
+
+                                <Link to={`/detail/${product._id}`} className="block">
+                                  <span className="font-medium text-gray-900 line-clamp-2 hover:text-blue-600 hover:underline transition">
+                                    {product.name}
+                                  </span>
+                                </Link>
                               </div>
                             </td>
                             <td className="px-6 py-4 text-center text-gray-700">{item.color || '-'}</td>
@@ -466,7 +478,7 @@ const Cart = () => {
                         {formatPrice(String(calculateTotal()))}
                       </div>
                     </div>
-                    
+
                     <button
                       onClick={handleCheckout}
                       disabled={selectedItems.length === 0}
