@@ -119,12 +119,12 @@ const OrderDetail = () => {
       });
     },
     onSuccess: () => {
-      message.success("✅ Cập nhật trạng thái thành công");
+      message.success("Cập nhật trạng thái thành công");
       refetch();
     },
     onError: (error: any) => {
       message.error(
-        error.response?.data?.message || "❌ Lỗi khi cập nhật trạng thái"
+        error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
       );
     },
   });
@@ -199,22 +199,17 @@ const OrderDetail = () => {
     },
   ];
 
-  if (isLoading) return <Spin tip="🔄 Đang tải chi tiết đơn hàng..." />;
+  if (isLoading) return <Spin tip="Đang tải chi tiết đơn hàng..." />;
   if (isError || !order) {
-    return (
-      <Alert message="❌ Không tìm thấy đơn hàng" type="error" showIcon />
-    );
+    return <Alert message="Không tìm thấy đơn hàng" type="error" showIcon />;
   }
 
   const totalItemsPrice =
-    order.items?.reduce(
-      (sum, item) => sum + item.price * item.soluong,
-      0
-    ) || 0;
+    order.items?.reduce((sum, item) => sum + item.price * item.soluong, 0) || 0;
 
   const discount = order.discountAmount || 0;
   const shippingFee = order.shippingFee || 0;
-  const totalPayment = order.total; // ✅ Lấy tổng từ backend
+  const totalPayment = order.total; //Lấy tổng từ backend
 
   return (
     <div>
@@ -249,7 +244,7 @@ const OrderDetail = () => {
             {order.shippingProvider || "Chưa chọn"}
           </Descriptions.Item>
 
-          {/* ✅ Voucher */}
+          {/* Voucher */}
           <Descriptions.Item label="Mã giảm giá (Voucher)">
             {order.voucherCode ? (
               <>
@@ -343,8 +338,7 @@ const OrderDetail = () => {
                 title: "Thời gian",
                 dataIndex: "timestamp",
                 key: "timestamp",
-                render: (date: string) =>
-                  new Date(date).toLocaleString(),
+                render: (date: string) => new Date(date).toLocaleString(),
               },
             ]}
             pagination={false}

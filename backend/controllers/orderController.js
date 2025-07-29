@@ -76,7 +76,7 @@ exports.updateOrderStatus = async (req, res) => {
         console.log("✅ Khôi phục số lượng thành công:", response.data.message);
       } catch (err) {
         console.error(
-          "❌ Lỗi khi gọi restore-quantity:",
+          "Lỗi khi gọi restore-quantity:",
           err?.response?.data || err.message
         );
         return res
@@ -110,9 +110,9 @@ exports.updateOrderStatus = async (req, res) => {
     if (status === "Giao thành công") {
       try {
         await sendDeliverySuccessEmail(order.email, order);
-        console.log("✅ Đã gửi email giao hàng thành công.");
+        console.log("Đã gửi email giao hàng thành công.");
       } catch (err) {
-        console.error("❌ Lỗi gửi email giao thành công:", err.message);
+        console.error("Lỗi gửi email giao thành công:", err.message);
       }
     }
     res.json(order);
@@ -130,18 +130,17 @@ exports.updateOrderReturn = async (req, res) => {
     if (!order)
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
-    // 🟩 Gán thông tin cơ bản
+    // Gán thông tin cơ bản
     order.returnStatus = returnStatus;
     if (returnReason) order.returnReason = returnReason;
     if (note) order.returnNote = note;
 
-    // 🟩 Gán ảnh nếu có
+    // Gán ảnh nếu có
     if (req.files && req.files.length > 0) {
-      console.log("FILES RECEIVED:", req.files); // ⚠️ Log lại để debug nếu lỗi
-      order.returnImages = req.files.map((file) => file.path); // Đảm bảo path có
+      order.returnImages = req.files.map((file) => file.path);
     }
 
-    // 🟩 Nếu yêu cầu được duyệt → hoàn hàng, hoàn tiền
+    // Nếu yêu cầu được duyệt → hoàn hàng, hoàn tiền
     if (returnStatus === "Đã duyệt") {
       await axios.post("http://localhost:5000/api/products/restore-quantity", {
         items: order.items.map((item) => ({
@@ -316,7 +315,7 @@ exports.createOrder = async (req, res) => {
           updatedCart = cart;
         }
       } catch (err) {
-        console.error("❌ Lỗi khi cập nhật giỏ hàng:", err.message);
+        console.error("Lỗi khi cập nhật giỏ hàng:", err.message);
       }
     }
 
@@ -328,10 +327,10 @@ exports.createOrder = async (req, res) => {
           voucher.usageCount = (voucher.usageCount || 0) + 1;
           await voucher.save();
         } else {
-          console.warn("⚠️ Không tìm thấy mã khuyến mãi:", voucherCode);
+          console.warn(" Không tìm thấy mã khuyến mãi:", voucherCode);
         }
       } catch (err) {
-        console.error("❌ Lỗi khi cập nhật mã khuyến mãi:", err.message);
+        console.error(" Lỗi khi cập nhật mã khuyến mãi:", err.message);
       }
     }
 
@@ -364,7 +363,7 @@ exports.createOrder = async (req, res) => {
       try {
         await notification.save();
       } catch (err) {
-        console.error("❌ Lỗi khi tạo thông báo user:", err.message);
+        console.error("Lỗi khi tạo thông báo user:", err.message);
       }
     }
 
@@ -379,7 +378,7 @@ exports.createOrder = async (req, res) => {
     try {
       await adminNotification.save();
     } catch (err) {
-      console.error("❌ Lỗi khi tạo thông báo admin:", err.message);
+      console.error("Lỗi khi tạo thông báo admin:", err.message);
     }
 
     res.status(201).json({ order, updatedCart });
@@ -414,30 +413,8 @@ exports.markAsPaid = async (req, res) => {
 
     res.status(200).json({ message: "Cập nhật thanh toán thành công", order });
   } catch (err) {
-    console.error("❌ Lỗi khi cập nhật thanh toán:", err);
+    console.error("Lỗi khi cập nhật thanh toán:", err);
     res.status(500).json({ message: "Lỗi server khi cập nhật thanh toán" });
-  }
-};
-
-// Lấy đơn hàng theo mã đơn hàng
-const getOrderByCode = async (req, res) => {
-  const { orderCode } = req.params;
-  try {
-    const order = await Order.findOne({
-      orderCode,
-      $or: [{ paymentMethod: { $ne: "VNPAY" } }, { isPaid: true }],
-    });
-
-    if (!order) {
-      return res
-        .status(404)
-        .json({ message: "Không tìm thấy đơn hàng với mã này" });
-    }
-
-    res.json(order);
-  } catch (err) {
-    console.error("Lỗi khi lấy đơn hàng theo mã:", err);
-    res.status(500).json({ message: "Lỗi server khi lấy đơn hàng" });
   }
 };
 
