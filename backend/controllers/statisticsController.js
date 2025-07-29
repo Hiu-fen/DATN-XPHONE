@@ -62,9 +62,12 @@ exports.getDashboardStats = async (req, res) => {
     const revenueThisWeek = await Order.aggregate([
       {
         $match: {
-          status: 'Giao thành công',
-          date: { $gte: startOfWeek }
-        }
+          $or: [
+            { status: "Giao thành công" },
+            { isPaid: true, paymentMethod: { $ne: "COD" } },
+          ],
+          date: { $gte: startOfDay },
+        },
       },
       {
         $group: {
