@@ -84,12 +84,8 @@ exports.updateOrderStatus = async (req, res) => {
           .json({ message: "Lỗi khi khôi phục số lượng biến thể" });
       }
 
-      // Nếu là MoMo hoặc VNPAY và đã thanh toán, cập nhật paymentStatus và total
-      if (
-        status === "Đã huỷ" &&
-        ["MoMo", "VNPAY"].includes(order.paymentMethod) &&
-        order.isPaid
-      ) {
+      // Khi hủy đơn, đặt total về 0 và cập nhật paymentStatus nếu đã thanh toán
+      if (status === "Đã huỷ" && order.isPaid) {
         order.paymentStatus = "Đã hoàn tiền";
         order.total = 0;
       }
