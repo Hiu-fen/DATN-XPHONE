@@ -1,10 +1,10 @@
 "use client"
-import React from "react"
-
+import React, { useState } from "react"
 import { clsx } from "clsx"
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query"
 import axios from "axios"
-import { Trophy, Crown, Medal, Award, Star, TrendingUp, Users, Gift } from "lucide-react"
+import { Trophy, Crown, Medal, Award, Star, TrendingUp, Users, Gift, Info } from "lucide-react"
+import { Modal } from "antd"
 
 // ==== Card Components ====
 const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, children, ...props }) => (
@@ -39,7 +39,7 @@ const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className
 
 // ==== Badge Component ====
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "success" | "destructive" | "warning" | "gold" | "silver" | "bronze"
+  variant?: "default" | "success" | "destructive" | "warning" | "gold" | "silver" | "bronze" | "vip"
 }
 
 const Badge: React.FC<BadgeProps> = ({ variant = "default", className, children, ...props }) => {
@@ -48,12 +48,12 @@ const Badge: React.FC<BadgeProps> = ({ variant = "default", className, children,
     default: "bg-gradient-to-r from-blue-500 to-blue-600 text-white",
     success: "bg-gradient-to-r from-green-500 to-green-600 text-white",
     destructive: "bg-gradient-to-r from-red-500 to-red-600 text-white",
-    warning: "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white",
+    warning: "bg-gradient-to-r from-yellow-500 to-yellow-600 text-yellow-900",
     gold: "bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900",
     silver: "bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800",
     bronze: "bg-gradient-to-r from-amber-600 to-amber-700 text-white",
+    vip: "bg-gradient-to-r from-purple-500 to-pink-500 text-white",
   } as const
-
   return (
     <span className={clsx(base, colors[variant], className)} {...props}>
       {children}
@@ -68,24 +68,46 @@ interface RewardUser {
   totalPoints: number
 }
 
+interface Order {
+  _id: string
+}
+
 function RewardsContent() {
   const user = JSON.parse(localStorage.getItem("user") || "{}")
   const myEmail: string = user.email || ""
+  const myUserId: string = user._id || ""
 
-  const { data: leaderboardRaw, isLoading } = useQuery({
+  const { data: leaderboardRaw, isLoading: isLoadingLeaderboard } = useQuery<RewardUser[]>({
     queryKey: ["reward-leaderboard"],
     queryFn: async () => {
       const res = await axios.get("http://localhost:5000/api/rewards", {
         withCredentials: true,
       })
+      console.log("✅ Đã lấy dữ liệu bảng xếp hạng:", res.data)
       return res.data
     },
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const { data: userOrders, isLoading: isLoadingOrders } = useQuery<Order[]>({
+    queryKey: ["user-orders", myUserId],
+    queryFn: async () => {
+      if (!myUserId) return []
+      const res = await axios.get(`http://localhost:5000/api/orders/user/${myUserId}`)
+      console.log("✅ Đã lấy dữ liệu đơn hàng:", res.data)
+      return res.data
+    },
+    enabled: !!myUserId,
     staleTime: 1000 * 60 * 5,
   })
 
   const leaderboard: RewardUser[] = Array.isArray(leaderboardRaw) ? leaderboardRaw : []
   const myCount = leaderboard.find((u) => u.email === myEmail)?.totalPoints || 0
   const myRank = leaderboard.findIndex((u) => u.email === myEmail) + 1
+
+  const isVIP = (userOrders?.length || 0) > 30
+
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
 
   const getRankIcon = (rank: number) => {
     if (rank === 1) return <Crown className="w-8 h-8 text-yellow-500 drop-shadow-lg" />
@@ -108,7 +130,7 @@ function RewardsContent() {
     return "bg-gradient-to-r from-white to-gray-50 border-gray-100 hover:from-blue-50 hover:to-indigo-50"
   }
 
-  if (isLoading) {
+  if (isLoadingLeaderboard || isLoadingOrders) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
@@ -147,7 +169,6 @@ function RewardsContent() {
               <p className="text-gray-600">Tổng người tham gia</p>
             </CardContent>
           </Card>
-
           <Card className="text-center">
             <CardContent className="p-6">
               <div className="flex justify-center mb-3">
@@ -159,7 +180,6 @@ function RewardsContent() {
               <p className="text-gray-600">Thứ hạng của bạn</p>
             </CardContent>
           </Card>
-
           <Card className="text-center">
             <CardContent className="p-6">
               <div className="flex justify-center mb-3">
@@ -173,6 +193,78 @@ function RewardsContent() {
           </Card>
         </div>
 
+        {/* Reward Info Card */}
+        <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+          <CardHeader>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-indigo-500 rounded-lg">
+                <Info className="w-6 h-6 text-white" />
+              </div>
+              <CardTitle className="text-indigo-800">Thông tin về Thành tích & Giảm giá</CardTitle>
+            </div>
+            <button
+              className="text-blue-600 hover:underline flex items-center gap-2"
+              onClick={() => setIsInfoModalOpen(true)}
+            >
+              <Info className="w-5 h-5" />
+              <span>Xem chi tiết</span>
+            </button>
+          </CardHeader>
+          <Modal
+            open={isInfoModalOpen}
+            title={
+              <div className="flex items-center gap-3">
+                <Info className="w-6 h-6 text-indigo-600" />
+                <span className="text-xl font-bold">Thông tin về Thành tích & Giảm giá</span>
+              </div>
+            }
+            onCancel={() => setIsInfoModalOpen(false)}
+            footer={null}
+            width={600}
+          >
+            <div className="space-y-6 p-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Thành tích là gì?</h3>
+                <p className="text-gray-600 mt-2">
+                  Thành tích được tính dựa trên số đơn hàng bạn đã hoàn thành. Mỗi đơn hàng hoàn thành giúp bạn tích lũy điểm để cạnh tranh trên bảng xếp hạng và nhận các mức giảm giá hấp dẫn khi mua sắm.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Xác nhận đơn hàng</h3>
+                <p className="text-gray-600 mt-2">
+                  Để đơn hàng được tính là "Hoàn thành" và cộng vào thành tích của bạn, vui lòng <strong>xác nhận đã nhận được hàng</strong> trong phần quản lý đơn hàng trên tài khoản của bạn. Điều này giúp đảm bảo số đơn hàng được cập nhật chính xác.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Mốc giảm giá</h3>
+                <p className="text-gray-600 mt-2">Dựa trên số đơn hàng hoàn thành, bạn sẽ nhận được các mức giảm giá sau khi thanh toán:</p>
+                <ul className="mt-4 space-y-3">
+                  <li className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+                    <span className="font-semibold text-gray-800">1 - 5 đơn hàng</span>
+                    <Badge variant="success">Giảm 10,000 VND</Badge>
+                  </li>
+                  <li className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+                    <span className="font-semibold text-gray-800">6 - 10 đơn hàng</span>
+                    <Badge variant="success">Giảm 20,000 VND</Badge>
+                  </li>
+                  <li className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+                    <span className="font-semibold text-gray-800">11 - 20 đơn hàng</span>
+                    <Badge variant="success">Giảm 20,000 VND</Badge>
+                  </li>
+                  <li className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+                    <span className="font-semibold text-gray-800">21 - 30 đơn hàng</span>
+                    <Badge variant="success">Giảm 40,000 VND</Badge>
+                  </li>
+                  <li className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+                    <span className="font-semibold text-gray-800">Trên 30 đơn hàng</span>
+                    <Badge variant="success">Giảm 50,000 VND</Badge>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </Modal>
+        </Card>
+
         {/* My Stats Card */}
         <Card className="border-2 border-indigo-200 bg-gradient-to-r from-indigo-50 to-purple-50">
           <CardHeader>
@@ -182,9 +274,16 @@ function RewardsContent() {
               </div>
               <CardTitle className="text-indigo-800">Thành tích của bạn</CardTitle>
             </div>
-            <Badge variant="success" className="text-lg px-4 py-2">
-              {myCount} điểm
-            </Badge>
+            <div className="flex items-center gap-2">
+              {isVIP && (
+                <Badge variant="vip" className="text-lg px-4 py-2">
+                  VIP
+                </Badge>
+              )}
+              <Badge variant="success" className="text-lg px-4 py-2">
+                {myCount} điểm
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -193,6 +292,9 @@ function RewardsContent() {
               </p>
               <p className="text-gray-700">
                 <span className="font-semibold">Thứ hạng hiện tại:</span> #{myRank || "Chưa xếp hạng"}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-semibold">Tổng số đơn hàng:</span> {userOrders?.length || 0}
               </p>
             </div>
           </CardContent>
@@ -232,6 +334,11 @@ function RewardsContent() {
                         {user.email === myEmail && (
                           <span className="ml-2 text-sm bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">Bạn</span>
                         )}
+                        {user.email === myEmail && isVIP && (
+                          <Badge variant="vip" className="ml-2 text-sm">
+                            VIP
+                          </Badge>
+                        )}
                       </h3>
                       <p className="text-gray-600">
                         Đã tích lũy <span className="font-semibold text-indigo-600">{user.totalPoints}</span> điểm
@@ -260,9 +367,7 @@ function RewardsContent() {
 }
 
 export default function RewardsPage() {
-  // Create QueryClient only once
   const [queryClient] = React.useState(() => new QueryClient())
-
   return (
     <QueryClientProvider client={queryClient}>
       <RewardsContent />

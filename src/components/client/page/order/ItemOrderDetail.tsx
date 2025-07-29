@@ -51,7 +51,7 @@ export const getPaymentStatusColor = (status: string) => {
       case "Đã thanh toán":
         return "bg-green-50 text-green-700 border-green-200";
       case "Đã hoàn tiền":
-        return "bg-orange-50 text-orange-700 border-orange-200";
+        return "bg-blue-50 text-blue-700 border-blue-200";
       case "Chưa thanh toán":
         return "bg-red-50 text-red-700 border-red-200";
       default:

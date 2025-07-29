@@ -11,7 +11,9 @@ import {
 const CodReturn = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [status, setStatus] = useState<"processing" | "success" | "error">("processing");
+  const [status, setStatus] = useState<"processing" | "success" | "error">(
+    "processing"
+  );
   const [orderId, setOrderId] = useState<string | null>(null);
   const [orderCode, setOrderCode] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -66,8 +68,17 @@ const CodReturn = () => {
 
       {status === "processing" && (
         <>
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 60, color: "#1890ff" }} spin />} />
-          <h2 className="text-lg font-semibold text-gray-700">Đang xử lý đơn hàng...</h2>
+          <Spin
+            indicator={
+              <LoadingOutlined
+                style={{ fontSize: 60, color: "#1890ff" }}
+                spin
+              />
+            }
+          />
+          <h2 className="text-lg font-semibold text-gray-700">
+            Đang xử lý đơn hàng...
+          </h2>
           <p className="text-gray-500 text-sm">Vui lòng chờ trong giây lát.</p>
         </>
       )}
@@ -75,8 +86,14 @@ const CodReturn = () => {
       {status === "success" && (
         <>
           <CheckCircleTwoTone twoToneColor="#52c41a" style={{ fontSize: 80 }} />
-          <h2 className="text-2xl font-bold text-green-600">🎉 Đặt hàng thành công!</h2>
-          {orderCode && <p>Mã đơn hàng: <strong>{orderCode}</strong></p>}
+          <h2 className="text-2xl font-bold text-green-600">
+            🎉 Đặt hàng thành công!
+          </h2>
+          {orderCode && (
+            <p>
+              Mã đơn hàng: <strong>{orderCode}</strong>
+            </p>
+          )}
           <Button type="primary" onClick={goToDetailOrder}>
             Xem chi tiết đơn hàng
           </Button>

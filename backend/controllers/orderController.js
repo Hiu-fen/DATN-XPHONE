@@ -1,4 +1,3 @@
-
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
 const Notification = require("../models/notificationModels");
@@ -39,7 +38,7 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// Cập nhật trạng thái đơn hàng
+// Cập nhật đơn hàng sau khi hủy đơn
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, cancelReason } = req.body;
@@ -77,12 +76,18 @@ exports.updateOrderStatus = async (req, res) => {
         console.log("✅ Khôi phục số lượng thành công:", response.data.message);
       } catch (err) {
         console.error(
-          "❌ Lỗi khi gọi restore-quantity:",
+          "Lỗi khi gọi restore-quantity:",
           err?.response?.data || err.message
         );
         return res
           .status(500)
           .json({ message: "Lỗi khi khôi phục số lượng biến thể" });
+      }
+
+      // Khi hủy đơn, đặt total về 0 và cập nhật paymentStatus nếu đã thanh toán
+      if (status === "Đã huỷ" && order.isPaid) {
+        order.paymentStatus = "Đã hoàn tiền";
+        order.total = 0;
       }
     }
 
@@ -101,9 +106,9 @@ exports.updateOrderStatus = async (req, res) => {
     if (status === "Giao thành công") {
       try {
         await sendDeliverySuccessEmail(order.email, order);
-        console.log("✅ Đã gửi email giao hàng thành công.");
+        console.log("Đã gửi email giao hàng thành công.");
       } catch (err) {
-        console.error("❌ Lỗi gửi email giao thành công:", err.message);
+        console.error("Lỗi gửi email giao thành công:", err.message);
       }
     }
     res.json(order);
@@ -117,17 +122,21 @@ exports.updateOrderReturn = async (req, res) => {
   try {
     const { returnStatus, returnReason, note } = req.body;
     const order = await Order.findById(req.params.id);
+
     if (!order)
       return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
 
+    // Gán thông tin cơ bản
     order.returnStatus = returnStatus;
     if (returnReason) order.returnReason = returnReason;
     if (note) order.returnNote = note;
 
+    // Gán ảnh nếu có
     if (req.files && req.files.length > 0) {
       order.returnImages = req.files.map((file) => file.path);
     }
 
+    // Nếu yêu cầu được duyệt → hoàn hàng, hoàn tiền
     if (returnStatus === "Đã duyệt") {
       await axios.post("http://localhost:5000/api/products/restore-quantity", {
         items: order.items.map((item) => ({
@@ -139,21 +148,29 @@ exports.updateOrderReturn = async (req, res) => {
       });
 
       order.status = "Trả hàng/Hoàn tiền";
+      order.paymentStatus = "Đã hoàn tiền";
+      order.total = 0;
       order.statusHistory = [
         ...(order.statusHistory || []),
         { status: "Trả hàng/Hoàn tiền", timestamp: new Date() },
       ];
 
-      if (order.isPaid) order.refunded = true;
+      if (order.isPaid) {
+        order.refunded = true;
+      }
     }
 
     await order.save();
     res.json(order);
   } catch (error) {
-    console.error("❌ Lỗi updateOrderReturn:", error);
-    res
-      .status(500)
-      .json({ message: "Lỗi khi xử lý trả hàng", error: error.message });
+    console.error("❌ Lỗi updateOrderReturn:", {
+      message: error.message,
+      stack: error.stack,
+    });
+    res.status(500).json({
+      message: "Lỗi khi xử lý trả hàng",
+      error: error.message,
+    });
   }
 };
 
@@ -258,24 +275,28 @@ exports.createOrder = async (req, res) => {
 
           if (isBuyNow) {
             // Luồng "Mua ngay": Giảm số lượng sản phẩm trùng trong giỏ hàng
-            cart.items = cart.items.map((cartItem) => {
-              const matchingOrderItem = orderItemIds.find(
-                (orderItem) =>
-                  orderItem.productId.toString() === cartItem.productId.toString() &&
-                  orderItem.color === cartItem.color &&
-                  orderItem.storage === cartItem.storage
-              );
-              if (matchingOrderItem) {
-                cartItem.quantity -= matchingOrderItem.quantity;
-              }
-              return cartItem;
-            }).filter((cartItem) => cartItem.quantity > 0); // Xóa sản phẩm nếu quantity <= 0
+            cart.items = cart.items
+              .map((cartItem) => {
+                const matchingOrderItem = orderItemIds.find(
+                  (orderItem) =>
+                    orderItem.productId.toString() ===
+                      cartItem.productId.toString() &&
+                    orderItem.color === cartItem.color &&
+                    orderItem.storage === cartItem.storage
+                );
+                if (matchingOrderItem) {
+                  cartItem.quantity -= matchingOrderItem.quantity;
+                }
+                return cartItem;
+              })
+              .filter((cartItem) => cartItem.quantity > 0); // Xóa sản phẩm nếu quantity <= 0
           } else {
             // Luồng mua từ giỏ hàng: Xóa các sản phẩm trong đơn hàng
             cart.items = cart.items.filter((cartItem) => {
               return !orderItemIds.some(
                 (orderItem) =>
-                  orderItem.productId.toString() === cartItem.productId.toString() &&
+                  orderItem.productId.toString() ===
+                    cartItem.productId.toString() &&
                   orderItem.color === cartItem.color &&
                   orderItem.storage === cartItem.storage
               );
@@ -290,7 +311,7 @@ exports.createOrder = async (req, res) => {
           updatedCart = cart;
         }
       } catch (err) {
-        console.error("❌ Lỗi khi cập nhật giỏ hàng:", err.message);
+        console.error("Lỗi khi cập nhật giỏ hàng:", err.message);
       }
     }
 
@@ -302,10 +323,10 @@ exports.createOrder = async (req, res) => {
           voucher.usageCount = (voucher.usageCount || 0) + 1;
           await voucher.save();
         } else {
-          console.warn("⚠️ Không tìm thấy mã khuyến mãi:", voucherCode);
+          console.warn(" Không tìm thấy mã khuyến mãi:", voucherCode);
         }
       } catch (err) {
-        console.error("❌ Lỗi khi cập nhật mã khuyến mãi:", err.message);
+        console.error(" Lỗi khi cập nhật mã khuyến mãi:", err.message);
       }
     }
 
@@ -338,7 +359,7 @@ exports.createOrder = async (req, res) => {
       try {
         await notification.save();
       } catch (err) {
-        console.error("❌ Lỗi khi tạo thông báo user:", err.message);
+        console.error("Lỗi khi tạo thông báo user:", err.message);
       }
     }
 
@@ -353,7 +374,7 @@ exports.createOrder = async (req, res) => {
     try {
       await adminNotification.save();
     } catch (err) {
-      console.error("❌ Lỗi khi tạo thông báo admin:", err.message);
+      console.error("Lỗi khi tạo thông báo admin:", err.message);
     }
 
     res.status(201).json({ order, updatedCart });
@@ -388,30 +409,8 @@ exports.markAsPaid = async (req, res) => {
 
     res.status(200).json({ message: "Cập nhật thanh toán thành công", order });
   } catch (err) {
-    console.error("❌ Lỗi khi cập nhật thanh toán:", err);
+    console.error("Lỗi khi cập nhật thanh toán:", err);
     res.status(500).json({ message: "Lỗi server khi cập nhật thanh toán" });
-  }
-};
-
-// Lấy đơn hàng theo mã đơn hàng
-const getOrderByCode = async (req, res) => {
-  const { orderCode } = req.params;
-  try {
-    const order = await Order.findOne({
-      orderCode,
-      $or: [{ paymentMethod: { $ne: "VNPAY" } }, { isPaid: true }],
-    });
-
-    if (!order) {
-      return res
-        .status(404)
-        .json({ message: "Không tìm thấy đơn hàng với mã này" });
-    }
-
-    res.json(order);
-  } catch (err) {
-    console.error("Lỗi khi lấy đơn hàng theo mã:", err);
-    res.status(500).json({ message: "Lỗi server khi lấy đơn hàng" });
   }
 };
 
