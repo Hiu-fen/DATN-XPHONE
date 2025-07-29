@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { message, Modal, Spin } from "antd"; // Thêm Spin từ antd
+import { message, Modal, Spin } from "antd";
 import { useUser } from "../../context/UserContext";
 import { ICartItem } from "../../../../interface/cart";
 import { IProduct } from "../../../../interface/product";
@@ -240,7 +239,7 @@ const Checkout = () => {
     const weight = cart.reduce((sum, i) => sum + i.soluong * 300, 0);
 
     if (shippingProvider === "GHN") {
-      console.log("✅ Chọn địa chỉ:", to_district_id, to_ward_code);
+      console.log("Chọn địa chỉ:", to_district_id, to_ward_code);
       axios
         .post("http://localhost:5000/api/ghn/calculate-fee", {
           to_district_id: Number(to_district_id),
@@ -252,7 +251,7 @@ const Checkout = () => {
           setShippingFee(res.data.shippingFee);
         })
         .catch((err) => {
-          console.error("❌ Lỗi tính phí GHN:", err);
+          console.error("Lỗi tính phí GHN:", err);
           setShippingFee(35000);
         });
     } else {
@@ -382,7 +381,10 @@ const Checkout = () => {
       if (form.paymentMethod === "Momo") {
         localStorage.setItem("fromBuyNow", JSON.stringify(isBuyNow));
         localStorage.setItem("pendingOrder", JSON.stringify(newOrder));
-        navigate(`/momo_return`, { state: { fromBuyNow: isBuyNow }, replace: true });
+        navigate(`/momo_return`, {
+          state: { fromBuyNow: isBuyNow },
+          replace: true,
+        });
         setIsSubmitting(false);
         return;
       }
@@ -429,15 +431,27 @@ const Checkout = () => {
 
       // Đồng bộ giỏ hàng từ backend
       if (updatedCart) {
-        localStorage.setItem("cartItems", JSON.stringify(updatedCart.items || []));
-        console.log("✅ Đã đồng bộ giỏ hàng từ backend (Checkout):", updatedCart.items);
+        localStorage.setItem(
+          "cartItems",
+          JSON.stringify(updatedCart.items || [])
+        );
+        console.log(
+          "✅ Đã đồng bộ giỏ hàng từ backend (Checkout):",
+          updatedCart.items
+        );
       } else {
         const cartResponse = await axios.get(
           `http://localhost:5000/api/carts/${user._id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        localStorage.setItem("cartItems", JSON.stringify(cartResponse.data.items || []));
-        console.log("✅ Đã đồng bộ giỏ hàng từ backend (GET):", cartResponse.data.items);
+        localStorage.setItem(
+          "cartItems",
+          JSON.stringify(cartResponse.data.items || [])
+        );
+        console.log(
+          "Đã đồng bộ giỏ hàng từ backend (GET):",
+          cartResponse.data.items
+        );
       }
 
       setCart([]);
@@ -557,7 +571,7 @@ const Checkout = () => {
                       <button
                         className="text-blue-600 hover:underline"
                         onClick={() => {
-                          console.log("✅ Chọn địa chỉ:", addr);
+                          console.log("Chọn địa chỉ:", addr);
                           setForm((prev) => ({
                             ...prev,
                             name: addr.name,
@@ -602,7 +616,9 @@ const Checkout = () => {
                 className="border p-2 rounded"
                 disabled={isSubmitting}
               >
-                <option value="Giao hàng tiêu chuẩn">Giao hàng tiêu chuẩn</option>
+                <option value="Giao hàng tiêu chuẩn">
+                  Giao hàng tiêu chuẩn
+                </option>
                 <option value="GHN">Giao hàng nhanh</option>
                 <option value="J&T">J&T Express</option>
               </select>
@@ -640,7 +656,9 @@ const Checkout = () => {
               onClick={handleOrder}
               disabled={isSubmitting}
               className={`mt-10 w-full bg-green-600 text-white font-semibold py-3 rounded-lg transition ${
-                isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"
+                isSubmitting
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-green-700"
               }`}
             >
               {isSubmitting ? "Đang xử lý..." : "Đặt hàng ngay"}
@@ -654,7 +672,9 @@ const Checkout = () => {
             <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
               {cart.map((item) => (
                 <li
-                  key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
+                  key={`${item.productId}-${item.color || ""}-${
+                    item.storage || ""
+                  }`}
                   className="flex items-center py-4"
                 >
                   <img
@@ -717,7 +737,8 @@ const Checkout = () => {
             </div>
 
             <div className="mt-6 bg-blue-50 p-4 rounded-lg text-blue-900 text-sm">
-              {form.paymentMethod === "COD" && "Bạn sẽ thanh toán khi nhận hàng."}
+              {form.paymentMethod === "COD" &&
+                "Bạn sẽ thanh toán khi nhận hàng."}
               {form.paymentMethod === "Momo" &&
                 "Bạn sẽ chuyển đến trang thanh toán MoMo"}
               {form.paymentMethod === "VNPAY" &&

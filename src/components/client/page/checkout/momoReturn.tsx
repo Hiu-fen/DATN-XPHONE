@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { Button, message } from "antd";
 import { CheckCircle, ArrowRight } from "lucide-react";
@@ -57,15 +56,24 @@ const MomoReturn = () => {
 
       // Đồng bộ giỏ hàng từ backend
       if (updatedCart) {
-        localStorage.setItem("cartItems", JSON.stringify(updatedCart.items || []));
-        console.log("✅ Đã đồng bộ giỏ hàng từ backend:", updatedCart.items);
+        localStorage.setItem(
+          "cartItems",
+          JSON.stringify(updatedCart.items || [])
+        );
+        console.log("Đã đồng bộ giỏ hàng từ backend:", updatedCart.items);
       } else {
         const cartResponse = await axios.get(
           `http://localhost:5000/api/carts/${pendingOrder.userId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        localStorage.setItem("cartItems", JSON.stringify(cartResponse.data.items || []));
-        console.log("✅ Đã đồng bộ giỏ hàng từ backend (GET):", cartResponse.data.items);
+        localStorage.setItem(
+          "cartItems",
+          JSON.stringify(cartResponse.data.items || [])
+        );
+        console.log(
+          "Đã đồng bộ giỏ hàng từ backend (GET):",
+          cartResponse.data.items
+        );
       }
 
       localStorage.removeItem("pendingOrder");
@@ -80,7 +88,9 @@ const MomoReturn = () => {
       }
     } catch (err: any) {
       console.error("Lỗi xử lý thanh toán Momo:", err);
-      message.error(err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+      message.error(
+        err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại."
+      );
     } finally {
       setIsProcessing(false);
     }
