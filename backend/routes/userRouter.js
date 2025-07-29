@@ -11,6 +11,7 @@ const {
   registerWithGoogle,
   loginWithGoogle,
   getUpdateHistory,
+  changePassword,
   getAllUpdateHistories,
   User_likeProduct, // like handler bạn đã định nghĩa
   userController_getLikedProducts,
@@ -31,6 +32,8 @@ router.get('/profile/:id', getProfile);
 router.put('/profile/:id', updateProfile);
 router.patch('/:id', updateUserStatus);
 router.get('/history/all', getAllUpdateHistories);
+
+router.patch('/change-password/:id', changePassword);
 
 // ✅ Route like sản phẩm
 router.patch('/:id/like', User_likeProduct);
