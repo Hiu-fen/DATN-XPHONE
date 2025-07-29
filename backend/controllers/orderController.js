@@ -38,7 +38,7 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-// Cập nhật đơn hàng sau khi hủy đơn
+// Cập nhật trạng thái khi thay đổi status
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, cancelReason } = req.body;
@@ -73,7 +73,6 @@ exports.updateOrderStatus = async (req, res) => {
             items: restoreItems,
           }
         );
-        console.log("✅ Khôi phục số lượng thành công:", response.data.message);
       } catch (err) {
         console.error(
           "Lỗi khi gọi restore-quantity:",
@@ -89,6 +88,14 @@ exports.updateOrderStatus = async (req, res) => {
         order.paymentStatus = "Đã hoàn tiền";
         order.total = 0;
       }
+    }
+     if (
+      status === "Giao thành công" &&
+      order.paymentMethod === "COD" &&
+      !order.isPaid
+    ) {
+      order.isPaid = true;
+      order.paymentStatus = "Đã thanh toán";
     }
 
     order.status = status;
@@ -395,12 +402,6 @@ exports.markAsPaid = async (req, res) => {
 
     if (order.isPaid) {
       return res.status(200).json({ message: "Đơn hàng đã được thanh toán" });
-    }
-
-    if (order.paymentMethod === "COD" && order.status !== "Giao thành công") {
-      return res.status(400).json({
-        message: "COD chỉ được thanh toán sau khi giao hàng thành công",
-      });
     }
 
     order.isPaid = true;
