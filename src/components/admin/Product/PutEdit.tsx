@@ -127,7 +127,6 @@ const PutEdit: React.FC = () => {
     if (id) fetchData();
   }, [id, reset]);
 
-
   // Khi variants thay đổi, tự tính tổng soluong và gán vào form
   useEffect(() => {
     const total = watchedVariants.reduce((sum, v) => sum + (v.soluong || 0), 0);
@@ -201,88 +200,87 @@ const PutEdit: React.FC = () => {
 
   // Xử lý submit form
   const onSubmit = async (data: IProductForm) => {
-  try {
-    // Kiểm tra danh mục
-    const selectedCategory = categories.find((c) => c.name === data.danhmuc);
-    if (!selectedCategory) {
-      message.error("Không tìm thấy danh mục đã chọn");
-      return;
+    try {
+      // Kiểm tra danh mục
+      const selectedCategory = categories.find((c) => c.name === data.danhmuc);
+      if (!selectedCategory) {
+        message.error("Không tìm thấy danh mục đã chọn");
+        return;
+      }
+
+      // Kiểm tra ảnh chính
+      if (!data.image) {
+        message.error("Vui lòng chọn ảnh chính");
+        return;
+      }
+
+      // Kiểm tra ảnh phụ
+      if (!data.albumImages.length) {
+        message.error("Vui lòng chọn ít nhất một ảnh phụ");
+        return;
+      }
+
+      // Kiểm tra biến thể
+      const variantSet = new Set();
+      for (let i = 0; i < data.variants.length; i++) {
+        const v = data.variants[i];
+
+        if (!v.color) {
+          message.error(`Biến thể thứ ${i + 1} chưa chọn màu`);
+          return;
+        }
+
+        if (!v.ram) {
+          message.error(`Biến thể thứ ${i + 1} chưa chọn RAM`);
+          return;
+        }
+
+        if (v.price === undefined || v.price === null || v.price === 0) {
+          message.error(`Biến thể thứ ${i + 1} chưa nhập giá`);
+          return;
+        }
+
+        if (v.soluong === undefined || v.soluong === null || v.soluong === 0) {
+          message.error(`Biến thể thứ ${i + 1} chưa nhập số lượng`);
+          return;
+        }
+
+        // Kiểm tra trùng
+        const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
+        if (variantSet.has(key)) {
+          message.error(`Biến thể thứ ${i + 1} trùng màu + RAM với biến thể khác. Vui lòng sửa lại.`);
+          return;
+        }
+        variantSet.add(key);
+      }
+
+      // Tạo payload
+      const updatedData = {
+        name: data.name,
+        image: data.image,
+        albumImages: data.albumImages,
+        price: data.price,
+        soluong: data.soluong,
+        mota: data.mota,
+        danhmuc: selectedCategory._id,
+        trangthai: data.trangthai,
+        status: true,
+        variants: data.variants.map((v) => ({
+          color: v.color,
+          ram: v.ram,
+          price: v.price,
+          soluong: v.soluong,
+        })),
+      };
+
+      await axios.put(`http://localhost:5000/api/products/${id}`, updatedData);
+      message.success("Cập nhật sản phẩm thành công");
+      nav("/admin/phone/list", { state: { forceReload: true } });
+    } catch (err) {
+      console.error(err);
+      message.error("Cập nhật thất bại");
     }
-
-    // Kiểm tra ảnh chính
-    if (!data.image) {
-      message.error("Vui lòng chọn ảnh chính");
-      return;
-    }
-
-    // Kiểm tra ảnh phụ
-    if (!data.albumImages.length) {
-      message.error("Vui lòng chọn ít nhất một ảnh phụ");
-      return;
-    }
-
-    // Kiểm tra biến thể
-    const variantSet = new Set();
-    for (let i = 0; i < data.variants.length; i++) {
-      const v = data.variants[i];
-
-      if (!v.color) {
-        message.error(`Biến thể thứ ${i + 1} chưa chọn màu`);
-        return;
-      }
-
-      if (!v.ram) {
-        message.error(`Biến thể thứ ${i + 1} chưa chọn RAM`);
-        return;
-      }
-
-      if (v.price === undefined || v.price === null || v.price === 0) {
-        message.error(`Biến thể thứ ${i + 1} chưa nhập giá`);
-        return;
-      }
-
-      if (v.soluong === undefined || v.soluong === null || v.soluong === 0) {
-        message.error(`Biến thể thứ ${i + 1} chưa nhập số lượng`);
-        return;
-      }
-
-      // Kiểm tra trùng
-      const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
-      if (variantSet.has(key)) {
-        message.error(`Biến thể thứ ${i + 1} trùng màu + RAM với biến thể khác. Vui lòng sửa lại.`);
-        return;
-      }
-      variantSet.add(key);
-    }
-
-    // Tạo payload
-    const updatedData = {
-      name: data.name,
-      image: data.image,
-      albumImages: data.albumImages,
-      price: data.price,
-      soluong: data.soluong,
-      mota: data.mota,
-      danhmuc: selectedCategory._id,
-      trangthai: data.trangthai,
-      status: true,
-      variants: data.variants.map((v) => ({
-        color: v.color,
-        ram: v.ram,
-        price: v.price,
-        soluong: v.soluong,
-      })),
-    };
-
-    await axios.put(`http://localhost:5000/api/products/${id}`, updatedData);
-    message.success("Cập nhật sản phẩm thành công");
-    nav("/admin/phone/list", { state: { forceReload: true } });
-  } catch (err) {
-    console.error(err);
-    message.error("Cập nhật thất bại");
-  }
-};
-
+  };
 
   return (
     <Form
@@ -473,31 +471,6 @@ const PutEdit: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Trạng thái */}
-      <Form.Item
-        label="Trạng thái"
-        validateStatus={errors.trangthai ? "error" : ""}
-        help={errors.trangthai?.message}
-        required
-      >
-        <Controller
-          name="trangthai"
-          control={control}
-          rules={{ required: "Vui lòng chọn trạng thái" }}
-          render={({ field }) => (
-            <Select
-              placeholder="Chọn trạng thái"
-              onChange={field.onChange}
-              value={field.value}
-              options={[
-                { label: "Còn hàng", value: "còn hàng" },
-                { label: "Hết hàng", value: "hết hàng" },
-              ]}
-            />
-          )}
-        />
-      </Form.Item>
-
       {/* Biến thể */}
       <Form.Item label="Biến thể (Màu; RAM; Số lượng; Giá)">
         {variantFields.map((field, index) => (
@@ -516,6 +489,13 @@ const PutEdit: React.FC = () => {
                   {...field}
                   placeholder="Chọn màu"
                   style={{ width: 150 }}
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                   onChange={field.onChange}
                   value={field.value}
                 >
@@ -538,6 +518,13 @@ const PutEdit: React.FC = () => {
                   {...field}
                   placeholder="Chọn RAM"
                   style={{ width: 100 }}
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                   onChange={field.onChange}
                   value={field.value}
                 >

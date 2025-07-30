@@ -83,12 +83,7 @@ const AddProduct: React.FC = () => {
     name: "variants",
   });
 
-  // Lấy danh sách category khi component mount
-  useEffect(() => {
-    axios.get("http://localhost:5000/api/category").then((res) => {
-      setCategories(res.data);
-    });
-  }, []);
+  // Lấy danh sách category, màu sắc, RAM khi component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -107,7 +102,6 @@ const AddProduct: React.FC = () => {
 
     fetchData();
   }, []);
-
 
   const image = watch("image");
   const albumImages = watch("albumImages");
@@ -177,98 +171,97 @@ const AddProduct: React.FC = () => {
   };
 
   // Xử lý submit form
- const onSubmit = async (data: IProductForm) => {
-  try {
-    // Kiểm tra danh mục
-    const selectedCategory = categories.find((c) => c._id === data.danhmuc);
-    if (!selectedCategory) {
-      message.error("Không tìm thấy danh mục đã chọn");
-      return;
+  const onSubmit = async (data: IProductForm) => {
+    try {
+      // Kiểm tra danh mục
+      const selectedCategory = categories.find((c) => c._id === data.danhmuc);
+      if (!selectedCategory) {
+        message.error("Không tìm thấy danh mục đã chọn");
+        return;
+      }
+
+      if (!data.image) {
+        message.error("Vui lòng chọn ảnh chính");
+        return;
+      }
+
+      if (!data.albumImages.length) {
+        message.error("Vui lòng chọn ít nhất một ảnh phụ");
+        return;
+      }
+
+      const validVariants = data.variants.filter(
+        (v) => v.color && v.ram && v.price && v.soluong
+      );
+      if (validVariants.length === 0) {
+        message.error("Vui lòng thêm ít nhất một biến thể hợp lệ");
+        return;
+      }
+
+      // Kiểm tra biến thể
+      const variantSet = new Set();
+      for (let i = 0; i < data.variants.length; i++) {
+        const v = data.variants[i];
+
+        if (!v.color) {
+          message.error(`Biến thể thứ ${i + 1} chưa chọn màu`);
+          return;
+        }
+        if (!v.ram) {
+          message.error(`Biến thể thứ ${i + 1} chưa chọn RAM`);
+          return;
+        }
+        if (v.price === undefined || v.price === null || v.price === 0) {
+          message.error(`Biến thể thứ ${i + 1} chưa nhập giá`);
+          return;
+        }
+        if (v.soluong === undefined || v.soluong === null || v.soluong === 0) {
+          message.error(`Biến thể thứ ${i + 1} chưa nhập số lượng`);
+          return;
+        }
+
+        // Kiểm tra trùng (color + ram)
+        const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
+        if (variantSet.has(key)) {
+          message.error(`Biến thể thứ ${i + 1} bị trùng màu + RAM với biến thể khác. Vui lòng chọn khác`);
+          return;
+        }
+        variantSet.add(key);
+      }
+
+      // Tạo payload gửi lên server
+      const payload: IProductForm = {
+        name: data.name,
+        image: data.image,
+        albumImages: data.albumImages,
+        soluong: data.soluong,
+        mota: data.mota,
+        danhmuc: selectedCategory._id,
+        price: data.price,
+        trangthai: data.trangthai,
+        variants: data.variants,
+      };
+
+      await axios.post("http://localhost:5000/api/products", payload);
+      message.success("Thêm sản phẩm thành công");
+      navigate("/admin/phone/list", { state: { forceReload: true } });
+
+      reset({
+        name: "",
+        image: "",
+        albumImages: [],
+        soluong: 0,
+        mota: "",
+        danhmuc: 0,
+        price: 0,
+        trangthai: "còn bán",
+        variants: [],
+      });
+    } catch (err) {
+      console.error("Lỗi thêm sản phẩm:", err);
+      message.error("Thêm sản phẩm thất bại");
     }
-
-    if (!data.image) {
-      message.error("Vui lòng chọn ảnh chính");
-      return;
-    }
-
-    if (!data.albumImages.length) {
-      message.error("Vui lòng chọn ít nhất một ảnh phụ");
-      return;
-    }
-  const validVariants = data.variants.filter(
-  (v) => v.color && v.ram && v.price && v.soluong
-)
-if (validVariants.length === 0) {
-  message.error("Vui lòng thêm ít nhất một biến thể hợp lệ");
-  return;
-}
-
-
-
-    // Kiểm tra biến thể
-    const variantSet = new Set();
-    for (let i = 0; i < data.variants.length; i++) {
-      const v = data.variants[i];
-
-      if (!v.color) {
-        message.error(`Biến thể thứ ${i + 1} chưa chọn màu`);
-        return;
-      }
-      if (!v.ram) {
-        message.error(`Biến thể thứ ${i + 1} chưa chọn RAM`);
-        return;
-      }
-      if (v.price === undefined || v.price === null || v.price === 0) {
-        message.error(`Biến thể thứ ${i + 1} chưa nhập giá`);
-        return;
-      }
-      if (v.soluong === undefined || v.soluong === null || v.soluong === 0) {
-        message.error(`Biến thể thứ ${i + 1} chưa nhập số lượng`);
-        return;
-      }
-
-      // Kiểm tra trùng (color + ram)
-      const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
-      if (variantSet.has(key)) {
-        message.error(`Biến thể thứ ${i + 1} bị trùng màu + RAM với biến thể khác. Vui lòng chọn khác`);
-        return;
-      }
-      variantSet.add(key);
-    }
-
-    // Tạo payload gửi lên server
-    const payload: IProductForm = {
-      name: data.name,
-      image: data.image,
-      albumImages: data.albumImages,
-      soluong: data.soluong,
-      mota: data.mota,
-      danhmuc: selectedCategory._id,
-      price: data.price,
-      trangthai: data.trangthai,
-      variants: data.variants,
-    };
-
-    await axios.post("http://localhost:5000/api/products", payload);
-    message.success("Thêm sản phẩm thành công");
-    navigate("/admin/phone/list", { state: { forceReload: true } });
-
-    reset({
-      name: "",
-      image: "",
-      albumImages: [],
-      soluong: 0,
-      mota: "",
-      danhmuc: 0,
-      price: 0,
-      trangthai: "còn bán",
-      variants: [],
-    });
-  } catch (err) {
-    console.error("Lỗi thêm sản phẩm:", err);
-    message.error("Thêm sản phẩm thất bại");
-  }
-};
+  };
 
   return (
     <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
@@ -442,13 +435,14 @@ if (validVariants.length === 0) {
       </Form.Item>
 
       {/* Mô tả (không required) */}
-      <Form.Item label="Mô tả">
-        <Controller
-          name="mota"
-          control={control}
-          render={({ field }) => <TextArea rows={3} {...field} />}
-        />
-      </Form.Item>
+     <Form.Item label="Mô tả">
+  <Controller
+    name="mota"
+    control={control}
+    render={({ field }) => <TextArea rows={3} {...field} />}
+  />
+</Form.Item>
+
 
       {/* Danh mục (required) */}
       <Form.Item
@@ -458,24 +452,24 @@ if (validVariants.length === 0) {
         required
       >
         <Controller
-    name="danhmuc"
-    control={control}
-    rules={{ required: "Vui lòng chọn danh mục" }}
-    render={({ field }) => (
-      <Select
-        placeholder="-- Chọn danh mục --"
-        allowClear
-        {...field}
-        value={field.value ?? undefined} // ép giá trị undefined thay vì 0
-      >
-        {categories.map((cat) => (
-          <Select.Option key={cat._id} value={cat._id}>
-            {cat.name}
-          </Select.Option>
-        ))}
-      </Select>
-    )}
-  />
+          name="danhmuc"
+          control={control}
+          rules={{ required: "Vui lòng chọn danh mục" }}
+          render={({ field }) => (
+            <Select
+              placeholder="-- Chọn danh mục --"
+              allowClear
+              {...field}
+              value={field.value ?? undefined} // ép giá trị undefined thay vì 0
+            >
+              {categories.map((cat) => (
+                <Select.Option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </Select.Option>
+              ))}
+            </Select>
+          )}
+        />
       </Form.Item>
 
       {/* Mảng biến thể (variants). Mỗi trường color, ram, price, soluong đều required */}
@@ -486,7 +480,7 @@ if (validVariants.length === 0) {
             align="baseline"
             style={{ marginBottom: 8, display: "flex", width: "100%", flexWrap: "wrap" }}
           >
-            {/* Ô nhập màu sắc (required) */}
+            {/* Ô nhập màu sắc (required) - Sử dụng Select với tìm kiếm */}
             <Controller
               name={`variants.${index}.color`}
               control={control}
@@ -496,6 +490,13 @@ if (validVariants.length === 0) {
                   {...field}
                   placeholder="Chọn màu"
                   style={{ width: 150 }}
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                   onChange={(value) => field.onChange(value)}
                 >
                   {colors.map((color) => (
@@ -507,7 +508,7 @@ if (validVariants.length === 0) {
               )}
             />
 
-            {/* Biến thể ram: Select từ API */}
+            {/* Biến thể ram: Select với tìm kiếm */}
             <Controller
               name={`variants.${index}.ram`}
               control={control}
@@ -517,6 +518,13 @@ if (validVariants.length === 0) {
                   {...field}
                   placeholder="Chọn RAM"
                   style={{ width: 100 }}
+                  showSearch
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    (option?.children as unknown as string)
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
                   onChange={(value) => field.onChange(value)}
                 >
                   {rams.map((ram) => (
@@ -567,16 +575,16 @@ if (validVariants.length === 0) {
           </Space>
         ))}
 
-       <Button
-  type="dashed"
-  onClick={() =>
-    appendVariant({ color: "", ram: "", soluong: undefined as any, price: undefined as any })
-  }
-  block
-  icon={<PlusOutlined />}
->
-  Thêm biến thể
-</Button>
+        <Button
+          type="dashed"
+          onClick={() =>
+            appendVariant({ color: "", ram: "", soluong: undefined as any, price: undefined as any })
+          }
+          block
+          icon={<PlusOutlined />}
+        >
+          Thêm biến thể
+        </Button>
       </Form.Item>
 
       {/* Nút submit */}
