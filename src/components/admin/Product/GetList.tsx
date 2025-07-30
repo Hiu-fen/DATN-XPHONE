@@ -165,16 +165,16 @@ const GetList: React.FC = () => {
         return <span style={{ color }}>{statusText}</span>;
       },
     },
-    {
-      title: "Đang bán?",
-      key: "status",
-      dataIndex: "status",
-      render: (status: boolean) => (
-        <span style={{ color: status ? "green" : "gray" }}>
-          {status ? "Đang bán" : "Ngừng bán"}
-        </span>
-      ),
-    },
+    // {
+    //   title: "Đang bán?",
+    //   key: "status",
+    //   dataIndex: "status",
+    //   render: (status: boolean) => (
+    //     <span style={{ color: status ? "green" : "gray" }}>
+    //       {status ? "Đang bán" : "Ngừng bán"}
+    //     </span>
+    //   ),
+    // },
     {
       title: "Thao tác",
       key: "actions",

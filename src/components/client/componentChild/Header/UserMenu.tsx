@@ -88,7 +88,7 @@ const UserMenu = () => {
           </div>
         )}
         <span
-          className="hidden md:inline-block font-semibold text-[15px] text-gray-800 dark:text-gray-200"
+          className="hidden md:inline-block font-semibold text-[15px] text-gray-800 dark:text-black-800"
         >
           Xin chào {user?.name || user?.email || "Khách"}
         </span>

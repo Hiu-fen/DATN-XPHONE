@@ -117,27 +117,6 @@ const OrderList = () => {
     },
   });
 
-  const returnMutation = useMutation({
-    mutationFn: async ({
-      id,
-      returnStatus,
-    }: {
-      id: string;
-      returnStatus: string;
-    }) => {
-      await axios.patch(`http://localhost:5000/api/orders/${id}/return`, {
-        returnStatus,
-      });
-    },
-    onSuccess: () => {
-      message.success("Cập nhật trạng thái trả hàng thành công");
-      refetch();
-    },
-    onError: (error: any) => {
-      message.error(error.response?.data?.message || "Lỗi khi xử lý trả hàng");
-    },
-  });
-
   const handleStatusChange = (
     id: string,
     currentStatus: string,
@@ -181,7 +160,7 @@ const OrderList = () => {
       return;
     }
 
-    setLoadingStatusUpdateId(id); // ✅ chặn bấm lại
+    setLoadingStatusUpdateId(id); // chặn bấm lại
 
     mutation.mutate(
       { id, status: newStatus },
@@ -199,10 +178,6 @@ const OrderList = () => {
       }
     );
   };
-
-  // const handleReturnAction = (id: string, returnStatus: string) => {
-  //   returnMutation.mutate({ id, returnStatus });
-  // };
 
   const handleMarkAsPaid = (id: string) => {
     markAsPaidMutation.mutate(id);

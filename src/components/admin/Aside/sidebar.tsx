@@ -62,6 +62,8 @@ const AdminSidebar = () => {
       children: [
         { key: '/admin/user/listadmin', label: <span className="text-[15px]">Tài khoản quản trị</span> },
         { key: '/admin/user/listclient', label: <span className="text-[15px]">Tài khoản người dùng</span> },
+        
+        { key: '/admin/user/history', label: <span className="text-[15px]">Lịch sử cập nhật</span> },
       ],
     },
     {

@@ -54,10 +54,10 @@ const Login = () => {
       style={{ backgroundImage: `url('/login.png')` }}
     >
       <div className="w-[300px] h-[400px] sm:w-[550px] bg-white bg-opacity-0 rounded-xl p-6 shadow-xl backdrop-blur-md ml-[650px] mt-[-50px]">
-        <h2 className="text-3xl font-extrabold mb-6 text-gray-800 text-center">Đăng nhập tài khoản</h2>
+        <h2 className="text-2xl font-extrabold mb-6 text-gray-800 text-center">Đăng nhập tài khoản</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="relative">
+          <div className="relative mt-[-20px]">
             <label htmlFor="email" className="block text-sm font-semibold  text-gray-700">
               Email
             </label>
@@ -75,7 +75,7 @@ const Login = () => {
           </div>
 
           <div className="relative">
-            <label htmlFor="password" className="block text-sm font-semibold  text-gray-700">
+            <label htmlFor="password" className="block text-sm font-semibold  text-gray-700 mt-[-20px]">
               Mật khẩu
             </label>
             <input
@@ -93,7 +93,7 @@ const Login = () => {
 
           <button
             type="submit"
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg shadow-md transition"
+            className="w-full h-[50px] bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-lg shadow-md transition "
           >
             Đăng nhập
           </button>
