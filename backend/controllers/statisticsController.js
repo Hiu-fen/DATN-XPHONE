@@ -2,6 +2,9 @@ const User = require("../models/userModels");
 const Order = require("../models/orderModel");
 const Product = require("../models/productModels");
 
+// Trạng thái hoàn thành đơn hàng
+const completedStatuses = ["Giao thành công", "Đã nhận hàng"];
+
 // Thống kê tổng quan
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -57,10 +60,7 @@ exports.getDashboardStats = async (req, res) => {
     const revenueToday = await Order.aggregate([
       {
         $match: {
-          $or: [
-            { status: "Giao thành công" },
-            { isPaid: true, paymentMethod: { $ne: "COD" } },
-          ],
+          status: { $in: completedStatuses },
           date: { $gte: startOfDay },
         },
       },
@@ -75,7 +75,7 @@ exports.getDashboardStats = async (req, res) => {
     const revenueThisWeek = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: { $gte: startOfWeek },
         },
       },
@@ -90,7 +90,7 @@ exports.getDashboardStats = async (req, res) => {
     const revenueThisMonth = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: { $gte: startOfMonth },
         },
       },
@@ -105,7 +105,7 @@ exports.getDashboardStats = async (req, res) => {
     const revenueThisYear = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: { $gte: startOfYear },
         },
       },
@@ -136,7 +136,7 @@ exports.getDashboardStats = async (req, res) => {
     const monthlyRevenueRaw = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: {
             $gte: new Date(currentYear, 0, 1),
             $lt: new Date(currentYear + 1, 0, 1),
@@ -218,7 +218,7 @@ exports.getDailyStats = async (req, res) => {
     const revenue = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: { $gte: startOfDay, $lt: endOfDay },
         },
       },
@@ -267,14 +267,14 @@ exports.getStatsByDateRange = async (req, res) => {
     });
 
     const completedOrders = await Order.countDocuments({
-      status: "Giao thành công",
+      status: { $in: completedStatuses },
       date: { $gte: start, $lte: end },
     });
 
     const revenue = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: { $gte: start, $lte: end },
         },
       },
@@ -290,7 +290,7 @@ exports.getStatsByDateRange = async (req, res) => {
     const dailyStats = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: { $gte: start, $lte: end },
         },
       },
@@ -343,7 +343,7 @@ exports.getDailyRevenueInMonth = async (req, res) => {
     const dailyRaw = await Order.aggregate([
       {
         $match: {
-          status: "Giao thành công",
+          status: { $in: completedStatuses },
           date: { $gte: start, $lt: end },
         },
       },
@@ -381,8 +381,13 @@ exports.getTopSellingProducts = async (req, res) => {
   try {
     const sortOrder = req.query.sort === "asc" ? 1 : -1;
     // Xử lý lọc theo tuần nếu có
-    let matchOrder = {};
-    if (req.query.weekStart) {
+    let matchOrder = { status: { $in: completedStatuses } };
+    if (req.query.startDate && req.query.endDate) {
+      matchOrder.date = {
+        $gte: new Date(req.query.startDate),
+        $lte: new Date(req.query.endDate),
+      };
+    } else if (req.query.weekStart) {
       const start = new Date(req.query.weekStart);
       const end = new Date(start);
       end.setDate(start.getDate() + 7);
@@ -390,7 +395,7 @@ exports.getTopSellingProducts = async (req, res) => {
     }
     // Lấy tổng số lượng bán ra của từng sản phẩm từ các đơn hàng trong tuần (nếu có)
     const soldAgg = await Order.aggregate([
-      ...(Object.keys(matchOrder).length ? [{ $match: matchOrder }] : []),
+      { $match: matchOrder },
       { $unwind: "$items" },
       {
         $group: {
