@@ -63,9 +63,8 @@ const ProductDetail = () => {
     setSelectedVariant(variant);
     // Ánh xạ ảnh theo thứ tự: biến thể 0 -> ảnh 1, biến thể 1 -> ảnh 2, v.v.
     if (album.length > 1) { // Đảm bảo có đủ ảnh
-      const imageIndex = index + 1; // Bắt đầu từ ảnh thứ 2 (chỉ số 1)
-      const newImageIndex = imageIndex < album.length ? imageIndex : 0; // Quay lại ảnh đầu nếu vượt quá
-      setMainImage(album[newImageIndex]);
+      const imageIndex = (index % (album.length - 1)) + 1; // Bắt đầu từ ảnh thứ 2 (chỉ số 1) và lặp lại
+      setMainImage(album[imageIndex]);
     }
   };
 
