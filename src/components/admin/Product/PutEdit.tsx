@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import axios from "axios";
@@ -11,8 +12,9 @@ import {
   Spin,
   Space,
   InputNumber,
+  Modal,
 } from "antd";
-import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusCircleOutlined, UploadOutlined, SwapOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RcFile } from "antd/lib/upload";
 import { IColor, IRam } from "../../../interface/variant";
@@ -21,7 +23,7 @@ interface VariantInput {
   color: string;
   ram: string;
   price: number;
-  soluong: number; // Số lượng cho từng biến thể
+  soluong: number;
 }
 
 interface IProductForm {
@@ -29,9 +31,9 @@ interface IProductForm {
   image: string;
   albumImages: string[];
   price: number;
-  soluong: number;       // Tổng số lượng (auto tính từ biến thể)
+  soluong: number;
   mota: string;
-  danhmuc: string;       // name of category
+  danhmuc: string;
   trangthai: string;
   variants: VariantInput[];
 }
@@ -72,14 +74,15 @@ const PutEdit: React.FC = () => {
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [albumLoading, setAlbumLoading] = useState(false);
-
+  const [visibleModal, setVisibleModal] = useState(false);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number | null>(null);
+  const [swapPosition, setSwapPosition] = useState<number | null>(null);
   const image = watch("image");
   const albumImages = watch("albumImages");
   const watchedVariants = watch("variants") || [];
   const [colors, setColors] = useState<IColor[]>([]);
   const [rams, setRams] = useState<IRam[]>([]);
 
-  // Khi load trang, lấy danh sách category và thông tin sản phẩm
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -127,13 +130,11 @@ const PutEdit: React.FC = () => {
     if (id) fetchData();
   }, [id, reset]);
 
-  // Khi variants thay đổi, tự tính tổng soluong và gán vào form
   useEffect(() => {
     const total = watchedVariants.reduce((sum, v) => sum + (v.soluong || 0), 0);
     setValue("soluong", total);
   }, [watchedVariants, setValue]);
 
-  // Upload ảnh chính
   const uploadImage = async (file: RcFile | null) => {
     if (!file) return;
     setLoading(true);
@@ -148,13 +149,12 @@ const PutEdit: React.FC = () => {
       message.success("Tải ảnh chính thành công");
     } catch (error) {
       console.error(error);
-      message.error("Lỗi upload ảnh chính");
+      message.error("Lỗi tải ảnh chính");
     } finally {
       setLoading(false);
     }
   };
 
-  // Upload ảnh phụ
   const uploadAlbumImages = async (files: RcFile[] | null) => {
     if (!files || files.length === 0) return;
     setAlbumLoading(true);
@@ -175,52 +175,67 @@ const PutEdit: React.FC = () => {
       message.success("Tải ảnh phụ thành công");
     } catch (error) {
       console.error(error);
-      message.error("Lỗi upload ảnh phụ");
+      message.error("Lỗi tải ảnh phụ");
     } finally {
       setAlbumLoading(false);
     }
   };
 
-  // Xóa 1 ảnh trong album
   const removeImage = (index: number) => {
     const updated = [...albumImages];
     updated.splice(index, 1);
     setValue("albumImages", updated, { shouldValidate: true });
   };
 
-  // useFieldArray cho biến thể
-  const {
-    fields: variantFields,
-    append: appendVariant,
-    remove: removeVariant,
-  } = useFieldArray({
+  const { fields: variantFields, append: appendVariant, remove: removeVariant, move: moveVariant } = useFieldArray({
     control,
     name: "variants",
   });
 
-  // Xử lý submit form
+  const handleSwapPosition = (index: number) => {
+    setSelectedVariantIndex(index);
+    setVisibleModal(true);
+  };
+
+  const confirmSwap = () => {
+    if (selectedVariantIndex === null || swapPosition === null) {
+      message.error("Vui lòng chọn vị trí để hoán đổi");
+      return;
+    }
+    const totalVariants = variantFields.length;
+    if (swapPosition < 1 || swapPosition > totalVariants) {
+      message.error(`Vị trí phải từ 1 đến ${totalVariants}`);
+      return;
+    }
+    if (swapPosition - 1 === selectedVariantIndex) {
+      message.error("Vị trí hoán đổi không thể trùng với vị trí hiện tại");
+      return;
+    }
+    moveVariant(selectedVariantIndex, swapPosition - 1);
+    setVisibleModal(false);
+    setSelectedVariantIndex(null);
+    setSwapPosition(null);
+    message.success("Hoán đổi vị trí thành công");
+  };
+
   const onSubmit = async (data: IProductForm) => {
     try {
-      // Kiểm tra danh mục
       const selectedCategory = categories.find((c) => c.name === data.danhmuc);
       if (!selectedCategory) {
         message.error("Không tìm thấy danh mục đã chọn");
         return;
       }
 
-      // Kiểm tra ảnh chính
       if (!data.image) {
         message.error("Vui lòng chọn ảnh chính");
         return;
       }
 
-      // Kiểm tra ảnh phụ
       if (!data.albumImages.length) {
         message.error("Vui lòng chọn ít nhất một ảnh phụ");
         return;
       }
 
-      // Kiểm tra biến thể
       const variantSet = new Set();
       for (let i = 0; i < data.variants.length; i++) {
         const v = data.variants[i];
@@ -245,7 +260,6 @@ const PutEdit: React.FC = () => {
           return;
         }
 
-        // Kiểm tra trùng
         const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
         if (variantSet.has(key)) {
           message.error(`Biến thể thứ ${i + 1} trùng màu + RAM với biến thể khác. Vui lòng sửa lại.`);
@@ -254,7 +268,6 @@ const PutEdit: React.FC = () => {
         variantSet.add(key);
       }
 
-      // Tạo payload
       const updatedData = {
         name: data.name,
         image: data.image,
@@ -290,7 +303,6 @@ const PutEdit: React.FC = () => {
     >
       <h2 className="text-xl font-semibold text-center mb-4">Cập nhật sản phẩm</h2>
 
-      {/* Tên sản phẩm */}
       <Form.Item
         label="Tên sản phẩm"
         validateStatus={errors.name ? "error" : ""}
@@ -305,7 +317,6 @@ const PutEdit: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Ảnh chính */}
       <Form.Item
         label="Hình ảnh chính"
         required
@@ -337,7 +348,6 @@ const PutEdit: React.FC = () => {
         )}
       </Form.Item>
 
-      {/* Ảnh phụ */}
       <Form.Item
         label="Hình ảnh phụ"
         required
@@ -395,7 +405,6 @@ const PutEdit: React.FC = () => {
         </div>
       </Form.Item>
 
-      {/* Giá */}
       <Form.Item
         label="Giá"
         validateStatus={errors.price ? "error" : ""}
@@ -409,11 +418,10 @@ const PutEdit: React.FC = () => {
             required: "Vui lòng nhập giá",
             min: { value: 1, message: "Giá phải lớn hơn 0" },
           }}
-          render={({ field }) => <Input type="number" {...field} />}
+          render={({ field }) => <InputNumber {...field} className="w-full" />}
         />
       </Form.Item>
 
-      {/* Số lượng tổng (readonly, do useEffect tính) */}
       <Form.Item
         label="Số lượng tổng"
         validateStatus={errors.soluong ? "error" : ""}
@@ -427,17 +435,16 @@ const PutEdit: React.FC = () => {
             required: "Số lượng tổng phải có giá trị (tính từ biến thể)",
           }}
           render={({ field }) => (
-            <InputNumber<number>
+            <InputNumber
               {...field}
               min={0}
-              style={{ width: "100%" }}
+              className="w-full"
               disabled
             />
           )}
         />
       </Form.Item>
 
-      {/* Mô tả */}
       <Form.Item label="Mô tả">
         <Controller
           name="mota"
@@ -446,7 +453,6 @@ const PutEdit: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Danh mục */}
       <Form.Item
         label="Danh mục"
         validateStatus={errors.danhmuc ? "error" : ""}
@@ -471,7 +477,6 @@ const PutEdit: React.FC = () => {
         />
       </Form.Item>
 
-      {/* Biến thể */}
       <Form.Item label="Biến thể (Màu; RAM; Số lượng; Giá)">
         {variantFields.map((field, index) => (
           <Space
@@ -479,7 +484,9 @@ const PutEdit: React.FC = () => {
             align="baseline"
             style={{ marginBottom: 8, display: "flex", width: "100%", flexWrap: "wrap" }}
           >
-            {/* Ô nhập màu sắc */}
+            <div style={{ width: 50, textAlign: "center" }}>
+              <span>{index + 1}</span>
+            </div>
             <Controller
               name={`variants.${index}.color`}
               control={control}
@@ -507,8 +514,6 @@ const PutEdit: React.FC = () => {
                 </Select>
               )}
             />
-
-            {/* Chọn RAM từ API */}
             <Controller
               name={`variants.${index}.ram`}
               control={control}
@@ -536,14 +541,12 @@ const PutEdit: React.FC = () => {
                 </Select>
               )}
             />
-
-            {/* Ô nhập số lượng biến thể */}
             <Controller
               name={`variants.${index}.soluong`}
               control={control}
               rules={{ required: "Nhập số lượng biến thể" }}
               render={({ field }) => (
-                <InputNumber<number>
+                <InputNumber
                   min={0}
                   placeholder="Số lượng"
                   style={{ width: 120 }}
@@ -551,14 +554,12 @@ const PutEdit: React.FC = () => {
                 />
               )}
             />
-
-            {/* Ô nhập giá biến thể */}
             <Controller
               name={`variants.${index}.price`}
               control={control}
               rules={{ required: "Nhập giá biến thể" }}
               render={({ field }) => (
-                <InputNumber<number>
+                <InputNumber
                   min={0}
                   placeholder="Giá"
                   style={{ width: 120 }}
@@ -568,23 +569,58 @@ const PutEdit: React.FC = () => {
                 />
               )}
             />
-
-            {/* Nút xóa biến thể */}
-            <MinusCircleOutlined onClick={() => removeVariant(index)} />
+            <Button
+              icon={<SwapOutlined />}
+              size="small"
+              onClick={() => handleSwapPosition(index)}
+              style={{ marginLeft: 8 }}
+            >
+              Đổi vị trí
+            </Button>
+            <MinusCircleOutlined
+              onClick={() => removeVariant(index)}
+              style={{ marginLeft: 8, color: "#ff4d4f", cursor: "pointer" }}
+            />
           </Space>
         ))}
-
+        <Modal
+          title="Chọn vị trí để hoán đổi"
+          open={visibleModal}
+          onOk={confirmSwap}
+          onCancel={() => {
+            setVisibleModal(false);
+            setSelectedVariantIndex(null);
+            setSwapPosition(null);
+          }}
+          okText="Xác nhận"
+          cancelText="Hủy"
+        >
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Chọn số thứ tự để hoán đổi"
+            onChange={(value) => setSwapPosition(value)}
+            value={swapPosition}
+          >
+            {variantFields.map((_, idx) => (
+              idx !== selectedVariantIndex && (
+                <Select.Option key={idx} value={idx + 1}>
+                  {idx + 1}
+                </Select.Option>
+              )
+            ))}
+          </Select>
+        </Modal>
         <Button
           type="dashed"
           onClick={() => appendVariant({ color: "", ram: "", price: 0, soluong: 0 })}
           block
           icon={<PlusOutlined />}
+          style={{ marginTop: 8 }}
         >
           Thêm biến thể
         </Button>
       </Form.Item>
 
-      {/* Nút submit */}
       <Form.Item>
         <Button
           type="primary"
