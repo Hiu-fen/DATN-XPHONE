@@ -1,6 +1,4 @@
-import {
-  ShoppingCartOutlined,
-} from "@ant-design/icons";
+import { ShoppingCartOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
@@ -11,7 +9,7 @@ import CommentSection from "../../componentChild/Detail/CommentSection";
 import RelatedProducts from "../../componentChild/Detail/RelatedProducts";
 import PromotionSection from "../../componentChild/Detail/PromotionSection";
 import SupportPolicy from "../../componentChild/Detail/SupportPolicy";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
+import socket from "../../../../socket"; // Import socket instance
 
 const Details = () => {
   const { id } = useParams();
@@ -44,13 +42,61 @@ const Details = () => {
       } catch (error) {
         console.error("Không thể tải sản phẩm:", error);
         message.error("Không thể tải thông tin sản phẩm.");
+        navigate("/products"); // Redirect to product list on fetch error
       }
     };
     fetchProduct();
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, navigate]);
+
+  // Socket.IO for real-time updates
+  useEffect(() => {
+    // Handle product updates
+    socket.on("productUpdated", (updatedProduct: IProduct) => {
+      if (updatedProduct._id === id) {
+        console.log("🟡 Cập nhật sản phẩm:", updatedProduct);
+        setProduct(updatedProduct);
+        setMainImage(updatedProduct.image || "/default-image.jpg");
+        setModalImage(updatedProduct.image || "/default-image.jpg");
+        // Reset variant if it no longer exists
+        if (
+          selectedVariant &&
+          !updatedProduct.variants?.some(
+            (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+          )
+        ) {
+          setSelectedVariant(null);
+          setModalVariant(null);
+          setQuantity(1);
+          setModalQuantity(1);
+          message.warning("Biến thể đã chọn không còn tồn tại, vui lòng chọn lại.");
+        }
+        // Check if product is no longer available
+        if (!updatedProduct.status) {
+          message.warning("Sản phẩm này không còn được bán.");
+        }
+      }
+    });
+
+    // Handle product deletion
+    socket.on("productDeleted", (deletedProductId: string) => {
+      if (deletedProductId === id) {
+        console.log("🔴 Sản phẩm bị xóa:", deletedProductId);
+        setProduct((prevProduct) =>
+          prevProduct ? { ...prevProduct, status: false } : null
+        );
+        message.warning("Sản phẩm này không còn được bán.");
+      }
+    });
+
+    // Clean up socket listeners
+    return () => {
+      socket.off("productUpdated");
+      socket.off("productDeleted");
+    };
+  }, [id, selectedVariant]);
 
   // Handle variant selection and image switching
   const handleSelectVariant = (color: string, ram: string, index: number) => {
@@ -84,27 +130,31 @@ const Details = () => {
   // Get selected variant price
   const getSelectedVariantPrice = () => {
     if (!selectedVariant) {
-      return product?.price ? `${product.price} VNĐ` : "Liên hệ";
+      return product?.price ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ` : "Liên hệ";
     }
     const variant = product?.variants?.find(
       (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
     );
     return variant?.price
-      ? `${variant.price} VNĐ`
-      : product?.price || "Liên hệ";
+      ? `${Number(variant.price).toLocaleString("vi-VN")} VNĐ`
+      : product?.price
+      ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ`
+      : "Liên hệ";
   };
 
   // Get modal variant price
   const getModalVariantPrice = () => {
     if (!modalVariant) {
-      return product?.price ? `${product.price} VNĐ` : "Liên hệ";
+      return product?.price ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ` : "Liên hệ";
     }
     const variant = product?.variants?.find(
       (v) => v.color === modalVariant.color && v.ram === modalVariant.ram
     );
     return variant?.price
-      ? `${variant.price} VNĐ`
-      : product?.price || "Liên hệ";
+      ? `${Number(variant.price).toLocaleString("vi-VN")} VNĐ`
+      : product?.price
+      ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ`
+      : "Liên hệ";
   };
 
   // Handle quantity change
@@ -112,8 +162,7 @@ const Details = () => {
     if (value < 1) return;
     if (selectedVariant) {
       const variant = product?.variants?.find(
-        (v) =>
-          v.color === selectedVariant.color && v.ram === selectedVariant.ram
+        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
       );
       if (variant && value > variant.soluong) {
         message.warning(
@@ -284,7 +333,7 @@ const Details = () => {
           {
             productId: product._id,
             quantity: modalQuantity,
-            price: product.price,
+            price: variant?.price || product.price,
             color: modalVariant.color,
             storage: modalVariant.ram,
             categoryId: Array.isArray(product.danhmuc)
@@ -427,9 +476,7 @@ const Details = () => {
               </span>{" "}
               | Trạng thái:{" "}
               <span
-                className={`font-semibold ${
-                  product.soluong > 0 ? "text-green-600" : "text-red-600"
-                }`}
+                className={`font-semibold ${product.soluong > 0 ? "text-green-600" : "text-red-600"}`}
               >
                 {product.soluong > 0 ? "Còn hàng" : "Hết hàng"}
               </span>
@@ -507,7 +554,7 @@ const Details = () => {
                   +
                 </button>
               </div>
-              <p className="mt-2 text-gray-700">
+              <p className="mt-2 text-gray-600">
                 Tồn kho hiện có:{" "}
                 {selectedVariant
                   ? product?.variants?.find(
@@ -557,22 +604,22 @@ const Details = () => {
 
       {/* Modal for variant and quantity selection */}
       <Modal
-  title={
-    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-t-lg">
-      {modalAction === "buyNow" ? "Chọn Biến Thể Để Mua Ngay" : "Chọn Biến Thể Để Thêm Vào Giỏ Hàng"}
-    </div>
-  }
-  open={isModalOpen}
-  onOk={handleModalOk}
-  onCancel={handleModalCancel}
-  okText={modalAction === "buyNow" ? "Xác nhận mua" : "Thêm vào giỏ"}
-  cancelText="Hủy"
-  width={650}
-  className="rounded-lg"
-  styles={{ body: { padding: "24px", background: "#f9fafb" } }} // Sử dụng styles.body thay thế
-  okButtonProps={{ className: "bg-blue-600 hover:bg-blue-700 text-white font-semibold" }}
-  cancelButtonProps={{ className: "border-gray-300 hover:border-gray-400 text-gray-700" }}
->
+        title={
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-t-lg">
+            {modalAction === "buyNow" ? "Chọn Biến Thể Để Mua Ngay" : "Chọn Biến Thể Để Thêm Vào Giỏ Hàng"}
+          </div>
+        }
+        open={isModalOpen}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+        okText={modalAction === "buyNow" ? "Xác nhận mua" : "Thêm vào giỏ"}
+        cancelText="Hủy"
+        width={650}
+        className="rounded-lg"
+        styles={{ body: { padding: "24px", background: "#f9fafb" } }}
+        okButtonProps={{ className: "bg-blue-600 hover:bg-blue-700 text-white font-semibold" }}
+        cancelButtonProps={{ className: "border-gray-300 hover:border-gray-400 text-gray-700" }}
+      >
         <div className="flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row gap-6 bg-white p-4 rounded-lg shadow-sm">
             <img
