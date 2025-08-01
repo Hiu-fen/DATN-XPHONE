@@ -7,7 +7,6 @@ import type { ICategory } from "../../../../interface/category"
 import { Card, Row, Col, Typography, Spin, Select, Input, Space, InputNumber, Button, Dropdown, Tag } from "antd"
 import { Link } from "react-router-dom"
 import { useState, useMemo, useEffect } from "react"
-// import { DatabaseOutlined } from "@ant-design/icons";
 import {
   FilterOutlined,
   SearchOutlined,
@@ -15,7 +14,6 @@ import {
   ArrowUpOutlined,
   ClearOutlined,
   DollarOutlined,
-  // MemoryOutlined,
 } from "@ant-design/icons"
 import socket from "../../../../socket"
 
@@ -33,12 +31,20 @@ const ProductPage = () => {
   const [showScrollTop, setShowScrollTop] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
 
-  const ramOptions = ["4GB", "6GB", "8GB", "12GB", "16GB"]
+  const ramOptions = ["16GB", "32GB", "128GB", "256GB", "512GB", "1TB"]
 
   // Fetch danh sách sản phẩm
   const { data: products, isLoading: productsLoading } = useQuery({
     queryKey: ["products"],
-    queryFn: async () => (await axios.get("http://localhost:5000/api/products")).data,
+    queryFn: async () => {
+      const response = await axios.get("http://localhost:5000/api/products")
+      const data = response.data
+      // Kiểm tra dữ liệu sản phẩm
+      if (data.some((product: IProduct) => !product._id)) {
+        console.warn("Cảnh báo: Một số sản phẩm không có _id hợp lệ", data)
+      }
+      return data
+    },
   })
 
   // Fetch danh sách danh mục
@@ -212,8 +218,8 @@ const ProductPage = () => {
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium">{ram}</span>
                   <Tag color="green" className="text-xs px-2 py-0.5">
-  RAM
-</Tag>
+                    RAM
+                  </Tag>
                 </div>
               </Option>
             ))}
@@ -397,7 +403,7 @@ const ProductPage = () => {
 
                 <div className="flex items-center">
                   <Dropdown
-                    overlay={filterDropdown}
+                    popupRender={() => filterDropdown}
                     trigger={["hover"]}
                     placement="bottomRight"
                     onOpenChange={setIsFilterOpen}
@@ -415,9 +421,9 @@ const ProductPage = () => {
                       <span className="flex items-center space-x-2">
                         <span>Bộ lọc nâng cao</span>
                         {activeFiltersCount > 0 && (
-                         <Tag color="white" className="ml-1 text-xs px-2 py-0.5">
-  {activeFiltersCount}
-</Tag>
+                          <Tag color="white" className="ml-1 text-xs px-2 py-0.5">
+                            {activeFiltersCount}
+                          </Tag>
                         )}
                       </span>
                     </Button>
@@ -460,13 +466,13 @@ const ProductPage = () => {
         {/* Enhanced Danh sách sản phẩm */}
         <Row gutter={[20, 20]}>
           {filteredProducts.map((product: IProduct, index: number) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={product._id}>
+            <Col xs={24} sm={12} md={8} lg={6} key={product._id || `product-${index}`}>
               <div
                 className={`group relative animate-in fade-in slide-in-from-bottom duration-500 delay-${Math.min(index * 100, 800)}`}
-                onMouseEnter={() => setHoveredProduct(product._id ?? null)}
+                onMouseEnter={() => setHoveredProduct(product._id || `product-${index}`)}
                 onMouseLeave={() => setHoveredProduct(null)}
               >
-                <Link to={`/detail/${product._id}`}>
+                <Link to={`/detail/${product._id || `product-${index}`}`}>
                   <Card
                     hoverable
                     className="h-full transition-all duration-500 hover:shadow-2xl border-0 bg-white/90 backdrop-blur-sm rounded-2xl overflow-hidden group-hover:-translate-y-2 group-hover:rotate-1 transform-gpu"
@@ -481,7 +487,7 @@ const ProductPage = () => {
                         {/* Enhanced overlay */}
                         <div
                           className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent transition-all duration-500 ${
-                            hoveredProduct === product._id ? "opacity-100" : "opacity-0"
+                            hoveredProduct === (product._id || `product-${index}`) ? "opacity-100" : "opacity-0"
                           }`}
                         >
                           <div className="absolute bottom-4 left-4 right-4 flex justify-center">
@@ -519,9 +525,9 @@ const ProductPage = () => {
                         </Text>
                         {product.variants && product.variants.length > 0 && (
                           <div className="flex items-center space-x-2">
-                           <Tag color="blue" className="rounded-full text-xs px-2 py-0.5">
-  RAM: {product.variants[0].ram}
-</Tag>
+                            <Tag color="blue" className="rounded-full text-xs px-2 py-0.5">
+                              RAM: {product.variants[0].ram}
+                            </Tag>
                           </div>
                         )}
                       </div>

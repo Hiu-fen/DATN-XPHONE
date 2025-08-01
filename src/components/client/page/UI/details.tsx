@@ -557,22 +557,22 @@ const Details = () => {
 
       {/* Modal for variant and quantity selection */}
       <Modal
-        title={
-          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-t-lg">
-            {modalAction === "buyNow" ? "Chọn Biến Thể Để Mua Ngay" : "Chọn Biến Thể Để Thêm Vào Giỏ Hàng"}
-          </div>
-        }
-        open={isModalOpen}
-        onOk={handleModalOk}
-        onCancel={handleModalCancel}
-        okText={modalAction === "buyNow" ? "Xác nhận mua" : "Thêm vào giỏ"}
-        cancelText="Hủy"
-        width={650}
-        className="rounded-lg"
-        bodyStyle={{ padding: "24px", background: "#f9fafb" }}
-        okButtonProps={{ className: "bg-blue-600 hover:bg-blue-700 text-white font-semibold" }}
-        cancelButtonProps={{ className: "border-gray-300 hover:border-gray-400 text-gray-700" }}
-      >
+  title={
+    <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-t-lg">
+      {modalAction === "buyNow" ? "Chọn Biến Thể Để Mua Ngay" : "Chọn Biến Thể Để Thêm Vào Giỏ Hàng"}
+    </div>
+  }
+  open={isModalOpen}
+  onOk={handleModalOk}
+  onCancel={handleModalCancel}
+  okText={modalAction === "buyNow" ? "Xác nhận mua" : "Thêm vào giỏ"}
+  cancelText="Hủy"
+  width={650}
+  className="rounded-lg"
+  styles={{ body: { padding: "24px", background: "#f9fafb" } }} // Sử dụng styles.body thay thế
+  okButtonProps={{ className: "bg-blue-600 hover:bg-blue-700 text-white font-semibold" }}
+  cancelButtonProps={{ className: "border-gray-300 hover:border-gray-400 text-gray-700" }}
+>
         <div className="flex flex-col gap-6">
           <div className="flex flex-col sm:flex-row gap-6 bg-white p-4 rounded-lg shadow-sm">
             <img

@@ -158,7 +158,7 @@ const About = () => {
               <Col xs={24} sm={12} md={6} key={index}>
                 <Card
                   className="text-center h-full bg-white/80 backdrop-blur-sm border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 rounded-2xl"
-                  bodyStyle={{ padding: "2rem" }}
+                  styles={{ body: { padding: "2rem" } }}
                 >
                   <div
                     className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center text-2xl text-white"
@@ -183,7 +183,7 @@ const About = () => {
           <Col xs={24} lg={12}>
             <Card
               className="h-full bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl animate-in fade-in slide-in-from-left duration-700 delay-300"
-              bodyStyle={{ padding: "2rem" }}
+              styles={{ body: { padding: "2rem" } }}
             >
               <div className="mb-6">
                 <div className="flex items-center space-x-3 mb-4">
@@ -228,7 +228,7 @@ const About = () => {
           <Col xs={24} lg={12}>
             <Card
               className="h-full bg-white/80 backdrop-blur-sm border-0 shadow-xl rounded-2xl animate-in fade-in slide-in-from-right duration-700 delay-400"
-              bodyStyle={{ padding: "2rem" }}
+              styles={{ body: { padding: "2rem" } }}
             >
               <div className="mb-6">
                 <div className="flex items-center space-x-3 mb-4">
@@ -246,7 +246,7 @@ const About = () => {
           </Col>
         </Row>
 
-        {/* Features */}
+        /* Features */
         <div className="mb-16 animate-in fade-in slide-in-from-bottom duration-700 delay-500">
           <div className="text-center mb-12">
             <Title level={2} className="text-3xl font-bold text-gray-800 mb-4">
@@ -262,7 +262,7 @@ const About = () => {
               <Col xs={24} md={12} lg={8} key={index}>
                 <Card
                   className="h-full bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-2xl group"
-                  bodyStyle={{ padding: "2rem" }}
+                  styles={{ body: { padding: "2rem" } }}
                 >
                   <div className="text-center">
                     <div
@@ -295,7 +295,7 @@ const About = () => {
               <Col xs={24} sm={12} md={8} key={index}>
                 <Card
                   className="text-center h-full bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 rounded-2xl"
-                  bodyStyle={{ padding: "2rem" }}
+                  styles={{ body: { padding: "2rem" } }}
                 >
                   <Avatar size={80} src={member.avatar} className="mb-4 ring-4 ring-white shadow-lg" />
                   <Title level={4} className="mb-1 text-gray-800">
@@ -312,7 +312,7 @@ const About = () => {
         {/* Contact Information */}
         <Card
           className="bg-gradient-to-r from-red-500 to-orange-500 border-0 shadow-2xl rounded-3xl animate-in fade-in slide-in-from-bottom duration-700 delay-700"
-          bodyStyle={{ padding: "3rem" }}
+          styles={{ body: { padding: "3rem" } }}
         >
           <Row gutter={[32, 32]} align="middle">
             <Col xs={24} lg={12}>
