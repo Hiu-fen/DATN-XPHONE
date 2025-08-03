@@ -222,13 +222,13 @@ const ProductDetail = () => {
       <Button
         style={{ marginBottom: 16, marginLeft: 8 }}
         onClick={() => {
-  if (id) {
-    queryClient.invalidateQueries({
-  queryKey: ['orders', id],
-});
+          if (id) {
+            queryClient.invalidateQueries({
+              queryKey: ['orders', id],
+            });
 
-  }
-}}
+          }
+        }}
 
 
       >

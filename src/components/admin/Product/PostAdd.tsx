@@ -306,8 +306,7 @@ const AddProduct: React.FC = () => {
           variantMap[key].push(i);
           // Báo lỗi với vị trí của cả hai biến thể trùng nhau
           message.error(
-            `Biến thể thứ ${i + 1} (${v.color} - ${v.ram}) trùng với biến thể thứ ${
-              variantMap[key][0] + 1
+            `Biến thể thứ ${i + 1} (${v.color} - ${v.ram}) trùng với biến thể thứ ${variantMap[key][0] + 1
             }`
           );
           return;

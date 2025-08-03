@@ -294,7 +294,8 @@ const PutEdit: React.FC = () => {
         return;
       }
 
-      const variantSet = new Set();
+      // Kiểm tra trùng lặp biến thể
+      const variantMap: { [key: string]: number[] } = {};
       for (let i = 0; i < data.variants.length; i++) {
         const v = data.variants[i];
 
@@ -319,11 +320,16 @@ const PutEdit: React.FC = () => {
         }
 
         const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
-        if (variantSet.has(key)) {
-          message.error(`Biến thể thứ ${i + 1} trùng màu + RAM với biến thể khác. Vui lòng sửa lại.`);
+        if (!variantMap[key]) {
+          variantMap[key] = [i];
+        } else {
+          variantMap[key].push(i);
+          message.error(
+            `Biến thể thứ ${i + 1} (${v.color} - ${v.ram}) trùng với biến thể thứ ${variantMap[key][0] + 1
+            }`
+          );
           return;
         }
-        variantSet.add(key);
       }
 
       const updatedData = {
@@ -333,7 +339,7 @@ const PutEdit: React.FC = () => {
         price: data.price,
         soluong: data.soluong,
         mota: data.mota,
-        danhmuc: selectedCategory._id,
+        danhmuc: selectedCategory._id, // Gửi _id thay vì name
         trangthai: data.trangthai,
         status: true,
         variants: data.variants.map((v) => ({
@@ -390,349 +396,351 @@ const PutEdit: React.FC = () => {
               return false;
             }}
           >
-          <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
-        </Upload>
-        {loading && <Spin style={{ marginLeft: 10 }} />}
-        {image && (
-          <img
-            src={image}
-            alt="Ảnh chính"
-            style={{
-              marginTop: 8,
-              maxWidth: 150,
-              maxHeight: 150,
-              borderRadius: 6,
+            <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+          </Upload>
+          {loading && <Spin style={{ marginLeft: 10 }} />}
+          {image && (
+            <img
+              src={image}
+              alt="Ảnh chính"
+              style={{
+                marginTop: 8,
+                maxWidth: 150,
+                maxHeight: 150,
+                borderRadius: 6,
+              }}
+            />
+          )}
+        </Form.Item>
+
+        <Form.Item
+          label="Hình ảnh phụ"
+          required
+          validateStatus={errors.albumImages ? "error" : ""}
+          help={errors.albumImages?.message}
+        >
+          <Upload
+            accept="image/*"
+            multiple
+            showUploadList={false}
+            beforeUpload={(fileList) => {
+              uploadAlbumImages(Array.isArray(fileList) ? fileList : [fileList]);
+              return false;
             }}
-          />
-        )}
-      </Form.Item>
-
-      <Form.Item
-        label="Hình ảnh phụ"
-        required
-        validateStatus={errors.albumImages ? "error" : ""}
-        help={errors.albumImages?.message}
-      >
-        <Upload
-          accept="image/*"
-          multiple
-          showUploadList={false}
-          beforeUpload={(fileList) => {
-            uploadAlbumImages(Array.isArray(fileList) ? fileList : [fileList]);
-            return false;
-          }}
-        >
-          <Button icon={<UploadOutlined />}>Chọn ảnh phụ</Button>
-        </Upload>
-        {albumLoading && <Spin style={{ marginLeft: 10 }} />}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            marginTop: 8,
-          }}
-        >
-          {albumImages?.map((img, index) => (
-            <div key={index} style={{ position: "relative" }}>
-              <img
-                src={img}
-                alt={`Ảnh phụ ${index + 1}`}
-                style={{
-                  width: 100,
-                  height: 100,
-                  objectFit: "cover",
-                  borderRadius: 6,
-                }}
-              />
-              <Button
-                type="primary"
-                danger
-                size="small"
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  right: 0,
-                  padding: "0 6px",
-                }}
-                onClick={() => removeImage(index)}
-              >
-                ✕
-              </Button>
-            </div>
-          ))}
-        </div>
-      </Form.Item>
-
-      <Form.Item
-        label="Giá"
-        validateStatus={errors.price ? "error" : ""}
-        help={errors.price?.message}
-        required
-      >
-        <Controller
-          name="price"
-          control={control}
-          rules={{
-            required: "Vui lòng nhập giá",
-            min: { value: 1, message: "Giá phải lớn hơn 0" },
-          }}
-          render={({ field }) => (
-            <InputNumber
-              min={0}
-              style={{ width: "100%" }}
-              formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-              parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
-              {...field}
-            />
-          )}
-        />
-      </Form.Item>
-
-      <Form.Item
-        label="Số lượng tổng"
-        validateStatus={errors.soluong ? "error" : ""}
-        help={errors.soluong?.message}
-        required
-      >
-        <Controller
-          name="soluong"
-          control={control}
-          rules={{
-            required: "Số lượng tổng phải có giá trị (tính từ biến thể)",
-          }}
-          render={({ field }) => (
-            <InputNumber
-              min={0}
-              style={{ width: "100%" }}
-              disabled
-              {...field}
-            />
-          )}
-        />
-      </Form.Item>
-
-      <Form.Item label="Mô tả">
-        <Controller
-          name="mota"
-          control={control}
-          render={({ field }) => <TextArea rows={4} {...field} />}
-        />
-      </Form.Item>
-
-      <Form.Item
-        label="Danh mục"
-        validateStatus={errors.danhmuc ? "error" : ""}
-        help={errors.danhmuc?.message}
-        required
-      >
-        <Controller
-          name="danhmuc"
-          control={control}
-          rules={{ required: "Vui lòng chọn danh mục" }}
-          render={({ field }) => (
-            <Select
-              placeholder="Chọn danh mục"
-              onChange={field.onChange}
-              value={field.value}
-            >
-              {categories.map((cat) => (
-                <Select.Option key={cat._id} value={cat.name}>
-                  {cat.name}
-                </Select.Option>
-              ))}
-            </Select>
-          )}
-        />
-      </Form.Item>
-
-      <Form.Item label="Biến thể (Màu; RAM; Số lượng; Giá)">
-        {variantFields.map((field, index) => (
+          >
+            <Button icon={<UploadOutlined />}>Chọn ảnh phụ</Button>
+          </Upload>
+          {albumLoading && <Spin style={{ marginLeft: 10 }} />}
           <div
-            key={field.id}
             style={{
               display: "flex",
-              alignItems: "center",
-              marginBottom: 8,
-              width: "100%",
+              flexWrap: "wrap",
               gap: 8,
+              marginTop: 8,
             }}
           >
-            <div style={{ width: 50, textAlign: "center" }}>
-              <span>{index + 1}</span>
-            </div>
-            <Controller
-              name={`variants.${index}.color`}
-              control={control}
-              rules={{ required: "Chọn màu sắc" }}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  placeholder="Chọn màu"
-                  style={{ width: 150 }}
-                  showSearch
-                  optionFilterProp="children"
-                  filterOption={(input, option) =>
-                    (option?.children as unknown as string)
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                  onChange={(value) => field.onChange(value)}
-                >
-                  {colors.map((color) => (
-                    <Select.Option key={color._id} value={color.name}>
-                      {color.name}
-                    </Select.Option>
-                  ))}
-                </Select>
-              )}
-            />
-            <Controller
-              name={`variants.${index}.ram`}
-              control={control}
-              rules={{ required: "Chọn RAM" }}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  placeholder="Chọn RAM"
-                  style={{ width: 100 }}
-                  showSearch
-                  optionFilterProp="children"
-                  filterOption={(input, option) =>
-                    (option?.children as unknown as string)
-                      .toLowerCase()
-                      .includes(input.toLowerCase())
-                  }
-                  onChange={(value) => field.onChange(value)}
-                >
-                  {rams.map((ram) => (
-                    <Select.Option key={ram._id} value={ram.size}>
-                      {ram.size}
-                    </Select.Option>
-                  ))}
-                </Select>
-              )}
-            />
-            <Controller
-              name={`variants.${index}.soluong`}
-              control={control}
-              rules={{ required: "Nhập số lượng biến thể" }}
-              render={({ field }) => (
-                <InputNumber
-                  min={0}
-                  placeholder="Số lượng"
-                  style={{ width: 120 }}
-                  {...field}
+            {albumImages?.map((img, index) => (
+              <div key={index} style={{ position: "relative" }}>
+                <img
+                  src={img}
+                  alt={`Ảnh phụ ${index + 1}`}
+                  style={{
+                    width: 100,
+                    height: 100,
+                    objectFit: "cover",
+                    borderRadius: 6,
+                  }}
                 />
-              )}
-            />
-            <Controller
-              name={`variants.${index}.price`}
-              control={control}
-              rules={{ required: "Nhập giá biến thể" }}
-              render={({ field }) => (
-                <InputNumber
-                  min={0}
-                  placeholder="Giá"
-                  style={{ width: 120 }}
-                  formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-                  parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
-                  {...field}
-                />
-              )}
-            />
-            <Button
-              icon={<SwapOutlined />}
-              size="small"
-              onClick={() => handleSwapPosition(index)}
-              style={{ marginLeft: 8 }}
-            >
-              Đổi vị trí
-            </Button>
-            <MinusCircleOutlined
-              onClick={() => removeVariant(index)}
-              style={{ marginLeft: 8, color: "#ff4d4f", cursor: "pointer" }}
-            />
+                <Button
+                  type="primary"
+                  danger
+                  size="small"
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    right: 0,
+                    padding: "0 6px",
+                  }}
+                  onClick={() => removeImage(index)}
+                >
+                  ✕
+                </Button>
+              </div>
+            ))}
           </div>
-        ))}
-        <Modal
-          title={selectedVariantIndex !== null ? "Chọn vị trí để hoán đổi" : "Chọn danh mục biến thể để sinh biến thể"}
-          open={visibleModal}
-          onOk={selectedVariantIndex !== null ? confirmSwap : handleGenerateVariants}
-          onCancel={() => {
-            setVisibleModal(false);
-            setSelectedVariantIndex(null);
-            setSwapPosition(null);
-            setSelectedVariantCategory(null);
-          }}
-          okText={selectedVariantIndex !== null ? "Xác nhận" : "Sinh biến thể"}
-          cancelText="Hủy"
+        </Form.Item>
+
+        <Form.Item
+          label="Giá"
+          validateStatus={errors.price ? "error" : ""}
+          help={errors.price?.message}
+          required
         >
-          {selectedVariantIndex !== null ? (
-            <Select
-              style={{ width: "100%" }}
-              placeholder="Chọn số thứ tự để hoán đổi"
-              onChange={(value) => setSwapPosition(value)}
-              value={swapPosition}
-            >
-              {variantFields.map((_, idx) => (
-                idx !== selectedVariantIndex && (
-                  <Select.Option key={idx} value={idx + 1}>
-                    {idx + 1}
+          <Controller
+            name="price"
+            control={control}
+            rules={{
+              required: "Vui lòng nhập giá",
+              min: { value: 1, message: "Giá phải lớn hơn 0" },
+            }}
+            render={({ field }) => (
+              <InputNumber
+                min={0}
+                style={{ width: "100%" }}
+                formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
+                {...field}
+              />
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Số lượng tổng"
+          validateStatus={errors.soluong ? "error" : ""}
+          help={errors.soluong?.message}
+          required
+        >
+          <Controller
+            name="soluong"
+            control={control}
+            rules={{
+              required: "Số lượng tổng phải có giá trị (tính từ biến thể)",
+            }}
+            render={({ field }) => (
+              <InputNumber
+                min={0}
+                style={{ width: "100%" }}
+                disabled
+                {...field}
+              />
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item label="Mô tả">
+          <Controller
+            name="mota"
+            control={control}
+            render={({ field }) => <TextArea rows={4} {...field} />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Danh mục"
+          validateStatus={errors.danhmuc ? "error" : ""}
+          help={errors.danhmuc?.message}
+          required
+        >
+          <Controller
+            name="danhmuc"
+            control={control}
+            rules={{ required: "Vui lòng chọn danh mục" }}
+            render={({ field }) => (
+              <Select
+                placeholder="Chọn danh mục"
+                onChange={field.onChange}
+                value={field.value}
+              >
+                {categories.map((cat) => (
+                  <Select.Option key={cat._id} value={cat.name}>
+                    {cat.name}
                   </Select.Option>
-                )
-              ))}
-            </Select>
-          ) : (
-            <Select
-              style={{ width: "100%" }}
-              placeholder="Chọn danh mục biến thể"
-              onChange={(value) => setSelectedVariantCategory(value)}
-              value={selectedVariantCategory}
+                ))}
+              </Select>
+            )}
+          />
+        </Form.Item>
+
+        <Form.Item label="Biến thể (Màu; RAM; Số lượng; Giá)">
+          {variantFields.map((field, index) => (
+            <div
+              key={field.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                marginBottom: 8,
+                width: "100%",
+                gap: 8,
+              }}
             >
-              {variantCategories.map((category) => (
-                <Select.Option key={category._id} value={category._id}>
-                  {category.name}
-                </Select.Option>
-              ))}
-            </Select>
-          )}
-        </Modal>
-        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-          <Button
-            type="dashed"
-            onClick={() => appendVariant({ color: "", ram: "", price: 0, soluong: 0 })}
-            style={{ flex: 1 }}
-            icon={<PlusOutlined />}
+              <div style={{ width: 50, textAlign: "center" }}>
+                <span>{index + 1}</span>
+              </div>
+              <Controller
+                name={`variants.${index}.color`}
+                control={control}
+                rules={{ required: "Chọn màu sắc" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    placeholder="Chọn màu"
+                    style={{ width: 150 }}
+                    showSearch
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                      (option?.children as unknown as string)
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                    onChange={(value) => field.onChange(value)}
+                  >
+                    {colors.map((color) => (
+                      <Select.Option key={color._id} value={color.name}>
+                        {color.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                )}
+              />
+              <Controller
+                name={`variants.${index}.ram`}
+                control={control}
+                rules={{ required: "Chọn RAM" }}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    placeholder="Chọn RAM"
+                    style={{ width: 100 }}
+                    showSearch
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                      (option?.children as unknown as string)
+                        .toLowerCase()
+                        .includes(input.toLowerCase())
+                    }
+                    onChange={(value) => field.onChange(value)}
+                  >
+                    {rams.map((ram) => (
+                      <Select.Option key={ram._id} value={ram.size}>
+                        {ram.size}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                )}
+              />
+              <Controller
+                name={`variants.${index}.soluong`}
+                control={control}
+                rules={{ required: "Nhập số lượng biến thể" }}
+                render={({ field }) => (
+                  <InputNumber
+                    min={0}
+                    placeholder="Số lượng"
+                    style={{ width: 120 }}
+                    {...field}
+                  />
+                )}
+              />
+              <Controller
+                name={`variants.${index}.price`}
+                control={control}
+                rules={{ required: "Nhập giá biến thể" }}
+                render={({ field }) => (
+                  <InputNumber
+                    min={0}
+                    placeholder="Giá"
+                    style={{ width: 120 }}
+                    formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                    parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
+                    {...field}
+                  />
+                )}
+              />
+              <Button
+                icon={<SwapOutlined />}
+                size="small"
+                onClick={() => handleSwapPosition(index)}
+                style={{ marginLeft: 8 }}
+              >
+                Đổi vị trí
+              </Button>
+              <MinusCircleOutlined
+                onClick={() => removeVariant(index)}
+                style={{ marginLeft: 8, color: "#ff4d4f", cursor: "pointer" }}
+              />
+            </div>
+          ))}
+          <Modal
+            title={selectedVariantIndex !== null ? "Chọn vị trí để hoán đổi" : "Chọn danh mục biến thể để sinh biến thể"}
+            open={visibleModal}
+            onOk={selectedVariantIndex !== null ? confirmSwap : handleGenerateVariants}
+            onCancel={() => {
+              setVisibleModal(false);
+              setSelectedVariantIndex(null);
+              setSwapPosition(null);
+              setSelectedVariantCategory(null);
+            }}
+            okText={selectedVariantIndex !== null ? "Xác nhận" : "Sinh biến thể"}
+            cancelText="Hủy"
           >
-            Thêm biến thể
-          </Button>
+            {selectedVariantIndex !== null ? (
+              <Select
+                style={{ width: "100%" }}
+                placeholder="Chọn số thứ tự để hoán đổi"
+                onChange={(value) => setSwapPosition(value)}
+                value={swapPosition}
+              >
+                {variantFields.map((_, idx) => (
+                  idx !== selectedVariantIndex && (
+                    <Select.Option key={idx} value={idx + 1}>
+                      {idx + 1}
+                    </Select.Option>
+                  )
+                ))}
+              </Select>
+            ) : (
+              <Select
+                style={{ width: "100%" }}
+                placeholder="Chọn danh mục biến thể"
+                onChange={(value) => setSelectedVariantCategory(value)}
+                value={selectedVariantCategory}
+              >
+                {variantCategories.map((category) => (
+                  <Select.Option key={category._id} value={category._id}>
+                    {category.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            )}
+          </Modal>
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <Button
+              type="dashed"
+              onClick={() => appendVariant({ color: "", ram: "", price: 0, soluong: 0 })}
+              style={{ flex: 1 }}
+              icon={<PlusOutlined />}
+            >
+              Thêm biến thể
+            </Button>
+
+            <Button
+              type="primary"
+              onClick={() => {
+                setVisibleModal(true);
+                setSelectedVariantIndex(null);
+              }}
+              style={{ flex: 1 }}
+              icon={<PlusOutlined />}
+            >
+              Tự sinh biến thể
+            </Button>
+          </div>
+          {/* </div> */}
+        </Form.Item>
+
+        <Form.Item>
           <Button
             type="primary"
-            onClick={() => {
-              setVisibleModal(true);
-              setSelectedVariantIndex(null);
-            }}
-            style={{ flex: 1 }}
-            icon={<PlusOutlined />}
+            htmlType="submit"
+            block
+            loading={loading || albumLoading}
           >
-            Tự sinh biến thể
+            Cập nhật sản phẩm
           </Button>
-        </div>
-      </Form.Item>
-
-      <Form.Item>
-        <Button
-          type="primary"
-          htmlType="submit"
-          block
-          loading={loading || albumLoading}
-        >
-          Cập nhật sản phẩm
-        </Button>
-      </Form.Item>
-    </Form>
-  </div>
+        </Form.Item>
+      </Form>
+    </div>
   );
 };
 
