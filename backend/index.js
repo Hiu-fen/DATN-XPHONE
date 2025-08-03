@@ -2,8 +2,9 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const http = require('http'); // <-- cần để tạo server cho socket.io
-const { Server } = require('socket.io'); // <-- socket.io
+const http = require('http');
+const { Server } = require('socket.io');
+
 
 // ROUTES
 const productRoutes = require('./routes/productRoutes');
@@ -24,6 +25,7 @@ const addressRouter = require("./routes/address");
 const vnpayRouter = require("./routes/vnpayRoutes");
 const ghnRoutes = require('./routes/ghnRoutes');
 const rewardRoutes = require("./routes/rewardRoutes");
+const variantCategoryRouter = require('./routes/variant/variantCategoryRouter'); // Thêm route cho VariantCategory
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,7 +36,7 @@ const server = http.createServer(app);
 // Khởi tạo socket server
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173', // Đúng origin FE của bạn
+    origin: 'http://localhost:5173',
     credentials: true
   }
 });
@@ -62,8 +64,8 @@ app.use("/uploads", express.static("uploads"));
 
 // DATABASE
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log('✅ Kết nối MongoDB thành công'))
-.catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
+  .then(() => console.log('✅ Kết nối MongoDB thành công'))
+  .catch((err) => console.error('❌ Lỗi kết nối MongoDB:', err));
 
 // ROUTES
 app.use('/api/products', productRoutes);
@@ -84,11 +86,16 @@ app.use("/api/addresses", addressRouter);
 app.use("/api/vnpay", vnpayRouter);
 app.use('/api/ghn', ghnRoutes);
 app.use("/api/rewards", rewardRoutes);
+app.use('/api/variant-category', variantCategoryRouter); // Thêm route mới
 
 // CRON
 require('./cron');
 
-// KHỞI ĐỘNG SERVER (dùng server HTTP, không dùng app.listen)
+
+// XÓA TỰ ĐỘNG SAU 30 NGÀY (SCHEDULER)
+const { initScheduler } = require('./utils/scheduler');
+initScheduler();
+// KHỞI ĐỘNG SERVER
 server.listen(PORT, () => {
   console.log(`🚀 Server + Socket đang chạy tại http://localhost:${PORT}`);
 });
