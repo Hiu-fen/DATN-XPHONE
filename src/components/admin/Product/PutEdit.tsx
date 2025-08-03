@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import axios from "axios";
@@ -17,7 +16,7 @@ import {
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined, SwapOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RcFile } from "antd/lib/upload";
-import { IColor, IRam } from "../../../interface/variant";
+import { IColor, IRam, IVariantCategory } from "../../../interface/variant";
 
 interface VariantInput {
   color: string;
@@ -47,7 +46,7 @@ const { TextArea } = Input;
 
 const PutEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const nav = useNavigate();
+  const navigate = useNavigate();
 
   const {
     control,
@@ -72,22 +71,31 @@ const PutEdit: React.FC = () => {
   });
 
   const [categories, setCategories] = useState<ICategory[]>([]);
+  const [variantCategories, setVariantCategories] = useState<IVariantCategory[]>([]);
   const [loading, setLoading] = useState(false);
   const [albumLoading, setAlbumLoading] = useState(false);
   const [visibleModal, setVisibleModal] = useState(false);
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number | null>(null);
   const [swapPosition, setSwapPosition] = useState<number | null>(null);
+  const [selectedVariantCategory, setSelectedVariantCategory] = useState<string | null>(null);
+  const [colors, setColors] = useState<IColor[]>([]);
+  const [rams, setRams] = useState<IRam[]>([]);
+
   const image = watch("image");
   const albumImages = watch("albumImages");
   const watchedVariants = watch("variants") || [];
-  const [colors, setColors] = useState<IColor[]>([]);
-  const [rams, setRams] = useState<IRam[]>([]);
+
+  const { fields: variantFields, append: appendVariant, remove: removeVariant, move: moveVariant } = useFieldArray({
+    control,
+    name: "variants",
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoryRes, productRes, colorRes, ramRes] = await Promise.all([
+        const [categoryRes, variantCategoryRes, productRes, colorRes, ramRes] = await Promise.all([
           axios.get("http://localhost:5000/api/category"),
+          axios.get("http://localhost:5000/api/variant-category"),
           axios.get(`http://localhost:5000/api/products/${id}`),
           axios.get("http://localhost:5000/api/colors"),
           axios.get("http://localhost:5000/api/rams"),
@@ -95,6 +103,7 @@ const PutEdit: React.FC = () => {
 
         const categoryList = categoryRes.data as ICategory[];
         setCategories(categoryList);
+        setVariantCategories(variantCategoryRes.data as IVariantCategory[]);
         setColors(colorRes.data as IColor[]);
         setRams(ramRes.data as IRam[]);
 
@@ -124,6 +133,7 @@ const PutEdit: React.FC = () => {
         });
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu:", error);
+        message.error("Lỗi khi tải dữ liệu sản phẩm");
       }
     };
 
@@ -187,11 +197,6 @@ const PutEdit: React.FC = () => {
     setValue("albumImages", updated, { shouldValidate: true });
   };
 
-  const { fields: variantFields, append: appendVariant, remove: removeVariant, move: moveVariant } = useFieldArray({
-    control,
-    name: "variants",
-  });
-
   const handleSwapPosition = (index: number) => {
     setSelectedVariantIndex(index);
     setVisibleModal(true);
@@ -216,6 +221,59 @@ const PutEdit: React.FC = () => {
     setSelectedVariantIndex(null);
     setSwapPosition(null);
     message.success("Hoán đổi vị trí thành công");
+  };
+
+  const handleGenerateVariants = async () => {
+    if (!selectedVariantCategory) {
+      message.error("Vui lòng chọn danh mục biến thể trước khi sinh biến thể");
+      return;
+    }
+
+    try {
+      const [colorRes, ramRes] = await Promise.all([
+        axios.get(`http://localhost:5000/api/colors?variantCategory=${selectedVariantCategory}`),
+        axios.get(`http://localhost:5000/api/rams?variantCategory=${selectedVariantCategory}`),
+      ]);
+
+      const filteredColors: IColor[] = colorRes.data;
+      const filteredRams: IRam[] = ramRes.data;
+
+      if (filteredColors.length === 0 || filteredRams.length === 0) {
+        message.warning("Không có màu hoặc RAM thuộc danh mục biến thể này");
+        return;
+      }
+
+      const newVariants: VariantInput[] = [];
+      filteredColors.forEach((color) => {
+        filteredRams.forEach((ram) => {
+          const key = `${color.name.trim().toLowerCase()}-${ram.size.trim().toLowerCase()}`;
+          const exists = watchedVariants.some(
+            (v) => `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}` === key
+          );
+          if (!exists) {
+            newVariants.push({
+              color: color.name,
+              ram: ram.size,
+              price: 0,
+              soluong: 0,
+            });
+          }
+        });
+      });
+
+      if (newVariants.length === 0) {
+        message.warning("Tất cả các biến thể đã được thêm hoặc không có dữ liệu phù hợp");
+        return;
+      }
+
+      newVariants.forEach((variant) => appendVariant(variant));
+      message.success(`Đã thêm ${newVariants.length} biến thể mới`);
+      setVisibleModal(false);
+      setSelectedVariantCategory(null);
+    } catch (err) {
+      console.error("Lỗi khi sinh biến thể:", err);
+      message.error("Lỗi khi sinh biến thể");
+    }
   };
 
   const onSubmit = async (data: IProductForm) => {
@@ -288,7 +346,7 @@ const PutEdit: React.FC = () => {
 
       await axios.put(`http://localhost:5000/api/products/${id}`, updatedData);
       message.success("Cập nhật sản phẩm thành công");
-      nav("/admin/phone/list", { state: { forceReload: true } });
+      navigate("/admin/phone/list", { state: { forceReload: true } });
     } catch (err) {
       console.error(err);
       message.error("Cập nhật thất bại");
@@ -296,41 +354,42 @@ const PutEdit: React.FC = () => {
   };
 
   return (
-    <Form
-      layout="vertical"
-      onFinish={handleSubmit(onSubmit)}
-      className="mx-auto mt-10 p-6 bg-white shadow rounded border-2"
-    >
+    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
       <h2 className="text-xl font-semibold text-center mb-4">Cập nhật sản phẩm</h2>
 
-      <Form.Item
-        label="Tên sản phẩm"
-        validateStatus={errors.name ? "error" : ""}
-        help={errors.name?.message}
-        required
+      <Form
+        layout="vertical"
+        onFinish={handleSubmit(onSubmit)}
+        className="bg-white shadow rounded border-2 p-6"
       >
-        <Controller
-          name="name"
-          control={control}
-          rules={{ required: "Vui lòng nhập tên sản phẩm" }}
-          render={({ field }) => <Input {...field} />}
-        />
-      </Form.Item>
-
-      <Form.Item
-        label="Hình ảnh chính"
-        required
-        validateStatus={errors.image ? "error" : ""}
-        help={errors.image?.message}
-      >
-        <Upload
-          accept="image/*"
-          showUploadList={false}
-          beforeUpload={(file) => {
-            uploadImage(file);
-            return false;
-          }}
+        <Form.Item
+          label="Tên sản phẩm"
+          validateStatus={errors.name ? "error" : ""}
+          help={errors.name?.message}
+          required
         >
+          <Controller
+            name="name"
+            control={control}
+            rules={{ required: "Vui lòng nhập tên sản phẩm" }}
+            render={({ field }) => <Input {...field} />}
+          />
+        </Form.Item>
+
+        <Form.Item
+          label="Hình ảnh chính"
+          required
+          validateStatus={errors.image ? "error" : ""}
+          help={errors.image?.message}
+        >
+          <Upload
+            accept="image/*"
+            showUploadList={false}
+            beforeUpload={(file) => {
+              uploadImage(file);
+              return false;
+            }}
+          >
           <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
         </Upload>
         {loading && <Spin style={{ marginLeft: 10 }} />}
@@ -418,7 +477,15 @@ const PutEdit: React.FC = () => {
             required: "Vui lòng nhập giá",
             min: { value: 1, message: "Giá phải lớn hơn 0" },
           }}
-          render={({ field }) => <InputNumber {...field} className="w-full" />}
+          render={({ field }) => (
+            <InputNumber
+              min={0}
+              style={{ width: "100%" }}
+              formatter={(val) => `${val}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+              parser={(val) => (val ? Number(val.replace(/,/g, "")) : 0)}
+              {...field}
+            />
+          )}
         />
       </Form.Item>
 
@@ -436,10 +503,10 @@ const PutEdit: React.FC = () => {
           }}
           render={({ field }) => (
             <InputNumber
-              {...field}
               min={0}
-              className="w-full"
+              style={{ width: "100%" }}
               disabled
+              {...field}
             />
           )}
         />
@@ -468,21 +535,28 @@ const PutEdit: React.FC = () => {
               placeholder="Chọn danh mục"
               onChange={field.onChange}
               value={field.value}
-              options={categories.map((cat) => ({
-                label: cat.name,
-                value: cat.name,
-              }))}
-            />
+            >
+              {categories.map((cat) => (
+                <Select.Option key={cat._id} value={cat.name}>
+                  {cat.name}
+                </Select.Option>
+              ))}
+            </Select>
           )}
         />
       </Form.Item>
 
       <Form.Item label="Biến thể (Màu; RAM; Số lượng; Giá)">
         {variantFields.map((field, index) => (
-          <Space
+          <div
             key={field.id}
-            align="baseline"
-            style={{ marginBottom: 8, display: "flex", width: "100%", flexWrap: "wrap" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginBottom: 8,
+              width: "100%",
+              gap: 8,
+            }}
           >
             <div style={{ width: 50, textAlign: "center" }}>
               <span>{index + 1}</span>
@@ -503,8 +577,7 @@ const PutEdit: React.FC = () => {
                       .toLowerCase()
                       .includes(input.toLowerCase())
                   }
-                  onChange={field.onChange}
-                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
                 >
                   {colors.map((color) => (
                     <Select.Option key={color._id} value={color.name}>
@@ -530,8 +603,7 @@ const PutEdit: React.FC = () => {
                       .toLowerCase()
                       .includes(input.toLowerCase())
                   }
-                  onChange={field.onChange}
-                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
                 >
                   {rams.map((ram) => (
                     <Select.Option key={ram._id} value={ram.size}>
@@ -581,44 +653,72 @@ const PutEdit: React.FC = () => {
               onClick={() => removeVariant(index)}
               style={{ marginLeft: 8, color: "#ff4d4f", cursor: "pointer" }}
             />
-          </Space>
+          </div>
         ))}
         <Modal
-          title="Chọn vị trí để hoán đổi"
+          title={selectedVariantIndex !== null ? "Chọn vị trí để hoán đổi" : "Chọn danh mục biến thể để sinh biến thể"}
           open={visibleModal}
-          onOk={confirmSwap}
+          onOk={selectedVariantIndex !== null ? confirmSwap : handleGenerateVariants}
           onCancel={() => {
             setVisibleModal(false);
             setSelectedVariantIndex(null);
             setSwapPosition(null);
+            setSelectedVariantCategory(null);
           }}
-          okText="Xác nhận"
+          okText={selectedVariantIndex !== null ? "Xác nhận" : "Sinh biến thể"}
           cancelText="Hủy"
         >
-          <Select
-            style={{ width: "100%" }}
-            placeholder="Chọn số thứ tự để hoán đổi"
-            onChange={(value) => setSwapPosition(value)}
-            value={swapPosition}
-          >
-            {variantFields.map((_, idx) => (
-              idx !== selectedVariantIndex && (
-                <Select.Option key={idx} value={idx + 1}>
-                  {idx + 1}
+          {selectedVariantIndex !== null ? (
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Chọn số thứ tự để hoán đổi"
+              onChange={(value) => setSwapPosition(value)}
+              value={swapPosition}
+            >
+              {variantFields.map((_, idx) => (
+                idx !== selectedVariantIndex && (
+                  <Select.Option key={idx} value={idx + 1}>
+                    {idx + 1}
+                  </Select.Option>
+                )
+              ))}
+            </Select>
+          ) : (
+            <Select
+              style={{ width: "100%" }}
+              placeholder="Chọn danh mục biến thể"
+              onChange={(value) => setSelectedVariantCategory(value)}
+              value={selectedVariantCategory}
+            >
+              {variantCategories.map((category) => (
+                <Select.Option key={category._id} value={category._id}>
+                  {category.name}
                 </Select.Option>
-              )
-            ))}
-          </Select>
+              ))}
+            </Select>
+          )}
         </Modal>
-        <Button
-          type="dashed"
-          onClick={() => appendVariant({ color: "", ram: "", price: 0, soluong: 0 })}
-          block
-          icon={<PlusOutlined />}
-          style={{ marginTop: 8 }}
-        >
-          Thêm biến thể
-        </Button>
+        <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+          <Button
+            type="dashed"
+            onClick={() => appendVariant({ color: "", ram: "", price: 0, soluong: 0 })}
+            style={{ flex: 1 }}
+            icon={<PlusOutlined />}
+          >
+            Thêm biến thể
+          </Button>
+          <Button
+            type="primary"
+            onClick={() => {
+              setVisibleModal(true);
+              setSelectedVariantIndex(null);
+            }}
+            style={{ flex: 1 }}
+            icon={<PlusOutlined />}
+          >
+            Tự sinh biến thể
+          </Button>
+        </div>
       </Form.Item>
 
       <Form.Item>
@@ -632,6 +732,7 @@ const PutEdit: React.FC = () => {
         </Button>
       </Form.Item>
     </Form>
+  </div>
   );
 };
 

@@ -1,45 +1,83 @@
-// src/components/admin/Color/ColorAdd.tsx
 import React from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { useForm, Controller } from 'react-hook-form';
-import { IColor } from '../../../../interface/variant';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Form, Input, Button, Select, message } from 'antd';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { IVariantCategory } from '../../../../interface/variant';
 
 const ColorAdd: React.FC = () => {
-  const { control, handleSubmit } = useForm<IColor>();
-  const nav = useNavigate();
-  const qc  = useQueryClient();
+  const [form] = Form.useForm();
+  const navigate = useNavigate();
 
-  const mut = useMutation({
-    mutationFn: (data: IColor) => axios.post('http://localhost:5000/api/colors', data),
-    onSuccess: () => {
-      message.success('Thêm màu thành công');
-      qc.invalidateQueries({ queryKey: ['colors'] });
-      nav('/admin/variant/list');
-    },
-    // onError: () => message.error('Thêm thất bại'),
+  // Lấy danh sách danh mục biến thể
+  const { data: variantCategories = [], isLoading: isLoadingVariantCategories, error: variantCategoriesError } = useQuery<IVariantCategory[]>({
+    queryKey: ['variantCategories'],
+    queryFn: () => axios.get('http://localhost:5000/api/variant-category').then(res => res.data),
   });
 
-  const onSubmit = (data: IColor) => mut.mutate(data);
+  // Thêm màu mới
+  const addColorMutation = useMutation({
+    mutationFn: (values: { name: string; variantCategory: string }) => {
+      console.log('Payload gửi đi:', values); // Debug payload
+      return axios.post('http://localhost:5000/api/colors', values);
+    },
+    onSuccess: () => {
+      message.success('Thêm màu thành công');
+      navigate('/admin/variant/list');
+    },
+    onError: (error: any) => {
+      message.error(`Thêm màu thất bại: ${error.response?.data?.message || error.message}`);
+    },
+  });
+
+  const onFinish = (values: { name: string; variantCategory: string }) => {
+    addColorMutation.mutate(values);
+  };
 
   return (
-    <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-      <Form.Item label="Tên màu" required>
-        <Controller
+    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Thêm màu mới</h2>
+      {variantCategoriesError && (
+        <p style={{ color: 'red' }}>Lỗi tải danh mục biến thể: {variantCategoriesError.message}</p>
+      )}
+      <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form.Item
+          label="Tên màu"
           name="name"
-          control={control}
-          rules={{ required: 'Không được để trống' }}
-          render={({ field }) => <Input {...field} />}
-        />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit" loading={mut.status === 'pending'}>
-          Thêm mới
-        </Button>
-      </Form.Item>
-    </Form>
+          rules={[{ required: true, message: 'Vui lòng nhập tên màu' }]}
+        >
+          <Input placeholder="Nhập tên màu" />
+        </Form.Item>
+        <Form.Item
+          label="Danh mục biến thể"
+          name="variantCategory"
+          rules={[{ required: true, message: 'Vui lòng chọn danh mục biến thể' }]}
+        >
+          <Select
+            placeholder="Chọn danh mục biến thể"
+            loading={isLoadingVariantCategories}
+            allowClear
+          >
+            {variantCategories.map((category) => (
+              <Select.Option key={category._id} value={category._id}>
+                {category.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={addColorMutation.isPending}>
+            Thêm màu
+          </Button>
+          <Button
+            style={{ marginLeft: '10px' }}
+            onClick={() => navigate('/admin/variant/list')}
+          >
+            Hủy
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 };
 
