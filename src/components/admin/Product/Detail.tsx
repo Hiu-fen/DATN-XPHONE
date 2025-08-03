@@ -21,27 +21,21 @@ const ProductDetail = () => {
   const [album, setAlbum] = useState<string[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
 
-  // Lấy tên danh mục dựa theo ID
   const { data: categoryNames } = useQuery<string[]>({
     queryKey: ['category-names', product?.danhmuc],
     queryFn: async () => {
       if (!product?.danhmuc) return ['Không xác định'];
-
-      const categoryIds = Array.isArray(product.danhmuc)
-        ? product.danhmuc
-        : [product.danhmuc];
-
+      const categoryIds = Array.isArray(product.danhmuc) ? product.danhmuc : [product.danhmuc];
       const names = await Promise.all(
         categoryIds.map(async (id) => {
           try {
             const res = await axios.get(`http://localhost:5000/api/category/${id}`);
             return res.data.name;
-          } catch (error) {
+          } catch {
             return 'Không xác định';
           }
         })
       );
-
       return names;
     },
     enabled: !!product?.danhmuc,
@@ -56,19 +50,23 @@ const ProductDetail = () => {
     }
     setMainImage(newAlbum[0] || '');
     setAlbum(newAlbum);
-    setSelectedVariant(null); // reset biến thể khi thay sản phẩm
+    setSelectedVariant(null); // reset khi đổi sản phẩm
   }, [product]);
 
   const handleSelectVariant = (variant: any, index: number) => {
     setSelectedVariant(variant);
-    const subImagesCount = album.length - 1; // Số ảnh phụ (loại bỏ ảnh chính)
-    if (subImagesCount > 0) {
-      // Tính nhóm (mỗi nhóm 4 biến thể)
-      const groupIndex = Math.floor(index / 4); // Nhóm 0, 1, 2, ...
-      // Lấy chỉ số ảnh phụ dựa trên nhóm, giới hạn bởi số ảnh phụ
-      const imageIndex = (groupIndex % subImagesCount) + 1; // Bắt đầu từ ảnh phụ 1 (index 1)
-      setMainImage(album[imageIndex] || album[0]); // Quay lại ảnh chính nếu hết
-    }
+
+    const totalVariants = product?.variants?.length || 0;
+    const totalImages = album.length;
+
+    if (totalImages <= 1 || totalVariants === 0) return;
+
+    const subImages = album.slice(1); // loại bỏ ảnh chính
+    const variantsPerImage = Math.ceil(totalVariants / subImages.length);
+    const imageGroup = Math.floor(index / variantsPerImage);
+
+    const newMainImage = subImages[imageGroup] || album[0];
+    setMainImage(newMainImage);
   };
 
   if (isLoading) return <p>Đang tải dữ liệu...</p>;
@@ -127,6 +125,7 @@ const ProductDetail = () => {
                   onClick={() => handleSelectVariant(variant, index)}
                   style={{
                     marginRight: 10,
+                    marginBottom: 5,
                     padding: '6px 12px',
                     borderRadius: 6,
                     border: selectedVariant === variant ? '2px solid #1890ff' : '1px solid #ccc',
@@ -159,12 +158,8 @@ const ProductDetail = () => {
                     : '#cf1322',
               }}
             >
-              {(selectedVariant
-                ? selectedVariant.soluong
-                : product.soluong) > 0
-                ? (selectedVariant
-                    ? selectedVariant.soluong
-                    : product.soluong)
+              {(selectedVariant ? selectedVariant.soluong : product.soluong) > 0
+                ? (selectedVariant ? selectedVariant.soluong : product.soluong)
                 : 'Hết hàng'}
             </span>
           </p>
