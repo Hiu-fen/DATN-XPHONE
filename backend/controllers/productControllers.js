@@ -2,6 +2,7 @@ const axios = require("axios");
 const Product = require('../models/productModels');
 const Order = require('../models/orderModel');
 const Notification = require('../models/notificationModels');
+const { autoDeleteOldProducts } = require('../utils/scheduler');
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -383,4 +384,4 @@ exports.reduceVariantQuantity = async (req, res) => {
     console.error("❌ Lỗi khi trừ tồn kho:", error);
     res.status(500).json({ message: "Lỗi server khi trừ tồn kho" });
   }
-};
+}

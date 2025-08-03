@@ -5,6 +5,7 @@ const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 
+
 // ROUTES
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRouter');
@@ -90,6 +91,10 @@ app.use('/api/variant-category', variantCategoryRouter); // Thêm route mới
 // CRON
 require('./cron');
 
+
+// XÓA TỰ ĐỘNG SAU 30 NGÀY (SCHEDULER)
+const { initScheduler } = require('./utils/scheduler');
+initScheduler();
 // KHỞI ĐỘNG SERVER
 server.listen(PORT, () => {
   console.log(`🚀 Server + Socket đang chạy tại http://localhost:${PORT}`);

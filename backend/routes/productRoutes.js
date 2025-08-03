@@ -18,4 +18,15 @@ router.patch('/:id/update-quantity', productController.updateProductQuantity);
 router.post("/restore-quantity", productController.restoreProductQuantity);
 router.post('/reduce-quantity', productController.reduceVariantQuantity);
 
+// Route để admin chạy thủ công việc xóa tự động (nếu cần)
+router.post('/auto-clean-trash', async (req, res) => {
+  try {
+    const { autoDeleteOldProducts } = require('../utils/scheduler');
+    await autoDeleteOldProducts();
+    res.json({ message: 'Đã chạy xóa tự động thành công' });
+  } catch (error) {
+    res.status(500).json({ message: 'Lỗi khi chạy xóa tự động', error: error.message });
+  }
+});
+
 module.exports = router;
