@@ -206,7 +206,6 @@ const AddProduct: React.FC = () => {
     }
 
     try {
-      // Lấy danh sách màu và RAM thuộc danh mục biến thể đã chọn
       const [colorRes, ramRes] = await Promise.all([
         axios.get(`http://localhost:5000/api/colors?variantCategory=${selectedVariantCategory}`),
         axios.get(`http://localhost:5000/api/rams?variantCategory=${selectedVariantCategory}`),
@@ -279,7 +278,8 @@ const AddProduct: React.FC = () => {
         return;
       }
 
-      const variantSet = new Set();
+      // Kiểm tra trùng lặp biến thể
+      const variantMap: { [key: string]: number[] } = {};
       for (let i = 0; i < data.variants.length; i++) {
         const v = data.variants[i];
         if (!v.color) {
@@ -300,11 +300,18 @@ const AddProduct: React.FC = () => {
         }
 
         const key = `${v.color.trim().toLowerCase()}-${v.ram.trim().toLowerCase()}`;
-        if (variantSet.has(key)) {
-          message.error(`Biến thể thứ ${i + 1} bị trùng màu + RAM với biến thể khác. Vui lòng chọn khác`);
+        if (!variantMap[key]) {
+          variantMap[key] = [i];
+        } else {
+          variantMap[key].push(i);
+          // Báo lỗi với vị trí của cả hai biến thể trùng nhau
+          message.error(
+            `Biến thể thứ ${i + 1} (${v.color} - ${v.ram}) trùng với biến thể thứ ${
+              variantMap[key][0] + 1
+            }`
+          );
           return;
         }
-        variantSet.add(key);
       }
 
       const payload: IProductForm = {
@@ -723,7 +730,7 @@ const AddProduct: React.FC = () => {
               type="primary"
               onClick={() => {
                 setVisibleModal(true);
-                setSelectedVariantIndex(null); // Đảm bảo hiển thị Select danh mục biến thể
+                setSelectedVariantIndex(null);
               }}
               style={{ flex: 1 }}
               icon={<PlusOutlined />}
