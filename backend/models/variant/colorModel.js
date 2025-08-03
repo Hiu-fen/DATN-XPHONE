@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
 
 const colorSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // e.g. "Red", "Blue"
-  variantCategory: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'VariantCategory', 
-    required: true // Danh mục biến thể là bắt buộc
-  }
-}, { timestamps: true });
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  variantCategory: [{
+    type: String,
+    ref: 'VariantCategory',
+  }],
+});
 
 module.exports = mongoose.model('Color', colorSchema);

@@ -26,7 +26,10 @@ exports.update = async (req, res) => {
 
 exports.getAll = async (req, res) => {
   try {
-    const query = req.query.variantCategory ? { variantCategory: req.query.variantCategory } : {};
+    const variantCategory = req.query.variantCategory;
+    const query = variantCategory
+      ? { variantCategory: { $in: variantCategory.split(',') } }
+      : {};
     const colors = await Color.find(query).populate('variantCategory', 'name');
     res.json(colors);
   } catch (e) {

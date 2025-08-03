@@ -17,7 +17,7 @@ const ColorAdd: React.FC = () => {
 
   // Thêm màu mới
   const addColorMutation = useMutation({
-    mutationFn: (values: { name: string; variantCategory: string }) => {
+    mutationFn: (values: { name: string; variantCategory: string[] }) => {
       console.log('Payload gửi đi:', values); // Debug payload
       return axios.post('http://localhost:5000/api/colors', values);
     },
@@ -30,7 +30,7 @@ const ColorAdd: React.FC = () => {
     },
   });
 
-  const onFinish = (values: { name: string; variantCategory: string }) => {
+  const onFinish = (values: { name: string; variantCategory: string[] }) => {
     addColorMutation.mutate(values);
   };
 
@@ -51,9 +51,10 @@ const ColorAdd: React.FC = () => {
         <Form.Item
           label="Danh mục biến thể"
           name="variantCategory"
-          rules={[{ required: true, message: 'Vui lòng chọn danh mục biến thể' }]}
+          rules={[{ required: true, message: 'Vui lòng chọn ít nhất một danh mục biến thể' }]}
         >
           <Select
+            mode="multiple"
             placeholder="Chọn danh mục biến thể"
             loading={isLoadingVariantCategories}
             allowClear

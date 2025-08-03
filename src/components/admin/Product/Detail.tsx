@@ -61,10 +61,13 @@ const ProductDetail = () => {
 
   const handleSelectVariant = (variant: any, index: number) => {
     setSelectedVariant(variant);
-    // Ánh xạ ảnh theo thứ tự: biến thể 0 -> ảnh 1, biến thể 1 -> ảnh 2, v.v.
-    if (album.length > 1) { // Đảm bảo có đủ ảnh
-      const imageIndex = (index % (album.length - 1)) + 1; // Bắt đầu từ ảnh thứ 2 (chỉ số 1) và lặp lại
-      setMainImage(album[imageIndex]);
+    const subImagesCount = album.length - 1; // Số ảnh phụ (loại bỏ ảnh chính)
+    if (subImagesCount > 0) {
+      // Tính nhóm (mỗi nhóm 4 biến thể)
+      const groupIndex = Math.floor(index / 4); // Nhóm 0, 1, 2, ...
+      // Lấy chỉ số ảnh phụ dựa trên nhóm, giới hạn bởi số ảnh phụ
+      const imageIndex = (groupIndex % subImagesCount) + 1; // Bắt đầu từ ảnh phụ 1 (index 1)
+      setMainImage(album[imageIndex] || album[0]); // Quay lại ảnh chính nếu hết
     }
   };
 

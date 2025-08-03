@@ -1,43 +1,38 @@
 import React, { useEffect } from 'react';
 import { Form, Input, Button, Select, message } from 'antd';
-import { useForm, Controller } from 'react-hook-form';
-import { IRam, IVariantCategory } from '../../../../interface/variant';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { IRam, IVariantCategory } from '../../../../interface/variant';
 
 const RamEdit: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const { control, handleSubmit, reset } = useForm<IRam>();
+  const [form] = Form.useForm();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { id } = useParams<{ id: string }>();
 
   // Lấy chi tiết RAM
   const { data: ram, isLoading: isLoadingRam, error: ramError } = useQuery<IRam>({
-    queryKey: ['rams', id],
-    queryFn: async () => {
-      const res = await axios.get(`http://localhost:5000/api/rams/${id}`);
-      console.log('Data RAM:', res.data); // Debug dữ liệu RAM
-      return res.data;
-    },
+    queryKey: ['ram', id],
+    queryFn: () => axios.get(`http://localhost:5000/api/rams/${id}`).then(res => res.data),
     enabled: !!id,
+    retry: 1,
   });
 
   // Lấy danh sách danh mục biến thể
   const { data: variantCategories = [], isLoading: isLoadingVariantCategories, error: variantCategoriesError } = useQuery<IVariantCategory[]>({
     queryKey: ['variantCategories'],
     queryFn: () => axios.get('http://localhost:5000/api/variant-category').then(res => res.data),
+    retry: 1,
   });
 
   // Cập nhật RAM
   const updateRamMutation = useMutation({
-    mutationFn: (values: IRam) => {
-      console.log('Payload cập nhật:', values); // Debug payload
+    mutationFn: (values: { size: string; variantCategory: string[] }) => {
+      console.log('Payload gửi đi:', values); // Debug payload
       return axios.put(`http://localhost:5000/api/rams/${id}`, values);
     },
     onSuccess: () => {
       message.success('Cập nhật RAM thành công');
-      queryClient.invalidateQueries({ queryKey: ['rams'] });
       navigate('/admin/variant/list');
     },
     onError: (error: any) => {
@@ -45,62 +40,80 @@ const RamEdit: React.FC = () => {
     },
   });
 
-  // Điền dữ liệu vào form
+  // Điền dữ liệu vào form khi lấy được chi tiết RAM
   useEffect(() => {
     if (ram) {
-      reset({
-        size: ram.size,
-        variantCategory: ram.variantCategory,
+      console.log('Dữ liệu RAM (full):', ram);
+      const variantCategoryArray = Array.isArray(ram.variantCategory)
+        ? ram.variantCategory
+            .filter(item => (typeof item === 'string' && item) || (typeof item === 'object' && item._id && typeof item._id === 'string'))
+            .map(item => (typeof item === 'string' ? item : item._id))
+        : [];
+      console.log('variantCategoryArray:', variantCategoryArray);
+      form.setFieldsValue({
+        size: ram.size || '',
+        variantCategory: variantCategoryArray,
       });
     }
-  }, [ram, reset]);
+  }, [ram, form]);
 
-  const onSubmit = (values: IRam) => {
+  const onFinish = (values: { size: string; variantCategory: string[] }) => {
     updateRamMutation.mutate(values);
   };
+
+  // Xử lý lỗi tải dữ liệu
+  if (!id) {
+    return <div style={{ padding: '20px' }}>ID không hợp lệ</div>;
+  }
+  if (isLoadingRam || isLoadingVariantCategories) {
+    return <div style={{ padding: '20px' }}>Đang tải...</div>;
+  }
+  if (ramError) {
+    return <div style={{ padding: '20px', color: 'red' }}>Lỗi tải RAM: {ramError.message}</div>;
+  }
+  if (variantCategoriesError) {
+    return <div style={{ padding: '20px', color: 'red' }}>Lỗi tải danh mục biến thể: {variantCategoriesError.message}</div>;
+  }
+
+  // Kiểm tra nếu không có danh mục biến thể
+  const validCategories = variantCategories.filter((category) => category._id && typeof category._id === 'string' && category.name);
+  if (validCategories.length === 0) {
+    return <div style={{ padding: '20px', color: 'red' }}>Không có danh mục biến thể để hiển thị</div>;
+  }
 
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
       <h2>Chỉnh sửa RAM</h2>
-      {ramError && <p style={{ color: 'red' }}>Lỗi tải RAM: {ramError.message}</p>}
-      {variantCategoriesError && (
-        <p style={{ color: 'red' }}>Lỗi tải danh mục biến thể: {variantCategoriesError.message}</p>
-      )}
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-        <Form.Item label="Dung lượng (VD: 4GB)" required>
-          <Controller
-            name="size"
-            control={control}
-            rules={{ required: 'Không được để trống' }}
-            render={({ field }) => <Input {...field} placeholder="Nhập dung lượng" disabled={isLoadingRam} />}
-          />
+      <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form.Item
+          label="Kích thước RAM"
+          name="size"
+          rules={[{ required: true, message: 'Vui lòng nhập kích thước RAM' }]}
+        >
+          <Input placeholder="Nhập kích thước RAM (ví dụ: 8GB)" />
         </Form.Item>
-        <Form.Item label="Danh mục biến thể" required>
-          <Controller
-            name="variantCategory"
-            control={control}
-            rules={{ required: 'Vui lòng chọn danh mục biến thể' }}
-            render={({ field }) => (
-              <Select
-                {...field}
-                placeholder="Chọn danh mục biến thể"
-                loading={isLoadingVariantCategories}
-                allowClear
-                disabled={isLoadingRam}
-                onChange={(value) => field.onChange(value)}
-              >
-                {variantCategories.map((category) => (
-                  <Select.Option key={category._id} value={category._id}>
-                    {category.name}
-                  </Select.Option>
-                ))}
-              </Select>
-            )}
-          />
+        <Form.Item
+          label="Danh mục biến thể"
+          name="variantCategory"
+          rules={[{ required: true, message: 'Vui lòng chọn ít nhất một danh mục biến thể' }]}
+        >
+          <Select
+            mode="multiple"
+            placeholder="Chọn danh mục biến thể"
+            loading={isLoadingVariantCategories}
+            allowClear
+            value={form.getFieldValue('variantCategory')}
+          >
+            {validCategories.map((category) => (
+              <Select.Option key={category._id} value={category._id}>
+                {category.name}
+              </Select.Option>
+            ))}
+          </Select>
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={updateRamMutation.isPending}>
-            Cập nhật
+            Cập nhật RAM
           </Button>
           <Button
             style={{ marginLeft: '10px' }}
