@@ -115,12 +115,13 @@ const GetClient = () => {
         ),
     },
     // ✅ Cột Tài khoản (role)
-   {
+  {
   title: 'Tài khoản',
   key: 'role',
   render: (_: any, record: User) => (
     <Switch
       checked={record.role === 'admin'}
+      disabled={record.role === 'user'} // Không cho user tự đổi thành admin
       onChange={(checked) =>
         updateRole.mutate({
           user: record,
@@ -128,13 +129,17 @@ const GetClient = () => {
         })
       }
       checkedChildren={<span style={{ color: '#fff' }}>Admin</span>}
-      unCheckedChildren="User"
+      unCheckedChildren={<span style={{ color: '#fff' }}>User</span>}
       style={{
-        backgroundColor: record.role === 'admin' ? '#52c41a' : undefined,
+        backgroundColor: '#1890ff', //  luôn xanh cho cả admin lẫn user
+        borderColor: '#1890ff',
+        opacity: 1,
+        cursor: record.role === 'user' ? 'not-allowed' : 'pointer',
       }}
     />
   ),
 },
+
     {
       title: 'Hành động',
       key: 'action',

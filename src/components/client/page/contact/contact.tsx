@@ -1,57 +1,122 @@
-import { useForm } from "react-hook-form"
-import type { IContact } from "../../../../interface/contact"
-import { useMutation } from "@tanstack/react-query"
-import axios from "axios"
 import { message } from "antd"
-import { MapPin, Phone, Mail, Clock, Send, User, MessageSquare, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
+import { MapPin, Phone, Mail, Clock } from "lucide-react"
+import { useState, FormEvent, ChangeEvent } from "react"
+import axios, { AxiosError } from "axios"
+
+// Định nghĩa interface cho contact
+interface Contact {
+  _id: string
+  name: string
+  email: string
+  phone: string
+  date: string
+  status: boolean
+  createdAt: string
+  updatedAt: string
+  __v: number
+}
 
 const Contact = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<IContact>()
-
-  const mutation = useMutation({
-    mutationFn: async (data: IContact) => {
-      const res = await axios.post("http://localhost:5000/api/contacts", data)
-      return res.data
-    },
-    onSuccess: () => {
-      message.success("Gửi thành công")
-      reset()
-    },
-    onError: () => {
-      message.error("Gửi liên hệ thất bại, vui lòng thử lại!")
-    },
+  const [formData, setFormData] = useState<{
+    name: string
+    email: string
+    phone: string
+  }>({
+    name: "",
+    email: "",
+    phone: "",
   })
 
-  const onSubmit = (data: IContact) => {
-    const contactData: IContact = {
-      ...data,
-      status: false,
-      date: new Date().toLocaleDateString("en-GB"),
+  const validatePhone = (phone: string) => {
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/ // Định dạng số điện thoại Việt Nam
+    return phoneRegex.test(phone)
+  }
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    // Kiểm tra đầu vào
+    if (!formData.name || !formData.email || !formData.phone) {
+      message.error("Vui lòng điền đầy đủ tên, email và số điện thoại")
+      return
     }
-    mutation.mutate(contactData)
+
+    // Validate số điện thoại
+    if (!validatePhone(formData.phone)) {
+      message.error("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09 và có 10 chữ số).")
+      return
+    }
+
+    // Lấy thời gian hiện tại
+    const now = new Date()
+    const date = now.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
+
+    // Tạo đối tượng thông tin gửi
+    const submission = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      date,
+      status: false,
+    }
+
+    try {
+      // Gửi dữ liệu lên API
+      const response = await axios.post("http://localhost:5000/api/contacts", submission)
+      
+      message.success("Gửi thông tin thành công!")
+
+      // Đặt lại form
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+      })
+
+      // Chuyển hướng đến Gmail
+      const email = "xphonene53@gmail.com"
+      const subject = encodeURIComponent("Liên hệ từ XPhone Store")
+      const body = encodeURIComponent(
+        `Xin chào XPhone Store : <Bạn nhập nội dung cần liên hệ vào đây nhé !>\n\nThông tin liên hệ:\nHọ và tên: ${formData.name}\nEmail: ${formData.email}\nSố điện thoại: ${formData.phone}\n\nTrân trọng,`
+      )
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`
+      window.open(gmailUrl, "_blank")
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string; error?: string }>
+      const errorMessage =
+        axiosError.response?.data?.message || axiosError.response?.data?.error || "Không thể gửi thông tin. Vui lòng thử lại."
+      message.error(errorMessage)
+      console.error("Lỗi khi gửi thông tin:", {
+        message: errorMessage,
+        status: axiosError.response?.status,
+        data: axiosError.response?.data,
+      })
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
+        {/* Phần tiêu đề */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Liên hệ với chúng tôi</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Chúng tôi luôn sẵn sàng hỗ trợ bạn. Hãy liên hệ với chúng tôi qua các kênh dưới đây hoặc gửi tin nhắn trực
-            tiếp.
+            Chúng tôi luôn sẵn sàng hỗ trợ bạn. Điền thông tin dưới đây để liên hệ.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Contact Information */}
+          {/* Thông tin liên hệ */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Store Info Card */}
+            {/* Thẻ thông tin cửa hàng */}
             <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-red-100 rounded-xl">
@@ -61,8 +126,8 @@ const Contact = () => {
               </div>
 
               <p className="text-gray-600 mb-8 leading-relaxed">
-                Hệ thống cửa hàng XPhone chuyên bán lẻ điện thoại, máy tính laptop, smartwatch, smartphone, phụ kiện
-                chính hãng - Giá tốt, giao miễn phí.
+                Hệ thống cửa hàng XPhone chuyên bán lẻ điện thoại, máy tính laptop, smartwatch, smartphone, phụ kiện chính
+                hãng - Giá tốt, giao miễn phí.
               </p>
 
               <div className="space-y-6">
@@ -108,7 +173,7 @@ const Contact = () => {
               </div>
             </div>
 
-            {/* Quick Stats */}
+            {/* Thống kê nhanh */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100">
                 <div className="text-3xl font-bold text-blue-600 mb-2">24/7</div>
@@ -121,150 +186,70 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* Contact Form & Map */}
+          {/* Form liên hệ */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Contact Form */}
+            {/* Form liên hệ */}
             <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
               <div className="flex items-center gap-3 mb-8">
                 <div className="p-3 bg-blue-100 rounded-xl">
-                  <MessageSquare className="w-6 h-6 text-blue-600" />
+                  <Mail className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">Gửi tin nhắn cho chúng tôi</h3>
+                <h3 className="text-2xl font-bold text-gray-900">Gửi thông tin liên hệ</h3>
               </div>
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <User className="w-4 h-4 inline mr-2" />
-                      Họ và tên *
-                    </label>
-                    <input
-                      {...register("name", { required: "Tên không được để trống" })}
-                      type="text"
-                      placeholder="Nhập họ và tên của bạn"
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                        errors.name ? "border-red-500" : "border-gray-300"
-                      }`}
-                    />
-                    {errors.name && (
-                      <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.name.message}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <Mail className="w-4 h-4 inline mr-2" />
-                      Email *
-                    </label>
-                    <input
-                      {...register("email", {
-                        required: "Email không được để trống",
-                        pattern: {
-                          value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                          message: "Email không hợp lệ",
-                        },
-                      })}
-                      type="email"
-                      placeholder="Nhập email của bạn"
-                      className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                        errors.email ? "border-red-500" : "border-gray-300"
-                      }`}
-                    />
-                    {errors.email && (
-                      <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
-                        <AlertCircle className="w-4 h-4" />
-                        {errors.email.message}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <Phone className="w-4 h-4 inline mr-2" />
-                    Số điện thoại *
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Họ và tên
                   </label>
                   <input
-                    {...register("phone", {
-                      required: "Số điện thoại không được để trống",
-                      pattern: {
-                        value: /^[0-9]{10,11}$/,
-                        message: "Số điện thoại không hợp lệ",
-                      },
-                    })}
-                    type="tel"
-                    placeholder="Nhập số điện thoại của bạn"
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
-                      errors.phone ? "border-red-500" : "border-gray-300"
-                    }`}
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nhập họ và tên"
                   />
-                  {errors.phone && (
-                    <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.phone.message}
-                    </div>
-                  )}
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    <MessageSquare className="w-4 h-4 inline mr-2" />
-                    Nội dung tin nhắn *
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
                   </label>
-                  <textarea
-                    {...register("message", {
-                      required: "Nội dung tin nhắn không được để trống",
-                      minLength: {
-                        value: 10,
-                        message: "Nội dung tin nhắn phải có ít nhất 10 ký tự",
-                      },
-                    })}
-                    placeholder="Nhập nội dung tin nhắn của bạn..."
-                    rows={5}
-                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none ${
-                      errors.message ? "border-red-500" : "border-gray-300"
-                    }`}
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nhập email của bạn"
                   />
-                  {errors.message && (
-                    <div className="flex items-center gap-2 mt-2 text-red-500 text-sm">
-                      <AlertCircle className="w-4 h-4" />
-                      {errors.message.message}
-                    </div>
-                  )}
                 </div>
-
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Số điện thoại
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Nhập số điện thoại (VD: 0935123456)"
+                  />
+                </div>
                 <button
                   type="submit"
-                  disabled={mutation.isPending}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
                 >
-                  {mutation.isPending ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Đang gửi...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5" />
-                      Gửi tin nhắn
-                    </>
-                  )}
+                  Gửi thông tin
                 </button>
-
-                {mutation.isSuccess && (
-                  <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded-lg">
-                    <CheckCircle className="w-4 h-4" />
-                    Tin nhắn đã được gửi thành công!
-                  </div>
-                )}
               </form>
             </div>
 
-            {/* Map */}
+            {/* Bản đồ */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center gap-3">
@@ -296,7 +281,7 @@ const Contact = () => {
           </div>
         </div>
 
-        {/* Additional Info Section */}
+        {/* Phần thông tin bổ sung */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
             <div className="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">

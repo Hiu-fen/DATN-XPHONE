@@ -13,7 +13,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { IProduct } from "../../../interface/product";
 import { useNavigate } from "react-router-dom";
-import { EyeOutlined, RollbackOutlined } from "@ant-design/icons";
+import { EyeOutlined, RollbackOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 interface ICategory {
@@ -64,8 +64,25 @@ const Deleted_products: React.FC = () => {
     },
   });
 
+  // Mutation xóa cứng sản phẩm
+ const hardDeleteMutation = useMutation({
+  mutationFn: async (id: string) =>
+    await axios.delete(`http://localhost:5000/api/products/${id}/hard`),
+  onSuccess: () => {
+    message.success("Xóa cứng thành công");
+    refetch();
+  },
+  onError: () => {
+    message.error("Xóa cứng thất bại");
+  },
+});
+
   const handleRestore = (id: string) => {
     restoreMutation.mutate(id);
+  };
+
+  const handleHardDelete = (id: string) => {
+    hardDeleteMutation.mutate(id);
   };
 
   // Lọc sản phẩm đã xóa và theo thời gian
@@ -170,16 +187,6 @@ const Deleted_products: React.FC = () => {
       },
     },
     {
-      title: "Đang bán?",
-      key: "status",
-      dataIndex: "status",
-      render: (status: boolean) => (
-        <span style={{ color: status ? "green" : "gray" }}>
-          {status ? "Đang bán" : "Ngừng bán"}
-        </span>
-      ),
-    },
-    {
       title: "Thao tác",
       key: "actions",
       render: (_: any, record: IProduct) => (
@@ -196,6 +203,18 @@ const Deleted_products: React.FC = () => {
           >
             <Button type="primary" icon={<RollbackOutlined />}>
               Khôi phục
+            </Button>
+          </Popconfirm>
+          <Popconfirm
+            title="Xóa cứng sản phẩm"
+            description="Bạn có chắc muốn xóa vĩnh viễn sản phẩm này? Hành động này không thể hoàn tác!"
+            onConfirm={() => handleHardDelete(record._id!)}
+            okText="Đồng ý"
+            cancelText="Hủy"
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="primary" danger icon={<DeleteOutlined />}>
+              Xóa cứng
             </Button>
           </Popconfirm>
         </Space>
