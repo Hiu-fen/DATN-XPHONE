@@ -49,20 +49,7 @@ const GetClient = () => {
   });
 
   // ✅ Mutation cập nhật vai trò (role)
-  const updateRole = useMutation({
-    mutationFn: async ({ user, role }: { user: User; role: string }) => {
-      return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
-        role,
-      });
-    },
-    onSuccess: () => {
-      message.success('Cập nhật vai trò thành công');
-      refetch();
-    },
-    onError: () => {
-      message.error('Lỗi khi cập nhật vai trò');
-    },
-  });
+ 
 
   const columns = [
     {
@@ -115,30 +102,7 @@ const GetClient = () => {
         ),
     },
     // ✅ Cột Tài khoản (role)
-  {
-  title: 'Tài khoản',
-  key: 'role',
-  render: (_: any, record: User) => (
-    <Switch
-      checked={record.role === 'admin'}
-      disabled={record.role === 'user'} // Không cho user tự đổi thành admin
-      onChange={(checked) =>
-        updateRole.mutate({
-          user: record,
-          role: checked ? 'admin' : 'user',
-        })
-      }
-      checkedChildren={<span style={{ color: '#fff' }}>Admin</span>}
-      unCheckedChildren={<span style={{ color: '#fff' }}>User</span>}
-      style={{
-        backgroundColor: '#1890ff', //  luôn xanh cho cả admin lẫn user
-        borderColor: '#1890ff',
-        opacity: 1,
-        cursor: record.role === 'user' ? 'not-allowed' : 'pointer',
-      }}
-    />
-  ),
-},
+ 
 
     {
       title: 'Hành động',
