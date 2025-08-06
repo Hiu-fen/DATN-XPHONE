@@ -1,50 +1,84 @@
-// src/components/admin/Ram/RamAdd.tsx
 import React from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { useForm, Controller } from 'react-hook-form';
-import { IRam } from '../../../../interface/variant';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Form, Input, Button, Select, message } from 'antd';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { IVariantCategory } from '../../../../interface/variant';
 
 const RamAdd: React.FC = () => {
-  const { control, handleSubmit } = useForm<IRam>();
-  const nav = useNavigate();
-  const qc  = useQueryClient();
+  const [form] = Form.useForm();
+  const navigate = useNavigate();
 
-  const mut = useMutation({
-    mutationFn: (data: IRam) => axios.post('http://localhost:5000/api/rams', data),
+  // Lấy danh sách danh mục biến thể
+  const { data: variantCategories = [], isLoading: isLoadingVariantCategories, error: variantCategoriesError } = useQuery<IVariantCategory[]>({
+    queryKey: ['variantCategories'],
+    queryFn: () => axios.get('http://localhost:5000/api/variant-category').then(res => res.data),
+  });
+
+  // Thêm RAM mới
+  const addRamMutation = useMutation({
+    mutationFn: (values: { size: string; variantCategory: string[] }) => {
+      console.log('Payload gửi đi:', values); // Debug payload
+      return axios.post('http://localhost:5000/api/rams', values);
+    },
     onSuccess: () => {
       message.success('Thêm RAM thành công');
-      qc.invalidateQueries({ queryKey: ['rams'] });
-      nav('/admin/variant/list');
+      navigate('/admin/variant/list');
     },
-    onError: (error) => {
-      console.error(error);
-      message.error('Thêm thất bại');
+    onError: (error: any) => {
+      message.error(`Thêm RAM thất bại: ${error.response?.data?.message || error.message}`);
     },
   });
 
-  const onSubmit = (data: IRam) => {
-    mut.mutate(data);
+  const onFinish = (values: { size: string; variantCategory: string[] }) => {
+    addRamMutation.mutate(values);
   };
 
   return (
-    <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
-      <Form.Item label="Dung lượng (VD: 4GB)" required>
-        <Controller
+    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto' }}>
+      <h2>Thêm RAM mới</h2>
+      {variantCategoriesError && (
+        <p style={{ color: 'red' }}>Lỗi tải danh mục biến thể: {variantCategoriesError.message}</p>
+      )}
+      <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form.Item
+          label="Kích thước RAM"
           name="size"
-          control={control}
-          rules={{ required: 'Không được để trống' }}
-          render={({ field }) => <Input {...field} />}
-        />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit">
-          Thêm mới
-        </Button>
-      </Form.Item>
-    </Form>
+          rules={[{ required: true, message: 'Vui lòng nhập kích thước RAM' }]}
+        >
+          <Input placeholder="Nhập kích thước RAM (ví dụ: 8GB)" />
+        </Form.Item>
+        <Form.Item
+          label="Danh mục biến thể"
+          name="variantCategory"
+          rules={[{ required: true, message: 'Vui lòng chọn ít nhất một danh mục biến thể' }]}
+        >
+          <Select
+            mode="multiple"
+            placeholder="Chọn danh mục biến thể"
+            loading={isLoadingVariantCategories}
+            allowClear
+          >
+            {variantCategories.map((category) => (
+              <Select.Option key={category._id} value={category._id}>
+                {category.name}
+              </Select.Option>
+            ))}
+          </Select>
+        </Form.Item>
+        <Form.Item>
+          <Button type="primary" htmlType="submit" loading={addRamMutation.isPending}>
+            Thêm RAM
+          </Button>
+          <Button
+            style={{ marginLeft: '10px' }}
+            onClick={() => navigate('/admin/variant/list')}
+          >
+            Hủy
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
   );
 };
 

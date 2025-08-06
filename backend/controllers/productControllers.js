@@ -2,6 +2,7 @@ const axios = require("axios");
 const Product = require('../models/productModels');
 const Order = require('../models/orderModel');
 const Notification = require('../models/notificationModels');
+const { autoDeleteOldProducts } = require('../utils/scheduler');
 
 exports.getAllProducts = async (req, res) => {
   try {
@@ -11,6 +12,7 @@ exports.getAllProducts = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi lấy sản phẩm' });
   }
 };
+
 exports.getAllDeleteProducts = async (req, res) => {
   try {
     const products = await Product.find({ status: false }); // chỉ lấy sản phẩm không còn bán
@@ -23,10 +25,8 @@ exports.getAllDeleteProducts = async (req, res) => {
 exports.createProduct = async (req, res) => {
   try {
     console.log("➡️ Data gửi lên:", req.body);
-    // req.body phải có: { name, image, albumImages, soluong, mota, danhmuc, price, trangthai, variants: [...] }
     const productData = req.body;
 
-    // 1. Kiểm tra đủ các trường cơ bản (bắt buộc)
     const requiredFields = ["name", "image", "albumImages", "danhmuc", "price", "trangthai"];
     for (const field of requiredFields) {
       if (
@@ -41,14 +41,12 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    // 2. Kiểm tra mảng variants có tồn tại ít nhất một phần tử hay không.
     if (!Array.isArray(productData.variants) || productData.variants.length === 0) {
       return res
         .status(400)
         .json({ message: "Vui lòng cung cấp ít nhất một biến thể" });
     }
 
-    // 3. Validate từng biến thể: mỗi variant phải có color, ram, price và soluong
     for (let i = 0; i < productData.variants.length; i++) {
       const v = productData.variants[i];
       if (
@@ -67,32 +65,27 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    // 4. Tính tổng soluong từ các biến thể
     const totalQuantity = productData.variants.reduce(
       (sum, v) => sum + Number(v.soluong),
       0
     );
-    // Ghi đè hoặc gán lại productData.soluong:
     productData.soluong = totalQuantity;
 
-    // 5. Tạo đối tượng mới và lưu vào database
     const product = new Product(productData);
     const savedProduct = await product.save();
 
+    if (global._io) {
+      global._io.emit("productCreated", savedProduct);
+    }
 
-    // ✅ Emit socket cho client
-global._io.emit("productCreated", savedProduct);
-
-    // ✅ Tạo thông báo mới cho user
     await Notification.create({
       message: `Sản phẩm "${savedProduct.name}" vừa mới được ra mắt`,
-      type: 'product', // hoặc 'success'
+      type: 'product',
       scope: 'user',
       role: 'user',
       relatedId: savedProduct._id,
     });
 
-    // 6. Trả về kết quả
     return res.status(201).json(savedProduct);
   } catch (error) {
     console.error("❌ Lỗi khi thêm sản phẩm:", error);
@@ -100,19 +93,12 @@ global._io.emit("productCreated", savedProduct);
   }
 };
 
-
-// Sửa sản phẩm theo id
-
-
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedData = req.body; 
-    // updatedData ví dụ: { name, image, albumImages, price, soluong (có thể bỏ), mota, danhmuc, trangthai, variants: [...] }
+    const updatedData = req.body;
 
-    // 1. Nếu có mảng variants trong req, tính lại tổng soluong
     if (Array.isArray(updatedData.variants)) {
-      // Validate từng biến thể trước
       for (let i = 0; i < updatedData.variants.length; i++) {
         const v = updatedData.variants[i];
         if (
@@ -131,7 +117,6 @@ exports.updateProduct = async (req, res) => {
         }
       }
 
-      // Tính tổng soluong từ variants
       const totalQuantity = updatedData.variants.reduce(
         (sum, v) => sum + Number(v.soluong),
         0
@@ -139,7 +124,6 @@ exports.updateProduct = async (req, res) => {
       updatedData.soluong = totalQuantity;
     }
 
-    // 2. Cập nhật sản phẩm (bao gồm trường soluong mới)
     const updatedProduct = await Product.findByIdAndUpdate(
       id,
       updatedData,
@@ -150,9 +134,9 @@ exports.updateProduct = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy sản phẩm để cập nhật" });
     }
 
-    // ✅ Emit socket cập nhật sản phẩm
-global._io.emit("productUpdated", updatedProduct);
-
+    if (global._io) {
+      global._io.emit("productUpdated", updatedProduct);
+    }
 
     res.json(updatedProduct);
   } catch (error) {
@@ -161,41 +145,8 @@ global._io.emit("productUpdated", updatedProduct);
   }
 };
 
-
-
-// exports.deleteProduct = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // Kiểm tra sản phẩm có trong đơn hàng đang xử lý
-//     const orders = await Order.find({
-//       'items.productId': id,
-//       status: { $nin: ['Hoàn thành', 'Đã huỷ', 'Trả hàng/Hoàn tiền'] },
-//     });
-
-//     if (orders.length > 0) {
-//       return res.status(400).json({ message: 'Không thể xóa sản phẩm vì đang liên kết với đơn hàng hiện tại' });
-//     }
-//     const deletedProduct = await Product.findByIdAndUpdate(
-//   id,
-//   { status: false },
-//   { new: true }
-// );
-
-//     if (!deletedProduct) {
-//       return res.status(404).json({ message: 'Không tìm thấy sản phẩm để xóa' });
-//     }
-
-//     res.json({ message: 'Xóa mềm thành công (status = false)' });
-//   } catch (error) {
-//     res.status(500).json({ message: 'Lỗi khi xóa sản phẩm' });
-//   }
-// };
-
-
 exports.deleteProduct = async (req, res) => {
   try {
-    // Cho phép xóa mềm không kiểm tra đơn hàng
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       { status: false },
@@ -206,13 +157,87 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
     }
 
-    // ✅ Emit socket xóa sản phẩm
-global._io.emit("productDeleted", product._id);
+    if (global._io) {
+      global._io.emit("productDeleted", product._id);
+    }
 
     res.json({ message: "Xóa mềm thành công", product });
   } catch (error) {
     console.error("Lỗi khi xóa mềm:", error);
     res.status(500).json({ message: "Xóa thất bại", error });
+  }
+};
+
+exports.hardDeleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log("🔥 Bắt đầu xóa cứng sản phẩm ID:", id);
+
+    // Validate ID format
+    if (!id || id.length !== 24) {
+      console.log("❌ ID không hợp lệ:", id);
+      return res.status(400).json({ message: "ID sản phẩm không hợp lệ" });
+    }
+
+    // Kiểm tra sản phẩm có tồn tại không
+    const product = await Product.findById(id);
+    if (!product) {
+      console.log("❌ Không tìm thấy sản phẩm với ID:", id);
+      return res.status(404).json({ message: "Không tìm thấy sản phẩm" });
+    }
+
+    console.log("✅ Tìm thấy sản phẩm:", product.name);
+
+    // Xóa vĩnh viễn khỏi cơ sở dữ liệu
+    const deletedProduct = await Product.findByIdAndDelete(id);
+    
+    if (!deletedProduct) {
+      console.log("❌ Không thể xóa sản phẩm");
+      return res.status(500).json({ message: "Không thể xóa sản phẩm" });
+    }
+
+    console.log("✅ Đã xóa sản phẩm thành công");
+
+    // Gửi sự kiện socket (nếu có)
+    try {
+      if (global._io) {
+        global._io.emit("productHardDeleted", id);
+        console.log("✅ Đã gửi socket event");
+      }
+    } catch (socketError) {
+      console.log("⚠️ Lỗi khi gửi socket event:", socketError.message);
+    }
+
+    // Tạo thông báo (nếu có model Notification)
+    try {
+      await Notification.create({
+        message: `Sản phẩm "${product.name}" đã bị xóa vĩnh viễn`,
+        type: 'delete',
+        scope: 'admin',
+        role: 'admin',
+        relatedId: id,
+      });
+      console.log("✅ Đã tạo notification");
+    } catch (notificationError) {
+      console.log("⚠️ Lỗi khi tạo notification:", notificationError.message);
+    }
+
+    res.json({ 
+      message: "Xóa cứng thành công",
+      deletedProduct: {
+        _id: deletedProduct._id,
+        name: deletedProduct.name
+      }
+    });
+
+  } catch (error) {
+    console.error("❌ Lỗi khi xóa cứng:", error);
+    res.status(500).json({ 
+      message: "Lỗi khi xóa cứng", 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
@@ -230,14 +255,11 @@ exports.getProductById = async (req, res) => {
 exports.restoreProductQuantity = async (req, res) => {
   try {
     const items = req.body.items;
-    // console.log("🟢 Dữ liệu nhận để khôi phục:", items);
 
     for (const item of items) {
-      // console.log("➡️ Đang xử lý:", item);
       const { productId, color, ram, quantity } = item;
 
       if (!color || !ram) {
-        // console.warn("⚠️ Dữ liệu thiếu thông tin biến thể:", item);
         continue;
       }
 
@@ -249,7 +271,6 @@ exports.restoreProductQuantity = async (req, res) => {
       );
 
       if (!variant) {
-        // console.warn(`❌ Không tìm thấy biến thể phù hợp: color=${color}, ram=${ram}`);
         continue;
       }
 
@@ -267,18 +288,10 @@ exports.restoreProductQuantity = async (req, res) => {
   }
 };
 
-
-
-
-
-
-
-// Tìm kiếm sản phẩm theo từ khoá (query string: ?keyword=...)
 exports.searchProducts = async (req, res) => {
   try {
     const keyword = req.query.keyword || "";
     
-    // Tìm kiếm trong tên sản phẩm (không phân biệt hoa thường) và sản phẩm còn hoạt động
     const products = await Product.find({
       name: { $regex: keyword, $options: "i" },
       status: true,
@@ -299,6 +312,7 @@ exports.checkProductInOrder = async (req, res) => {
     res.status(500).json({ message: "Lỗi kiểm tra đơn hàng" });
   }
 };
+
 exports.updateProductQuantity = async (req, res) => {
   try {
     const { id } = req.params;
@@ -322,13 +336,10 @@ exports.updateProductQuantity = async (req, res) => {
       return res.status(400).json({ message: "Không tìm thấy phiên bản sản phẩm" });
     }
 
-    // 👉 Cập nhật vào variant
     variant.soluong += quantityNumber;
 
-    // ✅ THÊM DÒNG NÀY để Mongoose biết bạn đã thay đổi
     product.markModified('variants');
 
-    // 👉 Cập nhật lại tổng số lượng sản phẩm
     product.soluong = product.variants.reduce((total, v) => total + v.soluong, 0);
 
     await product.save();
@@ -338,6 +349,7 @@ exports.updateProductQuantity = async (req, res) => {
     res.status(500).json({ message: "Lỗi server khi cập nhật số lượng" });
   }
 };
+
 exports.reduceVariantQuantity = async (req, res) => {
   try {
     const items = req.body.items;
@@ -359,7 +371,6 @@ exports.reduceVariantQuantity = async (req, res) => {
       variant.soluong = Math.max(0, variant.soluong - Number(soluong));
       product.markModified("variants");
 
-      // Cập nhật lại tổng tồn kho
       product.soluong = product.variants.reduce(
         (sum, v) => sum + v.soluong,
         0
@@ -373,8 +384,4 @@ exports.reduceVariantQuantity = async (req, res) => {
     console.error("❌ Lỗi khi trừ tồn kho:", error);
     res.status(500).json({ message: "Lỗi server khi trừ tồn kho" });
   }
-};
-
-
-
-
+}

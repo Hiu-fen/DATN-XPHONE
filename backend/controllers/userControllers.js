@@ -283,3 +283,34 @@ exports.userController_getLikedProducts = async (req, res) => {
     return res.status(500).json({ message: "Lỗi máy chủ" });
   }
 };
+
+// Đổi mật khẩu
+exports.changePassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.params.id;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ message: 'Mật khẩu hiện tại không chính xác' });
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedNewPassword;
+
+    // Ghi lại lịch sử thay đổi
+    if (!Array.isArray(user.updateHistory)) user.updateHistory = [];
+    user.updateHistory.unshift({
+      content: 'Đã đổi mật khẩu',
+      time: new Date(),
+    });
+
+    await user.save();
+    res.json({ message: 'Đổi mật khẩu thành công' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ khi đổi mật khẩu' });
+  }
+};
+

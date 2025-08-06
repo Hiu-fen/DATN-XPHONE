@@ -1,53 +1,98 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, message, Input, Popconfirm, Tag, Tooltip } from 'antd';
+import { Table, Button, message, Input, Tooltip, Tag } from 'antd';
 import axios from 'axios';
+import { io, Socket } from 'socket.io-client';
 import { IContact } from '../../../interface/contact';
-import { DeleteOutlined, EyeOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { EyeOutlined, MailOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
 const ContactList = () => {
   const [contacts, setContacts] = useState<IContact[]>([]);
   const [searchText, setSearchText] = useState('');
   const navigate = useNavigate();
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   const fetchContacts = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/contacts');
+      console.log('Danh sách liên hệ đã tải:', response.data);
       setContacts(response.data);
     } catch (error) {
       message.error('Không thể tải danh sách liên hệ, vui lòng thử lại!');
+      console.error('Lỗi tải danh sách liên hệ:', error);
     }
   };
 
   useEffect(() => {
     fetchContacts();
+
+    // Khởi tạo Socket.IO
+    const socketInstance = io('http://localhost:5000', {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
+    setSocket(socketInstance);
+
+    socketInstance.on('connect', () => {
+      console.log('Kết nối với server Socket.IO:', socketInstance.id);
+    });
+
+    socketInstance.on('contactCreated', (newContact: IContact) => {
+      console.log('Nhận sự kiện contactCreated:', newContact);
+      setContacts((prevContacts) => {
+        if (prevContacts.some((contact) => contact._id === newContact._id)) {
+          console.log('Liên hệ đã tồn tại, không thêm:', newContact._id);
+          return prevContacts;
+        }
+        const newContacts = [...prevContacts, newContact];
+        console.log('Danh sách liên hệ sau khi thêm:', newContacts);
+        return newContacts;
+      });
+      message.info(`Liên hệ mới: ${newContact.name}`);
+    });
+
+    socketInstance.on('contactUpdated', (updatedContact: IContact) => {
+      console.log('Nhận sự kiện contactUpdated:', updatedContact);
+      setContacts((prevContacts) => {
+        const exists = prevContacts.some((contact) => contact._id === updatedContact._id);
+        console.log('Liên hệ tồn tại trong danh sách:', exists);
+        const newContacts = prevContacts.map((contact) =>
+          contact._id === updatedContact._id ? updatedContact : contact
+        );
+        console.log('Danh sách liên hệ sau khi cập nhật:', newContacts);
+        return newContacts;
+      });
+      message.info(`Liên hệ ${updatedContact.name} đã được cập nhật!`);
+    });
+
+    socketInstance.on('disconnect', () => {
+      console.log('Ngắt kết nối với server Socket.IO');
+    });
+
+    return () => {
+      console.log('Ngắt kết nối Socket.IO');
+      socketInstance.disconnect();
+    };
   }, []);
 
-  const toggleStatus = async (id: string, currentStatus: boolean) => {
-    try {
-      const updatedStatus = !currentStatus;
-      await axios.patch(`http://localhost:5000/api/contacts/${id}`, { status: updatedStatus });
-      setContacts(prev =>
-        prev.map(contact => contact._id === id ? { ...contact, status: updatedStatus } : contact)
-      );
-      message.success('Thay đổi trạng thái thành công!');
-    } catch (error) {
-      message.error('Không thể thay đổi trạng thái, vui lòng thử lại!');
-    }
+  const handleEmailClick = (email: string) => {
+    const subject = encodeURIComponent('Re: Liên hệ từ XPhone Store');
+    const body = encodeURIComponent(
+      `Xin chào Bạn \n\nCảm ơn bạn đã liên hệ với XPhone Store. Chúng tôi đã nhận được phản hồi của bạn.\n\n Nội dung :  \n\nTrân trọng,\nXPhone Store\nTừ: xphonene53@gmail.com`
+    );
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
+    window.open(gmailUrl, '_blank');
   };
 
-  const deleteContact = async (id: string) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/contacts/${id}`);
-      setContacts(prev => prev.filter(contact => contact._id !== id));
-      message.success('Xoá liên hệ thành công!');
-    } catch (error) {
-      message.error('Không thể xoá liên hệ, vui lòng thử lại!');
-    }
+  const handleViewInbox = () => {
+    const gmailUrl = 'https://mail.google.com';
+    window.open(gmailUrl, '_blank');
   };
 
   const filteredContacts = contacts.filter((c: IContact) => {
-    const text = `${c.email} ${c.name} ${c.phone} ${c.message}`.toLowerCase();
+    const text = `${c.email} ${c.name} ${c.phone}`.toLowerCase();
+    console.log('Lọc liên hệ:', c, 'Từ khóa tìm kiếm:', searchText);
     return text.includes(searchText.toLowerCase());
   });
 
@@ -66,6 +111,18 @@ const ContactList = () => {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      render: (email: string) => (
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            handleEmailClick(email);
+          }}
+          className="text-blue-600 hover:underline"
+        >
+          {email}
+        </a>
+      ),
     },
     {
       title: 'Số điện thoại',
@@ -80,7 +137,7 @@ const ContactList = () => {
         <Tag color={status ? 'green' : 'red'}>
           {status ? 'Đã xử lý' : 'Chưa xử lý'}
         </Tag>
-      ),
+    )
     },
     {
       title: 'Thao tác',
@@ -93,22 +150,12 @@ const ContactList = () => {
               onClick={() => navigate(`/admin/contact/detail/${record._id}`)}
             />
           </Tooltip>
-          <Tooltip title={record.status ? 'Đánh dấu chưa xử lý' : 'Đánh dấu đã xử lý'}>
+          <Tooltip title="Xem hộp thư">
             <Button
-              icon={record.status ? <CloseCircleOutlined /> : <CheckCircleOutlined />}
-              onClick={() => toggleStatus(record._id, record.status)}
+              icon={<MailOutlined />}
+              onClick={handleViewInbox}
             />
           </Tooltip>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xoá?"
-            onConfirm={() => deleteContact(record._id)}
-            okText="Đồng ý"
-            cancelText="Hủy"
-          >
-            <Tooltip title="Xoá liên hệ">
-              <Button danger icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
         </div>
       ),
     },

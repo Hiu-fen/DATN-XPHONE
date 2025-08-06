@@ -11,6 +11,7 @@ const {
   registerWithGoogle,
   loginWithGoogle,
   getUpdateHistory,
+  changePassword,
   getAllUpdateHistories,
   User_likeProduct, // like handler bạn đã định nghĩa
   userController_getLikedProducts,
@@ -31,6 +32,8 @@ router.get('/profile/:id', getProfile);
 router.put('/profile/:id', updateProfile);
 router.patch('/:id', updateUserStatus);
 router.get('/history/all', getAllUpdateHistories);
+
+router.patch('/change-password/:id', changePassword);
 
 // ✅ Route like sản phẩm
 router.patch('/:id/like', User_likeProduct);
@@ -71,6 +74,19 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ message: 'Lỗi server' });
   }
 });
+
+// ✅ Lấy thông tin user theo id
+router.get('/:id', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy user' });
+    res.json(user);
+  } catch (error) {
+    console.error('Lỗi khi lấy thông tin user:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ' });
+  }
+});
+
 
 
 module.exports = router;

@@ -97,6 +97,8 @@ import ContactDetail from './components/admin/Contact/ContactDetail';
 import RewardsPage from './components/client/page/rewards/RewardsPage';
 import HistoryPage from './components/admin/User/HistoryPage';
 import ChangePassword from './components/client/page/account/change-password';
+import VariantCategoryAdd from './components/admin/Variant/Variant/VariantCategoryAdd';
+import VariantCategoryEdit from './components/admin/Variant/Variant/VariantCategoryEdit';
 
 
 const App = () => {
@@ -214,6 +216,9 @@ const App = () => {
         { path: "banner/edit/:id", element: <BannerEdit /> },
         { path: "banner/detail/:id", element: <BannerDetail /> },
 
+        // Router quản lý categoryvariant 
+        { path: 'categoryVariant/add', element: <VariantCategoryAdd /> },
+        { path: 'categoryVariant/:id', element: <VariantCategoryEdit /> },
         // Router quản lý Color
         { path: 'color/add', element: <ColorAdd /> },
         { path: 'color/:id', element: <ColorEdit /> },
