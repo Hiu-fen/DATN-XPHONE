@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { IProduct } from "../../../../interface/product";
-import { message, Modal } from "antd";
+import { message } from "antd";
 import { useQuery } from "@tanstack/react-query";
 import CommentSection from "../../componentChild/Detail/CommentSection";
 import RelatedProducts from "../../componentChild/Detail/RelatedProducts";
@@ -103,7 +103,6 @@ const Details = () => {
         if (isMounted) {
           setProduct(res.data);
           setMainImage(res.data.image || "/default-image.jpg");
-          setModalImage(res.data.image || "/default-image.jpg");
           setSelectedVariant(null);
         }
       } catch (error) {
@@ -132,9 +131,7 @@ const Details = () => {
           )
         ) {
           setSelectedVariant(null);
-          setModalVariant(null);
           setQuantity(1);
-          setModalQuantity(1);
           message.warning("Biến thể đã chọn không còn tồn tại, vui lòng chọn lại.");
         }
         if (!updatedProduct.status) {
@@ -191,21 +188,6 @@ const Details = () => {
     }
     const variant = product?.variants?.find(
       (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
-    );
-    return variant?.price
-      ? `${Number(variant.price).toLocaleString("vi-VN")} VNĐ`
-      : product?.price
-      ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ`
-      : "Liên hệ";
-  };
-
-  // Get modal variant price
-  const getModalVariantPrice = () => {
-    if (!modalVariant) {
-      return product?.price ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ` : "Liên hệ";
-    }
-    const variant = product?.variants?.find(
-      (v) => v.color === modalVariant.color && v.ram === modalVariant.ram
     );
     return variant?.price
       ? `${Number(variant.price).toLocaleString("vi-VN")} VNĐ`
@@ -379,7 +361,7 @@ const Details = () => {
         return;
       }
       const variant = product.variants?.find(
-        (v) => v.color === modalVariant.color && v.ram === modalVariant.ram
+        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
       );
       if (!variant) {
         message.warning("Biến thể không hợp lệ hoặc không có sẵn.");
@@ -399,8 +381,8 @@ const Details = () => {
       const cartItem = cart.items.find(
         (item: any) =>
           item.productId === product._id &&
-          item.color === modalVariant.color &&
-          item.storage === modalVariant.ram
+          item.color === selectedVariant.color &&
+          item.storage === selectedVariant.ram
       );
       let totalQuantity = modalQuantity;
       if (cartItem) {
@@ -418,10 +400,10 @@ const Details = () => {
         items: [
           {
             productId: product._id,
-            quantity: modalQuantity,
+            quantity: quantity,
             price: variant?.price || product.price,
-            color: modalVariant.color,
-            storage: modalVariant.ram,
+            color: selectedVariant.color,
+            storage: selectedVariant.ram,
             categoryId: Array.isArray(product.danhmuc)
               ? product.danhmuc[0]
               : product.danhmuc,
@@ -444,12 +426,12 @@ const Details = () => {
 
   // Buy now
   const handleBuyNow = () => {
-    if (!product || !modalVariant?.color || !modalVariant?.ram) {
+    if (!product || !selectedVariant?.color || !selectedVariant?.ram) {
       message.warning("Vui lòng chọn biến thể");
       return;
     }
     const variant = product.variants?.find(
-      (v) => v.color === modalVariant.color && v.ram === modalVariant.ram
+      (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
     );
     if (!variant || modalQuantity > variant.soluong) {
       return message.warning("Số lượng vượt quá tồn kho");
@@ -472,9 +454,9 @@ const Details = () => {
       productName: product.name,
       image: product.image,
       price: variant.price || product.price,
-      soluong: modalQuantity,
-      color: modalVariant.color,
-      storage: modalVariant.ram,
+      soluong: quantity,
+      color: selectedVariant.color,
+      storage: selectedVariant.ram,
       categoryId,
     };
 
@@ -671,14 +653,14 @@ const Details = () => {
           <div className="flex flex-col sm:flex-row gap-3 mt-4 max-w-md w-full">
             <button
               className="flex-1 bg-black text-white py-2 px-6 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => showModal("buyNow")}
+              onClick={handleBuyNow}
               disabled={!product.status}
             >
               MUA NGAY
             </button>
             <button
               className="flex-1 flex flex-col items-center justify-center gap-1 border-2 border-red-600 text-red-600 py-2 px-6 rounded-lg font-semibold text-sm md:text-base hover:bg-red-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => showModal("addToCart")}
+              onClick={handleAddToCart}
               disabled={!product.status}
             >
               <ShoppingCartOutlined className="text-base" />
