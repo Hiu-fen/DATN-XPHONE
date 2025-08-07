@@ -1,51 +1,134 @@
-
+import React from "react"
+import { Card, Row, Col, Typography, Timeline, Statistic, Avatar, Tag } from "antd"
 import {
-  Smartphone,
-  Shield,
-  Users,
-  Truck,
-  Gift,
-  Star,
-  CheckCircle,
-  MapPin,
-  Phone,
-  Mail,
-  Target,
-  Heart,
-  Zap,
-} from "lucide-react"
+  PhoneOutlined,
+  MailOutlined,
+  EnvironmentOutlined,
+  ClockCircleOutlined,
+  SafetyOutlined,
+  TruckOutlined,
+  CustomerServiceOutlined,
+  GiftOutlined,
+  StarOutlined,
+  TeamOutlined,
+  ShopOutlined,
+  GlobalOutlined,
+} from "@ant-design/icons"
+
+const { Title, Text, Paragraph } = Typography
 
 const About = () => {
+  const achievements = [
+    { title: "Khách hàng tin tưởng", value: "50,000+", icon: <TeamOutlined />, color: "#1890ff" },
+    { title: "Sản phẩm đã bán", value: "100,000+", icon: <ShopOutlined />, color: "#52c41a" },
+    { title: "Năm kinh nghiệm", value: "8+", icon: <StarOutlined />, color: "#faad14" },
+    { title: "Cửa hàng toàn quốc", value: "25+", icon: <GlobalOutlined />, color: "#f5222d" },
+  ]
+
   const features = [
     {
-      icon: <Shield className="w-5 h-5" />,
+      icon: <SafetyOutlined className="text-2xl text-blue-600" />,
       title: "Sản phẩm chính hãng 100%",
-      description: "Cam kết mọi sản phẩm đều chính hãng từ nhà sản xuất",
+      description: "Cam kết tất cả sản phẩm đều chính hãng, có đầy đủ giấy tờ và tem bảo hành từ nhà sản xuất",
+      color: "from-blue-500 to-cyan-500",
     },
     {
-      icon: <Users className="w-5 h-5" />,
-      title: "Đội ngũ tư vấn chuyên nghiệp",
-      description: "Nhân viên được đào tạo bài bản, nhiệt tình hỗ trợ",
-    },
-    {
-      icon: <Truck className="w-5 h-5" />,
-      title: "Giao hàng nhanh chóng",
-      description: "Giao hàng trong 24h tại nội thành",
-    },
-    {
-      icon: <Gift className="w-5 h-5" />,
-      title: "Chương trình khuyến mãi hấp dẫn",
-      description: "Thường xuyên có các ưu đãi và quà tặng giá trị",
-    },
-    {
-      icon: <Star className="w-5 h-5" />,
+      icon: <CustomerServiceOutlined className="text-2xl text-green-600" />,
       title: "Bảo hành uy tín",
-      description: "Chính sách bảo hành toàn diện, đổi trả dễ dàng",
+      description: "Chế độ bảo hành toàn diện, đổi trả trong 30 ngày đầu, hỗ trợ kỹ thuật 24/7",
+      color: "from-green-500 to-emerald-500",
     },
     {
-      icon: <CheckCircle className="w-5 h-5" />,
-      title: "Dịch vụ hậu mãi tận tâm",
-      description: "Hỗ trợ khách hàng 24/7, xử lý sự cố nhanh chóng",
+      icon: <TeamOutlined className="text-2xl text-purple-600" />,
+      title: "Đội ngũ chuyên nghiệp",
+      description: "Nhân viên được đào tạo bài bản, am hiểu sản phẩm, tư vấn nhiệt tình và chuyên nghiệp",
+      color: "from-purple-500 to-violet-500",
+    },
+    {
+      icon: <TruckOutlined className="text-2xl text-orange-600" />,
+      title: "Giao hàng nhanh chóng",
+      description: "Giao hàng trong 2-4 giờ tại nội thành, 1-2 ngày toàn quốc, miễn phí với đơn từ 500k",
+      color: "from-orange-500 to-red-500",
+    },
+    {
+      icon: <GiftOutlined className="text-2xl text-pink-600" />,
+      title: "Khuyến mãi hấp dẫn",
+      description: "Thường xuyên có các chương trình ưu đãi, giảm giá, quà tặng giá trị cho khách hàng",
+      color: "from-pink-500 to-rose-500",
+    },
+    {
+      icon: <StarOutlined className="text-2xl text-yellow-600" />,
+      title: "Dịch vụ cao cấp",
+      description: "Trải nghiệm mua sắm đẳng cấp với không gian hiện đại, dịch vụ chu đáo và chuyên nghiệp",
+      color: "from-yellow-500 to-amber-500",
+    },
+  ]
+
+  const timeline = [
+    {
+      color: "blue",
+      children: (
+        <div>
+          <Title level={5} className="mb-1">
+            2016 - Khởi đầu
+          </Title>
+          <Text className="text-gray-600">Thành lập cửa hàng đầu tiên tại Hà Nội với 5 nhân viên</Text>
+        </div>
+      ),
+    },
+    {
+      color: "green",
+      children: (
+        <div>
+          <Title level={5} className="mb-1">
+            2018 - Mở rộng
+          </Title>
+          <Text className="text-gray-600">Phát triển thành chuỗi 10 cửa hàng, ra mắt website bán hàng online</Text>
+        </div>
+      ),
+    },
+    {
+      color: "orange",
+      children: (
+        <div>
+          <Title level={5} className="mb-1">
+            2020 - Đột phá
+          </Title>
+          <Text className="text-gray-600">Đạt 50,000 khách hàng, trở thành đại lý ủy quyền chính thức của Apple</Text>
+        </div>
+      ),
+    },
+    {
+      color: "purple",
+      children: (
+        <div>
+          <Title level={5} className="mb-1">
+            2024 - Hiện tại
+          </Title>
+          <Text className="text-gray-600">25+ cửa hàng toàn quốc, hệ thống bán hàng omnichannel hoàn thiện</Text>
+        </div>
+      ),
+    },
+  ]
+
+  const teamMembers = [
+    {
+      name: "Phạm Minh Hiếu",
+      position: "Founder & CEO",
+      avatar: "/placeholder.svg?height=80&width=80",
+      description: "2 năm kinh nghiệm trong ngành công nghệ",
+    },
+    {
+      name: "Trịnh Thị Dương",
+      position: "Marketing Director",
+      avatar: "/placeholder.svg?height=80&width=80",
+      description: "Chuyên gia marketing với 6 ngày kinh nghiệm",
+    },
+    {
+      name: "Nguyễn Hồng Quân",
+      position: "Technical Director",
+      avatar: "/placeholder.svg?height=80&width=80",
+      description: "Chuyên gia công nghệ và phát triển sản phẩm",
     },
   ]
 
@@ -164,13 +247,15 @@ const About = () => {
         /* Features */
         <div className="mb-16 animate-in fade-in slide-in-from-bottom duration-700 delay-500">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Tại sao chọn XPhone?</h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Chúng tôi mang đến trải nghiệm mua sắm tuyệt vời nhất cho khách hàng
-            </p>
+            <Title level={2} className="text-3xl font-bold text-gray-800 mb-4">
+              Tại sao chọn XPhone?
+            </Title>
+            <Text className="text-lg text-gray-600">
+              Những lý do khiến hàng triệu khách hàng tin tưởng và lựa chọn XPhone
+            </Text>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Row gutter={[24, 24]}>
             {features.map((feature, index) => (
               <Col xs={24} md={12} lg={8} key={index}>
                 <Card
@@ -191,15 +276,16 @@ const About = () => {
                 </Card>
               </Col>
             ))}
-          </div>
+          </Row>
         </div>
-      </div>
 
-      {/* Mission, Vision, Values */}
-      <div className="py-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4">
+        {/* Team */}
+        <div className="mb-16 animate-in fade-in slide-in-from-bottom duration-700 delay-600">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Về chúng tôi</h2>
+            <Title level={2} className="text-3xl font-bold text-gray-800 mb-4">
+              Đội ngũ lãnh đạo
+            </Title>
+            <Text className="text-lg text-gray-600">Những con người tạo nên thành công của XPhone</Text>
           </div>
 
           <Row gutter={[24, 24]} justify="center">
@@ -248,67 +334,71 @@ const About = () => {
                     </div>
                   </div>
 
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-red-100 rounded-lg text-red-600">
-                  <Heart className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">Giá trị cốt lõi</h3>
-              </div>
-              <p className="text-gray-600">
-                Chất lượng - Uy tín - Tận tâm. Luôn đặt lợi ích khách hàng lên hàng đầu trong mọi hoạt động
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <PhoneOutlined className="text-white text-lg" />
+                    </div>
+                    <div>
+                      <Text className="text-white font-medium block">Hotline</Text>
+                      <Text className="text-white/80">Hãy alo cho Hiếu: 0123.456.789</Text>
+                    </div>
+                  </div>
 
-      {/* Contact Information */}
-      <div className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Thông tin liên hệ</h2>
-            <p className="text-lg text-gray-600">Hãy liên hệ với chúng tôi để được tư vấn và hỗ trợ tốt nhất</p>
-          </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <MailOutlined className="text-white text-lg" />
+                    </div>
+                    <div>
+                      <Text className="text-white font-medium block">Email</Text>
+                      <a
+                        href="mailto:trinhthiduong@gmail.com"
+                        className="text-white/80 hover:text-white transition-colors"
+                      >
+                        trinhthiduong@gmail.com
+                      </a>
+                    </div>
+                  </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-100">
-              <div className="flex justify-center mb-4">
-                <div className="p-3 bg-blue-100 rounded-full text-blue-600">
-                  <MapPin className="w-6 h-6" />
-                </div>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Địa chỉ cửa hàng</h3>
-              <p className="text-gray-600">Trịnh Văn Bô, Nam Từ Liêm, Hà Nội</p>
-            </div>
-
-            <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-100">
-              <div className="flex justify-center mb-4">
-                <div className="p-3 bg-green-100 rounded-full text-green-600">
-                  <Phone className="w-6 h-6" />
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                      <ClockCircleOutlined className="text-white text-lg" />
+                    </div>
+                    <div>
+                      <Text className="text-white font-medium block">Giờ làm việc</Text>
+                      <Text className="text-white/80">8:00 - 22:00 (Thứ 2 - Chủ nhật)</Text>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Hotline hỗ trợ</h3>
-              <p className="text-red-600 font-semibold">Hãy alo cho Hiếu</p>
-              <p className="text-sm text-gray-500 mt-1">Hỗ trợ 24/7</p>
-            </div>
+            </Col>
 
-            <div className="text-center p-6 bg-gray-50 rounded-xl border border-gray-100">
-              <div className="flex justify-center mb-4">
-                <div className="p-3 bg-purple-100 rounded-full text-purple-600">
-                  <Mail className="w-6 h-6" />
+            <Col xs={24} lg={12}>
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                <Title level={3} className="text-white mb-6 text-center">
+                  Cam kết của chúng tôi
+                </Title>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3">
+                    <SafetyOutlined className="text-white text-lg" />
+                    <Text className="text-white/90">Sản phẩm chính hãng 100%</Text>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <CustomerServiceOutlined className="text-white text-lg" />
+                    <Text className="text-white/90">Hỗ trợ khách hàng 24/7</Text>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <TruckOutlined className="text-white text-lg" />
+                    <Text className="text-white/90">Giao hàng miễn phí toàn quốc</Text>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <GiftOutlined className="text-white text-lg" />
+                    <Text className="text-white/90">Chương trình ưu đãi hấp dẫn</Text>
+                  </div>
                 </div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Email liên hệ</h3>
-              <a
-                href="mailto:trinhthiduong@gmail.com"
-                className="text-blue-600 hover:text-blue-700 transition-colors duration-200"
-              >
-                trinhthiduong@gmail.com
-              </a>
-            </div>
-          </div>
-        </div>
+            </Col>
+          </Row>
+        </Card>
       </div>
     </div>
   )

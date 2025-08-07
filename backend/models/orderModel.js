@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const OrderItemSchema = new mongoose.Schema({
   productId: {
@@ -16,14 +16,43 @@ const OrderItemSchema = new mongoose.Schema({
     color: { type: String },
     storage: { type: String },
   },
-});
+})
+
+// Schema cho thông tin người đặt hàng
+const OrdererInfoSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    email: { type: String, required: true },
+  },
+  { _id: false },
+)
+
+// Schema cho thông tin người nhận hàng
+const RecipientInfoSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    email: { type: String },
+    address: { type: String, required: true },
+    note: { type: String },
+  },
+  { _id: false },
+)
 
 const OrderSchema = new mongoose.Schema({
   orderCode: { type: String, required: true, unique: true },
+
+  // Thông tin cũ - giữ lại để tương thích ngược
   customerName: { type: String, required: true },
   phone: { type: String, required: true },
   address: { type: String, required: true },
   email: { type: String, required: true },
+
+  // Thông tin mới - người đặt hàng và người nhận hàng
+  ordererInfo: OrdererInfoSchema,
+  recipientInfo: RecipientInfoSchema,
+
   date: { type: Date, default: Date.now },
 
   // TRẠNG THÁI ĐƠN HÀNG
@@ -69,10 +98,18 @@ const OrderSchema = new mongoose.Schema({
       timestamp: { type: Date, default: Date.now },
     },
   ],
+  returnStatusHistory: [
+    {
+      status: { type: String, required: true },
+      timestamp: { type: Date, default: Date.now },
+    },
+  ],
   voucherCode: { type: String, default: null },
   discountAmount: { type: Number, default: 0 },
+  orderDiscount: { type: Number, default: 0 },
   userId: { type: String },
   restored: { type: Boolean, default: false },
-});
+  isBuyNow: { type: Boolean, default: false },
+})
 
-module.exports = mongoose.model("Order", OrderSchema);
+module.exports = mongoose.model("Order", OrderSchema)

@@ -9,7 +9,7 @@ import CommentSection from "../../componentChild/Detail/CommentSection";
 import RelatedProducts from "../../componentChild/Detail/RelatedProducts";
 import PromotionSection from "../../componentChild/Detail/PromotionSection";
 import SupportPolicy from "../../componentChild/Detail/SupportPolicy";
-import socket from "../../../../socket"; // Import socket instance
+import socket from "../../../../socket";
 
 const Details = () => {
   const { id } = useParams();
@@ -25,7 +25,74 @@ const Details = () => {
   const [modalVariant, setModalVariant] = useState<{ color: string; ram: string } | null>(null);
   const [modalQuantity, setModalQuantity] = useState<number>(1);
   const [modalImage, setModalImage] = useState<string>("");
+  
+  // 🔥 STATE CHO MODAL LIÊN HỆ
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [contactModalAction, setContactModalAction] = useState<"buyNow" | "addToCart" | null>(null);
+  
   const navigate = useNavigate();
+
+  // 🔥 FUNCTION KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG CÓ TRÊN 100 TRIỆU KHÔNG
+  const isHighValueOrder = (unitPrice: number, quantity: number): boolean => {
+    const totalValue = Number(unitPrice) * Number(quantity);
+    const threshold = 100000000; // 100 triệu
+    const isHigh = totalValue > threshold;
+    
+    if (isHigh) {
+      console.log("💎 High value order detected:", {
+        unitPrice: unitPrice.toLocaleString(),
+        quantity,
+        totalValue: totalValue.toLocaleString(),
+        threshold: threshold.toLocaleString()
+      });
+    }
+    
+    return isHigh;
+  };
+
+  // 🔥 FUNCTION LẤY GIÁ HIỆN TẠI CỦA SẢN PHẨM/VARIANT
+  const getCurrentPrice = (): number => {
+    let price = 0;
+    
+    if (selectedVariant && product?.variants) {
+      const variant = product.variants.find(
+        (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
+      );
+      price = variant?.price || product?.price || 0;
+    } else {
+      price = product?.price || 0;
+    }
+    
+    return Number(price);
+  };
+
+  // 🔥 FUNCTION LẤY GIÁ CỦA MODAL VARIANT
+  const getModalCurrentPrice = (): number => {
+    let price = 0;
+    
+    if (modalVariant && product?.variants) {
+      const variant = product.variants.find(
+        (v) => v.color === modalVariant.color && v.ram === modalVariant.ram
+      );
+      price = variant?.price || product?.price || 0;
+    } else {
+      price = product?.price || 0;
+    }
+    
+    return Number(price);
+  };
+
+  // 🔥 FUNCTION TÍNH TỔNG GIÁ TRỊ HIỆN TẠI
+  const getCurrentTotalValue = (): number => {
+    const unitPrice = getCurrentPrice();
+    return unitPrice * quantity;
+  };
+
+  // 🔥 FUNCTION TÍNH TỔNG GIÁ TRỊ MODAL
+  const getModalTotalValue = (): number => {
+    const unitPrice = getModalCurrentPrice();
+    return unitPrice * modalQuantity;
+  };
 
   // Fetch product details
   useEffect(() => {
@@ -42,7 +109,7 @@ const Details = () => {
       } catch (error) {
         console.error("Không thể tải sản phẩm:", error);
         message.error("Không thể tải thông tin sản phẩm.");
-        navigate("/products"); // Redirect to product list on fetch error
+        navigate("/products");
       }
     };
     fetchProduct();
@@ -53,14 +120,11 @@ const Details = () => {
 
   // Socket.IO for real-time updates
   useEffect(() => {
-    // Handle product updates
     socket.on("productUpdated", (updatedProduct: IProduct) => {
       if (updatedProduct._id === id) {
-        console.log("🟡 Cập nhật sản phẩm:", updatedProduct);
         setProduct(updatedProduct);
         setMainImage(updatedProduct.image || "/default-image.jpg");
         setModalImage(updatedProduct.image || "/default-image.jpg");
-        // Reset variant if it no longer exists
         if (
           selectedVariant &&
           !updatedProduct.variants?.some(
@@ -73,17 +137,14 @@ const Details = () => {
           setModalQuantity(1);
           message.warning("Biến thể đã chọn không còn tồn tại, vui lòng chọn lại.");
         }
-        // Check if product is no longer available
         if (!updatedProduct.status) {
           message.warning("Sản phẩm này không còn được bán.");
         }
       }
     });
 
-    // Handle product deletion
     socket.on("productDeleted", (deletedProductId: string) => {
       if (deletedProductId === id) {
-        console.log("🔴 Sản phẩm bị xóa:", deletedProductId);
         setProduct((prevProduct) =>
           prevProduct ? { ...prevProduct, status: false } : null
         );
@@ -91,7 +152,6 @@ const Details = () => {
       }
     });
 
-    // Clean up socket listeners
     return () => {
       socket.off("productUpdated");
       socket.off("productDeleted");
@@ -102,24 +162,21 @@ const Details = () => {
   const handleSelectVariant = (color: string, ram: string, index: number) => {
     setSelectedVariant({ color, ram });
     setModalVariant({ color, ram });
-    setModalQuantity(1); // Reset quantity when changing variant
-
-    // Map variant index to albumImages with cycling
+    setModalQuantity(1);
+    
     const albumLength = product?.albumImages?.length || 0;
     const newImage = albumLength > 0
       ? product?.albumImages[index % albumLength] || product?.image || "/default-image.jpg"
       : product?.image || "/default-image.jpg";
     setMainImage(newImage);
     setModalImage(newImage);
-    console.log("Đã chọn biến thể:", { color, ram, image: newImage });
   };
 
   // Handle modal variant selection
   const handleModalSelectVariant = (color: string, ram: string, index: number) => {
     setModalVariant({ color, ram });
-    setModalQuantity(1); // Reset quantity when changing variant
-
-    // Map variant index to albumImages with cycling
+    setModalQuantity(1);
+    
     const albumLength = product?.albumImages?.length || 0;
     const newImage = albumLength > 0
       ? product?.albumImages[index % albumLength] || product?.image || "/default-image.jpg"
@@ -197,7 +254,7 @@ const Details = () => {
     setModalQuantity(value);
   };
 
-  // Handle opening modal
+  // 🔥 FUNCTION showModal - KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG TRƯỚC KHI MỞ MODAL
   const showModal = (action: "buyNow" | "addToCart") => {
     if (!product) {
       message.error("Không tìm thấy sản phẩm.");
@@ -207,8 +264,22 @@ const Details = () => {
       message.error("Sản phẩm này không còn được bán.");
       return;
     }
+
+    // 🔥 KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG TRƯỚC KHI MỞ MODAL
+    const unitPrice = getCurrentPrice();
+    const currentQuantity = quantity;
+    
+    if (isHighValueOrder(unitPrice, currentQuantity)) {
+      console.log("💎 Showing contact modal for high value order");
+      setContactModalAction(action);
+      setIsContactModalOpen(true);
+      return;
+    }
+
+    // Nếu không phải đơn hàng cao cấp, mở modal bình thường
     setModalAction(action);
     setIsModalOpen(true);
+    
     if (selectedVariant) {
       setModalVariant(selectedVariant);
       setModalQuantity(quantity);
@@ -238,6 +309,19 @@ const Details = () => {
       return;
     }
 
+    // 🔥 KIỂM TRA LẠI TỔNG GIÁ TRỊ TRONG MODAL
+    const unitPrice = getModalCurrentPrice();
+    const currentQuantity = modalQuantity;
+    
+    if (isHighValueOrder(unitPrice, currentQuantity)) {
+      console.log("💎 Redirecting to contact modal from regular modal");
+      setIsModalOpen(false);
+      setContactModalAction(modalAction);
+      setIsContactModalOpen(true);
+      return;
+    }
+
+    // Xử lý bình thường
     if (modalAction === "addToCart") {
       await handleAddToCart();
     } else if (modalAction === "buyNow") {
@@ -252,18 +336,29 @@ const Details = () => {
     setModalAction(null);
   };
 
+  // 🔥 HANDLE CONTACT MODAL
+  const handleContactModalOk = () => {
+    navigate("/contact");
+    setIsContactModalOpen(false);
+    setContactModalAction(null);
+  };
+
+  const handleContactModalCancel = () => {
+    setIsContactModalOpen(false);
+    setContactModalAction(null);
+  };
+
   // Add to cart
   const handleAddToCart = async () => {
     if (!product) {
       message.error("Không tìm thấy sản phẩm.");
       return;
     }
-
     if (!product.status) {
       message.error("Sản phẩm này không còn được bán.");
       return;
     }
-
+    
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       if (!user?._id) {
@@ -271,36 +366,29 @@ const Details = () => {
         navigate("/login");
         return;
       }
-
       if (!product._id) {
         message.warning("Không tìm thấy sản phẩm.");
         return;
       }
-
       if (product.soluong <= 0) {
         message.warning("Sản phẩm đã hết hàng.");
         return;
       }
-
       if (!modalVariant) {
         message.warning("Vui lòng chọn biến thể.");
         return;
       }
-
       const variant = product.variants?.find(
         (v) => v.color === modalVariant.color && v.ram === modalVariant.ram
       );
-
       if (!variant) {
         message.warning("Biến thể không hợp lệ hoặc không có sẵn.");
         return;
       }
-
       if (variant.soluong <= 0) {
         message.warning(`Biến thể ${variant.color} - ${variant.ram} đã hết hàng!`);
         return;
       }
-
       if (modalQuantity > variant.soluong) {
         message.warning(`Số lượng vượt quá tồn kho của biến thể ${variant.color} - ${variant.ram}!`);
         return;
@@ -314,12 +402,10 @@ const Details = () => {
           item.color === modalVariant.color &&
           item.storage === modalVariant.ram
       );
-
       let totalQuantity = modalQuantity;
       if (cartItem) {
         totalQuantity += cartItem.quantity;
       }
-
       if (totalQuantity > variant.soluong) {
         message.warning(
           `Tổng số lượng cho biến thể ${variant.color} - ${variant.ram} vượt quá tồn kho!`
@@ -362,11 +448,9 @@ const Details = () => {
       message.warning("Vui lòng chọn biến thể");
       return;
     }
-
     const variant = product.variants?.find(
       (v) => v.color === modalVariant.color && v.ram === modalVariant.ram
     );
-
     if (!variant || modalQuantity > variant.soluong) {
       return message.warning("Số lượng vượt quá tồn kho");
     }
@@ -426,7 +510,7 @@ const Details = () => {
     return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
 
   const uniqueVariants = product.variants || [];
-  const displayedVariants = uniqueVariants.slice(0, 6); // Limit to 6 variants
+  const displayedVariants = uniqueVariants.slice(0, 6);
 
   return (
     <div className="w-full h-full bg-white p-4 md:p-8">
@@ -443,7 +527,7 @@ const Details = () => {
                 product.albumImages.map((img, idx) => (
                   <img
                     key={idx}
-                    src={img}
+                    src={img || "/placeholder.svg"}
                     alt={`variant-${idx}`}
                     onClick={() => setMainImage(img)}
                     className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${
@@ -489,7 +573,16 @@ const Details = () => {
               <p className="text-2xl md:text-3xl font-bold text-red-600">
                 {getSelectedVariantPrice()}
               </p>
+              {/* 🔥 HIỂN THỊ THÔNG BÁO CHO ĐƠN HÀNG GIÁ TRỊ CAO */}
+              {isHighValueOrder(getCurrentPrice(), quantity) && (
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 text-sm font-medium">
+                    💎 Đơn hàng cao cấp (Tổng: {getCurrentTotalValue().toLocaleString("vi-VN")} VNĐ) - Vui lòng liên hệ để được tư vấn và hỗ trợ tốt nhất
+                  </p>
+                </div>
+              )}
             </div>
+            
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Màu sắc và Dung lượng:
@@ -508,7 +601,10 @@ const Details = () => {
                         }`}
                         onClick={() => handleSelectVariant(variant.color, variant.ram, idx)}
                       >
-                        <span className="block truncate max-w-[120px]">{`${variant.color} - ${variant.ram}`}</span>
+                        <span className="block truncate max-w-[120px]">
+                          {`${variant.color} - ${variant.ram}`}
+                          <br />
+                        </span>
                       </button>
                     ))}
                     {uniqueVariants.length > 6 && (
@@ -554,16 +650,22 @@ const Details = () => {
                   +
                 </button>
               </div>
-              <p className="mt-2 text-gray-600">
-                Tồn kho hiện có:{" "}
-                {selectedVariant
-                  ? product?.variants?.find(
-                      (v) =>
-                        v.color === selectedVariant.color &&
-                        v.ram === selectedVariant.ram
-                    )?.soluong || 0
-                  : product.soluong}
-              </p>
+              <div className="mt-2 space-y-1">
+                <p className="text-gray-600">
+                  Tồn kho hiện có:{" "}
+                  {selectedVariant
+                    ? product?.variants?.find(
+                        (v) =>
+                          v.color === selectedVariant.color &&
+                          v.ram === selectedVariant.ram
+                      )?.soluong || 0
+                    : product.soluong}
+                </p>
+                {/* 🔥 HIỂN THỊ TỔNG GIÁ TRỊ ĐƠN HÀNG */}
+                <p className="text-blue-600 font-semibold">
+                  Tổng giá trị: {getCurrentTotalValue().toLocaleString("vi-VN")} VNĐ
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 mt-4 max-w-md w-full">
@@ -589,6 +691,7 @@ const Details = () => {
           <SupportPolicy />
         </div>
       </div>
+
       <section className="w-full mt-16 px-4 md:px-0">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-center text-3xl md:text-4xl font-bold mb-6 md:mb-8 border-b border-gray-300 pb-3 text-gray-900">
@@ -599,8 +702,113 @@ const Details = () => {
           </div>
         </div>
       </section>
+
       <CommentSection />
       <RelatedProducts />
+
+      {/* 🔥 MODAL LIÊN HỆ CHO ĐƠN HÀNG GIÁ TRỊ CAO */}
+      <Modal
+        title={
+          <div className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-3 px-4 rounded-t-lg">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">💎</span>
+              <span>Đơn hàng cao cấp - Cần tư vấn</span>
+            </div>
+          </div>
+        }
+        open={isContactModalOpen}
+        onOk={handleContactModalOk}
+        onCancel={handleContactModalCancel}
+        okText="Liên hệ ngay"
+        cancelText="Đóng"
+        width={600}
+        className="rounded-lg"
+        styles={{ body: { padding: "24px", background: "#fefdf8" } }}
+        okButtonProps={{ 
+          className: "bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 h-auto" 
+        }}
+        cancelButtonProps={{ 
+          className: "border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-2 h-auto" 
+        }}
+      >
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">💎</span>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Đơn hàng cao cấp trên 100 triệu VNĐ
+            </h3>
+            <p className="text-gray-600">
+              Để đảm bảo bạn nhận được sự tư vấn tốt nhất và chính sách hỗ trợ đặc biệt
+            </p>
+          </div>
+
+          <div className="bg-white p-4 rounded-lg border border-yellow-200">
+            <div className="flex items-center gap-4">
+              <img
+                src={product?.image || "/default-image.jpg"}
+                alt={product?.name}
+                className="w-16 h-16 object-cover rounded-lg"
+              />
+              <div className="flex-1">
+                <h4 className="font-semibold text-gray-900">{product?.name}</h4>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">
+                    Đơn giá: {getCurrentPrice().toLocaleString("vi-VN")} VNĐ
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Số lượng: {selectedVariant ? quantity : quantity}
+                  </p>
+                  <p className="text-red-600 font-bold">
+                    Tổng: {getCurrentTotalValue().toLocaleString("vi-VN")} VNĐ
+                  </p>
+                  {selectedVariant && (
+                    <p className="text-sm text-gray-600">
+                      {selectedVariant.color} - {selectedVariant.ram}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h4 className="font-semibold text-blue-900 mb-2">
+              🎯 Lợi ích khi liên hệ trực tiếp:
+            </h4>
+            <ul className="space-y-2 text-sm text-blue-800">
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                Tư vấn chuyên sâu từ đội ngũ chuyên gia
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                Chính sách ưu đãi và hỗ trợ đặc biệt cho đơn hàng lớn
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                Dịch vụ giao hàng và bảo hành VIP
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                Hỗ trợ trả góp 0% lãi suất cho đơn hàng lớn
+              </li>
+            </ul>
+          </div>
+
+          <div className="text-center text-sm text-gray-600">
+            <p>
+              Hành động: <strong>
+                {contactModalAction === "buyNow" ? "Mua ngay" : "Thêm vào giỏ hàng"}
+              </strong>
+            </p>
+            <p className="mt-1">
+              Nhấn "Liên hệ ngay" để được tư vấn chi tiết về đơn hàng này
+            </p>
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal for variant and quantity selection */}
       <Modal
@@ -634,6 +842,18 @@ const Details = () => {
               <p className="text-red-600 font-bold text-lg mb-3">
                 {getModalVariantPrice()}
               </p>
+              {/* 🔥 HIỂN THỊ TỔNG GIÁ TRỊ TRONG MODAL */}
+              <p className="text-blue-600 font-semibold text-lg mb-3">
+                Tổng: {getModalTotalValue().toLocaleString("vi-VN")} VNĐ
+              </p>
+              {/* 🔥 CẢNH BÁO NẾU TỔNG GIÁ TRỊ CAO */}
+              {isHighValueOrder(getModalCurrentPrice(), modalQuantity) && (
+                <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-yellow-800 text-xs font-medium">
+                    💎 Đơn hàng cao cấp - Sẽ chuyển sang tư vấn
+                  </p>
+                </div>
+              )}
               <p className="text-gray-600">
                 Tồn kho hiện có:{" "}
                 <span className="font-semibold">
@@ -669,6 +889,10 @@ const Details = () => {
                       {`${variant.color} - ${variant.ram}`}
                       <span className="ml-2 text-xs text-gray-500">
                         (Tồn: {variant.soluong})
+                      </span>
+                      <br />
+                      <span className="text-xs text-red-500">
+                        {Number(variant.price || 0).toLocaleString()} VNĐ
                       </span>
                     </span>
                   </button>
