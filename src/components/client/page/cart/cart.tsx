@@ -20,7 +20,7 @@ import {
 interface EnrichedCartItem extends ICartItem {
   productName: string;
   image: string;
-  isAvailable: boolean; // Tracks if product is still available for sale
+  isAvailable: boolean;
   price: number;
   maxStock: number;
 }
@@ -95,24 +95,25 @@ const Cart = () => {
 
   // Enrich cart items with product details
   const enrichedCartItems: EnrichedCartItem[] = cartItems.map((item) => {
-    const product = products.find((p) => p._id === item.productId);
-    const variant = product?.variants?.find(
-      (v) => v.color === item.color && v.ram === item.storage
-    );
-    const price = Number(variant?.price || product?.price || 0);
-    const maxStock = variant?.soluong || product?.soluong || 1;
-    const isAvailable = !!product && product.status !== false && maxStock > 0;
+  const product = products.find((p) => p._id === item.productId);
+  console.log("Tìm sản phẩm cho item:", item.productId, "=>", product);
+  const variant = product?.variants?.find(
+    (v) => v.color === item.color && v.ram === item.storage // Sử dụng ram thay vì storage
+  );
+  const price = Number(variant?.price || product?.price || item.price || 0); // Ưu tiên giá từ variant, sau đó product, rồi cart item
+  const maxStock = variant?.soluong || (product?.soluong || 1);
+  const isAvailable = !!(product && product.status !== false && maxStock > 0); // Đảm bảo luôn là boolean
 
-    return {
-      ...item,
-      productName: product ? product.name : "Sản phẩm không còn được bán",
-      image: product?.image || "https://cdn-icons-png.flaticon.com/512/2748/2748558.png"
-,
-      isAvailable,
-      price,
-      maxStock,
-    };
-  });
+  return {
+    ...item, // Giữ nguyên các trường từ cartItems (image, productName, price, color, storage, v.v.)
+     productName: product ? product.name : "Sản phẩm không còn tồn tại",
+      image: product?.image || "https://cdn-icons-png.flaticon.com/512/2748/2748558.png",
+    price,   // Cập nhật price từ variant hoặc giữ nguyên từ cartItems
+    isAvailable,
+    maxStock,
+  };
+});
+
 
   // Mutation to update cart on server
   const updateCartMutation = useMutation({
@@ -134,19 +135,18 @@ const Cart = () => {
 
   // Mutation to remove item
   const removeItemMutation = useMutation({
-  mutationFn: async (itemId: string) => {
-    const updatedItems = cartItems.filter((item) => item._id !== itemId);
-    await updateCartMutation.mutateAsync(updatedItems);
-  },
-  onSuccess: (_data, itemId) => {
-    setSelectedItems((prev) => prev.filter((id) => id !== itemId));
-    showToastMessage("Xóa thành công", "success");
-  },
-  onError: () => {
-    showToastMessage("Xóa thất bại", "error");
-  },
-});
-
+    mutationFn: async (itemId: string) => {
+      const updatedItems = cartItems.filter((item) => item._id !== itemId);
+      await updateCartMutation.mutateAsync(updatedItems);
+    },
+    onSuccess: (_data, itemId) => {
+      setSelectedItems((prev) => prev.filter((id) => id !== itemId));
+      showToastMessage("Xóa thành công", "success");
+    },
+    onError: () => {
+      showToastMessage("Xóa thất bại", "error");
+    },
+  });
 
   // Update local storage when cart changes
   useEffect(() => {
@@ -326,7 +326,6 @@ const Cart = () => {
           </div>
 
           {enrichedCartItems.length === 0 ? (
-            /* Empty Cart */
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FaShoppingBag className="w-12 h-12 text-gray-400" />
