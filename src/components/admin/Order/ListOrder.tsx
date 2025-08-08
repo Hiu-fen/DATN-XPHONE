@@ -166,11 +166,14 @@ const OrderList = () => {
       { id, status: newStatus },
       {
         onSuccess: () => {
-          // Nếu là đơn COD và chuyển sang Giao thành công → đánh dấu đã thanh toán
+          // Nếu là đơn COD và chuyển sang Giao thành công → đã thanh toán
           if (newStatus === "Giao thành công") {
             const order = orders?.find((o) => o._id === id);
-            if (order?.paymentMethod === "COD") {
-              handleMarkAsPaid(id);
+            if (
+              order?.paymentMethod === "COD" &&
+              newStatus === "Giao thành công"
+            ) {
+              message.success("Đơn đã được thanh toán");
             }
           }
         },
@@ -178,23 +181,6 @@ const OrderList = () => {
       }
     );
   };
-
-  const handleMarkAsPaid = (id: string) => {
-    markAsPaidMutation.mutate(id);
-  };
-
-  const markAsPaidMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await axios.patch(`http://localhost:5000/api/orders/${id}/paid`);
-    },
-    onSuccess: () => {
-      message.success("Cập nhật thanh toán thành công");
-      refetch();
-    },
-    onError: () => {
-      message.error("Lỗi khi cập nhật thanh toán");
-    },
-  });
 
   const filteredOrders = orders
     ?.filter((o) =>

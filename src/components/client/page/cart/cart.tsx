@@ -95,25 +95,51 @@ const Cart = () => {
 
   // Enrich cart items with product details
   const enrichedCartItems: EnrichedCartItem[] = cartItems.map((item) => {
-  const product = products.find((p) => p._id === item.productId);
-  console.log("Tìm sản phẩm cho item:", item.productId, "=>", product);
-  const variant = product?.variants?.find(
-    (v) => v.color === item.color && v.ram === item.storage // Sử dụng ram thay vì storage
-  );
-  const price = Number(variant?.price || product?.price || item.price || 0); // Ưu tiên giá từ variant, sau đó product, rồi cart item
-  const maxStock = variant?.soluong || (product?.soluong || 1);
-  const isAvailable = !!(product && product.status !== false && maxStock > 0); // Đảm bảo luôn là boolean
+    const product = products.find(
+      (p) => String(p._id) === String(item.productId)
+    );
 
-  return {
-    ...item, // Giữ nguyên các trường từ cartItems (image, productName, price, color, storage, v.v.)
-     productName: product ? product.name : "Sản phẩm không còn tồn tại",
-      image: product?.image || "https://cdn-icons-png.flaticon.com/512/2748/2748558.png",
-    price,   // Cập nhật price từ variant hoặc giữ nguyên từ cartItems
-    isAvailable,
-    maxStock,
-  };
-});
+    if (product) {
+      const variant = product.variants?.find(
+        (v) =>
+          String(v.color).trim().toLowerCase() ===
+            String(item.color).trim().toLowerCase() &&
+          String(v.ram).trim().toLowerCase() ===
+            String(item.storage).trim().toLowerCase()
+      );
 
+      const variantStock = variant?.soluong ?? 0;
+      const imageToUse =
+        variant?.image ||
+        item.image ||
+        product.albumImages?.find((img) =>
+          item.color
+            ? img.toLowerCase().includes(item.color.toLowerCase())
+            : false
+        ) ||
+        product.image ||
+        product.albumImages?.[0] ||
+        "https://cdn-icons-png.flaticon.com/512/2748/2748558.png";
+
+      return {
+        ...item,
+        productName: product.name,
+        image: imageToUse,
+        isAvailable: !!variant && variantStock > 0 && product.status !== false,
+        price: variant?.price ?? product.price,
+        maxStock: variantStock,
+      };
+    } else {
+      return {
+        ...item,
+        productName: item.name || "Sản phẩm không còn được bán",
+        image: item.image,
+        isAvailable: false,
+        price: item.price || 0,
+        maxStock: 0,
+      };
+    }
+  });
 
   // Mutation to update cart on server
   const updateCartMutation = useMutation({
@@ -162,7 +188,8 @@ const Cart = () => {
     delta: number
   ) => {
     const item = enrichedCartItems.find(
-      (i) => i.productId === productId && i.color === color && i.storage === storage
+      (i) =>
+        i.productId === productId && i.color === color && i.storage === storage
     );
     if (!item || !item.isAvailable) {
       showToastMessage("Sản phẩm không còn được bán", "warning");
@@ -203,7 +230,10 @@ const Cart = () => {
   const handleSelectItem = (itemId: string) => {
     const item = enrichedCartItems.find((i) => i._id === itemId);
     if (!item?.isAvailable) {
-      showToastMessage("Sản phẩm không còn được bán, không thể chọn", "warning");
+      showToastMessage(
+        "Sản phẩm không còn được bán, không thể chọn",
+        "warning"
+      );
       return;
     }
 
@@ -278,7 +308,9 @@ const Cart = () => {
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <FaExclamationTriangle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-              <p className="text-gray-600 text-lg">Lỗi khi tải giỏ hàng. Vui lòng thử lại.</p>
+              <p className="text-gray-600 text-lg">
+                Lỗi khi tải giỏ hàng. Vui lòng thử lại.
+              </p>
             </div>
           </div>
         </div>
@@ -303,7 +335,9 @@ const Cart = () => {
             >
               {toastType === "success" && <FaCheck className="w-5 h-5" />}
               {toastType === "error" && <FaTimes className="w-5 h-5" />}
-              {toastType === "warning" && <FaExclamationTriangle className="w-5 h-5" />}
+              {toastType === "warning" && (
+                <FaExclamationTriangle className="w-5 h-5" />
+              )}
               <span className="font-medium">{toastMessage}</span>
             </div>
           </div>
@@ -334,7 +368,8 @@ const Cart = () => {
                 Giỏ hàng trống
               </h3>
               <p className="text-gray-500 mb-6">
-                Bạn chưa có sản phẩm nào trong giỏ hàng. Hãy bắt đầu mua sắm ngay!
+                Bạn chưa có sản phẩm nào trong giỏ hàng. Hãy bắt đầu mua sắm
+                ngay!
               </p>
               <Link
                 to="/"
@@ -369,14 +404,17 @@ const Cart = () => {
                         />
                       </Link>
                       <div className="flex-1 min-w-0">
-                        <Link to={`/detail/${item.productId}`} className="block">
+                        <Link
+                          to={`/detail/${item.productId}`}
+                          className="block"
+                        >
                           <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 hover:underline transition">
                             {item.productName}
                           </h3>
                         </Link>
                         {!item.isAvailable && (
                           <p className="text-red-600 font-semibold mb-3">
-                            Hàng không còn bán
+                            Sản phẩm đã ngừng bán
                           </p>
                         )}
                         <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
@@ -425,7 +463,10 @@ const Cart = () => {
                                   1
                                 )
                               }
-                              disabled={!item.isAvailable || item.quantity >= item.maxStock}
+                              disabled={
+                                !item.isAvailable ||
+                                item.quantity >= item.maxStock
+                              }
                               className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <FaPlus className="w-3 h-3" />
@@ -461,8 +502,8 @@ const Cart = () => {
                             type="checkbox"
                             checked={
                               selectedItems.length ===
-                                enrichedCartItems.filter((i) => i.isAvailable).length &&
-                              enrichedCartItems.length > 0
+                                enrichedCartItems.filter((i) => i.isAvailable)
+                                  .length && enrichedCartItems.length > 0
                             }
                             onChange={handleSelectAll}
                             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
@@ -522,7 +563,10 @@ const Cart = () => {
                                 />
                               </Link>
                               <div>
-                                <Link to={`/detail/${item.productId}`} className="block">
+                                <Link
+                                  to={`/detail/${item.productId}`}
+                                  className="block"
+                                >
                                   <span className="font-medium text-gray-900 line-clamp-2 hover:text-blue-600 hover:underline transition">
                                     {item.productName}
                                   </span>
@@ -572,7 +616,10 @@ const Cart = () => {
                                     1
                                   )
                                 }
-                                disabled={!item.isAvailable || item.quantity >= item.maxStock}
+                                disabled={
+                                  !item.isAvailable ||
+                                  item.quantity >= item.maxStock
+                                }
                                 className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <FaPlus className="w-3 h-3" />

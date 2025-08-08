@@ -34,7 +34,7 @@ exports.getOrderById = async (req, res) => {
   }
 }
 
-// Cập nhật đơn hàng sau khi hủy đơn
+// Cập nhật trạng thái khi thay đổi status
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status, cancelReason } = req.body
@@ -74,6 +74,14 @@ exports.updateOrderStatus = async (req, res) => {
         order.paymentStatus = "Đã hoàn tiền"
         order.total = 0
       }
+    }
+     if (
+      status === "Giao thành công" &&
+      order.paymentMethod === "COD" &&
+      !order.isPaid
+    ) {
+      order.isPaid = true;
+      order.paymentStatus = "Đã thanh toán";
     }
 
     order.status = status
