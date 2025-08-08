@@ -1,5 +1,3 @@
-"use client"
-
 import React from "react"
 import { Card, Row, Col, Typography, Timeline, Statistic, Avatar, Tag } from "antd"
 import {

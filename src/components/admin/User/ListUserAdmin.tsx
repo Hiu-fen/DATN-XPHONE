@@ -49,24 +49,24 @@ const GetAdmin = () => {
   });
 
   // ✅ Mutation cập nhật role (admin <=> user)
-  const updateRole = useMutation({
-    mutationFn: async ({ user, role }: { user: User; role: string }) => {
-      return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
-        role,
-      });
-    },
-    onSuccess: (_, variables) => {
-      message.success(
-        variables.role === 'admin'
-          ? 'Đã chuyển thành Admin'
-          : 'Đã chuyển thành User'
-      );
-      refetch();
-    },
-    onError: () => {
-      message.error('Có lỗi xảy ra khi cập nhật tài khoản');
-    },
-  });
+  // const updateRole = useMutation({
+  //   mutationFn: async ({ user, role }: { user: User; role: string }) => {
+  //     return await axios.patch(`http://localhost:5000/api/users/${user._id}`, {
+  //       role,
+  //     });
+  //   },
+  //   onSuccess: (_, variables) => {
+  //     message.success(
+  //       variables.role === 'admin'
+  //         ? 'Đã chuyển thành Admin'
+  //         : 'Đã chuyển thành User'
+  //     );
+  //     refetch();
+  //   },
+  //   onError: () => {
+  //     message.error('Có lỗi xảy ra khi cập nhật tài khoản');
+  //   },
+  // });
 
   const columns = [
     {
@@ -108,24 +108,7 @@ const GetAdmin = () => {
       key: 'address',
       render: (_: any, record: User) => record.address || 'Chưa có',
     },
-    {
-      title: 'Tài khoản',
-      key: 'role',
-      render: (_: any, record: User) => (
-        <Switch
-          checked={record.role === 'admin'}
-          checkedChildren="Admin"
-          unCheckedChildren="User"
-          onChange={(checked) =>
-            updateRole.mutate({
-              user: record,
-              role: checked ? 'admin' : 'user',
-            })
-          }
-          disabled={record._id === currentUser?._id}
-        />
-      ),
-    },
+  
     {
       title: 'Trạng thái',
       key: 'active',

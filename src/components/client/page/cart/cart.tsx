@@ -20,7 +20,7 @@ import {
 interface EnrichedCartItem extends ICartItem {
   productName: string;
   image: string;
-  isAvailable: boolean; // Tracks if product is still available for sale
+  isAvailable: boolean;
   price: number;
   maxStock: number;
 }
@@ -360,7 +360,6 @@ const Cart = () => {
           </div>
 
           {enrichedCartItems.length === 0 ? (
-            /* Empty Cart */
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FaShoppingBag className="w-12 h-12 text-gray-400" />
