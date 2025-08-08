@@ -5,7 +5,7 @@ const variantSubSchema = new mongoose.Schema({
   ram: { type: String, required: true },
   price: { type: Number, required: true },
   soluong: { type: Number, required: true },
-
+  image: { type: String }
 });
 
 

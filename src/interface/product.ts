@@ -16,6 +16,7 @@ export interface IProduct {
     ram: string;
     price: number;
     soluong: number;
+    image?: string; 
   }[];
   createdAt?: string; 
   updatedAt?: string; 

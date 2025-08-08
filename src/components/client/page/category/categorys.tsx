@@ -1,25 +1,15 @@
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { Link } from "react-router-dom";
 import BannerClient from "../../componentChild/Home/banner";
 import { IProduct } from "../../../../interface/product";
 import { ICategory } from "../../../../interface/category";
-import { useCart } from "../../context/CartContext";
 
-interface CartItem {
-  productId: string;
-  productName: string;
-  price: number;   // Kiểu string, vì addToCart định nghĩa price là string
-  soluong: number;
-  image: string;
-}
+
 
 const Categorys: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const { addToCart } = useCart();
 
   // Fetch danh sách danh mục
   const { data: categories, isLoading: categoriesLoading } = useQuery<ICategory[]>({
