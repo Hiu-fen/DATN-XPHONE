@@ -91,7 +91,7 @@ exports.addToCart = async (req, res) => {
       const snapshotItem = {
         productId: product._id,
         categoryId: product.danhmuc || null,
-        productName: product.name,
+        name: product.name,
         price: price,
         image:
           variant?.image ||

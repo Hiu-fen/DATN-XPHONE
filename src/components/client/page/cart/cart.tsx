@@ -23,6 +23,7 @@ interface EnrichedCartItem extends ICartItem {
   isAvailable: boolean;
   price: number;
   maxStock: number;
+  orderIndex: number;
 }
 
 const Cart = () => {
@@ -94,10 +95,12 @@ const Cart = () => {
   });
 
   // Enrich cart items with product details
-  const enrichedCartItems: EnrichedCartItem[] = cartItems.map((item) => {
+const enrichedCartItems: EnrichedCartItem[] = cartItems
+  .map((item: ICartItem, index: number) => {
     const product = products.find(
       (p) => String(p._id) === String(item.productId)
     );
+
 
     if (product) {
       const variant = product.variants?.find(
@@ -118,8 +121,7 @@ const Cart = () => {
             : false
         ) ||
         product.image ||
-        product.albumImages?.[0] ||
-        "https://cdn-icons-png.flaticon.com/512/2748/2748558.png";
+        product.albumImages?.[0];
 
       return {
         ...item,
@@ -128,6 +130,7 @@ const Cart = () => {
         isAvailable: !!variant && variantStock > 0 && product.status !== false,
         price: variant?.price ?? product.price,
         maxStock: variantStock,
+        orderIndex: index,
       };
     } else {
       return {
@@ -137,8 +140,14 @@ const Cart = () => {
         isAvailable: false,
         price: item.price || 0,
         maxStock: 0,
+        orderIndex: index,
       };
     }
+  })
+  .sort((a, b) => {
+    if (a.isAvailable && !b.isAvailable) return -1;
+    if (!a.isAvailable && b.isAvailable) return 1;
+    return b.orderIndex - a.orderIndex;
   });
 
   // Mutation to update cart on server
@@ -556,11 +565,20 @@ const Cart = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-4">
                               <Link to={`/detail/${item.productId}`}>
-                                <img
-                                  src={item.image}
-                                  alt={item.productName}
-                                  className="w-16 h-16 rounded-lg border border-gray-200 object-cover hover:opacity-90 transition"
-                                />
+                                <div className="relative w-20 h-20">
+                                  <img
+                                    src={item.image}
+                                    alt={item.productName}
+                                    className="w-20 h-20 rounded-lg border border-gray-200 object-cover flex-shrink-0 hover:opacity-90 transition"
+                                  />
+                                  {!item.isAvailable && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
+                                      <span className="text-white text-xs font-semibold">
+                                        Không có sẵn
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
                               </Link>
                               <div>
                                 <Link
@@ -625,8 +643,16 @@ const Cart = () => {
                                 <FaPlus className="w-3 h-3" />
                               </button>
                             </div>
-                            <div className="text-xs text-gray-500 text-center mt-1">
-                              Tồn kho: {item.maxStock}
+                            <div
+                              className={`text-xs text-center ${
+                                item.isAvailable
+                                  ? "text-white-500"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {item.isAvailable
+                                ? `Tồn kho: ${item.maxStock}`
+                                : "không có sẵn"}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-center font-bold text-green-600">
