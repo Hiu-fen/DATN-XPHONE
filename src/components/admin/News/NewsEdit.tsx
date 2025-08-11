@@ -8,6 +8,7 @@ import {
   Select,
   Upload,
   Spin,
+  Tooltip,
 } from 'antd';
 import { UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -63,7 +64,7 @@ const NewsEdit = () => {
       navigate('/admin/news/list');
     },
     onError: () => {
-      message.error('❌ Cập nhật tin tức thất bại!');
+      message.error('Cập nhật tin tức thất bại!');
     },
   });
 
@@ -88,10 +89,10 @@ const NewsEdit = () => {
         formData
       );
       setValue('image', data.secure_url, { shouldValidate: true });
-      message.success('✅ Tải ảnh thành công');
+      message.success('Tải ảnh thành công');
     } catch (err) {
       console.error(err);
-      message.error('❌ Lỗi upload ảnh!');
+      message.error('Lỗi upload ảnh!');
     } finally {
       setUploading(false);
     }
@@ -104,10 +105,10 @@ const NewsEdit = () => {
   if (isLoading) return <Spin className="block mx-auto my-10" size="large" />;
 
   return (
-    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
-      <h2 className="text-3xl font-bold mb-6 text-center text-blue-500">Cập nhật Tin tức</h2>
+      <div className="p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4">Cập nhật tin tức</h2>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className="bg-white shadow rounded border-2 p-6">
         {/* Tiêu đề */}
         <Form.Item
           label="Tiêu đề"
@@ -205,24 +206,21 @@ const NewsEdit = () => {
 
         {/* Submit */}
         <Form.Item>
-            <div className="flex justify-between gap-4">
-                <Button
-                    type="default"
-                    icon={<ArrowLeftOutlined />}
-                    onClick={() => navigate(-1)}
-                    >
-                    Quay lại
-                </Button>
-
-                <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={mutation.isPending}
-                    >
-                    Cập nhật tin tức
-                </Button>
-            </div>
+            <Button type="primary" htmlType="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                Cập nhật tin tức
+            </Button>
         </Form.Item>
+
+        <div className="flex justify-end mt-2">
+            <Tooltip title="Quay lại">
+                <Button
+                  type="default"
+                  shape="circle"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={() => navigate(-1)}
+                />
+            </Tooltip>
+        </div>
       </Form>
 
     </div>

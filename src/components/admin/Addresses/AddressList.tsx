@@ -143,7 +143,7 @@ const AddressList: React.FC = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <h2 className="text-2xl font-bold mb-4">Quản lý địa chỉ theo tài khoản</h2>
+            <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách địa chỉ theo người dùng</h2>
 
             <div className="mb-6">
                 <Select

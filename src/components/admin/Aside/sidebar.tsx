@@ -35,7 +35,7 @@ const AdminSidebar = () => {
       label: <span className="text-[17px] font-semibold">Quản lý sản phẩm</span>,
       children: [
         { key: '/admin/phone/list', label: <span className="text-[15px]">Danh sách sản phẩm</span> },
-        { key: '/admin/phone/add', label: <span className="text-[15px]">Thêm sản phẩm</span> },
+        // { key: '/admin/phone/add', label: <span className="text-[15px]">Thêm sản phẩm</span> },
       ],
     },
     {
@@ -43,8 +43,8 @@ const AdminSidebar = () => {
       icon: <DatabaseOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý danh mục</span>,
       children: [
-        { key: '/admin/category/list', label: <span className="text-[15px]">Danh mục</span> },
-        { key: '/admin/category/add', label: <span className="text-[15px]">Thêm danh mục</span> },
+        { key: '/admin/category/list', label: <span className="text-[15px]">Danh sách danh mục</span> },
+        // { key: '/admin/category/add', label: <span className="text-[15px]">Thêm danh mục</span> },
       ],
     },
     {
@@ -117,7 +117,7 @@ const AdminSidebar = () => {
       label: <span className="text-[17px] font-semibold">Quản lý khuyến mãi</span>,
       children: [
         { key: '/admin/promotion/list', label: <span className="text-[15px]">Khuyến mãi</span> },
-        { key: '/admin/promotion/add', label: <span className="text-[15px]">Thêm khuyến mãi</span> },
+        // { key: '/admin/promotion/add', label: <span className="text-[15px]">Thêm khuyến mãi</span> },
       ],
     },
   ];

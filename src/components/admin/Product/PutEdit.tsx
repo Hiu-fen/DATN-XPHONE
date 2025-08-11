@@ -9,11 +9,11 @@ import {
   Select,
   Upload,
   Spin,
-  Space,
   InputNumber,
   Modal,
+  Tooltip,
 } from "antd";
-import { PlusOutlined, MinusCircleOutlined, UploadOutlined, SwapOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusCircleOutlined, UploadOutlined, SwapOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
 import type { RcFile } from "antd/lib/upload";
 import { IColor, IRam, IVariantCategory } from "../../../interface/variant";
@@ -739,6 +739,17 @@ const PutEdit: React.FC = () => {
             Cập nhật sản phẩm
           </Button>
         </Form.Item>
+
+        <div className="flex justify-end mt-2">
+          <Tooltip title="Quay lại">
+            <Button
+              type="default"
+              shape="circle"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(-1)}
+            />
+          </Tooltip>
+        </div>
       </Form>
     </div>
   );

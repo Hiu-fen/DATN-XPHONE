@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { Card, Button, Space, Typography, Divider, Spin, Alert, Table } from 'antd';
+import { Card, Button, Space, Typography, Spin, Alert, Table } from 'antd';
 
 const { Title } = Typography;
 

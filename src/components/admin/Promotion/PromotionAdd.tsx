@@ -3,12 +3,13 @@ import { Controller, useForm } from "react-hook-form";
 import { Promotion } from "../../../interface/promotion";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { message, Switch, Form, Input, Button, Typography, Select, InputNumber } from "antd";
+import { message, Form, Input, Button, Typography, Select, InputNumber, Tooltip } from "antd";
 import { addPromotion, getAllCategory, getRandomCode } from "../../../api/admin/promotionApi";
 import { useState } from "react";
 import { ICategory } from "../../../interface/category";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
+import { ArrowLeftOutlined } from "@ant-design/icons";
 
 const PostAddPromotion = () => {
   const {
@@ -19,7 +20,13 @@ const PostAddPromotion = () => {
     getValues,
     control,
     trigger
-  } = useForm<Promotion>({ mode: 'onChange' });
+  } = useForm<Promotion>({ 
+    mode: 'onChange',
+    defaultValues: {
+      quantity: 0,
+      status: true
+    }
+ });
 
   const [code, setCode] = useState<string>("");
   const discountType = watch("discountType");
@@ -85,15 +92,10 @@ const PostAddPromotion = () => {
   })) || [];
 
   return (
-    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
-      <Typography.Title
-        level={2}
-        className="!text-2xl !text-blue-600 !font-bold text-center mb-6"
-      >
-        Thêm khuyến mãi
-      </Typography.Title>
+    <div className="p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4">Thêm khuyến mãi</h2>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className="bg-white shadow rounded border-2 p-6">
         <Form.Item
           label="Tên khuyến mãi"
           validateStatus={errors.name ? 'error' : ''}
@@ -209,7 +211,7 @@ const PostAddPromotion = () => {
           </>
         )}
 
-        <Form.Item label="Sản phẩm áp dụng" validateStatus={errors.applicableCategories ? 'error' : ''} help={errors.applicableCategories?.message}>
+        <Form.Item label="Danh mục sản phẩm áp dụng" validateStatus={errors.applicableCategories ? 'error' : ''} help={errors.applicableCategories?.message}>
           <Controller
             name="applicableCategories"
             control={control}
@@ -294,7 +296,7 @@ const PostAddPromotion = () => {
           <Controller
             name="quantity"
             control={control}
-            rules={{ required: "Không được để trống", min: { value: 1, message: "Phải lớn hơn 0" } }}
+            rules={{ required: "Không được để trống", min: { value: 1, message: "Phải lớn hơn 1" } }}
             render={({ field }) => <Input type="number" {...field} />}
           />
         </Form.Item>
@@ -374,17 +376,27 @@ const PostAddPromotion = () => {
           />
         </Form.Item>
 
-        <Form.Item label="Trạng thái">
+        {/* Trạng thái khuyến mãi */}
+        <Form.Item
+          label="Trạng thái"
+          validateStatus={errors.status ? "error" : ""}
+          help={errors.status?.message}
+        >
           <Controller
             name="status"
             control={control}
-            defaultValue={false}
+            defaultValue={true}
+            rules={{ required: "Vui lòng chọn trạng thái" }}
             render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onChange={field.onChange}
-                checkedChildren="Hoạt động"
-                unCheckedChildren="Không hoạt động"
+              <Select
+                {...field}
+                placeholder="Chọn trạng thái"
+                onChange={(value) => field.onChange(value)}
+                value={field.value}
+                options={[
+                  { label: "Hoạt động", value: true },
+                  { label: "Hết hạn", value: false },
+                ]}
               />
             )}
           />
@@ -395,6 +407,17 @@ const PostAddPromotion = () => {
             Thêm khuyến mãi
           </Button>
         </Form.Item>
+
+        <div className="flex justify-end mt-2">
+          <Tooltip title="Quay lại">
+            <Button
+              type="default"
+              shape="circle"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => nav(-1)}
+            />
+          </Tooltip>
+        </div>
       </Form>
     </div>
   );

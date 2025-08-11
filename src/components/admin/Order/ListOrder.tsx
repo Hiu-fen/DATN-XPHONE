@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { Table, Select, message, Tag, Input, Button, Radio } from "antd";
@@ -304,7 +304,7 @@ const OrderList = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Danh sách đơn hàng</h2>
+      <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách đơn hàng</h2>
       <div>
         {/* Bộ lọc theo trạng thái đơn hàng */}
         <div className="flex justify-center   mr-[220px] mb-[-33px]">

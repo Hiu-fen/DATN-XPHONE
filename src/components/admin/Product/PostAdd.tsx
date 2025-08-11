@@ -9,11 +9,11 @@ import {
   Button,
   Upload,
   Spin,
-  Space,
   InputNumber,
   Modal,
+  Tooltip,
 } from "antd";
-import { PlusOutlined, MinusCircleOutlined, UploadOutlined, SwapOutlined } from "@ant-design/icons";
+import { PlusOutlined, MinusCircleOutlined, UploadOutlined, SwapOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import type { RcFile } from "antd/lib/upload";
 import { IColor, IRam, IVariantCategory } from "../../../interface/variant";
@@ -350,7 +350,7 @@ const AddProduct: React.FC = () => {
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
       <h2 className="text-xl font-semibold text-center mb-4">Thêm sản phẩm</h2>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className="bg-white shadow rounded border-2 p-6">
         <Form.Item
           label="Tên sản phẩm"
           validateStatus={errors.name ? "error" : ""}
@@ -744,6 +744,17 @@ const AddProduct: React.FC = () => {
             Thêm sản phẩm
           </Button>
         </Form.Item>
+
+        <div className="flex justify-end mt-2">
+          <Tooltip title="Quay lại">
+            <Button
+              type="default"
+              shape="circle"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate(-1)}
+            />
+          </Tooltip>
+        </div>
       </Form>
     </div>
   );

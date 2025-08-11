@@ -321,7 +321,7 @@ const NotificationAdmin
         dataSource={filteredData}
         columns={columns}
         rowKey="_id"
-        pagination={{ pageSize: 8 }}
+        pagination={{ pageSize: 10 }}
         locale={{
           emptyText: 'Không có thông báo nào',
         }}

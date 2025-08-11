@@ -312,7 +312,7 @@ const VariantList: React.FC = () => {
 
   return (
     <div className="p-6 space-y-8">
-      <h1 className="text-3xl font-bold tracking-tight">Quản lý biến thể sản phẩm</h1>
+      <h2 className="text-3xl font-bold mb-4 text-green-600">Quản lý danh mục biến thể sản phẩm</h2>
       <p className="text-gray-500">
         Quản lý RAM, màu sắc và danh mục biến thể của sản phẩm. Xem, chỉnh sửa và xóa thông tin một cách dễ dàng.
       </p>

@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ICategory } from '../../../interface/category';
-import { message, Form, Input, Button, Upload, Spin } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
+import { message, Form, Input, Button, Upload, Spin, Tooltip } from 'antd';
+import { ArrowLeftOutlined, UploadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 
 const PutEditCategory = () => {
-  const { register, control, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<ICategory>()
+  const { control, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<ICategory>()
   const nav = useNavigate()
   const params = useParams()
   const [loading, setLoading] = useState(false)
   const image = watch('image')
 
-  const { data, isLoading, isError } = useQuery({
+  const { data } = useQuery({
     queryKey: ['category', params.id],
     queryFn: async () => {
       const { data: category } = await axios.get(`http://localhost:5000/api/category/${params.id}`)
@@ -77,9 +77,9 @@ const PutEditCategory = () => {
   };
 
   return (
-    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Cập nhật danh mục</h2>
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+    <div className="p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4">Cập nhật danh mục</h2>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className='bg-white shadow rounded border-2 p-6'>
         <Form.Item
           label="Tên danh mục"
           validateStatus={errors.name ? "error" : ""}
@@ -89,7 +89,7 @@ const PutEditCategory = () => {
           <Controller
             name="name"
             control={control}
-            rules={{ required: "Không để trống", minLength: { value: 5, message: "Tối thiểu là 5 ký tự" } }}
+            rules={{ required: "Không để trống tên danh mục", minLength: { value: 5, message: "Tối thiểu là 5 ký tự" } }}
             render={({ field }) => <Input placeholder="Nhập tên" {...field} />}
           />
         </Form.Item>
@@ -129,7 +129,7 @@ const PutEditCategory = () => {
           <Controller
             name="mota"
             control={control}
-            rules={{ required: "Không để trống", minLength: { value: 5, message: "Tối thiểu là 5 ký tự" } }}
+            rules={{ required: "Không để trống mô tả danh mục", minLength: { value: 5, message: "Tối thiểu là 5 ký tự" } }}
             render={({ field }) => <Input placeholder="Nhập mô tả" {...field} />}
           />
         </Form.Item>
@@ -149,9 +149,21 @@ const PutEditCategory = () => {
             block
             loading={mutation.status === 'pending'}
           >
-            Cập nhật
+            Cập nhật danh mục
           </Button>
         </Form.Item>
+
+        <div className="flex justify-end mt-2">
+          <Tooltip title="Quay lại">
+            <Button
+              type="default"
+              shape="circle"
+              icon={<ArrowLeftOutlined />}
+              onClick={() => nav(-1)}
+            />
+          </Tooltip>
+        </div>
+
       </Form>
     </div>
   );

@@ -4,7 +4,6 @@ import {
   Button,
   Input,
   message,
-  Modal,
   Popconfirm,
   Space,
   Table,
@@ -17,6 +16,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 
 interface ICategory {
@@ -58,7 +58,6 @@ const GetList: React.FC = () => {
     }
   }, [location.state?.forceReload, refetch]);
 
-  // Mutation xóa mềm
   const mutation = useMutation({
     mutationFn: async (id: string) =>
       await axios.delete(`http://localhost:5000/api/products/${id}`),
@@ -71,7 +70,6 @@ const GetList: React.FC = () => {
     },
   });
 
-  // Kiểm tra sản phẩm có nằm trong đơn hàng không
   const checkInOrder = async (id: string) => {
     if (inOrderMap[id] !== undefined) return;
 
@@ -116,7 +114,7 @@ const GetList: React.FC = () => {
         <img
           src={image}
           alt="ảnh"
-          style={{ width: 100, objectFit: "cover", borderRadius: 8 }}
+          className="w-[100px] h-auto rounded-md object-cover"
         />
       ),
     },
@@ -161,38 +159,30 @@ const GetList: React.FC = () => {
       render: (_: any, record: IProduct) => {
         const isAvailable = record.soluong >= 1;
         const statusText = isAvailable ? "Còn hàng" : "Hết hàng";
-        const color = isAvailable ? "green" : "red";
-        return <span style={{ color }}>{statusText}</span>;
+        const colorClass = isAvailable ? "text-green-600" : "text-red-500";
+        return <span className={colorClass}>{statusText}</span>;
       },
     },
-    // {
-    //   title: "Đang bán?",
-    //   key: "status",
-    //   dataIndex: "status",
-    //   render: (status: boolean) => (
-    //     <span style={{ color: status ? "green" : "gray" }}>
-    //       {status ? "Đang bán" : "Ngừng bán"}
-    //     </span>
-    //   ),
-    // },
     {
       title: "Thao tác",
       key: "actions",
       render: (_: any, record: IProduct) => (
         <Space>
-          <Button
-            type="default"
-            onClick={() => nav(`/admin/phone/${record._id}`)}
-          >
-            <EyeOutlined />
-          </Button>
+          <Tooltip title="Xem chi tiết">
+            <Button
+              type="default"
+              onClick={() => nav(`/admin/phone/${record._id}`)}
+              icon={<EyeOutlined />}
+            />
+          </Tooltip>
 
-          <Button
-            type="primary"
-            onClick={() => nav(`/admin/phone/${record._id}/edit`)}
-          >
-            <EditOutlined />
-          </Button>
+          <Tooltip title="Chỉnh sửa">
+            <Button
+              type="primary"
+              onClick={() => nav(`/admin/phone/${record._id}/edit`)}
+              icon={<EditOutlined />}
+            />
+          </Tooltip>
 
           <Popconfirm
             title={
@@ -205,40 +195,45 @@ const GetList: React.FC = () => {
             cancelText="Hủy"
             onOpenChange={() => checkInOrder(record._id!)}
           >
-            <Button danger>
-              <DeleteOutlined />
-            </Button>
+            <Tooltip title="Xóa">
+              <Button danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
-  if (loadingProducts || loadingCategories) return <p>Đang tải dữ liệu...</p>;
-  if (errorProducts || errorCategories) return <p>Lỗi khi tải dữ liệu.</p>;
+  if (loadingProducts || loadingCategories)
+    return <p className="text-gray-500">Đang tải dữ liệu...</p>;
+  if (errorProducts || errorCategories)
+    return <p className="text-red-500">Lỗi khi tải dữ liệu.</p>;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold">Danh sách sản phẩm</h2>
+    <div className="p-6 bg-white rounded-lg shadow">
+      <h2 className="text-3xl font-bold mb-6 text-green-600">Danh sách sản phẩm</h2>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          gap: 8,
-          marginBottom: 16,
-        }}
-      >
-        <Button type="primary" onClick={() => nav("/admin/phone/deleted-products")}>
-          Sản phẩm xóa gần đây
-        </Button>
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={() => nav('/admin/phone/add')}
+          className="flex items-center gap-2 px-4 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition duration-200"
+        >
+          <PlusOutlined />
+          Thêm sản phẩm
+        </button>
 
-        <Input.Search
-          placeholder="Tìm kiếm sản phẩm..."
-          style={{ width: 300 }}
-          onChange={(e) => setSearchText(e.target.value)}
-          allowClear
-        />
+        <div className="flex gap-2">
+          <Button type="primary" onClick={() => nav("/admin/phone/deleted-products")}>
+            Sản phẩm xóa gần đây
+          </Button>
+
+          <Input.Search
+            placeholder="Tìm kiếm sản phẩm..."
+            className="w-[300px]"
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+          />
+        </div>
       </div>
 
       <Table
@@ -248,7 +243,6 @@ const GetList: React.FC = () => {
         pagination={{
           pageSize: 10,
           showSizeChanger: false,
-          pageSizeOptions: ["5", "10", "20"],
         }}
       />
     </div>

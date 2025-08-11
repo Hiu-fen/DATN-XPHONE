@@ -13,6 +13,7 @@ import {
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
+  PlusOutlined,
   SearchOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
@@ -177,14 +178,20 @@ const GetPromotion = () => {
   ];
 
   return (
-    <div className="p-5">
-      {/* Header + Search cùng hàng */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-bold">Danh sách khuyến mãi</h2>
+    <div className="p-5 font-sans text-base text-gray-700">
+      <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách khuyến mãi</h2>
 
+      <div className="flex justify-between items-center gap-2 mb-4">
+        <button
+          onClick={() => navigate('/admin/promotion/add')}
+          className="flex items-center gap-2 px-4 py-1 rounded bg-green-500 text-white hover:bg-green-600 transition duration-200"
+        >
+          <PlusOutlined />
+          Thêm khuyến mãi
+        </button>
         <Input
           prefix={<SearchOutlined />}
-          placeholder="Tìm theo tên hoặc mã khuyến mãi..."
+          placeholder="Tìm kiếm khuyến mãi..."
           allowClear
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}

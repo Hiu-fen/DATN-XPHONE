@@ -3,7 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { Promotion } from "../../../interface/promotion";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { DatePicker, Form, Input, Switch, Button, message, Typography, Select, InputNumber } from "antd";
+import { DatePicker, Form, Input, Button, message, Typography, Select, InputNumber } from "antd";
 import {
   getAllCategory,
   getPromotionById,
@@ -23,7 +23,11 @@ const PutEditPromotion = () => {
     reset,
     setValue,
     getValues,
-  } = useForm<Promotion>();
+  } = useForm<Promotion>(
+    {
+      mode: "onChange"
+    }
+  );
 
   const [code, setCode] = useState<string>("");
   const [categoryOptions, setCategoryOptions] = useState<
@@ -129,15 +133,10 @@ const PutEditPromotion = () => {
   };
 
   return (
-    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
-      <Typography.Title
-        level={2}
-        className="!text-2xl !text-blue-600 !font-bold text-center mb-6"
-      >
-        Cập nhật khuyến mãi
-      </Typography.Title>
+    <div className="p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4">Cập nhật khuyến mãi</h2>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className="bg-white shadow rounded border-2 p-6">
         <Form.Item label="Tên khuyến mãi" validateStatus={errors.name ? 'error' : ''} help={errors.name?.message}>
           <Controller
             name="name"
@@ -402,17 +401,26 @@ const PutEditPromotion = () => {
           />
         </Form.Item>
 
-        <Form.Item label="Trạng thái">
+        <Form.Item
+          label="Trạng thái"
+          validateStatus={errors.status ? "error" : ""}
+          help={errors.status?.message}
+        >
           <Controller
             name="status"
             control={control}
-            defaultValue={false}
+            defaultValue={true}
+            rules={{ required: "Vui lòng chọn trạng thái" }}
             render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onChange={field.onChange}
-                checkedChildren="Hoạt động"
-                unCheckedChildren="Không hoạt động"
+              <Select
+                {...field}
+                placeholder="Chọn trạng thái"
+                onChange={(value) => field.onChange(value)}
+                value={field.value}
+                options={[
+                  { label: "Hoạt động", value: true },
+                  { label: "Hết hạn", value: false },
+                ]}
               />
             )}
           />
