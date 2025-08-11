@@ -5,7 +5,6 @@ import {
   DatePicker,
   message,
   Spin,
-  Switch,
   Tooltip,
   Upload,
   Input,
@@ -37,6 +36,10 @@ const BannerAdd = () => {
     getValues,
   } = useForm<IBanner>({
     mode: 'onChange',
+    defaultValues: {
+      order: 0,
+      status: true,
+    },
   });
 
   const navigate = useNavigate();
@@ -115,9 +118,9 @@ const BannerAdd = () => {
   };
 
   return (
-    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
-      <h2 className="text-3xl text-blue-500 font-bold mb-6 text-center">Thêm Banner</h2>
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+    <div className="p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4">Thêm banner</h2>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className='bg-white shadow rounded border-2 p-6'>
         {/* Tên banner */}
         <Controller
           name="name"
@@ -328,17 +331,25 @@ const BannerAdd = () => {
         </Form.Item>
 
         {/* Trạng thái hiển thị */}
-        <Form.Item label="Trạng thái hiển thị">
+        <Form.Item
+          label="Trạng thái hiển thị"
+          validateStatus={errors.status ? 'error' : ''}
+          help={errors.status?.message}
+        >
           <Controller
             name="status"
             control={control}
             defaultValue={true}
             render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onChange={(val) => field.onChange(val)}
-                checkedChildren="Hiển thị"
-                unCheckedChildren="Ẩn"
+              <Select
+                {...field}
+                placeholder="Chọn trạng thái"
+                options={[
+                  { label: 'Hiển thị', value: true },
+                  { label: 'Ẩn', value: false },
+                ]}
+                onChange={(value) => field.onChange(value)}
+                value={field.value}
               />
             )}
           />

@@ -175,7 +175,7 @@ const BannerList = () => {
           Thêm Banner
         </button>
         <Input.Search
-          placeholder="Tìm theo tên..."
+          placeholder="Tìm kiếm banner..."
           allowClear
           className="w-80"
           onChange={(e) => setSearchText(e.target.value)}

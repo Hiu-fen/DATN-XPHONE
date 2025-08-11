@@ -1,7 +1,8 @@
 import { useForm, Controller } from 'react-hook-form';
 import { useMutation } from '@tanstack/react-query';
 import {
-    message, Form, Input, Select, Button, Upload, Spin
+    message, Form, Input, Select, Button, Upload, Spin,
+    Tooltip
 } from 'antd';
 import { ArrowLeftOutlined, UploadOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -23,10 +24,6 @@ const NewsAdd = () => {
     } = useForm<INews>({
         mode: 'onChange',
         defaultValues: {
-            name: '',
-            content: '',
-            image: '',
-            author: '',
             status: true,
         },
     });
@@ -56,7 +53,7 @@ const NewsAdd = () => {
     // ✅ Upload ảnh Cloudinary
     const handleUpload = async (file: File, onChange: (url: string) => void) => {
         if (!name.trim()) {
-            message.warning('⚠️ Vui lòng nhập tiêu đề trước khi tải ảnh!');
+            message.warning('Vui lòng nhập tiêu đề trước khi tải ảnh!');
             return;
         }
         setUploading(true);
@@ -74,13 +71,13 @@ const NewsAdd = () => {
             const data = await res.json();
             if (data.secure_url) {
                 onChange(data.secure_url); // ✅ Gán URL vào field
-                message.success('✅ Tải ảnh thành công!');
+                message.success('Tải ảnh thành công!');
             } else {
                 throw new Error('Không lấy được URL ảnh');
             }
         } catch (err) {
             console.error(err);
-            message.error('❌ Lỗi tải ảnh!');
+            message.error('Lỗi tải ảnh!');
         } finally {
             setUploading(false);
         }
@@ -91,10 +88,10 @@ const NewsAdd = () => {
     };
 
     return (
-        <div className="p-6 bg-white shadow rounded-lg mx-auto border">
-            <h2 className="text-3xl text-blue-600 font-bold mb-6 text-center">Thêm tin tức</h2>
+        <div className="p-5 max-w-4xl mx-auto">
+            <h2 className="text-xl font-semibold text-center mb-4">Thêm mới tin tức</h2>
 
-            <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+            <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className="bg-white shadow rounded border-2 p-6">
                 {/* Tiêu đề */}
                 <Controller
                     name="name"
@@ -152,7 +149,7 @@ const NewsAdd = () => {
                                     accept="image/*"
                                     showUploadList={false}
                                     beforeUpload={(file) => {
-                                        handleUpload(file, field.onChange); // ✅ Truyền onChange
+                                        handleUpload(file, field.onChange); 
                                         return false;
                                     }}
                                 >
@@ -205,24 +202,21 @@ const NewsAdd = () => {
 
                 {/* Submit */}
                 <Form.Item>
-                    <div className="flex justify-between gap-4">
-                        <Button
-                            type="default"
-                            icon={<ArrowLeftOutlined />}
-                            onClick={() => navigate(-1)}
-                            >
-                            Quay lại
-                        </Button>
-
-                        <Button
-                            type="primary"
-                            htmlType="submit"
-                            loading={mutation.isPending}
-                            >
-                            Thêm mới tin tức
-                        </Button>
-                    </div>
+                    <Button type="primary" htmlType="submit" className="w-full bg-blue-600 hover:bg-blue-700">
+                        Thêm mới tin tức
+                    </Button>
                 </Form.Item>
+
+                <div className="flex justify-end mt-2">
+                    <Tooltip title="Quay lại">
+                        <Button
+                        type="default"
+                        shape="circle"
+                        icon={<ArrowLeftOutlined />}
+                        onClick={() => navigate(-1)}
+                        />
+                    </Tooltip>
+                </div>
             </Form>
         </div>
     );

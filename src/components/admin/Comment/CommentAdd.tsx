@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { message } from 'antd';
 import axios from 'axios';
-import { useMutation } from '@tanstack/react-query';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { IComment } from '../../../interface/comments';
 import { IProduct } from '../../../interface/product';
@@ -21,19 +20,19 @@ const CommentAdd = () => {
   }, [])
 
 
-  const mutation = useMutation({
-    mutationFn: async (data: IComment) => {
-      const response = await axios.post('http://localhost:5000/api/comments', data);
-      return response.data;
-    },
-    onSuccess: () => {
-      message.success("Thêm bình luận thành công");
-      nav(`/admin/comment/list`); 
-    },
-    onError: (error) => {
-      message.error("Có lỗi xảy ra. Vui lòng thử lại");
-    },
-  });
+  // const mutation = useMutation({
+  //   mutationFn: async (data: IComment) => {
+  //     const response = await axios.post('http://localhost:5000/api/comments', data);
+  //     return response.data;
+  //   },
+  //   onSuccess: () => {
+  //     message.success("Thêm bình luận thành công");
+  //     nav(`/admin/comment/list`); 
+  //   },
+  //   onError: () => {
+  //     message.error("Có lỗi xảy ra. Vui lòng thử lại");
+  //   },
+  // });
 
 
  const onSubmit = async (data: IComment) => {

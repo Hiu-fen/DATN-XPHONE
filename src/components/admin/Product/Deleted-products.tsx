@@ -26,30 +26,18 @@ const Deleted_products: React.FC = () => {
   const [filterTime, setFilterTime] = useState("all");
   const nav = useNavigate();
 
-  // Lấy danh sách sản phẩm đã xóa
-  const {
-    data: products,
-    isLoading: loadingProducts,
-    error: errorProducts,
-    refetch,
-  } = useQuery({
+  const { data: products, isLoading: loadingProducts, error: errorProducts, refetch } = useQuery({
     queryKey: ["deletedProducts"],
     queryFn: async () =>
       (await axios.get("http://localhost:5000/api/products/deleted")).data as IProduct[],
   });
 
-  // Lấy danh mục
-  const {
-    data: categories,
-    isLoading: loadingCategories,
-    error: errorCategories,
-  } = useQuery({
+  const { data: categories, isLoading: loadingCategories, error: errorCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () =>
       (await axios.get("http://localhost:5000/api/category")).data as ICategory[],
   });
 
-  // Mutation khôi phục sản phẩm
   const restoreMutation = useMutation({
     mutationFn: async (id: string) =>
       await axios.put(`http://localhost:5000/api/products/${id}`, {
@@ -64,18 +52,17 @@ const Deleted_products: React.FC = () => {
     },
   });
 
-  // Mutation xóa cứng sản phẩm
- const hardDeleteMutation = useMutation({
-  mutationFn: async (id: string) =>
-    await axios.delete(`http://localhost:5000/api/products/${id}/hard`),
-  onSuccess: () => {
-    message.success("Xóa cứng thành công");
-    refetch();
-  },
-  onError: () => {
-    message.error("Xóa cứng thất bại");
-  },
-});
+  const hardDeleteMutation = useMutation({
+    mutationFn: async (id: string) =>
+      await axios.delete(`http://localhost:5000/api/products/${id}/hard`),
+    onSuccess: () => {
+      message.success("Xóa cứng thành công");
+      refetch();
+    },
+    onError: () => {
+      message.error("Xóa cứng thất bại");
+    },
+  });
 
   const handleRestore = (id: string) => {
     restoreMutation.mutate(id);
@@ -85,15 +72,12 @@ const Deleted_products: React.FC = () => {
     hardDeleteMutation.mutate(id);
   };
 
-  // Lọc sản phẩm đã xóa và theo thời gian
   const deletedProducts = products
     ?.filter((p) => p.status === false)
     .filter((p) => {
       if (!p.createdAt) return false;
-
       const created = dayjs(p.createdAt);
       const now = dayjs();
-
       switch (filterTime) {
         case "today":
           return created.isSame(now, "day");
@@ -101,18 +85,15 @@ const Deleted_products: React.FC = () => {
           return created.isAfter(now.subtract(7, "day"));
         case "30days":
           return created.isAfter(now.subtract(30, "day"));
-        case "all":
         default:
           return true;
       }
     })
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt ?? "").getTime() -
-        new Date(a.createdAt ?? "").getTime()
+    .sort((a, b) =>
+      new Date(b.createdAt ?? "").getTime() -
+      new Date(a.createdAt ?? "").getTime()
     );
 
-  // Tìm kiếm
   const filtered = deletedProducts?.filter((p) => {
     const text = `${p._id} ${p.name} ${p.mota} ${p.price} ${p.danhmuc}`.toLowerCase();
     return text.includes(searchText.toLowerCase());
@@ -137,7 +118,7 @@ const Deleted_products: React.FC = () => {
         <img
           src={image}
           alt="ảnh"
-          style={{ width: 100, objectFit: "cover", borderRadius: 8 }}
+          className="w-[100px] h-auto object-cover rounded-md"
         />
       ),
     },
@@ -182,8 +163,8 @@ const Deleted_products: React.FC = () => {
       render: (_: any, record: IProduct) => {
         const isAvailable = record.soluong >= 1;
         const statusText = isAvailable ? "Còn hàng" : "Hết hàng";
-        const color = isAvailable ? "green" : "red";
-        return <span style={{ color }}>{statusText}</span>;
+        const color = isAvailable ? "text-green-600" : "text-red-600";
+        return <span className={color}>{statusText}</span>;
       },
     },
     {
@@ -191,9 +172,12 @@ const Deleted_products: React.FC = () => {
       key: "actions",
       render: (_: any, record: IProduct) => (
         <Space>
-          <Button type="default" onClick={() => nav(`/admin/phone/${record._id}`)}>
-            <EyeOutlined />
-          </Button>
+          <Tooltip title="Xem chi tiết">
+            <Button type="default" onClick={() => nav(`/admin/phone/${record._id}`)}>
+              <EyeOutlined />
+            </Button>
+          </Tooltip>
+
           <Popconfirm
             title="Khôi phục sản phẩm"
             description="Bạn có chắc muốn khôi phục sản phẩm này?"
@@ -201,10 +185,11 @@ const Deleted_products: React.FC = () => {
             okText="Đồng ý"
             cancelText="Hủy"
           >
-            <Button type="primary" icon={<RollbackOutlined />}>
-              Khôi phục
-            </Button>
+            <Tooltip title="Khôi phục">
+              <Button type="primary" icon={<RollbackOutlined />} />
+            </Tooltip>
           </Popconfirm>
+
           <Popconfirm
             title="Xóa cứng sản phẩm"
             description="Bạn có chắc muốn xóa vĩnh viễn sản phẩm này? Hành động này không thể hoàn tác!"
@@ -213,9 +198,9 @@ const Deleted_products: React.FC = () => {
             cancelText="Hủy"
             okButtonProps={{ danger: true }}
           >
-            <Button type="primary" danger icon={<DeleteOutlined />}>
-              Xóa cứng
-            </Button>
+            <Tooltip title="Xóa vĩnh viễn">
+              <Button danger icon={<DeleteOutlined />} />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -226,10 +211,12 @@ const Deleted_products: React.FC = () => {
   if (errorProducts || errorCategories) return <p>Lỗi khi tải dữ liệu.</p>;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">Danh sách sản phẩm đã xóa (Ngừng bán)</h2>
+    <div className="p-4">
+      <h2 className="text-3xl font-bold mb-6 text-green-600">
+        Danh sách sản phẩm đã xóa (Ngừng bán)
+      </h2>
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <Space>
           <Button type="primary" onClick={() => nav("/admin/phone/list")}>
             Quay lại
@@ -237,7 +224,7 @@ const Deleted_products: React.FC = () => {
 
           <Select
             defaultValue="all"
-            style={{ width: 200 }}
+            className="min-w-[180px]"
             onChange={setFilterTime}
             options={[
               { label: "Tất cả", value: "all" },
@@ -250,7 +237,7 @@ const Deleted_products: React.FC = () => {
 
         <Input.Search
           placeholder="Tìm kiếm sản phẩm đã xóa..."
-          style={{ width: 300 }}
+          className="w-full md:w-[300px]"
           onChange={(e) => setSearchText(e.target.value)}
           allowClear
         />

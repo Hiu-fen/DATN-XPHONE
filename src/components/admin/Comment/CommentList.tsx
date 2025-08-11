@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { Table, Button, Popconfirm, message, Input } from 'antd';
+import { Table, Button, Popconfirm, message, Input, Tooltip } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { IComment } from '../../../interface/comments';
@@ -45,19 +45,19 @@ const CommentAdmin = () => {
     }
   };
 
-  const toggleLike = async (_id: string, currentLikes: number) => {
-    try {
-      const updatedLikes = currentLikes + 1;
-      await axios.patch(`http://localhost:5000/api/comments/${_id}`, {
-        likes: updatedLikes,
-      });
-      message.success('Đã thích bình luận');
-      refetch();
-    } catch (error: any) {
-      console.error('Lỗi khi cập nhật số tim:', error);
-      message.error('Không thể thích bình luận');
-    }
-  };
+  // const toggleLike = async (_id: string, currentLikes: number) => {
+  //   try {
+  //     const updatedLikes = currentLikes + 1;
+  //     await axios.patch(`http://localhost:5000/api/comments/${_id}`, {
+  //       likes: updatedLikes,
+  //     });
+  //     message.success('Đã thích bình luận');
+  //     refetch();
+  //   } catch (error: any) {
+  //     console.error('Lỗi khi cập nhật số tim:', error);
+  //     message.error('Không thể thích bình luận');
+  //   }
+  // };
 
   const mutation = useMutation({
     mutationFn: async (_id: string) =>
@@ -98,24 +98,24 @@ const CommentAdmin = () => {
       dataIndex: 'date',
       render: (text: string) => new Date(text).toLocaleString(),
     },
-    {
-      title: 'Đánh giá',
-      dataIndex: 'likes',
-      render: (likes: number, record: IComment) => {
-        return (
-          <div>
-            <span>{likes} ❤️</span>
-            <Button
-              onClick={() => toggleLike(record._id, likes)}
-              size="small"
-              type="link"
-            >
-              Thích
-            </Button>
-          </div>
-        );
-      },
-    },
+    // {
+    //   title: 'Đánh giá',
+    //   dataIndex: 'likes',
+    //   render: (likes: number, record: IComment) => {
+    //     return (
+    //       <div>
+    //         <span>{likes} ❤️</span>
+    //         <Button
+    //           onClick={() => toggleLike(record._id, likes)}
+    //           size="small"
+    //           type="link"
+    //         >
+    //           Thích
+    //         </Button>
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       title: 'Trạng thái',
       key: 'status',
@@ -137,12 +137,14 @@ const CommentAdmin = () => {
             console.log('Xóa id:', record._id);
             onDelete(record._id);
           }}
-          okText="OK"
+          okText="YES"
           cancelText="NO"
         >
-          <Button danger>
-            <DeleteOutlined />
-          </Button>
+          <Tooltip title="Xóa bình luận">
+            <Button danger>
+              <DeleteOutlined />
+            </Button>
+          </Tooltip>
         </Popconfirm>
       ),
     }
@@ -151,10 +153,10 @@ const CommentAdmin = () => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold ">Danh sách bình luận</h2>
+      <h2 className="text-3xl font-bold text-green-600">Danh sách bình luận</h2>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <Input.Search
-          placeholder=""
+          placeholder="Tìm kiếm bình luận..."
           className="mb-4"
           style={{ width: 300 }}
           onChange={(e) => setSearchText(e.target.value)}

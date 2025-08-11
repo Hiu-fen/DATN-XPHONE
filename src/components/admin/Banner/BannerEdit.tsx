@@ -9,7 +9,6 @@ import {
   message,
   Select,
   Spin,
-  Switch,
   Tooltip,
   Upload,
 } from 'antd';
@@ -35,13 +34,13 @@ const BannerEdit = () => {
     getValues,
     reset,
   } = useForm<IBanner>({
+    mode: 'onChange',
     defaultValues: {
       name: '',
       imageUrl: '',
       link: '',
-      startDate: new Date(),
-      endDate: new Date(),
-      order: 0,
+      order: 1,
+      position: '',
       description: '',
       status: true,
     },
@@ -138,10 +137,10 @@ const BannerEdit = () => {
   };
 
   return (
-    <div className="mx-auto mt-10 p-6 bg-white shadow rounded border-2">
-      <h2 className="text-2xl font-bold mb-6 text-center text-blue-500">Cập nhật Banner</h2>
+    <div className="p-5 max-w-4xl mx-auto">
+      <h2 className="text-xl font-semibold text-center mb-4">Cập nhật banner</h2>
 
-      <Form layout="vertical" onFinish={handleSubmit(onSubmit)}>
+      <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className='bg-white shadow rounded border-2 p-6'>
         {/* Tên banner */}
         <Form.Item
           label="Tên banner"
@@ -350,17 +349,26 @@ const BannerEdit = () => {
           />
         </Form.Item>
 
-        {/* Trạng thái */}
-        <Form.Item label="Trạng thái">
+        {/* Trạng thái hiển thị */}
+        <Form.Item
+          label="Trạng thái hiển thị"
+          validateStatus={errors.status ? 'error' : ''}
+          help={errors.status?.message}
+        >
           <Controller
             name="status"
             control={control}
+            defaultValue={true}
             render={({ field }) => (
-              <Switch
-                checked={field.value}
-                onChange={(val) => field.onChange(val)}
-                checkedChildren="Hiển thị"
-                unCheckedChildren="Ẩn"
+              <Select
+                {...field}
+                placeholder="Chọn trạng thái"
+                options={[
+                  { label: 'Hiển thị', value: true },
+                  { label: 'Ẩn', value: false },
+                ]}
+                onChange={(value) => field.onChange(value)}
+                value={field.value}
               />
             )}
           />
@@ -372,13 +380,19 @@ const BannerEdit = () => {
             Cập nhật
           </Button>
         </Form.Item>
+
+        <div className="mt-2 flex justify-end">
+          <Tooltip title="Quay lại">
+            <Button 
+              type="default" 
+              shape="circle" 
+              icon={<ArrowLeftOutlined />} 
+              onClick={() => navigate(-1)} 
+            />
+          </Tooltip>
+        </div>
       </Form>
 
-      <div className="mt-2 flex justify-right">
-        <Tooltip title="Quay lại">
-          <Button type="default" shape="circle" icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)} />
-        </Tooltip>
-      </div>
     </div>
   );
 };

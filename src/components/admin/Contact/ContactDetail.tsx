@@ -5,7 +5,6 @@ import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import { IContact } from '../../../interface/contact';
 import { ArrowLeftOutlined, CheckCircleOutlined, EyeOutlined, UploadOutlined, CloseOutlined } from '@ant-design/icons';
-import moment from 'moment';
 import { RcFile } from 'antd/es/upload';
 
 const ContactDetail = () => {
