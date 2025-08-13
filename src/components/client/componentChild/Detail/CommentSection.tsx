@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { message } from "antd";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { MoreOutlined } from "@ant-design/icons";
+import { AiOutlineLike } from "react-icons/ai";
 import { IComment } from "../../../../interface/comments";
 
 const CommentSection = () => {
@@ -13,8 +14,11 @@ const CommentSection = () => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>("");
+  const navigate = useNavigate();
 
-  // Lấy bình luận
+  const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
+  const isLoggedIn = !!userInfo?.name;
+
   useEffect(() => {
     const fetchComments = async () => {
       try {
@@ -27,13 +31,20 @@ const CommentSection = () => {
     if (id) fetchComments();
   }, [id]);
 
-  // Gửi bình luận
   const handleAddComment = async () => {
-    if (!newComment.trim()) return;
+    if (!isLoggedIn) {
+      message.warning("Vui lòng đăng nhập để bình luận!");
+      return;
+    }
+
+    if (!newComment.trim()) {
+      message.warning("Nội dung bình luận không được để trống!");
+      return;
+    }
+
     setLoading(true);
     try {
-      const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
-      const userName = userInfo?.name || "Khách hàng";
+      const userName = userInfo.name;
 
       const res = await axios.post("http://localhost:5000/api/comments", {
         sanpham: id,
@@ -55,13 +66,22 @@ const CommentSection = () => {
   };
 
   const handleLike = async (commentId: string) => {
+    if (!isLoggedIn) {
+      message.warning("Bạn cần đăng nhập để like bình luận. Đang chuyển hướng tới trang đăng nhập...");
+      setTimeout(() => navigate("/login"), 5000); // Chờ 5 giây rồi chuyển trang
+      return;
+    }
+
     try {
       const res = await axios.post(`http://localhost:5000/api/comments/${commentId}/like`);
+      message.success("Đã like bình luận!");
+
       setComments((prev) =>
         prev.map((c) => (c._id === commentId ? res.data : c))
       );
     } catch (error) {
       console.error("Lỗi khi like bình luận:", error);
+      message.error("Lỗi khi like!");
     }
   };
 
@@ -81,7 +101,11 @@ const CommentSection = () => {
   };
 
   const saveEdit = async () => {
-    if (!editContent.trim()) return alert("Nội dung không được để trống");
+    if (!editContent.trim()) {
+      alert("Nội dung không được để trống");
+      return;
+    }
+
     try {
       const res = await axios.put(
         `http://localhost:5000/api/comments/${editingId}`,
@@ -115,93 +139,115 @@ const CommentSection = () => {
           Bình luận sản phẩm
         </h6>
       </div>
+
+      {/* Vùng nhập bình luận */}
       <textarea
         rows={3}
-        placeholder="Viết bình luận của bạn..."
-        className="w-full p-2 text-sm border border-gray-300 rounded-md resize-none focus:outline-none focus:border-blue-500 mt-3"
+        placeholder={
+          isLoggedIn ? "Viết bình luận của bạn..." : "Bạn cần đăng nhập để bình luận"
+        }
+        className={`w-full p-2 text-sm border rounded-md resize-none focus:outline-none mt-3 ${
+          isLoggedIn
+            ? "border-gray-300 focus:border-blue-500"
+            : "border-red-400 bg-red-50 placeholder-red-500 font-semibold"
+        }`}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
+        disabled={!isLoggedIn}
       ></textarea>
+
       <button
-        disabled={loading}
+        disabled={loading || !isLoggedIn}
         onClick={handleAddComment}
         className="mt-2 bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 text-sm"
       >
         {loading ? "Đang gửi..." : "Gửi bình luận"}
       </button>
+
       <div className="mt-5 space-y-3">
         {comments
           .filter((comment) => comment.status)
-          .map((comment) => (
-            <div
-              key={comment._id}
-              className="p-3 border border-gray-200 rounded-md relative text-sm"
-            >
-              <div className="flex justify-between items-center mb-1">
-                <span className="font-semibold">{comment.user}</span>
-                <span className="text-xs text-gray-500">
-                  {new Date(comment.date).toLocaleString("vi-VN")}
-                </span>
-                <button
-                  className="ml-2 p-1 text-gray-600 hover:text-gray-900"
-                  onClick={() => toggleMenu(comment._id)}
-                >
-                  <MoreOutlined />
-                </button>
-                {activeMenuId === comment._id && (
-                  <div className="absolute top-7 right-3 bg-white border border-gray-300 rounded shadow-md z-10 text-xs">
+          .map((comment) => {
+            const isOwner = comment.user === userInfo?.name;
+
+            return (
+              <div
+                key={comment._id}
+                className="p-3 border border-gray-200 rounded-md relative text-sm"
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold">{comment.user}</span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(comment.date).toLocaleString("vi-VN")}
+                  </span>
+
+                  {isOwner && (
                     <button
-                      className="block px-3 py-1 hover:bg-gray-100 w-full text-left"
-                      onClick={() => startEdit(comment)}
+                      className="ml-2 p-1 text-gray-600 hover:text-gray-900"
+                      onClick={() => toggleMenu(comment._id)}
                     >
-                      Chỉnh sửa
+                      <MoreOutlined />
                     </button>
-                    <button
-                      className="block px-3 py-1 hover:bg-gray-100 w-full text-left text-red-600"
-                      onClick={() => deleteComment(comment._id)}
-                    >
-                      Xóa
-                    </button>
-                  </div>
+                  )}
+
+                  {activeMenuId === comment._id && isOwner && (
+                    <div className="absolute top-7 right-3 bg-white border border-gray-300 rounded shadow-md z-10 text-xs">
+                      <button
+                        className="block px-3 py-1 hover:bg-gray-100 w-full text-left"
+                        onClick={() => startEdit(comment)}
+                      >
+                        Chỉnh sửa
+                      </button>
+                      <button
+                        className="block px-3 py-1 hover:bg-gray-100 w-full text-left text-red-600"
+                        onClick={() => deleteComment(comment._id)}
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {editingId === comment._id ? (
+                  <>
+                    <textarea
+                      className="w-full h-16 border border-gray-300 rounded resize-none text-sm"
+                      rows={3}
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                    />
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-xs"
+                        onClick={saveEdit}
+                      >
+                        Lưu
+                      </button>
+                      <button
+                        className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400 text-xs"
+                        onClick={cancelEdit}
+                      >
+                        Hủy
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-700">{comment.content}</p>
                 )}
+
+                <div className="mt-1 flex items-center gap-2 text-xs">
+                  <button
+                    onClick={() => handleLike(comment._id)}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                  >
+                    <AiOutlineLike />
+                    Like
+                  </button>
+                  <span>{comment.likes ?? 0}</span>
+                </div>
               </div>
-              {editingId === comment._id ? (
-                <>
-                  <textarea
-                    className="w-full h-16 border border-gray-300 rounded resize-none text-sm"
-                    rows={3}
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                  />
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-xs"
-                      onClick={saveEdit}
-                    >
-                      Lưu
-                    </button>
-                    <button
-                      className="bg-gray-300 px-3 py-1 rounded hover:bg-gray-400 text-xs"
-                      onClick={cancelEdit}
-                    >
-                      Hủy
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <p className="text-gray-700">{comment.content}</p>
-              )}
-              <div className="mt-1 flex items-center gap-2 text-xs">
-                <button
-                  onClick={() => handleLike(comment._id)}
-                  className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                >
-                  👍 Like
-                </button>
-                <span>{comment.likes ?? 0}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
       </div>
     </section>
   );
