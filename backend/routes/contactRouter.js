@@ -5,6 +5,6 @@ const contactControllers = require('../controllers/contactControllers');
 router.get('/', contactControllers.getAllContact);
 router.get('/:id', contactControllers.getContactById);
 router.post('/', contactControllers.createContact);
-router.patch('/:id', contactControllers.updateContactStatus);
+router.patch('/:id/reply', contactControllers.addReply);
 
 module.exports = router;
