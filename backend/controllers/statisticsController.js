@@ -60,7 +60,14 @@ exports.getDashboardStats = async (req, res) => {
     const revenueToday = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
+
           date: { $gte: startOfDay },
         },
       },
@@ -75,7 +82,14 @@ exports.getDashboardStats = async (req, res) => {
     const revenueThisWeek = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
+
           date: { $gte: startOfWeek },
         },
       },
@@ -90,7 +104,13 @@ exports.getDashboardStats = async (req, res) => {
     const revenueThisMonth = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
           date: { $gte: startOfMonth },
         },
       },
@@ -105,7 +125,13 @@ exports.getDashboardStats = async (req, res) => {
     const revenueThisYear = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
           date: { $gte: startOfYear },
         },
       },
@@ -136,7 +162,13 @@ exports.getDashboardStats = async (req, res) => {
     const monthlyRevenueRaw = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
           date: {
             $gte: new Date(currentYear, 0, 1),
             $lt: new Date(currentYear + 1, 0, 1),
@@ -218,7 +250,13 @@ exports.getDailyStats = async (req, res) => {
     const revenue = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
           date: { $gte: startOfDay, $lt: endOfDay },
         },
       },
@@ -267,14 +305,26 @@ exports.getStatsByDateRange = async (req, res) => {
     });
 
     const completedOrders = await Order.countDocuments({
-      status: { $in: completedStatuses },
+      $or: [
+        { paymentMethod: "COD", status: { $in: completedStatuses } },
+        {
+          paymentMethod: { $in: ["Momo", "VNPay"] },
+          paymentStatus: "Đã thanh toán",
+        },
+      ],
       date: { $gte: start, $lte: end },
     });
 
     const revenue = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
           date: { $gte: start, $lte: end },
         },
       },
@@ -290,7 +340,13 @@ exports.getStatsByDateRange = async (req, res) => {
     const dailyStats = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
           date: { $gte: start, $lte: end },
         },
       },
@@ -343,7 +399,13 @@ exports.getDailyRevenueInMonth = async (req, res) => {
     const dailyRaw = await Order.aggregate([
       {
         $match: {
-          status: { $in: completedStatuses },
+          $or: [
+            { paymentMethod: "COD", status: { $in: completedStatuses } },
+            {
+              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentStatus: "Đã thanh toán",
+            },
+          ],
           date: { $gte: start, $lt: end },
         },
       },
@@ -381,7 +443,15 @@ exports.getTopSellingProducts = async (req, res) => {
   try {
     const sortOrder = req.query.sort === "asc" ? 1 : -1;
     // Xử lý lọc theo tuần nếu có
-    let matchOrder = { status: { $in: completedStatuses } };
+    let matchOrder = {
+      $or: [
+        { paymentMethod: "COD", status: { $in: completedStatuses } },
+        {
+          paymentMethod: { $in: ["Momo", "VNPay"] },
+          paymentStatus: "Đã thanh toán",
+        },
+      ],
+    };
     if (req.query.startDate && req.query.endDate) {
       matchOrder.date = {
         $gte: new Date(req.query.startDate),

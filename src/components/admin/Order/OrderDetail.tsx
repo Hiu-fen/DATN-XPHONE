@@ -41,6 +41,7 @@ interface IOrder {
   status: string;
   items: OrderItem[];
   total: number;
+  originalTotal?: number;
   shippingFee?: number;
   isPaid: boolean;
   paymentMethod?: string;
@@ -209,7 +210,8 @@ const OrderDetail = () => {
 
   const discount = order.discountAmount || 0;
   const shippingFee = order.shippingFee || 0;
-  const totalPayment = order.total; //Lấy tổng từ backend
+  const totalPayment = order.originalTotal ?? order.total;
+
 
   return (
     <div>

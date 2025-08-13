@@ -79,6 +79,7 @@ const OrderSchema = new mongoose.Schema({
 
   items: [OrderItemSchema],
   total: { type: Number, required: true },
+  originalTotal: { type: Number, required: true },
   shippingFee: { type: Number, default: 0 },
   isPaid: { type: Boolean, default: false },
   refunded: { type: Boolean, default: false },

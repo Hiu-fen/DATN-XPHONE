@@ -28,6 +28,7 @@ interface Order {
   status: string;
   items: OrderItem[];
   total: number;
+  originalTotal: number;
   isPaid: boolean;
   refunded?: boolean;
   paymentMethod?: string;
@@ -184,7 +185,7 @@ const OrderList = () => {
 
   const filteredOrders = orders
     ?.filter((o) =>
-      `${o.orderCode} ${o.customerName} ${o.phone} ${o.total}`
+      `${o.orderCode} ${o.customerName} ${o.phone} ${o.originalTotal}`
         .toLowerCase()
         .includes(searchText.toLowerCase())
     )
@@ -218,10 +219,11 @@ const OrderList = () => {
     },
     {
       title: "Tổng tiền",
-      dataIndex: "total",
-      key: "total",
-      render: (total: number) => total.toLocaleString() + " VND",
+      key: "originalTotal",
+      render: (_: any, record: Order) =>
+        (record.originalTotal ?? 0).toLocaleString() + " VND",
     },
+
     {
       title: "Thanh toán",
       key: "isPaid",
@@ -304,7 +306,9 @@ const OrderList = () => {
 
   return (
     <div>
-      <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách đơn hàng</h2>
+      <h2 className="text-3xl font-bold mb-4 text-green-600">
+        Danh sách đơn hàng
+      </h2>
       <div>
         {/* Bộ lọc theo trạng thái đơn hàng */}
         <div className="flex justify-center   mr-[220px] mb-[-33px]">
@@ -327,9 +331,7 @@ const OrderList = () => {
           <Input.Search
             placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
             className="mb-4"
-            style={{ width: 300, 
-              marginTop:50
-            }}
+            style={{ width: 300, marginTop: 50 }}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
           />
