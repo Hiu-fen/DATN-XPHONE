@@ -242,6 +242,7 @@ exports.createOrder = async (req, res) => {
       email,
       items,
       total,
+      originalTotal: total,
       paymentMethod,
       shippingProvider,
       notes,
