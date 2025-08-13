@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import GoogleLoginButton from "./GoogleLoginButton";
 import { createNotificationForUser } from "../../api/client/nofitationApiClient";
+import { useEffect } from "react";
 
 interface LoginForm {
   email: string;
@@ -14,7 +15,14 @@ interface LoginForm {
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
   const nav = useNavigate();
+    useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
 
+    if (token && user) {
+      nav("/");
+    }
+  }, [nav]);
   const onSubmit = async (data: LoginForm) => {
     try {
       const res = await axios.post("http://localhost:5000/api/users/login", {

@@ -5,10 +5,19 @@ import { message } from "antd";
 import { User } from "../../../interface/user";
 import { createNotificationForAdmin } from "../../../api/admin/notificationApi";
 import GoogleLoginButton from "../../client/GoogleLoginButton";
+import { useEffect } from "react";
 
 const LoginAdmin = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<User>();
   const navigate = useNavigate();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const admin = localStorage.getItem("admin");
+
+    if (token && admin) {
+      navigate("/admin");
+    }
+  }, [navigate]);
 
   const onSubmit = async (data: User) => {
     try {
@@ -38,7 +47,7 @@ const LoginAdmin = () => {
       });
 
       message.success("Đăng nhập thành công");
-      navigate("/admin/category/list");
+      navigate("/admin");
     } catch (error: any) {
       message.error(error.response?.data?.message || "Đăng nhập thất bại");
     }
