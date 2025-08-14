@@ -116,8 +116,8 @@ const ContactDetail = () => {
       <Card
         title={<div className="text-blue-500 text-2xl font-bold">Chi tiết liên hệ</div>}
         extra={
-          <div className="flex gap-2">
-            <Tooltip title="Phản hồi">
+            <div className="flex gap-2">
+              <Tooltip title="Phản hồi">
               <Button
                 type="primary"
                 icon={<CheckCircleOutlined />}
@@ -158,7 +158,7 @@ const ContactDetail = () => {
         </Descriptions>
 
         <div className="mt-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-4">Lịch sử trò chuyện</h3>
+          <h3 className="text-xl font-bold text-blue-500 mb-4">Lịch sử trò chuyện</h3>
           {connectionError && (
             <p className="text-center text-red-500 mb-4">Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng!</p>
           )}
