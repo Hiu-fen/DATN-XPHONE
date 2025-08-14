@@ -122,7 +122,7 @@ const ContactDetail = () => {
                 type="primary"
                 icon={<CheckCircleOutlined />}
                 onClick={() => setIsModalOpen(true)}
-                disabled={contact.status || connectionError}
+                disabled={connectionError}
               >
                 Phản hồi
               </Button>

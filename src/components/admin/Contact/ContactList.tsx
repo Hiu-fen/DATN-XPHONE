@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, message, Input, Tooltip, Tag } from 'antd';
+import { Table, Button, message, Input, Tooltip, Tag, Select } from 'antd';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import { IContact } from '../../../interface/contact';
 import { EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
+const { Option } = Select;
+
 const ContactList = () => {
   const [contacts, setContacts] = useState<IContact[]>([]);
   const [searchText, setSearchText] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'unprocessed' | 'processed'>('all');
   const navigate = useNavigate();
   const [socket, setSocket] = useState<Socket | null>(null);
 
@@ -47,7 +50,9 @@ const ContactList = () => {
           console.log('Liên hệ đã tồn tại, không thêm:', newContact._id);
           return prevContacts;
         }
-        const newContacts = [newContact, ...prevContacts];
+        const newContacts = [newContact, ...prevContacts].sort((a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         console.log('Danh sách liên hệ sau khi thêm:', newContacts);
         return newContacts;
       });
@@ -80,7 +85,11 @@ const ContactList = () => {
 
   const filteredContacts = contacts.filter((c: IContact) => {
     const text = `${c.email} ${c.name} ${c.phone} ${c.conversation[0]?.content || ''}`.toLowerCase();
-    return text.includes(searchText.toLowerCase());
+    const matchesSearch = text.includes(searchText.toLowerCase());
+    if (filterType === 'all') return matchesSearch;
+    if (filterType === 'unprocessed') return matchesSearch && !c.status;
+    if (filterType === 'processed') return matchesSearch && c.status;
+    return false;
   });
 
   const columns = [
@@ -138,7 +147,16 @@ const ContactList = () => {
   return (
     <div className="p-4">
       <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách liên hệ</h2>
-      <div className="flex justify-end mb-4">
+      <div className="flex justify-end mb-4 gap-4">
+        <Select
+          value={filterType}
+          onChange={(value) => setFilterType(value)}
+          className="w-48"
+        >
+          <Option value="all">Tất cả</Option>
+          <Option value="unprocessed">Chưa xử lý</Option>
+          <Option value="processed">Đã xử lý</Option>
+        </Select>
         <Input.Search
           placeholder="Tìm kiếm liên hệ..."
           className="w-72"

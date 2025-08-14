@@ -6,5 +6,6 @@ router.get('/', contactControllers.getAllContact);
 router.get('/:id', contactControllers.getContactById);
 router.post('/', contactControllers.createContact);
 router.patch('/:id/reply', contactControllers.addReply);
+router.patch('/:id', contactControllers.updateContactConversation);
 
 module.exports = router;

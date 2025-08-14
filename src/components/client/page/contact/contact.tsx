@@ -1,9 +1,8 @@
 import { message, Modal, Input, Button as AntButton } from 'antd';
-import { MapPin, Phone, Mail, Clock, Upload, LogOut } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Upload, Send } from 'lucide-react';
 import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
 import axios, { AxiosError } from 'axios';
 import { Upload as AntdUpload, Button } from 'antd';
-import { UploadOutlined } from '@ant-design/icons';
 import { RcFile } from 'antd/es/upload';
 import { io, Socket } from 'socket.io-client';
 import { IContact, IMessage } from '../../../../interface/contact';
@@ -37,6 +36,9 @@ const Contact = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [newMota, setNewMota] = useState('');
+  const [newImage, setNewImage] = useState<string | undefined>(undefined);
+  const [newUploading, setNewUploading] = useState(false);
 
   const validatePhone = (phone: string) => {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
@@ -63,16 +65,6 @@ const Contact = () => {
     return null;
   };
 
-  // const handleLogout = () => {
-  //   localStorage.removeItem('token');
-  //   localStorage.removeItem('user');
-  //   localStorage.removeItem('userEmail');
-  //   setFormData({ name: '', email: '', phone: '', mota: '', image: undefined });
-  //   setContacts([]);
-  //   setIsAuthenticated(false);
-  //   message.success('Đã đăng xuất thành công!');
-  // };
-
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -87,7 +79,7 @@ const Contact = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const sortedContacts = response.data.sort((a: IContact, b: IContact) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() // Sort ascending to show oldest first
       );
       setContacts(sortedContacts);
     } catch (error) {
@@ -97,8 +89,11 @@ const Contact = () => {
     }
   };
 
-  const uploadImage = async (file: RcFile) => {
-    setUploading(true);
+  const uploadImage = async (file: RcFile, isNew = false) => {
+    const setUploadingFunc = isNew ? setNewUploading : setUploading;
+    const setImageFunc = isNew ? setNewImage : (url: string) => setFormData((prev) => ({ ...prev, image: url }));
+
+    setUploadingFunc(true);
     const formData = new FormData();
     const publicId = `contact_image_${Date.now()}`;
     formData.append('file', file);
@@ -109,7 +104,7 @@ const Contact = () => {
       const { data } = await axios.post('https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      setFormData((prev) => ({ ...prev, image: data.secure_url }));
+      setImageFunc(data.secure_url);
       message.success('Tải ảnh thành công');
       return data.secure_url;
     } catch (error: any) {
@@ -117,7 +112,7 @@ const Contact = () => {
       message.error(error.response?.data?.error?.message || 'Lỗi upload ảnh lên Cloudinary');
       throw error;
     } finally {
-      setUploading(false);
+      setUploadingFunc(false);
     }
   };
 
@@ -139,6 +134,28 @@ const Contact = () => {
       }
 
       uploadImage(file);
+      return false;
+    },
+  };
+
+  const newUploadProps = {
+    accept: 'image/*',
+    showUploadList: false,
+    beforeUpload: (file: RcFile) => {
+      const isImage = file.type.startsWith('image/');
+      const isLt5MB = file.size / 1024 / 1024 < 5;
+      console.log('File selected for new:', { file, isImage, isLt5MB });
+
+      if (!isImage) {
+        message.error('Vui lòng chỉ tải lên file hình ảnh!');
+        return false;
+      }
+      if (!isLt5MB) {
+        message.error('Hình ảnh phải nhỏ hơn 5MB!');
+        return false;
+      }
+
+      uploadImage(file, true);
       return false;
     },
   };
@@ -184,6 +201,10 @@ const Contact = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       message.success('Gửi thông tin thành công!');
+      localStorage.setItem('lastContactInfo', JSON.stringify({
+        name: formData.name,
+        phone: formData.phone,
+      }));
       setFormData((prev) => ({
         ...prev,
         name: '',
@@ -208,8 +229,85 @@ const Contact = () => {
     }
   };
 
+  const handleNewSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!isAuthenticated) {
+      message.error('Vui lòng đăng nhập để gửi thông tin liên hệ!');
+      return;
+    }
+
+    if (!newMota) {
+      message.error('Vui lòng điền mô tả');
+      return;
+    }
+
+    if (!contacts.length) {
+      message.error('Không tìm thấy liên hệ trước đó. Vui lòng gửi liên hệ từ form chính trước.');
+      return;
+    }
+
+    const latestContact = contacts[contacts.length - 1]; // Get the most recent contact
+    if (!latestContact) {
+      message.error('Không tìm thấy liên hệ gần nhất. Vui lòng gửi liên hệ từ form chính trước.');
+      return;
+    }
+
+    const lastInfo = localStorage.getItem('lastContactInfo');
+    if (!lastInfo) {
+      message.error('Không tìm thấy thông tin liên hệ gần nhất. Vui lòng gửi liên hệ từ form chính trước.');
+      return;
+    }
+
+    const { phone } = JSON.parse(lastInfo);
+
+    if (!validatePhone(phone)) {
+      message.error('Số điện thoại từ lần gửi trước không hợp lệ. Vui lòng cập nhật thông tin.');
+      return;
+    }
+
+    const now = new Date();
+    const timestamp = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+    const newMessage = {
+      sender: 'client',
+      content: newMota,
+      image: newImage,
+      timestamp,
+    };
+
+    try {
+      setConnectionError(false);
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(`http://localhost:5000/api/contacts/${latestContact._id}`, {
+        conversation: newMessage,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success('Gửi tin nhắn thành công!');
+      setNewMota('');
+      setNewImage(undefined);
+      if (formData.email) {
+        fetchContactsByEmail(formData.email);
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string; error?: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message || axiosError.response?.data?.error || 'Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau!';
+      message.error(errorMessage);
+      console.error('Lỗi khi gửi tin nhắn:', {
+        message: errorMessage,
+        status: axiosError.response?.status,
+        data: axiosError.response?.data,
+      });
+      setConnectionError(true);
+    }
+  };
+
   const handleModalCancel = () => {
     setIsModalOpen(false);
+    setNewMota('');
+    setNewImage(undefined);
   };
 
   useEffect(() => {
@@ -244,7 +342,7 @@ const Contact = () => {
     socketInstance.on('contactCreated', (newContact: IContact) => {
       if (newContact.email === formData.email) {
         setContacts((prev) => [...prev, newContact].sort((a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() // Sort ascending
         ));
         message.info(`Liên hệ mới đã được tạo: ${newContact.name}`);
       }
@@ -257,7 +355,7 @@ const Contact = () => {
           const newContacts = exists
             ? prev.map((contact) => (contact._id === updatedContact._id ? updatedContact : contact))
             : [...prev, updatedContact];
-          return newContacts.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          return newContacts.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); // Sort ascending
         });
         message.info('Bạn đã nhận được phản hồi từ XPhone Store!');
       }
@@ -283,13 +381,6 @@ const Contact = () => {
           {isAuthenticated ? (
             <div className="flex justify-center gap-4 mt-4">
               <p className="text-lg text-gray-700">Đăng nhập với: <strong>{formData.email}</strong></p>
-              {/* <AntButton
-                onClick={handleLogout}
-                className="flex items-center gap-2"
-                icon={<LogOut className="w-5 h-5" />}
-              >
-                Đăng xuất
-              </AntButton> */}
             </div>
           ) : (
             <p className="text-lg text-red-500 mt-4">Vui lòng đăng nhập để sử dụng tính năng liên hệ.</p>
@@ -413,47 +504,44 @@ const Contact = () => {
                     <label htmlFor="mota" className="block text-sm font-medium text-gray-700 mb-1">
                       Mô tả
                     </label>
-                    <textarea
-                      id="mota"
-                      name="mota"
-                      value={formData.mota}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Nhập mô tả hoặc câu hỏi của bạn"
-                      rows={4}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="image" className="block text-sm font-medium text-gray-700 mb-1">
-                      Hình ảnh (Tùy chọn)
-                    </label>
-                    <AntdUpload {...uploadProps}>
-                      <Button icon={<UploadOutlined />} loading={uploading}>
-                        Tải lên hình ảnh
-                      </Button>
-                    </AntdUpload>
-                    {formData.image && (
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        style={{ marginTop: 8, maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2">
+                      <TextArea
+                        id="mota"
+                        name="mota"
+                        value={formData.mota}
+                        onChange={handleInputChange}
+                        className="flex-1 border-none focus:ring-0"
+                        placeholder="Nhập mô tả hoặc câu hỏi của bạn"
+                        autoSize={{ minRows: 2, maxRows: 4 }}
                       />
+                      <AntdUpload {...uploadProps}>
+                        <Button icon={<Upload className="w-5 h-5 text-gray-500" />} loading={uploading} type="text" />
+                      </AntdUpload>
+                      <button
+                        type="submit"
+                        className="p-2 text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                        disabled={uploading || connectionError || !formData.mota}
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </div>
+                    {formData.image && (
+                      <div className="mt-2">
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                        />
+                      </div>
                     )}
                   </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
-                    disabled={uploading || connectionError}
-                  >
-                    Gửi thông tin
-                  </button>
                 </form>
               ) : (
                 <p className="text-center text-red-500">Vui lòng đăng nhập để gửi thông tin liên hệ.</p>
               )}
             </div>
 
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+            <div className="bg-white Rounded-2xl shadow-xl p-8 border border-gray-100">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold text-gray-900">Lịch sử liên hệ</h3>
                 <Button
@@ -517,6 +605,47 @@ const Contact = () => {
                   <p className="text-center text-gray-500">
                     {isAuthenticated ? 'Chưa có lịch sử liên hệ.' : 'Vui lòng đăng nhập để xem lịch sử liên hệ.'}
                   </p>
+                )}
+                {isAuthenticated && (
+                  <div className="mt-6 border-t pt-6">
+                    <h4 className="text-xl font-bold text-gray-900 mb-4">Gửi tin nhắn mới</h4>
+                    <form onSubmit={handleNewSubmit} className="space-y-6">
+                      <div>
+                        <label htmlFor="newMota" className="block text-sm font-medium text-gray-700 mb-1">
+                          Mô tả
+                        </label>
+                        <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2">
+                          <TextArea
+                            id="newMota"
+                            value={newMota}
+                            onChange={(e) => setNewMota(e.target.value)}
+                            className="flex-1 border-none focus:ring-0"
+                            placeholder="Nhập mô tả hoặc câu hỏi của bạn"
+                            autoSize={{ minRows: 2, maxRows: 4 }}
+                          />
+                          <AntdUpload {...newUploadProps}>
+                            <Button icon={<Upload className="w-5 h-5 text-gray-500" />} loading={newUploading} type="text" />
+                          </AntdUpload>
+                          <button
+                            type="submit"
+                            className="p-2 text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                            disabled={newUploading || connectionError || !newMota || !contacts.length}
+                          >
+                            <Send className="w-5 h-5" />
+                          </button>
+                        </div>
+                        {newImage && (
+                          <div className="mt-2">
+                            <img
+                              src={newImage}
+                              alt="Preview"
+                              style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </form>
+                  </div>
                 )}
               </Modal>
             </div>

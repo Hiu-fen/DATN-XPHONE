@@ -82,3 +82,37 @@ exports.addReply = async (req, res) => {
     res.status(500).json({ message: 'Lỗi khi thêm phản hồi', error: error.message });
   }
 };
+
+exports.updateContactConversation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { conversation } = req.body;
+    if (!conversation || !conversation.content) {
+      return res.status(400).json({ message: 'Thiếu nội dung tin nhắn' });
+    }
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({ message: 'Không tìm thấy liên hệ' });
+    }
+    contact.conversation.push({
+      sender: 'client',
+      content: conversation.content,
+      image: conversation.image,
+      timestamp: conversation.timestamp,
+    });
+    contact.status = false; // Set status to false when client sends a new message
+    contact.updatedAt = new Date();
+    await contact.save();
+    const io = global._io;
+    if (io) {
+      console.log('Phát sự kiện contactUpdated:', contact);
+      io.emit('contactUpdated', contact);
+    } else {
+      console.error('Socket.IO instance không tồn tại');
+    }
+    res.status(200).json({ message: 'Cập nhật tin nhắn thành công', contact });
+  } catch (error) {
+    console.error('Lỗi khi cập nhật tin nhắn:', error);
+    res.status(500).json({ message: 'Lỗi khi cập nhật tin nhắn', error: error.message });
+  }
+};
