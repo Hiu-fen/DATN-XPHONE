@@ -10,7 +10,7 @@ import RelatedProducts from "../../componentChild/Detail/RelatedProducts";
 import PromotionSection from "../../componentChild/Detail/PromotionSection";
 import SupportPolicy from "../../componentChild/Detail/SupportPolicy";
 import socket from "../../../../socket";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaShareAlt } from "react-icons/fa";
 
 const Details = () => {
   const { id } = useParams();
@@ -404,6 +404,18 @@ const Details = () => {
     enabled: !!product?.danhmuc,
   });
 
+  // 🔥 FUNCTION SHARE LINK
+  const handleShare = () => {
+    const productLink = `${window.location.origin}/detail/${id}`;
+    navigator.clipboard.writeText(productLink)
+      .then(() => {
+        message.success("Đã sao chép link sản phẩm!");
+      })
+      .catch(() => {
+        message.error("Không thể sao chép link.");
+      });
+  };
+
   if (!product)
     return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
 
@@ -437,7 +449,8 @@ const Details = () => {
                 <p className="text-gray-500">Không có ảnh phụ.</p>
               )}
             </div>
-            <div className="w-full max-w-md overflow-x-auto flex gap-2 scrollbar-hide">
+            <div className="w-full max-w-md overflow-x-auto flex gap-4 scrollbar-hide">
+              {/* Nút Yêu thích */}
               <button
                 onClick={() => handleLike(product._id!)}
                 className="flex items-center gap-2 text-base font-medium transition"
@@ -449,13 +462,29 @@ const Details = () => {
                     : "text-gray-400"
                     }`}
                 />
-                <span>
+                <span
+                  className={
+                    likedProducts.includes(product._id!)
+                      ? "text-red-500"
+                      : "text-gray-600"
+                  }
+                >
                   {likedProducts.includes(product._id!)
                     ? "Đã thích"
-                    : "Thêm vào danh sách yêu thích"}
+                    : "Thêm vào yêu thích"}
                 </span>
               </button>
+
+              {/* Nút Chia sẻ */}
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 text-base font-medium text-blue-600 hover:text-blue-800 transition"
+              >
+                <FaShareAlt size={18} />
+                <span>Chia sẻ</span>
+              </button>
             </div>
+
           </div>
         </div>
         <div className="col-span-12 lg:col-span-5 flex flex-col justify-between">
