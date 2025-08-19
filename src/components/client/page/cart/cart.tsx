@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
+import { Modal } from "antd";
 import { IProduct } from "../../../../interface/product";
 import { ICartItem } from "../../../../interface/cart";
 import { useUser } from "../../context/UserContext";
@@ -37,6 +38,7 @@ const Cart = () => {
   const [toastType, setToastType] = useState<"success" | "error" | "warning">(
     "success"
   );
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   const showToastMessage = (
     message: string,
@@ -54,6 +56,19 @@ const Cart = () => {
       style: "currency",
       currency: "VND",
     });
+  };
+
+  // Check if total value exceeds 100 million VND
+  const isHighValueOrder = (total: number): boolean => {
+    const threshold = 100000000; // 100 million VND
+    const isHigh = total > threshold;
+    if (isHigh) {
+      console.log("💎 High value order detected:", {
+        totalValue: total.toLocaleString(),
+        threshold: threshold.toLocaleString(),
+      });
+    }
+    return isHigh;
   };
 
   // Fetch cart items
@@ -95,60 +110,59 @@ const Cart = () => {
   });
 
   // Enrich cart items with product details
-const enrichedCartItems: EnrichedCartItem[] = cartItems
-  .map((item: ICartItem, index: number) => {
-    const product = products.find(
-      (p) => String(p._id) === String(item.productId)
-    );
-
-
-    if (product) {
-      const variant = product.variants?.find(
-        (v) =>
-          String(v.color).trim().toLowerCase() ===
-            String(item.color).trim().toLowerCase() &&
-          String(v.ram).trim().toLowerCase() ===
-            String(item.storage).trim().toLowerCase()
+  const enrichedCartItems: EnrichedCartItem[] = cartItems
+    .map((item: ICartItem, index: number) => {
+      const product = products.find(
+        (p) => String(p._id) === String(item.productId)
       );
 
-      const variantStock = variant?.soluong ?? 0;
-      const imageToUse =
-        variant?.image ||
-        item.image ||
-        product.albumImages?.find((img) =>
-          item.color
-            ? img.toLowerCase().includes(item.color.toLowerCase())
-            : false
-        ) ||
-        product.image ||
-        product.albumImages?.[0];
+      if (product) {
+        const variant = product.variants?.find(
+          (v) =>
+            String(v.color).trim().toLowerCase() ===
+              String(item.color).trim().toLowerCase() &&
+            String(v.ram).trim().toLowerCase() ===
+              String(item.storage).trim().toLowerCase()
+        );
 
-      return {
-        ...item,
-        productName: product.name,
-        image: imageToUse,
-        isAvailable: !!variant && variantStock > 0 && product.status !== false,
-        price: variant?.price ?? product.price,
-        maxStock: variantStock,
-        orderIndex: index,
-      };
-    } else {
-      return {
-        ...item,
-        productName: item.name || "Sản phẩm không còn được bán",
-        image: item.image,
-        isAvailable: false,
-        price: item.price || 0,
-        maxStock: 0,
-        orderIndex: index,
-      };
-    }
-  })
-  .sort((a, b) => {
-    if (a.isAvailable && !b.isAvailable) return -1;
-    if (!a.isAvailable && b.isAvailable) return 1;
-    return b.orderIndex - a.orderIndex;
-  });
+        const variantStock = variant?.soluong ?? 0;
+        const imageToUse =
+          variant?.image ||
+          item.image ||
+          product.albumImages?.find((img) =>
+            item.color
+              ? img.toLowerCase().includes(item.color.toLowerCase())
+              : false
+          ) ||
+          product.image ||
+          product.albumImages?.[0];
+
+        return {
+          ...item,
+          productName: product.name,
+          image: imageToUse,
+          isAvailable: !!variant && variantStock > 0 && product.status !== false,
+          price: variant?.price ?? product.price,
+          maxStock: variantStock,
+          orderIndex: index,
+        };
+      } else {
+        return {
+          ...item,
+          productName: item.name || "Sản phẩm không còn được bán",
+          image: item.image,
+          isAvailable: false,
+          price: item.price || 0,
+          maxStock: 0,
+          orderIndex: index,
+        };
+      }
+    })
+    .sort((a, b) => {
+      if (a.isAvailable && !b.isAvailable) return -1;
+      if (!a.isAvailable && b.isAvailable) return 1;
+      return b.orderIndex - a.orderIndex;
+    });
 
   // Mutation to update cart on server
   const updateCartMutation = useMutation({
@@ -281,6 +295,13 @@ const enrichedCartItems: EnrichedCartItem[] = cartItems
       return;
     }
 
+    const totalValue = calculateTotal();
+    if (isHighValueOrder(totalValue)) {
+      console.log("💎 Showing contact modal for high value cart");
+      setIsContactModalOpen(true);
+      return;
+    }
+
     const selectedCartItems = enrichedCartItems.filter((item) =>
       selectedItems.includes(item._id)
     );
@@ -293,6 +314,16 @@ const enrichedCartItems: EnrichedCartItem[] = cartItems
       if (!item) return total;
       return total + item.price * item.quantity;
     }, 0);
+  };
+
+  // Handle contact modal actions
+  const handleContactModalOk = () => {
+    navigate("/contact");
+    setIsContactModalOpen(false);
+  };
+
+  const handleContactModalCancel = () => {
+    setIsContactModalOpen(false);
   };
 
   if (isLoadingCart || isLoadingProducts) {
@@ -351,6 +382,128 @@ const enrichedCartItems: EnrichedCartItem[] = cartItems
             </div>
           </div>
         )}
+
+        {/* High Value Order Modal */}
+        <Modal
+          title={
+            <div className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-3 px-4 rounded-t-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">💎</span>
+                <span>Đơn hàng cao cấp - Cần tư vấn</span>
+              </div>
+            </div>
+          }
+          open={isContactModalOpen}
+          onOk={handleContactModalOk}
+          onCancel={handleContactModalCancel}
+          okText="Liên hệ ngay"
+          cancelText="Đóng"
+          width={600}
+          className="rounded-lg"
+          styles={{ body: { padding: "24px", background: "#fefdf8" } }}
+          okButtonProps={{
+            className:
+              "bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 h-auto",
+          }}
+          cancelButtonProps={{
+            className:
+              "border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-2 h-auto",
+          }}
+        >
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">💎</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Đơn hàng cao cấp trên 100 triệu VNĐ
+              </h3>
+              <p className="text-gray-600">
+                Để đảm bảo bạn nhận được sự tư vấn tốt nhất và chính sách hỗ trợ
+                đặc biệt
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-lg border border-yellow-200">
+              <h4 className="font-semibold text-gray-900 mb-2">
+                Chi tiết đơn hàng
+              </h4>
+              {selectedItems.map((itemId) => {
+                const item = enrichedCartItems.find((i) => i._id === itemId);
+                if (!item) return null;
+                return (
+                  <div
+                    key={item._id}
+                    className="flex items-center gap-4 mb-3 last:mb-0"
+                  >
+                    <img
+                      src={item.image || "/default-image.jpg"}
+                      alt={item.productName}
+                      className="w-16 h-16 object-cover rounded-lg"
+                    />
+                    <div className="flex-1">
+                      <h4 className={`font-semibold text-gray-900 ${item.isAvailable ? '' : 'line-through'}`}>
+                        {item.productName}
+                      </h4>
+                      <div className="space-y-1">
+                        <p className="text-sm text-gray-600">
+                          Đơn giá: {formatPrice(item.price)}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Số lượng: {item.quantity}
+                        </p>
+                        <p className="text-red-600 font-bold">
+                          Tổng: {formatPrice(item.price * item.quantity)}
+                        </p>
+                        {(item.color || item.storage) && (
+                          <p className="text-sm text-gray-600">
+                            {item.color} {item.storage && `- ${item.storage}`}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-red-600 font-bold text-lg">
+                  Tổng giá trị: {formatPrice(calculateTotal())}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-semibold text-blue-900 mb-2">
+                🎯 Lợi ích khi liên hệ trực tiếp:
+              </h4>
+              <ul className="space-y-2 text-sm text-blue-800">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                  Tư vấn chuyên sâu từ đội ngũ chuyên gia
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                  Chính sách ưu đãi và hỗ trợ đặc biệt cho đơn hàng lớn
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                  Dịch vụ giao hàng và bảo hành VIP
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                  Hỗ trợ trả góp 0% lãi suất cho đơn hàng lớn
+                </li>
+              </ul>
+            </div>
+
+            <div className="text-center text-sm text-gray-600">
+              <p>Hành động: <strong>Thanh toán đơn hàng</strong></p>
+              <p className="mt-1">
+                Nhấn "Liên hệ ngay" để được tư vấn chi tiết về đơn hàng này
+              </p>
+            </div>
+          </div>
+        </Modal>
 
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Header */}
@@ -417,7 +570,11 @@ const enrichedCartItems: EnrichedCartItem[] = cartItems
                           to={`/detail/${item.productId}`}
                           className="block"
                         >
-                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 hover:underline transition">
+                          <h3
+                            className={`font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 hover:underline transition ${
+                              item.isAvailable ? "" : "line-through"
+                            }`}
+                          >
                             {item.productName}
                           </h3>
                         </Link>
@@ -585,7 +742,11 @@ const enrichedCartItems: EnrichedCartItem[] = cartItems
                                   to={`/detail/${item.productId}`}
                                   className="block"
                                 >
-                                  <span className="font-medium text-gray-900 line-clamp-2 hover:text-blue-600 hover:underline transition">
+                                  <span
+                                    className={`font-medium text-gray-900 line-clamp-2 hover:text-blue-600 hover:underline transition ${
+                                      item.isAvailable ? "" : "line-through"
+                                    }`}
+                                  >
                                     {item.productName}
                                   </span>
                                 </Link>
@@ -646,7 +807,7 @@ const enrichedCartItems: EnrichedCartItem[] = cartItems
                             <div
                               className={`text-xs text-center ${
                                 item.isAvailable
-                                  ? "text-white-500"
+                                  ? "text-gray-500"
                                   : "text-red-600"
                               }`}
                             >
