@@ -10,10 +10,14 @@ import RelatedProducts from "../../componentChild/Detail/RelatedProducts";
 import PromotionSection from "../../componentChild/Detail/PromotionSection";
 import SupportPolicy from "../../componentChild/Detail/SupportPolicy";
 import socket from "../../../../socket";
+import { FaHeart, FaShareAlt } from "react-icons/fa";
 
 const Details = () => {
   const { id } = useParams();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [product, setProduct] = useState<IProduct | null>(null);
+  const userId: string | undefined = user._id;
+  const [likedProducts, setLikedProducts] = useState<string[]>([]);
   const [mainImage, setMainImage] = useState<string>("");
   const [selectedVariant, setSelectedVariant] = useState<{
     color: string;
@@ -22,15 +26,37 @@ const Details = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [contactModalAction, setContactModalAction] = useState<"buyNow" | "addToCart" | null>(null);
-  
+
   const navigate = useNavigate();
+  // Thêm sản phẩm yêu thích
+  const handleLike = async (productId: string) => {
+    if (!userId) {
+      message.warning("Bạn cần đăng nhập để thích sản phẩm.");
+      return;
+    }
+
+    try {
+      const { data } = await axios.patch(
+        `http://localhost:5000/api/users/${userId}/like`,
+        { productId }
+      );
+      setLikedProducts(data.likeList);
+      if (data.likeList.includes(productId)) {
+        message.success("Đã thêm vào yêu thích");
+      } else {
+        message.success("Đã bỏ yêu thích");
+      }
+    } catch (error) {
+      message.error("Không thể cập nhật yêu thích.");
+    }
+  };
 
   // 🔥 FUNCTION KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG CÓ TRÊN 100 TRIỆU KHÔNG
   const isHighValueOrder = (unitPrice: number, quantity: number): boolean => {
     const totalValue = Number(unitPrice) * Number(quantity);
     const threshold = 100000000; // 100 triệu
     const isHigh = totalValue > threshold;
-    
+
     if (isHigh) {
       console.log("💎 High value order detected:", {
         unitPrice: unitPrice.toLocaleString(),
@@ -39,14 +65,14 @@ const Details = () => {
         threshold: threshold.toLocaleString()
       });
     }
-    
+
     return isHigh;
   };
 
   // 🔥 FUNCTION LẤY GIÁ HIỆN TẠI CỦA SẢN PHẨM/VARIANT
   const getCurrentPrice = (): number => {
     let price = 0;
-    
+
     if (selectedVariant && product?.variants) {
       const variant = product.variants.find(
         (v) => v.color === selectedVariant.color && v.ram === selectedVariant.ram
@@ -55,7 +81,7 @@ const Details = () => {
     } else {
       price = product?.price || 0;
     }
-    
+
     return Number(price);
   };
 
@@ -129,7 +155,7 @@ const Details = () => {
   const handleSelectVariant = (color: string, ram: string, index: number) => {
     setSelectedVariant({ color, ram });
     setQuantity(1);
-    
+
     const albumLength = product?.albumImages?.length || 0;
     const newImage = albumLength > 0
       ? product?.albumImages[index % albumLength] || product?.image || "/default-image.jpg"
@@ -148,8 +174,8 @@ const Details = () => {
     return variant?.price
       ? `${Number(variant.price).toLocaleString("vi-VN")} VNĐ`
       : product?.price
-      ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ`
-      : "Liên hệ";
+        ? `${Number(product.price).toLocaleString("vi-VN")} VNĐ`
+        : "Liên hệ";
   };
 
   // Handle quantity change
@@ -191,7 +217,7 @@ const Details = () => {
     if (action === "buyNow") {
       const unitPrice = getCurrentPrice();
       const currentQuantity = quantity;
-      
+
       if (isHighValueOrder(unitPrice, currentQuantity)) {
         console.log("💎 Showing contact modal for high value order");
         setContactModalAction(action);
@@ -230,7 +256,7 @@ const Details = () => {
       message.error("Sản phẩm này không còn được bán.");
       return;
     }
-    
+
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       if (!user?._id) {
@@ -378,6 +404,18 @@ const Details = () => {
     enabled: !!product?.danhmuc,
   });
 
+  // 🔥 FUNCTION SHARE LINK
+  const handleShare = () => {
+    const productLink = `${window.location.origin}/detail/${id}`;
+    navigator.clipboard.writeText(productLink)
+      .then(() => {
+        message.success("Đã sao chép link sản phẩm!");
+      })
+      .catch(() => {
+        message.error("Không thể sao chép link.");
+      });
+  };
+
   if (!product)
     return <div className="p-10 text-center text-xl">Đang tải sản phẩm...</div>;
 
@@ -393,7 +431,7 @@ const Details = () => {
               alt={product.name}
               className="w-full max-w-md h-96 object-cover rounded-lg shadow-md mb-4"
             />
-            <div className="w-full max-w-md overflow-x-auto flex gap-2 scrollbar-hide">
+            <div className="w-full max-w-md overflow-x-auto flex gap-2 scrollbar-hide mb-4">
               {product.albumImages?.length > 0 ? (
                 product.albumImages.map((img, idx) => (
                   <img
@@ -401,17 +439,52 @@ const Details = () => {
                     src={img || "/placeholder.svg"}
                     alt={`variant-${idx}`}
                     onClick={() => setMainImage(img)}
-                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${
-                      mainImage === img
-                        ? "border-blue-600"
-                        : "border-gray-300 hover:border-gray-500"
-                    }`}
+                    className={`w-20 h-20 object-cover rounded-md cursor-pointer border-2 transition-all duration-200 ${mainImage === img
+                      ? "border-blue-600"
+                      : "border-gray-300 hover:border-gray-500"
+                      }`}
                   />
                 ))
               ) : (
                 <p className="text-gray-500">Không có ảnh phụ.</p>
               )}
             </div>
+            <div className="w-full max-w-md overflow-x-auto flex gap-4 scrollbar-hide">
+              {/* Nút Yêu thích */}
+              <button
+                onClick={() => handleLike(product._id!)}
+                className="flex items-center gap-2 text-base font-medium transition"
+              >
+                <FaHeart
+                  size={18}
+                  className={`${likedProducts.includes(product._id!)
+                    ? "text-red-500"
+                    : "text-gray-400"
+                    }`}
+                />
+                <span
+                  className={
+                    likedProducts.includes(product._id!)
+                      ? "text-red-500"
+                      : "text-gray-600"
+                  }
+                >
+                  {likedProducts.includes(product._id!)
+                    ? "Đã thích"
+                    : "Thêm vào yêu thích"}
+                </span>
+              </button>
+
+              {/* Nút Chia sẻ */}
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 text-base font-medium text-blue-600 hover:text-blue-800 transition"
+              >
+                <FaShareAlt size={18} />
+                <span>Chia sẻ</span>
+              </button>
+            </div>
+
           </div>
         </div>
         <div className="col-span-12 lg:col-span-5 flex flex-col justify-between">
@@ -445,7 +518,7 @@ const Details = () => {
                 {getSelectedVariantPrice()}
               </p>
             </div>
-            
+
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
                 Màu sắc và Dung lượng:
@@ -455,12 +528,11 @@ const Details = () => {
                   uniqueVariants.map((variant, idx) => (
                     <button
                       key={idx}
-                      className={`relative px-2 py-1 text-xs font-medium rounded-full border bg-white shadow-sm transition-all duration-300 transform hover:scale-105 hover:shadow-md ${
-                        selectedVariant?.color === variant.color &&
+                      className={`relative px-2 py-1 text-xs font-medium rounded-full border bg-white shadow-sm transition-all duration-300 transform hover:scale-105 hover:shadow-md ${selectedVariant?.color === variant.color &&
                         selectedVariant?.ram === variant.ram
-                          ? "border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-300"
-                          : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
-                      }`}
+                        ? "border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-300"
+                        : "border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                        }`}
                       onClick={() => handleSelectVariant(variant.color, variant.ram, idx)}
                     >
                       <span className="block truncate max-w-[120px]">
@@ -497,10 +569,10 @@ const Details = () => {
                   max={
                     selectedVariant
                       ? product?.variants?.find(
-                          (v) =>
-                            v.color === selectedVariant.color &&
-                            v.ram === selectedVariant.ram
-                        )?.soluong || 1
+                        (v) =>
+                          v.color === selectedVariant.color &&
+                          v.ram === selectedVariant.ram
+                      )?.soluong || 1
                       : product.soluong
                   }
                 />
@@ -516,10 +588,10 @@ const Details = () => {
                   Tồn kho hiện có:{" "}
                   {selectedVariant
                     ? product?.variants?.find(
-                        (v) =>
-                          v.color === selectedVariant.color &&
-                          v.ram === selectedVariant.ram
-                      )?.soluong || 0
+                      (v) =>
+                        v.color === selectedVariant.color &&
+                        v.ram === selectedVariant.ram
+                    )?.soluong || 0
                     : product.soluong}
                 </p>
                 <p className="text-blue-600 font-semibold">
@@ -549,6 +621,7 @@ const Details = () => {
               <ShoppingCartOutlined className="text-base" />
               Thêm vào giỏ hàng
             </button>
+
           </div>
         </div>
         <div className="col-span-12 lg:col-span-3 space-y-3">
@@ -589,11 +662,11 @@ const Details = () => {
         width={600}
         className="rounded-lg"
         styles={{ body: { padding: "24px", background: "#fefdf8" } }}
-        okButtonProps={{ 
-          className: "bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 h-auto" 
+        okButtonProps={{
+          className: "bg-orange-600 hover:bg-orange-700 text-white font-semibold px-6 py-2 h-auto"
         }}
-        cancelButtonProps={{ 
-          className: "border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-2 h-auto" 
+        cancelButtonProps={{
+          className: "border-gray-300 hover:border-gray-400 text-gray-700 px-6 py-2 h-auto"
         }}
       >
         <div className="space-y-6">
@@ -647,7 +720,7 @@ const Details = () => {
                 <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
                 Tư vấn chuyên sâu từ đội ngũ chuyên gia
               </li>
-              <li className = "flex items-center gap-2">
+              <li className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
                 Chính sách ưu đãi và hỗ trợ đặc biệt cho đơn hàng lớn
               </li>

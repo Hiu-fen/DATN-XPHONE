@@ -195,11 +195,10 @@ const Notification = () => {
           }}
           renderItem={(note) => (
             <List.Item
-              className={`rounded-lg px-5 py-4 border border-gray-200 transition duration-300 ease-in-out ${
-                note.readBy?.includes(userId)
+              className={`rounded-lg px-5 py-4 border border-gray-200 transition duration-300 ease-in-out ${note.readBy?.includes(userId)
                   ? 'bg-gray-50 hover:bg-gray-100'
                   : 'bg-blue-50 hover:bg-blue-100'
-              }`}
+                }`}
               actions={[
                 !note.readBy?.includes(userId) && (
                   <Tooltip title="Đánh dấu đã đọc" key="read">
@@ -228,8 +227,8 @@ const Notification = () => {
                       {note.type === 'order'
                         ? 'Đơn hàng'
                         : note.type === 'product'
-                        ? 'Sản phẩm'
-                        : 'Thông báo'}
+                          ? 'Sản phẩm'
+                          : 'Thông báo'}
                     </span>
                     <Tag
                       color={note.readBy?.includes(userId) ? 'success' : 'processing'}
