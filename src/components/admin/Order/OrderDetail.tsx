@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { WarningOutlined } from "@ant-design/icons";
 import axios from "axios";
 import {
   Card,
@@ -13,6 +14,7 @@ import {
   Space,
   message,
   Select,
+  Result
 } from "antd";
 
 const { Title } = Typography;
@@ -111,6 +113,8 @@ const OrderDetail = () => {
       return res.data;
     },
     enabled: !!id,
+    retry: 0, // Ngăn chặn tự động retry khi lỗi (ví dụ: 404)
+    refetchOnWindowFocus: false, // Ngăn chặn refetch khi window focus lại
   });
 
   const statusMutation = useMutation({
@@ -200,9 +204,66 @@ const OrderDetail = () => {
     },
   ];
 
-  if (isLoading) return <Spin tip="Đang tải chi tiết đơn hàng..." />;
+  if (isLoading) {
+    return (
+      <div style={{ textAlign: "center", marginTop: 50 }}>
+        <Spin size="large" />
+        <p style={{ marginTop: 16 }}>Đang tải chi tiết đơn hàng...</p>
+      </div>
+    );
+  }
+
   if (isError || !order) {
-    return <Alert message="Không tìm thấy đơn hàng" type="error" showIcon />;
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "80vh",
+          background: "linear-gradient(135deg, #fffbe6, #ffe7ba)",
+          padding: 20,
+        }}
+      >
+        <Result
+          icon={<WarningOutlined style={{ color: "#faad14", fontSize: 80 }} />}
+          status="warning"
+          title={
+            <span style={{ fontSize: 22, fontWeight: 600, color: "#d48806" }}>
+              Đơn hàng chưa được thanh toán hoặc không tồn tại
+            </span>
+          }
+          subTitle={
+            <span style={{ fontSize: 16, color: "#595959" }}>
+              Vui lòng kiểm tra lại mã đơn hàng hoặc tiến hành thanh toán để tiếp tục.
+            </span>
+          }
+          extra={
+            <Button
+              type="primary"
+              size="large"
+              style={{
+                borderRadius: 8,
+                padding: "0 24px",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                background: "linear-gradient(135deg, #fa8c16, #fa541c)",
+              }}
+              onClick={() => (window.location.href = "/admin/orders")}
+            >
+              Quay lại trang chủ
+            </Button>
+          }
+          style={{
+            background: "#fff",
+            padding: "40px 20px",
+            borderRadius: 16,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+            maxWidth: 600,
+            width: "100%",
+          }}
+        />
+      </div>
+    );
   }
 
   const totalItemsPrice =
@@ -211,7 +272,6 @@ const OrderDetail = () => {
   const discount = order.discountAmount || 0;
   const shippingFee = order.shippingFee || 0;
   const totalPayment = order.originalTotal ?? order.total;
-
 
   return (
     <div>
