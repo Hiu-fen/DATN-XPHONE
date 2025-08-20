@@ -119,7 +119,7 @@ const Checkout = () => {
     discountValue: string
   } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState("COD")
+  const [paymentMethod, setPaymentMethod] = useState("VNPAY") // Changed default to VNPAY
   const [shippingProvider, setShippingProvider] = useState("GHN")
 
   // State cho validation errors
@@ -170,7 +170,7 @@ const Checkout = () => {
     return emailRegex.test(email)
   }
 
-  // Function validate tên (chỉ chứa chữ cái và khoảng trắng)
+  // Function validate tên
   const validateName = (name: string): boolean => {
     const nameRegex = /^[a-zA-ZÀ-ỹ\s]{2,50}$/
     return nameRegex.test(name.trim())
@@ -199,7 +199,6 @@ const Checkout = () => {
       newErrors.orderer = { ...newErrors.orderer, email: "Email không hợp lệ" }
     }
 
-    // 🔥 CHỈ VALIDATE THÔNG TIN NGƯỜI NHẬN KHI isDifferentRecipient = true
     if (isDifferentRecipient) {
       if (!recipientInfo.name.trim()) {
         newErrors.recipient = { ...newErrors.recipient, name: "Vui lòng nhập tên người nhận hàng" }
@@ -223,7 +222,6 @@ const Checkout = () => {
         newErrors.recipient = { ...newErrors.recipient, address: "Địa chỉ quá ngắn, vui lòng nhập đầy đủ" }
       }
     } else {
-      // 🔥 KHI KHÔNG KHÁC NGƯỜI NHẬN, KIỂM TRA ĐỊA CHỈ GIAO HÀNG
       if (!recipientInfo.address.trim()) {
         newErrors.recipient = { ...newErrors.recipient, address: "Vui lòng chọn địa chỉ giao hàng" }
       } else if (recipientInfo.address.length < 10) {
@@ -233,14 +231,12 @@ const Checkout = () => {
 
     setErrors(newErrors)
 
-    // Kiểm tra có lỗi nào không
     const hasErrors = Object.keys(newErrors).some(
       (key) => Object.keys(newErrors[key as keyof typeof newErrors] || {}).length > 0,
     )
 
     if (hasErrors) {
       message.error("Vui lòng kiểm tra lại thông tin đã nhập")
-      // Scroll đến lỗi đầu tiên
       const firstErrorElement = document.querySelector(".error-input")
       if (firstErrorElement) {
         firstErrorElement.scrollIntoView({ behavior: "smooth", block: "center" })
@@ -293,26 +289,34 @@ const Checkout = () => {
     }
   }, [currentUser, isDifferentRecipient])
 
-  // 🔥 XỬ LÝ KHI THAY ĐỔI CHECKBOX - CẬP NHẬT LOGIC
+  // Handle high-value order: reset payment method if COD is selected and total exceeds 50M
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.soluong, 0)
+  const totalWithDiscountAndShipping = (discountAmount > 0 ? finalPrice : totalPrice - orderDiscount) + shippingFee
+  const isHighValueOrder = totalWithDiscountAndShipping > 50000000 // 50 million VND threshold
+
+  useEffect(() => {
+    if (isHighValueOrder && paymentMethod === "COD") {
+      setPaymentMethod("VNPAY") // Reset to VNPAY if COD is selected for high-value order
+      message.warning("Đơn hàng trên 50 triệu không hỗ trợ thanh toán COD. Vui lòng chọn phương thức khác.")
+    }
+  }, [isHighValueOrder, paymentMethod])
+
   const handleDifferentRecipientChange = (checked: boolean) => {
     setIsDifferentRecipient(checked)
     if (!checked) {
-      // Nếu bỏ check, copy thông tin từ người đặt sang người nhận (trừ address và note)
       setRecipientInfo((prev) => ({
         ...prev,
         name: ordererInfo.name,
         phone: ordererInfo.phone,
         email: ordererInfo.email,
       }))
-      // Xóa lỗi của recipient khi bỏ check
       setErrors((prev) => ({
         ...prev,
         recipient: {
-          address: prev.recipient?.address, // Giữ lại lỗi address nếu có
+          address: prev.recipient?.address,
         },
       }))
     } else {
-      // Nếu check, reset thông tin người nhận về trống để người dùng nhập mới
       setRecipientInfo((prev) => ({
         ...prev,
         name: "",
@@ -322,24 +326,16 @@ const Checkout = () => {
     }
   }
 
-  // Cập nhật handleOrdererInfoChange
   const handleOrdererInfoChange = (field: keyof OrdererInfo, value: string) => {
     setOrdererInfo((prev) => ({ ...prev, [field]: value }))
-
-    // Xóa lỗi khi người dùng bắt đầu nhập
     clearError("orderer", field)
-
-    // Nếu người nhận không khác người đặt, tự động cập nhật thông tin người nhận
     if (!isDifferentRecipient) {
       setRecipientInfo((prev) => ({ ...prev, [field]: value }))
     }
   }
 
-  // Cập nhật handleRecipientInfoChange
   const handleRecipientInfoChange = (field: keyof RecipientInfo, value: string) => {
     setRecipientInfo((prev) => ({ ...prev, [field]: value }))
-
-    // Xóa lỗi khi người dùng bắt đầu nhập
     clearError("recipient", field)
   }
 
@@ -463,41 +459,6 @@ const Checkout = () => {
     fetchCartAndProducts()
   }, [currentUser, buyNowItem, selectedItems])
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.soluong, 0)
-
-  const totalWithDiscountAndShipping = (discountAmount > 0 ? finalPrice : totalPrice - orderDiscount) + shippingFee
-
-  useEffect(() => {
-    const { to_district_id, to_ward_code } = recipientInfo
-    if (!to_district_id || !to_ward_code) return
-
-    const weight = cart.reduce((sum, i) => sum + i.soluong * 300, 0)
-
-    if (shippingProvider === "GHN") {
-      console.log("✅ Chọn địa chỉ:", to_district_id, to_ward_code)
-      axios
-        .post(
-          "http://localhost:5000/api/ghn/calculate-fee",
-          {
-            to_district_id: Number(to_district_id),
-            to_ward_code: String(to_ward_code),
-            weight,
-            insurance_value: 0,
-          },
-          { withCredentials: true },
-        )
-        .then((res) => {
-          setShippingFee(res.data.shippingFee)
-        })
-        .catch((err) => {
-          console.error("❌ Lỗi tính phí GHN:", err)
-          setShippingFee(35000)
-        })
-    } else {
-      setShippingFee(35000)
-    }
-  }, [recipientInfo, shippingProvider, cart])
-
   const handleApplyVoucher = async (code: string) => {
     try {
       const itemsPayload = cart.map((item) => ({
@@ -528,7 +489,6 @@ const Checkout = () => {
     }
   }
 
-  // Cập nhật handleOrder function để sử dụng validation mới
   const handleOrder = async () => {
     if (isSubmitting) return
     setIsSubmitting(true)
@@ -540,20 +500,17 @@ const Checkout = () => {
       return
     }
 
-    // Validate form trước khi submit
     if (!validateForm()) {
       setIsSubmitting(false)
       return
     }
 
-    // Kiểm tra giỏ hàng có sản phẩm không
     if (cart.length === 0) {
       message.error("Giỏ hàng trống, vui lòng thêm sản phẩm")
       setIsSubmitting(false)
       return
     }
 
-    // Kiểm tra tổng tiền hợp lệ
     if (totalWithDiscountAndShipping <= 0) {
       message.error("Tổng tiền đơn hàng không hợp lệ")
       setIsSubmitting(false)
@@ -562,7 +519,6 @@ const Checkout = () => {
 
     const orderCode = `ORD-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
 
-    // 🔥 XỬ LÝ DỮ LIỆU NGƯỜI NHẬN DỰA TRÊN isDifferentRecipient
     const finalRecipientInfo = isDifferentRecipient
       ? {
           name: recipientInfo.name.trim(),
@@ -575,28 +531,23 @@ const Checkout = () => {
           name: ordererInfo.name.trim(),
           phone: ordererInfo.phone.trim(),
           email: ordererInfo.email.trim(),
-          address: recipientInfo.address.trim(), // Địa chỉ vẫn lấy từ recipientInfo
+          address: recipientInfo.address.trim(),
           note: recipientInfo.note?.trim() || "",
         }
 
     const newOrder = {
       orderCode,
-      // Thông tin cũ để tương thích ngược
       customerName: ordererInfo.name,
       phone: ordererInfo.phone,
       address: recipientInfo.address,
       email: ordererInfo.email,
       notes: recipientInfo.note,
-
-      // 🔥 THÊM CÁC TRƯỜNG MỚI VÀO ĐÂY
       ordererInfo: {
         name: ordererInfo.name.trim(),
         phone: ordererInfo.phone.trim(),
         email: ordererInfo.email.trim(),
       },
-
       recipientInfo: finalRecipientInfo,
-
       paymentMethod: paymentMethod,
       shippingProvider: shippingProvider,
       total: Number(totalWithDiscountAndShipping),
@@ -621,7 +572,6 @@ const Checkout = () => {
       isBuyNow,
     }
 
-    // 🔥 DEBUG: Log dữ liệu trước khi gửi
     console.log("🚀 SENDING ORDER DATA:", newOrder)
     console.log("🚀 isDifferentRecipient:", isDifferentRecipient)
     console.log("🚀 ordererInfo:", newOrder.ordererInfo)
@@ -689,8 +639,8 @@ const Checkout = () => {
         console.log("✅ Đã đồng bộ giỏ hàng từ backend (Checkout):", updatedCart.items)
       } else {
         const cartResponse = await axios.get(`http://localhost:5000/api/carts/${user._id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+          headers: { Authorization: `Bearer ${token}` } },
+        )
         localStorage.setItem("cartItems", JSON.stringify(cartResponse.data.items || []))
         console.log("✅ Đã đồng bộ giỏ hàng từ backend (GET):", cartResponse.data.items)
       }
@@ -704,7 +654,6 @@ const Checkout = () => {
       const error = err as AxiosError<{ message: string }>
       console.error("Lỗi khi đặt hàng:", error)
 
-      // Xử lý các lỗi cụ thể từ server
       if (error.response?.status === 400) {
         message.error(error.response.data?.message || "Thông tin đơn hàng không hợp lệ")
       } else if (error.response?.status === 401) {
@@ -816,7 +765,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Checkbox để chọn người nhận khác */}
                 <div className="mb-6">
                   <Checkbox
                     checked={isDifferentRecipient}
@@ -827,7 +775,6 @@ const Checkout = () => {
                   </Checkbox>
                 </div>
 
-                {/* 🔥 CHỈ HIỂN THỊ FORM THÔNG TIN NGƯỜI NHẬN KHI isDifferentRecipient = true */}
                 {isDifferentRecipient && (
                   <div className="mb-8">
                     <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">
@@ -900,59 +847,55 @@ const Checkout = () => {
                   </div>
                 )}
 
-                {/* 🔥 ĐỊA CHỈ GIAO HÀNG - LUÔN HIỂN THỊ */}
                 <div className="mb-8">
                   <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Địa chỉ giao hàng</h2>
                   <div className="space-y-5">
-                    {/* Địa chỉ giao hàng */}
-                    <div>
-                      {recipientInfo.address ? (
-                        <div
-                          className={`p-4 rounded-lg mb-3 ${
-                            errors.recipient?.address ? "bg-red-50 border border-red-200" : "bg-gray-100"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <p className="font-semibold text-gray-800">
-                                <strong>
-                                  {isDifferentRecipient ? recipientInfo.name : ordererInfo.name}
-                                </strong>{" "}
-                                – {isDifferentRecipient ? recipientInfo.phone : ordererInfo.phone}
-                              </p>
-                              <p className="text-gray-600 mt-1">{recipientInfo.address}</p>
-                            </div>
-                            <button
-                              type="button"
-                              className="text-blue-600 hover:text-blue-800 underline text-sm"
-                              onClick={() => setShowAddressModal(true)}
-                              disabled={isSubmitting}
-                            >
-                              Đổi địa chỉ
-                            </button>
+                    {recipientInfo.address ? (
+                      <div
+                        className={`p-4 rounded-lg mb-3 ${
+                          errors.recipient?.address ? "bg-red-50 border border-red-200" : "bg-gray-100"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-800">
+                              <strong>
+                                {isDifferentRecipient ? recipientInfo.name : ordererInfo.name}
+                              </strong>{" "}
+                              – {isDifferentRecipient ? recipientInfo.phone : ordererInfo.phone}
+                            </p>
+                            <p className="text-gray-600 mt-1">{recipientInfo.address}</p>
                           </div>
+                          <button
+                            type="button"
+                            className="text-blue-600 hover:text-blue-800 underline text-sm"
+                            onClick={() => setShowAddressModal(true)}
+                            disabled={isSubmitting}
+                          >
+                            Đổi địa chỉ
+                          </button>
                         </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className={`w-full px-4 py-3 rounded-lg transition-colors ${
-                            errors.recipient?.address
-                              ? "bg-red-600 hover:bg-red-700 border-red-500 error-input"
-                              : "bg-blue-600 hover:bg-blue-700"
-                          } text-white`}
-                          onClick={() => setShowAddressModal(true)}
-                          disabled={isSubmitting}
-                        >
-                          Chọn địa chỉ giao hàng
-                        </button>
-                      )}
-                      {errors.recipient?.address && (
-                        <p className="text-red-500 text-sm mt-1 flex items-center">
-                          <span className="mr-1">⚠️</span>
-                          {errors.recipient.address}
-                        </p>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className={`w-full px-4 py-3 rounded-lg transition-colors ${
+                          errors.recipient?.address
+                            ? "bg-red-600 hover:bg-red-700 border-red-500 error-input"
+                            : "bg-blue-600 hover:bg-blue-700"
+                        } text-white`}
+                        onClick={() => setShowAddressModal(true)}
+                        disabled={isSubmitting}
+                      >
+                        Chọn địa chỉ giao hàng
+                      </button>
+                    )}
+                    {errors.recipient?.address && (
+                      <p className="text-red-500 text-sm mt-1 flex items-center">
+                        <span className="mr-1">⚠️</span>
+                        {errors.recipient.address}
+                      </p>
+                    )}
 
                     <textarea
                       placeholder="Ghi chú đơn hàng (tùy chọn)"
@@ -978,7 +921,6 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                {/* Modal chọn địa chỉ */}
                 <Modal
                   open={showAddressModal}
                   title="Chọn địa chỉ giao hàng"
@@ -1039,11 +981,28 @@ const Checkout = () => {
                   </ul>
                 </Modal>
 
-                {/* Phương thức thanh toán */}
                 <div className="mt-8">
                   <h3 className="text-xl font-semibold mb-4 text-gray-700">Phương thức thanh toán</h3>
                   <div className="space-y-3">
-                    {["COD", "Momo", "VNPAY"].map((method) => (
+                    {!isHighValueOrder && (
+                      <label
+                        className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          value="COD"
+                          checked={paymentMethod === "COD"}
+                          onChange={(e) => setPaymentMethod(e.target.value)}
+                          className="form-radio h-5 w-5 text-green-600"
+                          disabled={isSubmitting}
+                        />
+                        <span className="ml-3 text-gray-700 font-medium">
+                          Thanh toán khi nhận hàng (COD)
+                        </span>
+                      </label>
+                    )}
+                    {["VNPAY", "Momo"].map((method) => (
                       <label
                         key={method}
                         className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
@@ -1058,11 +1017,7 @@ const Checkout = () => {
                           disabled={isSubmitting}
                         />
                         <span className="ml-3 text-gray-700 font-medium">
-                          {method === "COD"
-                            ? "Thanh toán khi nhận hàng (COD)"
-                            : method === "Momo"
-                              ? "Thanh toán qua MoMo"
-                              : "Thanh toán VNPay"}
+                          {method === "VNPAY" ? "Thanh toán VNPay" : "Thanh toán qua MoMo"}
                         </span>
                       </label>
                     ))}
@@ -1080,7 +1035,6 @@ const Checkout = () => {
                 </button>
               </div>
 
-              {/* Cột bên phải - Thông tin đơn hàng */}
               <div>
                 <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Sản phẩm trong giỏ hàng</h2>
                 <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
@@ -1151,6 +1105,11 @@ const Checkout = () => {
                     <p className="mt-2 font-medium">
                       🎉 Bạn được giảm {orderDiscount.toLocaleString("vi-VN")} VND nhờ có {completedOrderCount} đơn hàng
                       hoàn thành!
+                    </p>
+                  )}
+                  {isHighValueOrder && (
+                    <p className="mt-2 font-medium text-red-600">
+                      ⚠️ Đơn hàng trên 50 triệu không hỗ trợ thanh toán COD.
                     </p>
                   )}
                 </div>

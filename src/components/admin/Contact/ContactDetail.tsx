@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Card, Descriptions, Spin, Button, message, Tag, Tooltip, Modal, Form, Upload, DatePicker } from 'antd';
+import { Card, Descriptions, Spin, Button, message, Tag, Tooltip, Modal, Form, Input } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { io, Socket } from 'socket.io-client';
-import { IContact } from '../../../interface/contact';
-import { ArrowLeftOutlined, CheckCircleOutlined, EyeOutlined, UploadOutlined, CloseOutlined } from '@ant-design/icons';
-import { RcFile } from 'antd/es/upload';
+import { IContact, IMessage } from '../../../interface/contact';
+import { ArrowLeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
+
+const { TextArea } = Input;
 
 const ContactDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,19 +14,25 @@ const ContactDetail = () => {
   const [contact, setContact] = useState<IContact | null>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isFullScreenModalOpen, setIsFullScreenModalOpen] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [form] = Form.useForm();
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [connectionError, setConnectionError] = useState(false);
 
   const fetchContactDetail = async () => {
     try {
+      setConnectionError(false);
       const response = await axios.get(`http://localhost:5000/api/contacts/${id}`);
       setContact(response.data);
       setLoading(false);
     } catch (error) {
-      message.error('Không thể tải chi tiết liên hệ!');
+      const axiosError = error as AxiosError;
+      message.error('Không thể tải chi tiết liên hệ! Vui lòng kiểm tra kết nối mạng.');
+      console.error('Lỗi tải chi tiết liên hệ:', {
+        message: axiosError.message,
+        status: axiosError.response?.status,
+        data: axiosError.response?.data,
+      });
+      setConnectionError(true);
       setLoading(false);
     }
   };
@@ -33,7 +40,6 @@ const ContactDetail = () => {
   useEffect(() => {
     fetchContactDetail();
 
-    // Initialize Socket.IO
     const socketInstance = io('http://localhost:5000', {
       reconnection: true,
       reconnectionAttempts: 5,
@@ -43,6 +49,13 @@ const ContactDetail = () => {
 
     socketInstance.on('connect', () => {
       console.log('Connected to Socket.IO server:', socketInstance.id);
+      setConnectionError(false);
+    });
+
+    socketInstance.on('connect_error', (error) => {
+      console.error('Lỗi kết nối Socket.IO:', error);
+      message.error('Không thể kết nối tới server Socket.IO. Vui lòng kiểm tra kết nối mạng!');
+      setConnectionError(true);
     });
 
     socketInstance.on('contactUpdated', (updatedContact: IContact) => {
@@ -61,54 +74,25 @@ const ContactDetail = () => {
     };
   }, [id]);
 
-  const uploadImage = async (file: RcFile) => {
-    setLoading(true);
-    const formData = new FormData();
-    const publicId = `contact_reply_${id}_${Date.now()}`;
-    formData.append('file', file);
-    formData.append('upload_preset', 'datn-xphone');
-
+  const handleReply = async () => {
     try {
-      console.log('Uploading to Cloudinary:', { publicId, file });
-      const { data } = await axios.post('https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setImageUrl(data.secure_url);
-      message.success('Tải ảnh xác nhận thành công');
-      return data.secure_url;
-    } catch (error: any) {
-      console.error('Cloudinary error:', error.response?.data);
-      message.error(error.response?.data?.error?.message || 'Lỗi upload ảnh lên Cloudinary');
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleConfirmReply = async () => {
-    try {
-      await form.validateFields();
-      if (!imageUrl) {
-        message.error('Vui lòng chọn và tải lên hình ảnh xác nhận!');
-        return;
-      }
-
+      const values = await form.validateFields();
       setLoading(true);
-      const replyDate = form.getFieldValue('replyDate').format('DD/MM/YYYY HH:mm');
+      setConnectionError(false);
 
-      const response = await axios.patch(`http://localhost:5000/api/contacts/${id}`, {
-        status: true,
-        replyImage: imageUrl,
-        replyDate,
+      const response = await axios.patch(`http://localhost:5000/api/contacts/${id}/reply`, {
+        content: values.replyMessage,
       });
 
       setContact(response.data);
-      message.success('Xác nhận đã phản hồi thành công!');
+      message.success('Phản hồi tin nhắn thành công!');
       setIsModalOpen(false);
       form.resetFields();
-      setImageUrl(null);
     } catch (error: any) {
-      message.error(error.message || 'Không thể xác nhận phản hồi, vui lòng thử lại!');
+      const errorMessage = error.response?.data?.message || 'Không thể gửi phản hồi! Vui lòng kiểm tra kết nối mạng.';
+      message.error(errorMessage);
+      console.error('Lỗi khi gửi phản hồi:', error);
+      setConnectionError(true);
     } finally {
       setLoading(false);
     }
@@ -117,37 +101,6 @@ const ContactDetail = () => {
   const handleModalCancel = () => {
     setIsModalOpen(false);
     form.resetFields();
-    setImageUrl(null);
-  };
-
-  const handleViewReply = () => {
-    setIsViewModalOpen(true);
-  };
-
-  const handleFullScreenImage = () => {
-    setIsFullScreenModalOpen(true);
-  };
-
-  const uploadProps = {
-    accept: 'image/*',
-    showUploadList: false,
-    beforeUpload: (file: RcFile) => {
-      const isImage = file.type.startsWith('image/');
-      const isLt5MB = file.size / 1024 / 1024 < 5;
-      console.log('File selected:', { file, isImage, isLt5MB });
-
-      if (!isImage) {
-        message.error('Vui lòng chỉ tải lên file hình ảnh!');
-        return false;
-      }
-      if (!isLt5MB) {
-        message.error('Hình ảnh phải nhỏ hơn 5MB!');
-        return false;
-      }
-
-      uploadImage(file);
-      return false;
-    },
   };
 
   if (loading) {
@@ -161,32 +114,17 @@ const ContactDetail = () => {
   return (
     <div className="mx-auto max-w-4xl p-4">
       <Card
-        title={
-          <div className="text-blue-500 text-2xl font-bold">
-            Chi tiết liên hệ
-          </div>
-        }
+        title={<div className="text-blue-500 text-2xl font-bold">Chi tiết liên hệ</div>}
         extra={
-          <div className="flex gap-2">
-            {contact.status && (
-              <Tooltip title="Xem phản hồi">
-                <Button
-                  type="default"
-                  icon={<EyeOutlined />}
-                  onClick={handleViewReply}
-                >
-                  Xem phản hồi
-                </Button>
-              </Tooltip>
-            )}
-            <Tooltip title="Xác nhận đã phản hồi">
+            <div className="flex gap-2">
+              <Tooltip title="Phản hồi">
               <Button
                 type="primary"
                 icon={<CheckCircleOutlined />}
                 onClick={() => setIsModalOpen(true)}
-                disabled={contact.status}
+                disabled={connectionError}
               >
-                Xác nhận đã phản hồi
+                Phản hồi
               </Button>
             </Tooltip>
             <Tooltip title="Quay lại">
@@ -194,6 +132,7 @@ const ContactDetail = () => {
                 shape="circle"
                 icon={<ArrowLeftOutlined />}
                 onClick={() => navigate(-1)}
+                disabled={connectionError}
               />
             </Tooltip>
           </div>
@@ -204,8 +143,9 @@ const ContactDetail = () => {
           <Descriptions.Item label="Họ tên">{contact.name}</Descriptions.Item>
           <Descriptions.Item label="Email">{contact.email}</Descriptions.Item>
           <Descriptions.Item label="Số điện thoại">{contact.phone}</Descriptions.Item>
+          <Descriptions.Item label="Mô tả">{contact.conversation[0]?.content || 'Chưa có mô tả'}</Descriptions.Item>
           <Descriptions.Item label="Ngày gửi">
-            {contact.date || 'Chưa cập nhật'}
+            {contact.conversation[0]?.timestamp || 'Chưa cập nhật'}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày cập nhật">
             {new Date(contact.updatedAt).toLocaleString()}
@@ -216,113 +156,59 @@ const ContactDetail = () => {
             </Tag>
           </Descriptions.Item>
         </Descriptions>
+
+        <div className="mt-8">
+          <h3 className="text-xl font-bold text-blue-500 mb-4">Lịch sử trò chuyện</h3>
+          {connectionError && (
+            <p className="text-center text-red-500 mb-4">Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng!</p>
+          )}
+          <div className="max-h-[60vh] overflow-y-auto">
+            {contact.conversation.map((msg: IMessage, index: number) => (
+              <div
+                key={index}
+                className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[70%] p-4 rounded-lg ${
+                    msg.sender === 'client' ? 'bg-blue-100' : 'bg-green-100'
+                  }`}
+                >
+                  <p className="font-semibold">{msg.sender === 'client' ? contact.name : 'Admin'}</p>
+                  <p>{msg.content}</p>
+                  {msg.image && (
+                    <img
+                      src={msg.image}
+                      alt="Message"
+                      className="mt-2 max-w-full h-auto"
+                      style={{ maxHeight: '200px', objectFit: 'contain' }}
+                    />
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">{msg.timestamp}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </Card>
 
       <Modal
-        title="Xác nhận đã phản hồi"
+        title="Phản hồi liên hệ"
         open={isModalOpen}
-        onOk={handleConfirmReply}
+        onOk={handleReply}
         onCancel={handleModalCancel}
-        okText="Lưu"
+        okText="Gửi phản hồi"
         cancelText="Hủy"
         confirmLoading={loading}
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="replyImage"
-            label="Hình ảnh xác nhận (vui lòng chụp toàn màn hình)"
-            rules={[{ required: true, message: 'Vui lòng tải lên hình ảnh xác nhận!' }]}
+            name="replyMessage"
+            label="Thông tin phản hồi"
+            rules={[{ required: true, message: 'Vui lòng nhập thông tin phản hồi!' }]}
           >
-            <Upload {...uploadProps}>
-              <Button icon={<UploadOutlined />}>Tải lên hình ảnh</Button>
-            </Upload>
-            {imageUrl && (
-              <img
-                src={imageUrl}
-                alt="Preview"
-                style={{ marginTop: 8, maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
-              />
-            )}
-          </Form.Item>
-          <Form.Item
-            name="replyDate"
-            label="Thời gian, ngày phản hồi"
-            rules={[{ required: true, message: 'Vui lòng chọn thời gian phản hồi!' }]}
-          >
-            <DatePicker
-              showTime
-              format="DD/MM/YYYY HH:mm"
-              placeholder="Chọn thời gian phản hồi"
-              style={{ width: '100%' }}
-            />
+            <TextArea rows={4} placeholder="Nhập thông tin phản hồi" disabled={connectionError} />
           </Form.Item>
         </Form>
-      </Modal>
-
-      <Modal
-        title="Thông tin phản hồi"
-        open={isViewModalOpen}
-        onOk={() => setIsViewModalOpen(false)}
-        onCancel={() => setIsViewModalOpen(false)}
-        okText="Đóng"
-        cancelText="Hủy"
-      >
-        <div className="space-y-4">
-          <div>
-            <strong>Thời gian phản hồi:</strong> {contact.replyDate || 'Chưa cập nhật'}
-          </div>
-          <div>
-            <strong>Hình ảnh xác nhận:</strong>
-            {contact.replyImage ? (
-              <img
-                src={contact.replyImage}
-                alt="Hình ảnh xác nhận"
-                style={{ maxWidth: '100%', maxHeight: '400px', objectFit: 'contain', cursor: 'pointer' }}
-                onClick={handleFullScreenImage}
-              />
-            ) : (
-              <p>Chưa có hình ảnh</p>
-            )}
-          </div>
-        </div>
-      </Modal>
-
-      <Modal
-        title="Xem ảnh toàn màn hình"
-        open={isFullScreenModalOpen}
-        onCancel={() => setIsFullScreenModalOpen(false)}
-        footer={null}
-        centered
-        width="90%"
-        style={{ maxWidth: '1200px' }}
-        bodyStyle={{ padding: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}
-      >
-        {contact.replyImage && (
-          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-            <img
-              src={contact.replyImage}
-              alt="Full-screen reply image"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                maxHeight: '80vh',
-              }}
-            />
-            <Button
-              icon={<CloseOutlined />}
-              onClick={() => setIsFullScreenModalOpen(false)}
-              style={{
-                position: 'absolute',
-                top: 10,
-                right: 10,
-                zIndex: 1000,
-              }}
-            >
-              Đóng
-            </Button>
-          </div>
-        )}
       </Modal>
     </div>
   );

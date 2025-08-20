@@ -2,7 +2,9 @@ const Contact = require('../models/contactModels');
 
 exports.getAllContact = async (req, res) => {
   try {
-    const contacts = await Contact.find();
+    const { email } = req.query;
+    const query = email ? { email } : {};
+    const contacts = await Contact.find(query);
     res.json(contacts);
   } catch (error) {
     console.error('Lỗi khi lấy danh sách liên hệ:', error);
@@ -27,14 +29,14 @@ exports.getContactById = async (req, res) => {
 exports.createContact = async (req, res) => {
   try {
     console.log('Dữ liệu nhận được:', req.body);
-    const contactData = req.body;
-    if (!contactData.name || !contactData.email || !contactData.phone) {
-      return res.status(400).json({ message: 'Thiếu các trường bắt buộc: name, email, hoặc phone' });
+    const { name, email, phone, conversation } = req.body;
+    if (!name || !email || !phone || !conversation || !conversation[0]) {
+      return res.status(400).json({ message: 'Thiếu các trường bắt buộc: name, email, phone, hoặc conversation' });
     }
-    const contact = new Contact(contactData);
+    const contact = new Contact({ name, email, phone, conversation, status: false });
     await contact.save();
     console.log('Liên hệ đã lưu:', contact);
-    const io = global._io; // Sử dụng global._io thay vì req.app.get('io')
+    const io = global._io;
     if (io) {
       io.emit('contactCreated', contact);
       console.log('Phát sự kiện contactCreated:', contact);
@@ -48,31 +50,69 @@ exports.createContact = async (req, res) => {
   }
 };
 
-exports.updateContactStatus = async (req, res) => {
+exports.addReply = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, replyImage, replyDate } = req.body;
-    const updateData = { status };
-    if (replyImage) {
-      updateData.replyImage = replyImage;
+    const { content } = req.body;
+    if (!content) {
+      return res.status(400).json({ message: 'Thiếu nội dung phản hồi' });
     }
-    if (replyDate) {
-      updateData.replyDate = replyDate;
-    }
-    const updatedContact = await Contact.findByIdAndUpdate(id, updateData, { new: true });
-    if (!updatedContact) {
+    const timestamp = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const contact = await Contact.findById(id);
+    if (!contact) {
       return res.status(404).json({ message: 'Không tìm thấy liên hệ' });
     }
-    const io = global._io; // Sử dụng global._io
+    contact.conversation.push({
+      sender: 'admin',
+      content,
+      timestamp,
+    });
+    contact.status = true;
+    await contact.save();
+    const io = global._io;
     if (io) {
-      console.log('Phát sự kiện contactUpdated:', updatedContact);
-      io.emit('contactUpdated', updatedContact);
+      console.log('Phát sự kiện contactUpdated:', contact);
+      io.emit('contactUpdated', contact);
     } else {
       console.error('Socket.IO instance không tồn tại');
     }
-    res.json(updatedContact);
+    res.json(contact);
   } catch (error) {
-    console.error('Lỗi khi cập nhật trạng thái:', error);
-    res.status(500).json({ message: 'Lỗi khi cập nhật trạng thái liên hệ', error: error.message });
+    console.error('Lỗi khi thêm phản hồi:', error);
+    res.status(500).json({ message: 'Lỗi khi thêm phản hồi', error: error.message });
+  }
+};
+
+exports.updateContactConversation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { conversation } = req.body;
+    if (!conversation || !conversation.content) {
+      return res.status(400).json({ message: 'Thiếu nội dung tin nhắn' });
+    }
+    const contact = await Contact.findById(id);
+    if (!contact) {
+      return res.status(404).json({ message: 'Không tìm thấy liên hệ' });
+    }
+    contact.conversation.push({
+      sender: 'client',
+      content: conversation.content,
+      image: conversation.image,
+      timestamp: conversation.timestamp,
+    });
+    contact.status = false; // Set status to false when client sends a new message
+    contact.updatedAt = new Date();
+    await contact.save();
+    const io = global._io;
+    if (io) {
+      console.log('Phát sự kiện contactUpdated:', contact);
+      io.emit('contactUpdated', contact);
+    } else {
+      console.error('Socket.IO instance không tồn tại');
+    }
+    res.status(200).json({ message: 'Cập nhật tin nhắn thành công', contact });
+  } catch (error) {
+    console.error('Lỗi khi cập nhật tin nhắn:', error);
+    res.status(500).json({ message: 'Lỗi khi cập nhật tin nhắn', error: error.message });
   }
 };

@@ -4,6 +4,7 @@ import { Table, Button, Popconfirm, message, Input, Tooltip } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { IComment } from '../../../interface/comments';
+import { AiOutlineLike } from 'react-icons/ai';
 
 interface IProduct {
   _id: string;
@@ -98,24 +99,19 @@ const CommentAdmin = () => {
       dataIndex: 'date',
       render: (text: string) => new Date(text).toLocaleString(),
     },
-    // {
-    //   title: 'Đánh giá',
-    //   dataIndex: 'likes',
-    //   render: (likes: number, record: IComment) => {
-    //     return (
-    //       <div>
-    //         <span>{likes} ❤️</span>
-    //         <Button
-    //           onClick={() => toggleLike(record._id, likes)}
-    //           size="small"
-    //           type="link"
-    //         >
-    //           Thích
-    //         </Button>
-    //       </div>
-    //     );
-    //   },
-    // },
+    {
+      title: 'Đánh giá',
+      dataIndex: 'likes',
+      render: (likes: number) => {
+        return (
+          <div>
+            <span className='flex items-center gap-1'>
+              {likes}<AiOutlineLike />
+            </span>
+          </div>
+        );
+      },
+    },
     {
       title: 'Trạng thái',
       key: 'status',

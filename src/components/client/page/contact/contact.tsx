@@ -1,122 +1,394 @@
-import { message } from "antd"
-import { MapPin, Phone, Mail, Clock } from "lucide-react"
-import { useState, FormEvent, ChangeEvent } from "react"
-import axios, { AxiosError } from "axios"
+import { message, Modal, Input, Button as AntButton } from 'antd';
+import { MapPin, Phone, Mail, Clock, Upload, Send } from 'lucide-react';
+import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import axios, { AxiosError } from 'axios';
+import { Upload as AntdUpload, Button } from 'antd';
+import { RcFile } from 'antd/es/upload';
+import { io, Socket } from 'socket.io-client';
+import { IContact, IMessage } from '../../../../interface/contact';
 
-// Định nghĩa interface cho contact
-interface Contact {
-  _id: string
-  name: string
-  email: string
-  phone: string
-  date: string
-  status: boolean
-  createdAt: string
-  updatedAt: string
-  __v: number
+const { TextArea } = Input;
+
+interface User {
+  _id: string;
+  email: string;
+  role: string;
 }
 
 const Contact = () => {
   const [formData, setFormData] = useState<{
-    name: string
-    email: string
-    phone: string
+    name: string;
+    email: string;
+    phone: string;
+    mota: string;
+    image?: string;
   }>({
-    name: "",
-    email: "",
-    phone: "",
-  })
+    name: '',
+    email: '',
+    phone: '',
+    mota: '',
+    image: undefined,
+  });
+
+  const [uploading, setUploading] = useState(false);
+  const [contacts, setContacts] = useState<IContact[]>([]);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [newMota, setNewMota] = useState('');
+  const [newImage, setNewImage] = useState<string | undefined>(undefined);
+  const [newUploading, setNewUploading] = useState(false);
 
   const validatePhone = (phone: string) => {
-    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/ // Định dạng số điện thoại Việt Nam
-    return phoneRegex.test(phone)
-  }
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+    return phoneRegex.test(phone);
+  };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
+  const checkAuth = () => {
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      try {
+        const user: User = JSON.parse(userData);
+        if (user.email) {
+          setFormData((prev) => ({ ...prev, email: user.email }));
+          setIsAuthenticated(true);
+          return user.email;
+        }
+      } catch (error) {
+        console.error('Invalid user data:', error);
+        message.error('Dữ liệu người dùng không hợp lệ. Vui lòng đăng nhập lại.');
+      }
+    }
+    setIsAuthenticated(false);
+    return null;
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const fetchContactsByEmail = async (email: string) => {
+    if (!email) return;
+    const token = localStorage.getItem('token');
+    try {
+      setConnectionError(false);
+      const response = await axios.get(`http://localhost:5000/api/contacts?email=${encodeURIComponent(email)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const sortedContacts = response.data.sort((a: IContact, b: IContact) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() // Sort ascending to show oldest first
+      );
+      setContacts(sortedContacts);
+    } catch (error) {
+      console.error('Lỗi tải lịch sử liên hệ:', error);
+      message.error('Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau!');
+      setConnectionError(true);
+    }
+  };
+
+  const uploadImage = async (file: RcFile, isNew = false) => {
+    const setUploadingFunc = isNew ? setNewUploading : setUploading;
+    const setImageFunc = isNew ? setNewImage : (url: string) => setFormData((prev) => ({ ...prev, image: url }));
+
+    setUploadingFunc(true);
+    const formData = new FormData();
+    const publicId = `contact_image_${Date.now()}`;
+    formData.append('file', file);
+    formData.append('upload_preset', 'datn-xphone');
+
+    try {
+      console.log('Uploading to Cloudinary:', { publicId, file });
+      const { data } = await axios.post('https://api.cloudinary.com/v1_1/dx3ffn8li/image/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setImageFunc(data.secure_url);
+      message.success('Tải ảnh thành công');
+      return data.secure_url;
+    } catch (error: any) {
+      console.error('Cloudinary error:', error.response?.data);
+      message.error(error.response?.data?.error?.message || 'Lỗi upload ảnh lên Cloudinary');
+      throw error;
+    } finally {
+      setUploadingFunc(false);
+    }
+  };
+
+  const uploadProps = {
+    accept: 'image/*',
+    showUploadList: false,
+    beforeUpload: (file: RcFile) => {
+      const isImage = file.type.startsWith('image/');
+      const isLt5MB = file.size / 1024 / 1024 < 5;
+      console.log('File selected:', { file, isImage, isLt5MB });
+
+      if (!isImage) {
+        message.error('Vui lòng chỉ tải lên file hình ảnh!');
+        return false;
+      }
+      if (!isLt5MB) {
+        message.error('Hình ảnh phải nhỏ hơn 5MB!');
+        return false;
+      }
+
+      uploadImage(file);
+      return false;
+    },
+  };
+
+  const newUploadProps = {
+    accept: 'image/*',
+    showUploadList: false,
+    beforeUpload: (file: RcFile) => {
+      const isImage = file.type.startsWith('image/');
+      const isLt5MB = file.size / 1024 / 1024 < 5;
+      console.log('File selected for new:', { file, isImage, isLt5MB });
+
+      if (!isImage) {
+        message.error('Vui lòng chỉ tải lên file hình ảnh!');
+        return false;
+      }
+      if (!isLt5MB) {
+        message.error('Hình ảnh phải nhỏ hơn 5MB!');
+        return false;
+      }
+
+      uploadImage(file, true);
+      return false;
+    },
+  };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    // Kiểm tra đầu vào
-    if (!formData.name || !formData.email || !formData.phone) {
-      message.error("Vui lòng điền đầy đủ tên, email và số điện thoại")
-      return
+    if (!isAuthenticated) {
+      message.error('Vui lòng đăng nhập để gửi thông tin liên hệ!');
+      return;
     }
 
-    // Validate số điện thoại
+    if (!formData.name || !formData.email || !formData.phone || !formData.mota) {
+      message.error('Vui lòng điền đầy đủ tên, số điện thoại và mô tả');
+      return;
+    }
+
     if (!validatePhone(formData.phone)) {
-      message.error("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09 và có 10 chữ số).")
-      return
+      message.error('Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (bắt đầu bằng 03, 05, 07, 08, 09 và có 10 chữ số).');
+      return;
     }
 
-    // Lấy thời gian hiện tại
-    const now = new Date()
-    const date = now.toLocaleDateString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })
+    const now = new Date();
+    const timestamp = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-    // Tạo đối tượng thông tin gửi
     const submission = {
       name: formData.name,
       email: formData.email,
       phone: formData.phone,
-      date,
+      conversation: [{
+        sender: 'client',
+        content: formData.mota,
+        image: formData.image,
+        timestamp,
+      }],
       status: false,
-    }
+    };
 
     try {
-      // Gửi dữ liệu lên API
-      const response = await axios.post("http://localhost:5000/api/contacts", submission)
-      
-      message.success("Gửi thông tin thành công!")
-
-      // Đặt lại form
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-      })
-
-      // Chuyển hướng đến Gmail
-      const email = "xphonene53@gmail.com"
-      const subject = encodeURIComponent("Liên hệ từ XPhone Store")
-      const body = encodeURIComponent(
-        `Xin chào XPhone Store : <Bạn nhập nội dung cần liên hệ vào đây nhé !>\n\nThông tin liên hệ:\nHọ và tên: ${formData.name}\nEmail: ${formData.email}\nSố điện thoại: ${formData.phone}\n\nTrân trọng,`
-      )
-      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`
-      window.open(gmailUrl, "_blank")
+      setConnectionError(false);
+      const token = localStorage.getItem('token');
+      const response = await axios.post('http://localhost:5000/api/contacts', submission, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success('Gửi thông tin thành công!');
+      localStorage.setItem('lastContactInfo', JSON.stringify({
+        name: formData.name,
+        phone: formData.phone,
+      }));
+      setFormData((prev) => ({
+        ...prev,
+        name: '',
+        phone: '',
+        mota: '',
+        image: undefined,
+      }));
+      if (formData.email) {
+        fetchContactsByEmail(formData.email);
+      }
     } catch (error) {
-      const axiosError = error as AxiosError<{ message?: string; error?: string }>
+      const axiosError = error as AxiosError<{ message?: string; error?: string }>;
       const errorMessage =
-        axiosError.response?.data?.message || axiosError.response?.data?.error || "Không thể gửi thông tin. Vui lòng thử lại."
-      message.error(errorMessage)
-      console.error("Lỗi khi gửi thông tin:", {
+        axiosError.response?.data?.message || axiosError.response?.data?.error || 'Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau!';
+      message.error(errorMessage);
+      console.error('Lỗi khi gửi thông tin:', {
         message: errorMessage,
         status: axiosError.response?.status,
         data: axiosError.response?.data,
-      })
+      });
+      setConnectionError(true);
     }
-  }
+  };
+
+  const handleNewSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!isAuthenticated) {
+      message.error('Vui lòng đăng nhập để gửi thông tin liên hệ!');
+      return;
+    }
+
+    if (!newMota) {
+      message.error('Vui lòng điền mô tả');
+      return;
+    }
+
+    if (!contacts.length) {
+      message.error('Không tìm thấy liên hệ trước đó. Vui lòng gửi liên hệ từ form chính trước.');
+      return;
+    }
+
+    const latestContact = contacts[contacts.length - 1]; // Get the most recent contact
+    if (!latestContact) {
+      message.error('Không tìm thấy liên hệ gần nhất. Vui lòng gửi liên hệ từ form chính trước.');
+      return;
+    }
+
+    const lastInfo = localStorage.getItem('lastContactInfo');
+    if (!lastInfo) {
+      message.error('Không tìm thấy thông tin liên hệ gần nhất. Vui lòng gửi liên hệ từ form chính trước.');
+      return;
+    }
+
+    const { phone } = JSON.parse(lastInfo);
+
+    if (!validatePhone(phone)) {
+      message.error('Số điện thoại từ lần gửi trước không hợp lệ. Vui lòng cập nhật thông tin.');
+      return;
+    }
+
+    const now = new Date();
+    const timestamp = now.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+    const newMessage = {
+      sender: 'client',
+      content: newMota,
+      image: newImage,
+      timestamp,
+    };
+
+    try {
+      setConnectionError(false);
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(`http://localhost:5000/api/contacts/${latestContact._id}`, {
+        conversation: newMessage,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      message.success('Gửi tin nhắn thành công!');
+      setNewMota('');
+      setNewImage(undefined);
+      if (formData.email) {
+        fetchContactsByEmail(formData.email);
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message?: string; error?: string }>;
+      const errorMessage =
+        axiosError.response?.data?.message || axiosError.response?.data?.error || 'Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau!';
+      message.error(errorMessage);
+      console.error('Lỗi khi gửi tin nhắn:', {
+        message: errorMessage,
+        status: axiosError.response?.status,
+        data: axiosError.response?.data,
+      });
+      setConnectionError(true);
+    }
+  };
+
+  const handleModalCancel = () => {
+    setIsModalOpen(false);
+    setNewMota('');
+    setNewImage(undefined);
+  };
+
+  useEffect(() => {
+    const email = checkAuth();
+    if (email) {
+      fetchContactsByEmail(email);
+    } else {
+      setContacts([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    const socketInstance = io('http://localhost:5000', {
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      auth: { token: localStorage.getItem('token') },
+    });
+    setSocket(socketInstance);
+
+    socketInstance.on('connect', () => {
+      console.log('Kết nối với server Socket.IO:', socketInstance.id);
+      setConnectionError(false);
+    });
+
+    socketInstance.on('connect_error', (error) => {
+      console.error('Lỗi kết nối Socket.IO:', error);
+      message.error('Không thể kết nối tới server Socket.IO. Vui lòng kiểm tra kết nối mạng!');
+      setConnectionError(true);
+    });
+
+    socketInstance.on('contactCreated', (newContact: IContact) => {
+      if (newContact.email === formData.email) {
+        setContacts((prev) => [...prev, newContact].sort((a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() // Sort ascending
+        ));
+        message.info(`Liên hệ mới đã được tạo: ${newContact.name}`);
+      }
+    });
+
+    socketInstance.on('contactUpdated', (updatedContact: IContact) => {
+      if (updatedContact.email === formData.email) {
+        setContacts((prev) => {
+          const exists = prev.some((contact) => contact._id === updatedContact._id);
+          const newContacts = exists
+            ? prev.map((contact) => (contact._id === updatedContact._id ? updatedContact : contact))
+            : [...prev, updatedContact];
+          return newContacts.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()); // Sort ascending
+        });
+        message.info('Bạn đã nhận được phản hồi từ XPhone Store!');
+      }
+    });
+
+    socketInstance.on('disconnect', () => {
+      console.log('Ngắt kết nối với server Socket.IO');
+    });
+
+    return () => {
+      socketInstance.disconnect();
+    };
+  }, [formData.email]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
-        {/* Phần tiêu đề */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Liên hệ với chúng tôi</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Chúng tôi luôn sẵn sàng hỗ trợ bạn. Điền thông tin dưới đây để liên hệ.
           </p>
+          {isAuthenticated ? (
+            <div className="flex justify-center gap-4 mt-4">
+              <p className="text-lg text-gray-700">Đăng nhập với: <strong>{formData.email}</strong></p>
+            </div>
+          ) : (
+            <p className="text-lg text-red-500 mt-4">Vui lòng đăng nhập để sử dụng tính năng liên hệ.</p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Thông tin liên hệ */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Thẻ thông tin cửa hàng */}
             <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-3 bg-red-100 rounded-xl">
@@ -124,12 +396,10 @@ const Contact = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900">XPhone Store</h2>
               </div>
-
               <p className="text-gray-600 mb-8 leading-relaxed">
                 Hệ thống cửa hàng XPhone chuyên bán lẻ điện thoại, máy tính laptop, smartwatch, smartphone, phụ kiện chính
                 hãng - Giá tốt, giao miễn phí.
               </p>
-
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
@@ -140,7 +410,6 @@ const Contact = () => {
                     <p className="text-gray-600">Trịnh Văn Bô, Nam Từ Liêm, Hà Nội</p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-4">
                   <div className="p-2 bg-green-100 rounded-lg flex-shrink-0">
                     <Phone className="w-5 h-5 text-green-600" />
@@ -150,7 +419,6 @@ const Contact = () => {
                     <p className="text-gray-600">0123 456 789</p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-4">
                   <div className="p-2 bg-purple-100 rounded-lg flex-shrink-0">
                     <Mail className="w-5 h-5 text-purple-600" />
@@ -160,7 +428,6 @@ const Contact = () => {
                     <p className="text-gray-600">trinhthiduong@gmail.com</p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-4">
                   <div className="p-2 bg-orange-100 rounded-lg flex-shrink-0">
                     <Clock className="w-5 h-5 text-orange-600" />
@@ -172,8 +439,6 @@ const Contact = () => {
                 </div>
               </div>
             </div>
-
-            {/* Thống kê nhanh */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white rounded-xl shadow-lg p-6 text-center border border-gray-100">
                 <div className="text-3xl font-bold text-blue-600 mb-2">24/7</div>
@@ -186,9 +451,7 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* Form liên hệ */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Form liên hệ */}
             <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
               <div className="flex items-center gap-3 mb-8">
                 <div className="p-3 bg-blue-100 rounded-xl">
@@ -196,127 +459,201 @@ const Contact = () => {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900">Gửi thông tin liên hệ</h3>
               </div>
+              {isAuthenticated ? (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                      Email
+                    </label>
+                    <Input
+                      id="email"
+                      value={formData.email}
+                      disabled
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                      Họ và tên
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Nhập họ và tên"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+                      Số điện thoại
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Nhập số điện thoại (VD: 0935123456)"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="mota" className="block text-sm font-medium text-gray-700 mb-1">
+                      Mô tả
+                    </label>
+                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2">
+                      <TextArea
+                        id="mota"
+                        name="mota"
+                        value={formData.mota}
+                        onChange={handleInputChange}
+                        className="flex-1 border-none focus:ring-0"
+                        placeholder="Nhập mô tả hoặc câu hỏi của bạn"
+                        autoSize={{ minRows: 2, maxRows: 4 }}
+                      />
+                      <AntdUpload {...uploadProps}>
+                        <Button icon={<Upload className="w-5 h-5 text-gray-500" />} loading={uploading} type="text" />
+                      </AntdUpload>
+                      <button
+                        type="submit"
+                        className="p-2 text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                        disabled={uploading || connectionError || !formData.mota}
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </div>
+                    {formData.image && (
+                      <div className="mt-2">
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </form>
+              ) : (
+                <p className="text-center text-red-500">Vui lòng đăng nhập để gửi thông tin liên hệ.</p>
+              )}
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Họ và tên
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nhập họ và tên"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nhập email của bạn"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                    Số điện thoại
-                  </label>
-                  <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Nhập số điện thoại (VD: 0935123456)"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl"
+            <div className="bg-white Rounded-2xl shadow-xl p-8 border border-gray-100">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-gray-900">Lịch sử liên hệ</h3>
+                <Button
+                  type="primary"
+                  onClick={() => setIsModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={connectionError || !isAuthenticated}
                 >
-                  Gửi thông tin
-                </button>
-              </form>
-            </div>
-
-            {/* Bản đồ */}
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <MapPin className="w-5 h-5 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Vị trí cửa hàng</h3>
-                </div>
+                  Xem liên hệ
+                </Button>
               </div>
-              <div className="relative">
-                <iframe
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3723.8639311820666!2d105.74468687503176!3d21.03812978061353!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x313455e940879933%3A0xcf10b34e9f1a03df!2zVHLGsOG7nW5nIENhbyDEkeG6s25nIEZQVCBQb2x5dGVjaG5pYw!5e0!3m2!1svi!2s!4v1747882891526!5m2!1svi!2s"
-                  width="100%"
-                  height="400"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="w-full"
-                />
-                <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-3">
-                  <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <MapPin className="w-4 h-4 text-red-500" />
-                    XPhone Store
+              {connectionError && (
+                <p className="text-center text-red-500 mb-4">Không thể kết nối tới server. Vui lòng kiểm tra kết nối mạng!</p>
+              )}
+              <Modal
+                title="Lịch sử liên hệ"
+                open={isModalOpen}
+                onCancel={handleModalCancel}
+                footer={null}
+                width={800}
+              >
+                {isAuthenticated && contacts.length > 0 ? (
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    {contacts.map((contact: IContact) => (
+                      <div key={contact._id} className="border-b pb-4 mb-4">
+                        {contact.conversation.length > 0 && (
+                          <p className="text-sm text-gray-500 mb-2">
+                            Liên hệ ngày {contact.conversation[0]?.timestamp || ''}
+                          </p>
+                        )}
+                        <div className="space-y-4">
+                          {contact.conversation.map((msg: IMessage, index: number) => (
+                            <div
+                              key={index}
+                              className={`flex ${msg.sender === 'client' ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div
+                                className={`max-w-[70%] p-4 rounded-lg ${
+                                  msg.sender === 'client' ? 'bg-blue-100' : 'bg-green-100'
+                                }`}
+                              >
+                                <p className="font-semibold">{msg.sender === 'client' ? contact.name : 'Admin'}</p>
+                                <p>{msg.content}</p>
+                                {msg.image && (
+                                  <img
+                                    src={msg.image}
+                                    alt="Message"
+                                    className="mt-2 max-w-full h-auto"
+                                    style={{ maxHeight: '200px', objectFit: 'contain' }}
+                                  />
+                                )}
+                                <p className="text-xs text-gray-500 mt-1">{msg.timestamp}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              </div>
+                ) : (
+                  <p className="text-center text-gray-500">
+                    {isAuthenticated ? 'Chưa có lịch sử liên hệ.' : 'Vui lòng đăng nhập để xem lịch sử liên hệ.'}
+                  </p>
+                )}
+                {isAuthenticated && (
+                  <div className="mt-6 border-t pt-6">
+                    <h4 className="text-xl font-bold text-gray-900 mb-4">Gửi tin nhắn mới</h4>
+                    <form onSubmit={handleNewSubmit} className="space-y-6">
+                      <div>
+                        <label htmlFor="newMota" className="block text-sm font-medium text-gray-700 mb-1">
+                          Mô tả
+                        </label>
+                        <div className="flex items-center gap-2 border border-gray-300 rounded-lg p-2">
+                          <TextArea
+                            id="newMota"
+                            value={newMota}
+                            onChange={(e) => setNewMota(e.target.value)}
+                            className="flex-1 border-none focus:ring-0"
+                            placeholder="Nhập mô tả hoặc câu hỏi của bạn"
+                            autoSize={{ minRows: 2, maxRows: 4 }}
+                          />
+                          <AntdUpload {...newUploadProps}>
+                            <Button icon={<Upload className="w-5 h-5 text-gray-500" />} loading={newUploading} type="text" />
+                          </AntdUpload>
+                          <button
+                            type="submit"
+                            className="p-2 text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+                            disabled={newUploading || connectionError || !newMota || !contacts.length}
+                          >
+                            <Send className="w-5 h-5" />
+                          </button>
+                        </div>
+                        {newImage && (
+                          <div className="mt-2">
+                            <img
+                              src={newImage}
+                              alt="Preview"
+                              style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </form>
+                  </div>
+                )}
+              </Modal>
             </div>
-          </div>
-        </div>
-
-        {/* Phần thông tin bổ sung */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="p-4 bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Phone className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Gọi điện trực tiếp</h3>
-            <p className="text-gray-600 mb-4">Liên hệ ngay với chúng tôi qua hotline</p>
-            <a href="tel:0123456789" className="text-blue-600 font-semibold hover:text-blue-700">
-              0123 456 789
-            </a>
-          </div>
-
-          <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="p-4 bg-green-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <Mail className="w-8 h-8 text-green-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Gửi email</h3>
-            <p className="text-gray-600 mb-4">Gửi email cho chúng tôi để được hỗ trợ</p>
-            <a href="mailto:trinhthiduong@gmail.com" className="text-green-600 font-semibold hover:text-green-700">
-              trinhthiduong@gmail.com
-            </a>
-          </div>
-
-          <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-100">
-            <div className="p-4 bg-purple-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <MapPin className="w-8 h-8 text-purple-600" />
-            </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Ghé thăm cửa hàng</h3>
-            <p className="text-gray-600 mb-4">Đến trực tiếp cửa hàng để trải nghiệm</p>
-            <span className="text-purple-600 font-semibold">Trịnh Văn Bô, Hà Nội</span>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Contact
+export default Contact;

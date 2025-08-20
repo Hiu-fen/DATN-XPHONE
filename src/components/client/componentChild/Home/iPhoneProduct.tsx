@@ -95,74 +95,73 @@ const IphoneProducts: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mx-4">
           {isLoading && iphoneProducts.length === 0
             ? Array.from({ length: 4 }).map((_, idx) => (
-                <SkeletonCard key={idx} />
-              ))
+              <SkeletonCard key={idx} />
+            ))
             : displayedIphoneProducts.map((product) => (
-                <div
-                  key={product._id}
-                  className="relative border rounded-xl shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group bg-green-50 hover:bg-green-100"
-                >
-                  <div className="relative overflow-hidden rounded-t-xl">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
+              <div
+                key={product._id}
+                className="relative border rounded-xl shadow-sm hover:shadow-xl transition duration-300 flex flex-col justify-between group bg-green-50 hover:bg-green-100"
+              >
+                <div className="relative overflow-hidden rounded-t-xl">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-52 object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
 
-                    {/* ✅ Tags nằm cạnh nhau sử dụng AntD */}
-                    <div className="absolute top-2 left-2 flex">
-                      {isNewProduct(product.createdAt!) && (
-                        <Tag color="red" className="px-2 py-0.5 text-xs">
-                          Mới
-                        </Tag>
-                      )}
-                      <Tag
-                        color="blue"
-                        className="px-2 py-0.5 text-xs flex items-center gap-1"
-                      >
-                        <FaShippingFast />
-                        Miễn phí ship
+                  {/* ✅ Tags nằm cạnh nhau sử dụng AntD */}
+                  <div className="absolute top-2 left-2 flex">
+                    {isNewProduct(product.createdAt!) && (
+                      <Tag color="red" className="px-2 py-0.5 text-xs">
+                        Mới
                       </Tag>
-                    </div>
-
-                    {/* Nút xem & thích */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition duration-300">
-                      <div className="flex flex-col gap-2 bg-green-600/30 p-1 rounded-full">
-                        <Link
-                          to={`/detail/${product._id}`}
-                          className="flex justify-center items-center w-9 h-9 rounded-full bg-white hover:bg-green-100 transition"
-                        >
-                          <FaEye size={14} className="text-green-700" />
-                        </Link>
-                        <button
-                          onClick={() => handleLike(product._id!)}
-                          className={`flex justify-center items-center w-9 h-9 rounded-full transition ${
-                            likedProducts.includes(product._id!)
-                              ? "bg-green-600 text-white"
-                              : "bg-white hover:bg-green-100"
-                          }`}
-                        >
-                          <FaHeart size={14} />
-                        </button>
-                      </div>
-                    </div>
+                    )}
+                    <Tag
+                      color="blue"
+                      className="px-2 py-0.5 text-xs flex items-center gap-1"
+                    >
+                      <FaShippingFast />
+                      Miễn phí ship
+                    </Tag>
                   </div>
 
-                  {/* Thông tin sản phẩm */}
-                  <div className="p-3">
-                    <h3 className="font-semibold text-lg mb-1 truncate text-green-700">
-                      {product.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {product.mota}
-                    </p>
-                    <p className="text-red-500 font-bold text-base mt-1">
-                      Giá từ:{" "}
-                      {product.variants?.[0]?.price?.toLocaleString()}₫
-                    </p>
+                  {/* Nút xem & thích */}
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition duration-300">
+                    <div className="flex flex-col gap-2 bg-green-600/30 p-1 rounded-full">
+                      <Link
+                        to={`/detail/${product._id}`}
+                        className="flex justify-center items-center w-9 h-9 rounded-full bg-white hover:bg-green-100 transition"
+                      >
+                        <FaEye size={14} className="text-green-700" />
+                      </Link>
+                      <button
+                        onClick={() => handleLike(product._id!)}
+                        className={`flex justify-center items-center w-9 h-9 rounded-full transition ${likedProducts.includes(product._id!)
+                          ? "bg-green-600 text-white"
+                          : "bg-white hover:bg-green-100"
+                          }`}
+                      >
+                        <FaHeart size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
+
+                {/* Thông tin sản phẩm */}
+                <div className="p-3">
+                  <h3 className="font-semibold text-lg mb-1 truncate text-green-700">
+                    {product.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 line-clamp-2">
+                    {product.mota}
+                  </p>
+                  <p className="text-red-500 font-bold text-base mt-1">
+                    Giá từ:{" "}
+                    {product.variants?.[0]?.price?.toLocaleString()}₫
+                  </p>
+                </div>
+              </div>
+            ))}
         </div>
 
         {iphoneProducts.length > 8 && (
