@@ -55,7 +55,7 @@ interface RecipientInfo {
   note: string
   to_district_id: string
   to_ward_code: string
-  shippingProvider:string
+  shippingProvider: string
 }
 
 const Checkout = () => {
@@ -271,45 +271,65 @@ const Checkout = () => {
   const orderDiscount = getOrderDiscount(completedOrderCount)
   const showOrderDiscountLine = orderDiscount > 0
 
+  // -----------------------
+  // Hàm tái sử dụng: tính phí vận chuyển
+  // -----------------------
+  const calculateShipping = async ({
+    to_district_id,
+    to_ward_code,
+    provider = shippingProvider,
+    cartParam = cart,
+  }: {
+    to_district_id?: string | number
+    to_ward_code?: string | number
+    provider?: string
+    cartParam?: CartItem[]
+  }) => {
+    if (!to_district_id || !to_ward_code) {
+      setShippingFee(35000)
+      return
+    }
 
+    const weight = (cartParam || []).reduce((sum, item) => sum + item.soluong * 300, 0) // 300g mỗi sản phẩm
 
+    if (provider === "GHN") {
+      try {
+        const res = await axios.post(
+          "http://localhost:5000/api/ghn/calculate-fee",
+          {
+            to_district_id: Number(to_district_id),
+            to_ward_code: String(to_ward_code),
+            weight,
+            insurance_value: 0,
+          },
+          { withCredentials: true },
+        )
+
+        const fee = res.data.shippingFee ?? 35000
+        setShippingFee(fee)
+        console.log(`✅ Phí vận chuyển cập nhật: ${fee} VND`)
+      } catch (err) {
+        console.error("❌ Lỗi tính phí GHN:", err)
+        setShippingFee(35000)
+        // Không show message error nhiều lần ở mount, nếu muốn có thể hiện 1 lần
+        // message.error("Không thể tính phí vận chuyển. Sử dụng phí mặc định.")
+      }
+    } else {
+      // Fallback cho các nhà cung cấp khác
+      setShippingFee(35000)
+    }
+  }
+
+  // useEffect gọi calculateShipping khi recipient địa chỉ hoặc cart hoặc shippingProvider thay đổi
   useEffect(() => {
-  const { to_district_id, to_ward_code, shippingProvider } = recipientInfo;
-
-  if (!to_district_id || !to_ward_code) {
-    setShippingFee(35000); // Giá trị mặc định nếu chưa có địa chỉ
-    return;
-  }
-
-  const weight = cart.reduce((sum, item) => sum + item.soluong * 300, 0); // 300g mỗi sản phẩm, như mã cũ
-
-  if (shippingProvider === "GHN") {
-    console.log("✅ Tính phí vận chuyển cho địa chỉ:", to_district_id, to_ward_code);
-    axios
-      .post(
-        "http://localhost:5000/api/ghn/calculate-fee",
-        {
-          to_district_id: Number(to_district_id),
-          to_ward_code: String(to_ward_code),
-          weight,
-          insurance_value: 0, // Hoặc giá trị bảo hiểm nếu cần
-        },
-        { withCredentials: true }
-      )
-      .then((res) => {
-        const fee = res.data.shippingFee || 35000;
-        setShippingFee(fee);
-        console.log(`✅ Phí vận chuyển cập nhật: ${fee} VND`);
-      })
-      .catch((err) => {
-        console.error("❌ Lỗi tính phí GHN:", err);
-        setShippingFee(35000); // Fallback về giá trị mặc định
-        message.error("Không thể tính phí vận chuyển. Sử dụng phí mặc định.");
-      });
-  } else {
-    setShippingFee(35000); // Phí mặc định cho các nhà cung cấp khác
-  }
-}, [recipientInfo.to_district_id, recipientInfo.to_ward_code, shippingProvider, cart]);
+    calculateShipping({
+      to_district_id: recipientInfo.to_district_id,
+      to_ward_code: recipientInfo.to_ward_code,
+      provider: shippingProvider,
+      cartParam: cart,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipientInfo.to_district_id, recipientInfo.to_ward_code, shippingProvider, cart])
 
   // Cập nhật thông tin người dùng khi component mount
   useEffect(() => {
@@ -381,6 +401,7 @@ const Checkout = () => {
     clearError("recipient", field)
   }
 
+  // Fetch addresses và gọi calculateShipping khi có địa chỉ mặc định
   useEffect(() => {
     const fetchAddresses = async () => {
       if (currentUser?._id) {
@@ -400,6 +421,14 @@ const Checkout = () => {
               to_district_id: defaultAddr.district_id,
               to_ward_code: defaultAddr.ward_code,
             }))
+
+            // Gọi tính phí ngay sau khi có defaultAddr (sử dụng cart hiện tại)
+            calculateShipping({
+              to_district_id: defaultAddr.district_id,
+              to_ward_code: defaultAddr.ward_code,
+              provider: shippingProvider,
+              cartParam: cart,
+            })
           }
         } catch (error) {
           console.error("Lỗi khi lấy địa chỉ:", error)
@@ -409,13 +438,22 @@ const Checkout = () => {
     }
 
     fetchAddresses()
-  }, [currentUser])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?._id])
 
+  // Fetch cart và products, enrich cart items; gọi calculateShipping ngay sau khi setCart
   useEffect(() => {
     const fetchCartAndProducts = async () => {
       try {
         if (buyNowItem) {
           setCart([buyNowItem])
+          // tính phí ngay với cart mới
+          calculateShipping({
+            to_district_id: recipientInfo.to_district_id,
+            to_ward_code: recipientInfo.to_ward_code,
+            provider: shippingProvider,
+            cartParam: [buyNowItem],
+          })
           return
         }
 
@@ -449,6 +487,13 @@ const Checkout = () => {
           })
 
           setCart(enrichedCartItems)
+          // tính phí ngay với cart mới
+          calculateShipping({
+            to_district_id: recipientInfo.to_district_id,
+            to_ward_code: recipientInfo.to_ward_code,
+            provider: shippingProvider,
+            cartParam: enrichedCartItems,
+          })
           return
         }
 
@@ -491,6 +536,14 @@ const Checkout = () => {
           })
 
           setCart(enrichedCartItems)
+
+          // tính phí ngay với cart mới
+          calculateShipping({
+            to_district_id: recipientInfo.to_district_id,
+            to_ward_code: recipientInfo.to_ward_code,
+            provider: shippingProvider,
+            cartParam: enrichedCartItems,
+          })
         }
       } catch (error) {
         console.error("Lỗi khi lấy giỏ hàng từ server:", error)
@@ -499,6 +552,7 @@ const Checkout = () => {
     }
 
     fetchCartAndProducts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser, buyNowItem, selectedItems])
 
   const handleApplyVoucher = async (code: string) => {
@@ -956,7 +1010,7 @@ const Checkout = () => {
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500"
                       disabled={isSubmitting}
                     >
-                      <option value="Giao hàng tiêu chuẩn">Giao hàng tiêu chuẩn</option>
+                      <option value="Standard">Giao hàng tiêu chuẩn</option>
                       <option value="GHN">Giao hàng nhanh (GHN)</option>
                       <option value="J&T">J&T Express</option>
                     </select>
@@ -1000,50 +1054,50 @@ const Checkout = () => {
                             )}
                           </div>
                           <button
-  className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-  onClick={() => {
-    console.log("✅ Chọn địa chỉ:", addr);
-    setRecipientInfo((prev) => ({
-      ...prev,
-      name: addr.name,
-      phone: addr.phone,
-      address: addr.address,
-      to_district_id: addr.district_id,
-      to_ward_code: addr.ward_code,
-    }));
-    setShowAddressModal(false);
-    // Gọi hàm tính phí vận chuyển ngay sau khi chọn địa chỉ
-    const weight = cart.reduce((sum, item) => sum + item.soluong * 300, 0);
-    if (shippingProvider === "GHN") {
-      axios
-        .post(
-          "http://localhost:5000/api/ghn/calculate-fee",
-          {
-            to_district_id: Number(addr.district_id),
-            to_ward_code: String(addr.ward_code),
-            weight,
-            insurance_value: 0,
-          },
-          { withCredentials: true }
-        )
-        .then((res) => {
-          const fee = res.data.shippingFee || 35000;
-          setShippingFee(fee);
-          console.log(`✅ Phí vận chuyển cập nhật: ${fee} VND`);
-        })
-        .catch((err) => {
-          console.error("❌ Lỗi tính phí GHN:", err);
-          setShippingFee(35000);
-          message.error("Không thể tính phí vận chuyển. Sử dụng phí mặc định.");
-        });
-    } else {
-      setShippingFee(35000);
-    }
-  }}
-  disabled={isSubmitting}
->
-  Chọn
-</button>
+                            className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            onClick={() => {
+                              console.log("✅ Chọn địa chỉ:", addr);
+                              setRecipientInfo((prev) => ({
+                                ...prev,
+                                name: addr.name,
+                                phone: addr.phone,
+                                address: addr.address,
+                                to_district_id: addr.district_id,
+                                to_ward_code: addr.ward_code,
+                              }));
+                              setShowAddressModal(false);
+                              // Gọi hàm tính phí vận chuyển ngay sau khi chọn địa chỉ
+                              const weight = cart.reduce((sum, item) => sum + item.soluong * 300, 0);
+                              if (shippingProvider === "GHN") {
+                                axios
+                                  .post(
+                                    "http://localhost:5000/api/ghn/calculate-fee",
+                                    {
+                                      to_district_id: Number(addr.district_id),
+                                      to_ward_code: String(addr.ward_code),
+                                      weight,
+                                      insurance_value: 0,
+                                    },
+                                    { withCredentials: true }
+                                  )
+                                  .then((res) => {
+                                    const fee = res.data.shippingFee || 35000;
+                                    setShippingFee(fee);
+                                    console.log(`✅ Phí vận chuyển cập nhật: ${fee} VND`);
+                                  })
+                                  .catch((err) => {
+                                    console.error("❌ Lỗi tính phí GHN:", err);
+                                    setShippingFee(35000);
+                                    message.error("Không thể tính phí vận chuyển. Sử dụng phí mặc định.");
+                                  });
+                              } else {
+                                setShippingFee(35000);
+                              }
+                            }}
+                            disabled={isSubmitting}
+                          >
+                            Chọn
+                          </button>
                         </div>
                       </li>
                     ))}
