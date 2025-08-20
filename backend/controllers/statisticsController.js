@@ -63,7 +63,7 @@ exports.getDashboardStats = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -85,7 +85,7 @@ exports.getDashboardStats = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -107,7 +107,7 @@ exports.getDashboardStats = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -128,7 +128,7 @@ exports.getDashboardStats = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -165,7 +165,7 @@ exports.getDashboardStats = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -253,7 +253,7 @@ exports.getDailyStats = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -308,7 +308,7 @@ exports.getStatsByDateRange = async (req, res) => {
       $or: [
         { paymentMethod: "COD", status: { $in: completedStatuses } },
         {
-          paymentMethod: { $in: ["Momo", "VNPay"] },
+          paymentMethod: { $in: ["Momo", "VNPAY"] },
           paymentStatus: "Đã thanh toán",
         },
       ],
@@ -321,7 +321,7 @@ exports.getStatsByDateRange = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -343,7 +343,7 @@ exports.getStatsByDateRange = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -402,7 +402,7 @@ exports.getDailyRevenueInMonth = async (req, res) => {
           $or: [
             { paymentMethod: "COD", status: { $in: completedStatuses } },
             {
-              paymentMethod: { $in: ["Momo", "VNPay"] },
+              paymentMethod: { $in: ["Momo", "VNPAY"] },
               paymentStatus: "Đã thanh toán",
             },
           ],
@@ -447,7 +447,7 @@ exports.getTopSellingProducts = async (req, res) => {
       $or: [
         { paymentMethod: "COD", status: { $in: completedStatuses } },
         {
-          paymentMethod: { $in: ["Momo", "VNPay"] },
+          paymentMethod: { $in: ["Momo", "VNPAY"] },
           paymentStatus: "Đã thanh toán",
         },
       ],
