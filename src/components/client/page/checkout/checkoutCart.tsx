@@ -65,29 +65,29 @@ const Checkout = () => {
   const isBuyNow = !!buyNowItem
 
   const {
-    data: completedOrderCount = 0,
-    isLoading: isLoadingOrders,
-    error: orderError,
-  } = useQuery({
-    queryKey: ["completed-orders", user?._id],
-    queryFn: async () => {
-      if (!user?._id) return 0
-      try {
-        const res = await axios.get(`http://localhost:5000/api/orders/user/${user._id}?status=Hoàn thành`, {
-          withCredentials: true,
-        })
-        console.log("✅ Đã lấy số đơn hàng hoàn thành:", res.data.length)
-        return res.data.length
-      } catch (error) {
-        console.error("❌ Lỗi khi lấy số đơn hàng hoàn thành:", error)
-        message.error("Không thể tải dữ liệu đơn hàng. Vui lòng thử lại.")
-        return 0
-      }
-    },
-    enabled: !!user?._id,
-    staleTime: 1000 * 60 * 5,
-    refetchOnWindowFocus: true,
-  })
+  data: completedOrderCount = 0,
+  isLoading: isLoadingOrders,
+  error: orderError,
+} = useQuery({
+  queryKey: ["completed-orders", user?._id],
+  queryFn: async () => {
+    if (!user?._id) return 0
+    try {
+      const res = await axios.get(`http://localhost:5000/api/orders/user/${user._id}?status=Đã nhận hàng`, {
+        withCredentials: true,
+      })
+      console.log("✅ Đã lấy số đơn hàng hoàn thành:", res.data.length)
+      return res.data.length
+    } catch (error) {
+      console.error("❌ Lỗi khi lấy số đơn hàng hoàn thành:", error)
+      message.error("Không thể tải dữ liệu đơn hàng. Vui lòng thử lại.")
+      return 0
+    }
+  },
+  enabled: !!user?._id,
+  staleTime: 1000 * 60 * 5,
+  refetchOnWindowFocus: true,
+});
 
   useEffect(() => {
     const hasCartItems = localStorage.getItem("cartItems")

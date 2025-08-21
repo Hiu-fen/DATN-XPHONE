@@ -439,13 +439,23 @@ exports.markAsPaid = async (req, res) => {
 // Lấy đơn hàng theo người dùng
 exports.getOrdersByUser = async (req, res) => {
   try {
-    const { userId } = req.params
-    const orders = await Order.find({
+    const { userId } = req.params;
+    const { status } = req.query; // Lấy tham số status từ query
+
+    // Xây dựng điều kiện tìm kiếm
+    const query = {
       userId,
       $or: [{ paymentMethod: { $ne: "VNPAY" } }, { isPaid: true }],
-    }).sort({ date: -1 })
-    res.json(orders)
+    };
+
+    // Nếu có tham số status, thêm điều kiện lọc theo status
+    if (status) {
+      query.status = { $regex: status, $options: "i" }; // Không phân biệt hoa/thường
+    }
+
+    const orders = await Order.find(query).sort({ date: -1 });
+    res.json(orders);
   } catch (error) {
-    res.status(500).json({ message: "Lỗi server khi lấy lịch sử đơn hàng" })
+    res.status(500).json({ message: "Lỗi server khi lấy lịch sử đơn hàng" });
   }
-}
+};
