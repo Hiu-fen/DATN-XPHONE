@@ -65,7 +65,7 @@ const PromotionPageClient = () => {
 
   return (
     <div className="mx-auto px-4 py-8 font-sans">
-      <h2 className="text-center text-green-700 text-4xl font-bold mb-6">
+      <h2 className="text-center text-4xl font-bold mb-6">
         Mã khuyến mãi
       </h2>
 

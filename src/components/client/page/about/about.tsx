@@ -244,7 +244,7 @@ const About = () => {
           </Col>
         </Row>
 
-        /* Features */
+        {/* /* Features */}
         <div className="mb-16 animate-in fade-in slide-in-from-bottom duration-700 delay-500">
           <div className="text-center mb-12">
             <Title level={2} className="text-3xl font-bold text-gray-800 mb-4">

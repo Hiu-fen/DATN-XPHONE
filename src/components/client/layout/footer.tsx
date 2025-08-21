@@ -63,7 +63,7 @@ const ClientFooter = () => {
           <FaMapMarkerAlt className="mr-2" /> Trịnh Văn Bô
         </li>
         <li className="flex items-center">
-          <FaPhone className="mr-2" /> Hãy alo cho em híu
+          <FaPhone className="mr-2" /> Hãy alo cho Hiếu
         </li>
         <li className="flex items-center">
           <FaEnvelope className="mr-2" /> trinhthiduong@gmail.com
