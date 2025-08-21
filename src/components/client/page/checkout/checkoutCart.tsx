@@ -39,14 +39,12 @@ interface IUserExtended {
   address?: string
 }
 
-// Interface cho thông tin người đặt hàng
 interface OrdererInfo {
   name: string
   phone: string
   email: string
 }
 
-// Interface cho thông tin người nhận hàng
 interface RecipientInfo {
   name: string
   phone: string
@@ -87,7 +85,7 @@ const Checkout = () => {
       }
     },
     enabled: !!user?._id,
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: true,
   })
 
@@ -120,10 +118,8 @@ const Checkout = () => {
     discountValue: string
   } | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState("VNPAY") // Changed default to VNPAY
+  const [paymentMethod, setPaymentMethod] = useState("VNPAY")
   const [shippingProvider, setShippingProvider] = useState("GHN")
-
-  // State cho validation errors
   const [errors, setErrors] = useState<{
     orderer?: {
       name?: string
@@ -137,15 +133,11 @@ const Checkout = () => {
       address?: string
     }
   }>({})
-
-  // State cho thông tin người đặt hàng
   const [ordererInfo, setOrdererInfo] = useState<OrdererInfo>({
     name: currentUser?.name || "",
     phone: currentUser?.sdt || "",
     email: currentUser?.email || "",
   })
-
-  // State cho thông tin người nhận hàng
   const [recipientInfo, setRecipientInfo] = useState<RecipientInfo>({
     name: currentUser?.name || "",
     phone: currentUser?.sdt || "",
@@ -156,33 +148,26 @@ const Checkout = () => {
     to_ward_code: "",
     shippingProvider: "",
   })
-
-  // State để kiểm tra người nhận có khác người đặt không
   const [isDifferentRecipient, setIsDifferentRecipient] = useState(false)
 
-  // Function validate số điện thoại Việt Nam
   const validatePhoneNumber = (phone: string): boolean => {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/
     return phoneRegex.test(phone)
   }
 
-  // Function validate email
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
   }
 
-  // Function validate tên
   const validateName = (name: string): boolean => {
     const nameRegex = /^[a-zA-ZÀ-ỹ\s]{2,50}$/
     return nameRegex.test(name.trim())
   }
 
-  // Function validate toàn bộ form
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {}
 
-    // Validate thông tin người đặt hàng
     if (!ordererInfo.name.trim()) {
       newErrors.orderer = { ...newErrors.orderer, name: "Vui lòng nhập tên người đặt hàng" }
     } else if (!validateName(ordererInfo.name)) {
@@ -248,7 +233,6 @@ const Checkout = () => {
     return !hasErrors
   }
 
-  // Function xóa lỗi khi người dùng nhập
   const clearError = (section: "orderer" | "recipient", field: string) => {
     setErrors((prev) => ({
       ...prev,
@@ -271,9 +255,6 @@ const Checkout = () => {
   const orderDiscount = getOrderDiscount(completedOrderCount)
   const showOrderDiscountLine = orderDiscount > 0
 
-  // -----------------------
-  // Hàm tái sử dụng: tính phí vận chuyển
-  // -----------------------
   const calculateShipping = async ({
     to_district_id,
     to_ward_code,
@@ -285,12 +266,12 @@ const Checkout = () => {
     provider?: string
     cartParam?: CartItem[]
   }) => {
-    if (!to_district_id || !to_ward_code) {
+    if (!to_district_id || !to_ward_code || !cartParam.length) {
       setShippingFee(35000)
       return
     }
 
-    const weight = (cartParam || []).reduce((sum, item) => sum + item.soluong * 300, 0) // 300g mỗi sản phẩm
+    const weight = cartParam.reduce((sum, item) => sum + item.soluong * 300, 0)
 
     if (provider === "GHN") {
       try {
@@ -308,30 +289,66 @@ const Checkout = () => {
         const fee = res.data.shippingFee ?? 35000
         setShippingFee(fee)
         console.log(`✅ Phí vận chuyển cập nhật: ${fee} VND`)
-      } catch (err) {
+      } catch (err: any) {
         console.error("❌ Lỗi tính phí GHN:", err)
+        message.error("Không thể tính phí vận chuyển. Sử dụng phí mặc định 35,000 VND.")
         setShippingFee(35000)
-        // Không show message error nhiều lần ở mount, nếu muốn có thể hiện 1 lần
-        // message.error("Không thể tính phí vận chuyển. Sử dụng phí mặc định.")
       }
     } else {
-      // Fallback cho các nhà cung cấp khác
       setShippingFee(35000)
     }
   }
 
-  // useEffect gọi calculateShipping khi recipient địa chỉ hoặc cart hoặc shippingProvider thay đổi
   useEffect(() => {
-    calculateShipping({
-      to_district_id: recipientInfo.to_district_id,
-      to_ward_code: recipientInfo.to_ward_code,
-      provider: shippingProvider,
-      cartParam: cart,
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const fetchAddresses = async () => {
+      if (currentUser?._id) {
+        try {
+          const res = await axios.get(`http://localhost:5000/api/addresses/${currentUser._id}`, {
+            withCredentials: true,
+          })
+          const addresses = res.data
+          setAddressList(addresses)
+          const defaultAddr = addresses.find((addr: IAddress) => addr.default === true) || addresses[0]
+          if (defaultAddr) {
+            setRecipientInfo((prev) => ({
+              ...prev,
+              name: defaultAddr.name,
+              phone: defaultAddr.phone,
+              address: defaultAddr.address,
+              to_district_id: defaultAddr.district_id,
+              to_ward_code: defaultAddr.ward_code,
+            }))
+            // Gọi calculateShipping sau khi recipientInfo được cập nhật
+            if (defaultAddr.district_id && defaultAddr.ward_code && cart.length) {
+              calculateShipping({
+                to_district_id: defaultAddr.district_id,
+                to_ward_code: defaultAddr.ward_code,
+                provider: shippingProvider,
+                cartParam: cart,
+              })
+            }
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy địa chỉ:", error)
+          message.error("Không thể tải danh sách địa chỉ.")
+        }
+      }
+    }
+
+    fetchAddresses()
+  }, [currentUser?._id, cart, shippingProvider])
+
+  useEffect(() => {
+    if (recipientInfo.to_district_id && recipientInfo.to_ward_code && cart.length) {
+      calculateShipping({
+        to_district_id: recipientInfo.to_district_id,
+        to_ward_code: recipientInfo.to_ward_code,
+        provider: shippingProvider,
+        cartParam: cart,
+      })
+    }
   }, [recipientInfo.to_district_id, recipientInfo.to_ward_code, shippingProvider, cart])
 
-  // Cập nhật thông tin người dùng khi component mount
   useEffect(() => {
     if (currentUser) {
       setOrdererInfo({
@@ -351,14 +368,13 @@ const Checkout = () => {
     }
   }, [currentUser, isDifferentRecipient])
 
-  // Handle high-value order: reset payment method if COD is selected and total exceeds 50M
   const totalPrice = cart.reduce((sum, item) => sum + item.price * item.soluong, 0)
   const totalWithDiscountAndShipping = (discountAmount > 0 ? finalPrice : totalPrice - orderDiscount) + shippingFee
-  const isHighValueOrder = totalWithDiscountAndShipping > 50000000 // 50 million VND threshold
+  const isHighValueOrder = totalWithDiscountAndShipping > 50000000
 
   useEffect(() => {
     if (isHighValueOrder && paymentMethod === "COD") {
-      setPaymentMethod("VNPAY") // Reset to VNPAY if COD is selected for high-value order
+      setPaymentMethod("VNPAY")
       message.warning("Đơn hàng trên 50 triệu không hỗ trợ thanh toán COD. Vui lòng chọn phương thức khác.")
     }
   }, [isHighValueOrder, paymentMethod])
@@ -401,59 +417,19 @@ const Checkout = () => {
     clearError("recipient", field)
   }
 
-  // Fetch addresses và gọi calculateShipping khi có địa chỉ mặc định
-  useEffect(() => {
-    const fetchAddresses = async () => {
-      if (currentUser?._id) {
-        try {
-          const res = await axios.get(`http://localhost:5000/api/addresses/${currentUser._id}`, {
-            withCredentials: true,
-          })
-          const addresses = res.data
-          setAddressList(addresses)
-          const defaultAddr = addresses.find((addr: IAddress) => addr.default === true) || addresses[0]
-          if (defaultAddr) {
-            setRecipientInfo((prev) => ({
-              ...prev,
-              name: defaultAddr.name,
-              phone: defaultAddr.phone,
-              address: defaultAddr.address,
-              to_district_id: defaultAddr.district_id,
-              to_ward_code: defaultAddr.ward_code,
-            }))
-
-            // Gọi tính phí ngay sau khi có defaultAddr (sử dụng cart hiện tại)
-            calculateShipping({
-              to_district_id: defaultAddr.district_id,
-              to_ward_code: defaultAddr.ward_code,
-              provider: shippingProvider,
-              cartParam: cart,
-            })
-          }
-        } catch (error) {
-          console.error("Lỗi khi lấy địa chỉ:", error)
-          message.error("Không thể tải danh sách địa chỉ.")
-        }
-      }
-    }
-
-    fetchAddresses()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser?._id])
-
-  // Fetch cart và products, enrich cart items; gọi calculateShipping ngay sau khi setCart
   useEffect(() => {
     const fetchCartAndProducts = async () => {
       try {
         if (buyNowItem) {
           setCart([buyNowItem])
-          // tính phí ngay với cart mới
-          calculateShipping({
-            to_district_id: recipientInfo.to_district_id,
-            to_ward_code: recipientInfo.to_ward_code,
-            provider: shippingProvider,
-            cartParam: [buyNowItem],
-          })
+          if (recipientInfo.to_district_id && recipientInfo.to_ward_code) {
+            calculateShipping({
+              to_district_id: recipientInfo.to_district_id,
+              to_ward_code: recipientInfo.to_ward_code,
+              provider: shippingProvider,
+              cartParam: [buyNowItem],
+            })
+          }
           return
         }
 
@@ -487,13 +463,14 @@ const Checkout = () => {
           })
 
           setCart(enrichedCartItems)
-          // tính phí ngay với cart mới
-          calculateShipping({
-            to_district_id: recipientInfo.to_district_id,
-            to_ward_code: recipientInfo.to_ward_code,
-            provider: shippingProvider,
-            cartParam: enrichedCartItems,
-          })
+          if (recipientInfo.to_district_id && recipientInfo.to_ward_code) {
+            calculateShipping({
+              to_district_id: recipientInfo.to_district_id,
+              to_ward_code: recipientInfo.to_ward_code,
+              provider: shippingProvider,
+              cartParam: enrichedCartItems,
+            })
+          }
           return
         }
 
@@ -536,14 +513,14 @@ const Checkout = () => {
           })
 
           setCart(enrichedCartItems)
-
-          // tính phí ngay với cart mới
-          calculateShipping({
-            to_district_id: recipientInfo.to_district_id,
-            to_ward_code: recipientInfo.to_ward_code,
-            provider: shippingProvider,
-            cartParam: enrichedCartItems,
-          })
+          if (recipientInfo.to_district_id && recipientInfo.to_ward_code) {
+            calculateShipping({
+              to_district_id: recipientInfo.to_district_id,
+              to_ward_code: recipientInfo.to_ward_code,
+              provider: shippingProvider,
+              cartParam: enrichedCartItems,
+            })
+          }
         }
       } catch (error) {
         console.error("Lỗi khi lấy giỏ hàng từ server:", error)
@@ -552,8 +529,7 @@ const Checkout = () => {
     }
 
     fetchCartAndProducts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser, buyNowItem, selectedItems])
+  }, [currentUser, buyNowItem, selectedItems, recipientInfo.to_district_id, recipientInfo.to_ward_code, shippingProvider])
 
   const handleApplyVoucher = async (code: string) => {
     try {
@@ -792,7 +768,6 @@ const Checkout = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                {/* Thông tin người đặt hàng */}
                 <div className="mb-8">
                   <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Thông tin người đặt hàng</h2>
                   <div className="space-y-5">
@@ -1056,7 +1031,7 @@ const Checkout = () => {
                           <button
                             className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                             onClick={() => {
-                              console.log("✅ Chọn địa chỉ:", addr);
+                              console.log("✅ Chọn địa chỉ:", addr)
                               setRecipientInfo((prev) => ({
                                 ...prev,
                                 name: addr.name,
@@ -1064,34 +1039,15 @@ const Checkout = () => {
                                 address: addr.address,
                                 to_district_id: addr.district_id,
                                 to_ward_code: addr.ward_code,
-                              }));
-                              setShowAddressModal(false);
-                              // Gọi hàm tính phí vận chuyển ngay sau khi chọn địa chỉ
-                              const weight = cart.reduce((sum, item) => sum + item.soluong * 300, 0);
-                              if (shippingProvider === "GHN") {
-                                axios
-                                  .post(
-                                    "http://localhost:5000/api/ghn/calculate-fee",
-                                    {
-                                      to_district_id: Number(addr.district_id),
-                                      to_ward_code: String(addr.ward_code),
-                                      weight,
-                                      insurance_value: 0,
-                                    },
-                                    { withCredentials: true }
-                                  )
-                                  .then((res) => {
-                                    const fee = res.data.shippingFee || 35000;
-                                    setShippingFee(fee);
-                                    console.log(`✅ Phí vận chuyển cập nhật: ${fee} VND`);
-                                  })
-                                  .catch((err) => {
-                                    console.error("❌ Lỗi tính phí GHN:", err);
-                                    setShippingFee(35000);
-                                    message.error("Không thể tính phí vận chuyển. Sử dụng phí mặc định.");
-                                  });
-                              } else {
-                                setShippingFee(35000);
+                              }))
+                              setShowAddressModal(false)
+                              if (addr.district_id && addr.ward_code && cart.length) {
+                                calculateShipping({
+                                  to_district_id: addr.district_id,
+                                  to_ward_code: addr.ward_code,
+                                  provider: shippingProvider,
+                                  cartParam: cart,
+                                })
                               }
                             }}
                             disabled={isSubmitting}
@@ -1108,9 +1064,7 @@ const Checkout = () => {
                   <h3 className="text-xl font-semibold mb-4 text-gray-700">Phương thức thanh toán</h3>
                   <div className="space-y-3">
                     {!isHighValueOrder && (
-                      <label
-                        className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                      >
+                      <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
                         <input
                           type="radio"
                           name="paymentMethod"
@@ -1226,8 +1180,7 @@ const Checkout = () => {
                   {paymentMethod === "VNPAY" && "Bạn sẽ chuyển đến trang thanh toán VNPAY"}
                   {orderDiscount > 0 && (
                     <p className="mt-2 font-medium">
-                      🎉 Bạn được giảm {orderDiscount.toLocaleString("vi-VN")} VND nhờ có {completedOrderCount} đơn hàng
-                      hoàn thành!
+                      🎉 Bạn được giảm {orderDiscount.toLocaleString("vi-VN")} VND nhờ có {completedOrderCount} đơn hàng hoàn thành!
                     </p>
                   )}
                   {isHighValueOrder && (
