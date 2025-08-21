@@ -338,7 +338,11 @@ const Checkout = () => {
   }, [currentUser?._id]);
 
   useEffect(() => {
-    if (recipientInfo.to_district_id && recipientInfo.to_ward_code && cart.length) {
+    if (
+      recipientInfo.to_district_id &&
+      recipientInfo.to_ward_code &&
+      cart.length
+    ) {
       calculateShipping({
         to_district_id: recipientInfo.to_district_id,
         to_ward_code: recipientInfo.to_ward_code,
@@ -769,19 +773,25 @@ const Checkout = () => {
       ) : (
         <Spin spinning={isSubmitting} tip="Đang xử lý đơn hàng..." size="large">
           <div className="mx-4 p-8 bg-white rounded-lg mt-12 mb-12 border-2 w-full max-w-6xl">
-            <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">Xác nhận đơn hàng</h1>
+            <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
+              Xác nhận đơn hàng
+            </h1>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
                 <div className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Thông tin người đặt hàng</h2>
+                  <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">
+                    Thông tin người đặt hàng
+                  </h2>
                   <div className="space-y-5">
                     <div>
                       <input
                         type="text"
                         placeholder="Họ tên người đặt hàng *"
                         value={ordererInfo.name}
-                        onChange={(e) => handleOrdererInfoChange("name", e.target.value)}
+                        onChange={(e) =>
+                          handleOrdererInfoChange("name", e.target.value)
+                        }
                         className={`w-full border rounded-lg px-4 py-3 transition-colors ${
                           errors.orderer?.name
                             ? "border-red-500 bg-red-50 error-input"
@@ -802,7 +812,9 @@ const Checkout = () => {
                         type="tel"
                         placeholder="Số điện thoại người đặt hàng *"
                         value={ordererInfo.phone}
-                        onChange={(e) => handleOrdererInfoChange("phone", e.target.value)}
+                        onChange={(e) =>
+                          handleOrdererInfoChange("phone", e.target.value)
+                        }
                         className={`w-full border rounded-lg px-4 py-3 transition-colors ${
                           errors.orderer?.phone
                             ? "border-red-500 bg-red-50 error-input"
@@ -823,7 +835,9 @@ const Checkout = () => {
                         type="email"
                         placeholder="Email người đặt hàng *"
                         value={ordererInfo.email}
-                        onChange={(e) => handleOrdererInfoChange("email", e.target.value)}
+                        onChange={(e) =>
+                          handleOrdererInfoChange("email", e.target.value)
+                        }
                         className={`w-full border rounded-lg px-4 py-3 transition-colors ${
                           errors.orderer?.email
                             ? "border-red-500 bg-red-50 error-input"
@@ -844,10 +858,14 @@ const Checkout = () => {
                 <div className="mb-6">
                   <Checkbox
                     checked={isDifferentRecipient}
-                    onChange={(e) => handleDifferentRecipientChange(e.target.checked)}
+                    onChange={(e) =>
+                      handleDifferentRecipientChange(e.target.checked)
+                    }
                     disabled={isSubmitting}
                   >
-                    <span className="text-gray-700 font-medium">Người nhận hàng khác với người đặt hàng</span>
+                    <span className="text-gray-700 font-medium">
+                      Người nhận hàng khác với người đặt hàng
+                    </span>
                   </Checkbox>
                 </div>
 
@@ -862,7 +880,9 @@ const Checkout = () => {
                           type="text"
                           placeholder="Họ tên người nhận *"
                           value={recipientInfo.name}
-                          onChange={(e) => handleRecipientInfoChange("name", e.target.value)}
+                          onChange={(e) =>
+                            handleRecipientInfoChange("name", e.target.value)
+                          }
                           className={`w-full border rounded-lg px-4 py-3 transition-colors ${
                             errors.recipient?.name
                               ? "border-red-500 bg-red-50 error-input"
@@ -883,7 +903,9 @@ const Checkout = () => {
                           type="tel"
                           placeholder="Số điện thoại người nhận *"
                           value={recipientInfo.phone}
-                          onChange={(e) => handleRecipientInfoChange("phone", e.target.value)}
+                          onChange={(e) =>
+                            handleRecipientInfoChange("phone", e.target.value)
+                          }
                           className={`w-full border rounded-lg px-4 py-3 transition-colors ${
                             errors.recipient?.phone
                               ? "border-red-500 bg-red-50 error-input"
@@ -904,7 +926,9 @@ const Checkout = () => {
                           type="email"
                           placeholder="Email người nhận (tùy chọn)"
                           value={recipientInfo.email}
-                          onChange={(e) => handleRecipientInfoChange("email", e.target.value)}
+                          onChange={(e) =>
+                            handleRecipientInfoChange("email", e.target.value)
+                          }
                           className={`w-full border rounded-lg px-4 py-3 transition-colors ${
                             errors.recipient?.email
                               ? "border-red-500 bg-red-50 error-input"
@@ -924,12 +948,16 @@ const Checkout = () => {
                 )}
 
                 <div className="mb-8">
-                  <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Địa chỉ giao hàng</h2>
+                  <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">
+                    Địa chỉ giao hàng
+                  </h2>
                   <div className="space-y-5">
                     {recipientInfo.address ? (
                       <div
                         className={`p-4 rounded-lg mb-3 ${
-                          errors.recipient?.address ? "bg-red-50 border border-red-200" : "bg-gray-100"
+                          errors.recipient?.address
+                            ? "bg-red-50 border border-red-200"
+                            : "bg-gray-100"
                         }`}
                       >
                         <div className="flex items-start justify-between">
@@ -937,7 +965,6 @@ const Checkout = () => {
                             <p className="font-semibold text-gray-800">
                               <strong>{recipientInfo.name}</strong> – {recipientInfo.phone}
                             </p>
-                            <p className="text-gray-600 mt-1">{recipientInfo.address}</p>
                           </div>
                           <button
                             type="button"
@@ -973,13 +1000,17 @@ const Checkout = () => {
                     <textarea
                       placeholder="Ghi chú đơn hàng (tùy chọn)"
                       value={recipientInfo.note}
-                      onChange={(e) => handleRecipientInfoChange("note", e.target.value)}
+                      onChange={(e) =>
+                        handleRecipientInfoChange("note", e.target.value)
+                      }
                       rows={3}
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 resize-none focus:border-blue-500"
                       disabled={isSubmitting}
                       maxLength={500}
                     />
-                    <p className="text-xs text-gray-500 text-right">{recipientInfo.note.length}/500 ký tự</p>
+                    <p className="text-xs text-gray-500 text-right">
+                      {recipientInfo.note.length}/500 ký tự
+                    </p>
 
                     <select
                       value={shippingProvider}
@@ -1023,7 +1054,9 @@ const Checkout = () => {
                             <p className="font-semibold text-gray-800">
                               {addr.name} - {addr.phone}
                             </p>
-                            <p className="text-sm text-gray-600 mt-1">{addr.address}</p>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {addr.address}
+                            </p>
                             {addr.default && (
                               <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                                 Địa chỉ mặc định
@@ -1063,7 +1096,9 @@ const Checkout = () => {
                 </Modal>
 
                 <div className="mt-8">
-                  <h3 className="text-xl font-semibold mb-4 text-gray-700">Phương thức thanh toán</h3>
+                  <h3 className="text-xl font-semibold mb-4 text-gray-700">
+                    Phương thức thanh toán
+                  </h3>
                   <div className="space-y-3">
                     {!isHighValueOrder && (
                       <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
@@ -1096,7 +1131,9 @@ const Checkout = () => {
                           disabled={isSubmitting}
                         />
                         <span className="ml-3 text-gray-700 font-medium">
-                          {method === "VNPAY" ? "Thanh toán VNPay" : "Thanh toán qua MoMo"}
+                          {method === "VNPAY"
+                            ? "Thanh toán VNPay"
+                            : "Thanh toán qua MoMo"}
                         </span>
                       </label>
                     ))}
@@ -1107,7 +1144,9 @@ const Checkout = () => {
                   onClick={handleOrder}
                   disabled={isSubmitting}
                   className={`mt-10 w-full bg-green-600 text-white font-semibold py-4 rounded-lg transition-all ${
-                    isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700 hover:shadow-lg"
+                    isSubmitting
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-green-700 hover:shadow-lg"
                   }`}
                 >
                   {isSubmitting ? "Đang xử lý..." : "Đặt hàng ngay"}
@@ -1115,11 +1154,15 @@ const Checkout = () => {
               </div>
 
               <div>
-                <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">Sản phẩm trong giỏ hàng</h2>
+                <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">
+                  Sản phẩm trong giỏ hàng
+                </h2>
                 <ul className="divide-y divide-gray-200 max-h-[400px] overflow-y-auto">
                   {cart.map((item) => (
                     <li
-                      key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
+                      key={`${item.productId}-${item.color || ""}-${
+                        item.storage || ""
+                      }`}
                       className="flex items-center py-4"
                     >
                       <img
@@ -1128,13 +1171,26 @@ const Checkout = () => {
                         className="w-16 h-16 rounded-lg object-cover mr-4 border border-gray-300"
                       />
                       <div className="flex-1">
-                        <p className="font-medium text-gray-800">{item.productName}</p>
-                        <p className="text-sm text-gray-500">Số lượng: {item.soluong}</p>
-                        {item.color && <p className="text-sm text-gray-500">Màu: {item.color}</p>}
-                        {item.storage && <p className="text-sm text-gray-500">Dung lượng: {item.storage}</p>}
+                        <p className="font-medium text-gray-800">
+                          {item.productName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Số lượng: {item.soluong}
+                        </p>
+                        {item.color && (
+                          <p className="text-sm text-gray-500">
+                            Màu: {item.color}
+                          </p>
+                        )}
+                        {item.storage && (
+                          <p className="text-sm text-gray-500">
+                            Dung lượng: {item.storage}
+                          </p>
+                        )}
                       </div>
                       <div className="font-semibold text-gray-900">
-                        {(item.price * item.soluong).toLocaleString("vi-VN")} VND
+                        {(item.price * item.soluong).toLocaleString("vi-VN")}{" "}
+                        VND
                       </div>
                     </li>
                   ))}
@@ -1153,7 +1209,8 @@ const Checkout = () => {
                         <span>-{fmt(discountAmount)}</span>
                       </div>
                       <div className="text-sm text-green-700 italic bg-green-50 p-2 rounded">
-                        Mã giảm giá: <strong>{voucherCode}</strong> {voucherInfo?.name && `– ${voucherInfo.name}`}
+                        Mã giảm giá: <strong>{voucherCode}</strong>{" "}
+                        {voucherInfo?.name && `– ${voucherInfo.name}`}
                       </div>
                     </>
                   )}
@@ -1177,12 +1234,16 @@ const Checkout = () => {
                 </div>
 
                 <div className="mt-6 bg-blue-50 p-4 rounded-lg text-blue-900 text-sm">
-                  {paymentMethod === "COD" && "Bạn sẽ thanh toán khi nhận hàng."}
-                  {paymentMethod === "Momo" && "Bạn sẽ chuyển đến trang thanh toán MoMo"}
-                  {paymentMethod === "VNPAY" && "Bạn sẽ chuyển đến trang thanh toán VNPAY"}
+                  {paymentMethod === "COD" &&
+                    "Bạn sẽ thanh toán khi nhận hàng."}
+                  {paymentMethod === "Momo" &&
+                    "Bạn sẽ chuyển đến trang thanh toán MoMo"}
+                  {paymentMethod === "VNPAY" &&
+                    "Bạn sẽ chuyển đến trang thanh toán VNPAY"}
                   {orderDiscount > 0 && (
                     <p className="mt-2 font-medium">
-                      🎉 Bạn được giảm {orderDiscount.toLocaleString("vi-VN")} VND nhờ có {completedOrderCount} đơn hàng hoàn thành!
+                      🎉 Bạn được giảm {orderDiscount.toLocaleString("vi-VN")}{" "}
+                      VND nhờ có {completedOrderCount} đơn hàng hoàn thành!
                     </p>
                   )}
                   {isHighValueOrder && (
