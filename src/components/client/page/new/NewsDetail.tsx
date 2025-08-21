@@ -45,10 +45,9 @@ const NewsDetail = () => {
       <div className="w-full relative">
         {/* Nút quay lại */}
         
-
         {/* Thẻ H2 tiêu đề chính */}
         <div className="mb-6 text-center">
-            <h2 className="text-center text-green-700 text-4xl font-bold mb-6">
+            <h2 className="text-center text-4xl font-bold mb-6">
                 Chi tiết tin tức
             </h2>
         </div>

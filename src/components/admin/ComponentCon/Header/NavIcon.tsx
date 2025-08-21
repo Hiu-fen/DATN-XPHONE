@@ -21,17 +21,17 @@ export default function NavIcons() {
           </Link>
         ),
       },
-      {
-        key: 'general',
-        label: (
-          <Link
-            to="/admin/settings"
-            className="block px-3 py-1 hover:text-blue-500"
-          >
-            Cài đặt chung
-          </Link>
-        ),
-      },
+      // {
+      //   key: 'general',
+      //   label: (
+      //     <Link
+      //       to="#"
+      //       className="block px-3 py-1 hover:text-blue-500"
+      //     >
+      //       Cài đặt chung
+      //     </Link>
+      //   ),
+      // },
     ],
   };
 

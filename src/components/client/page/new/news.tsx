@@ -47,7 +47,7 @@ const NewsClient = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-[1280px] mx-auto">
-        <h2 className="text-center text-green-700 text-4xl font-bold mb-10">
+        <h2 className="text-center text-4xl font-bold mb-10">
           Tin tức mới nhất
         </h2>
 
