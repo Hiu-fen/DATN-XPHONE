@@ -1,5 +1,4 @@
-// src/components/Detail/RelatedProducts.tsx
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import {
@@ -7,18 +6,16 @@ import {
   RightOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { message } from "antd";
+import { message, Tooltip } from "antd";
 import { IProduct } from "../../../../interface/product";
-
 const RelatedProducts = () => {
   const { id } = useParams();
   const [product, setProduct] = useState<IProduct | null>(null);
-  const [relatedProducts, setRelatedProducts] = useState<IProduct[]>([]);
-  const relatedProductsRef = useRef<HTMLDivElement>(null);
-
+  const [, setRelatedProducts] = useState<IProduct[]>([]);
+  const [displayProducts, setDisplayProducts] = useState<IProduct[]>([]);
+  const [isHovering, setIsHovering] = useState(false);
   useEffect(() => {
     let isMounted = true;
-
     const fetchProductAndRelated = async () => {
       try {
         const productRes = await axios.get(`http://localhost:5000/api/products/${id}`);
@@ -30,52 +27,58 @@ const RelatedProducts = () => {
           (p: IProduct) =>
             p._id !== currentProduct._id && p.danhmuc === currentProduct.danhmuc
         );
-        if (isMounted) setRelatedProducts(filtered.slice(0, 4));
+        if (isMounted) {
+          setRelatedProducts(filtered.slice(0, 4));
+          setDisplayProducts(filtered.slice(0, 4));
+        }
       } catch (error) {
         console.error("Lỗi lấy sản phẩm liên quan:", error);
         message.error("Không thể tải sản phẩm liên quan.");
       }
     };
-
     if (id) fetchProductAndRelated();
-
     return () => {
       isMounted = false;
     };
   }, [id]);
-
-  const scrollRelatedProducts = (direction: "left" | "right") => {
-    if (relatedProductsRef.current) {
-      const scrollAmount = 300;
-      relatedProductsRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
+  const rotate = (direction: "left" | "right") => {
+    const newData = [...displayProducts];
+    if (direction === "left") {
+      const last = newData.pop();
+      if (last) newData.unshift(last);
+    } else {
+      const first = newData.shift();
+      if (first) newData.push(first);
     }
+    setDisplayProducts(newData);
   };
-
   if (!product) return null;
-
   return (
-    <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0 relative">
+    <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0">
       <div className="flex items-center gap-3">
-        <div className=" bg-red-500 w-[30px] rounded-lg h-[50px]" />
-        <h6 className=" text-red-500 font-semibold">Sản phẩm liên quan</h6>
+        <div className="bg-red-500 w-8 h-12 rounded-lg" />
+        <h6 className="text-red-500 font-semibold">Sản phẩm liên quan</h6>
       </div>
-      <br />
-      <button
-        onClick={() => scrollRelatedProducts("left")}
-        className="hidden md:flex absolute -left-16 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 hover:bg-gray-300 z-10 shadow"
+      <div className="mt-6" />
+      <div
+        className="relative group"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
       >
-        <LeftOutlined className="text-3xl" />
-      </button>
-      <div className="relative">
-        <div
-          ref={relatedProductsRef}
-          className="flex overflow-x-auto gap-4 scrollbar-hide max-w-[1008px]"
-        >
-          {relatedProducts.length > 0 ? (
-            relatedProducts.map((item) => (
+        <Tooltip title="Sang trái" placement="left">
+          {isHovering && displayProducts.length > 1 && (
+            <button
+              onClick={() => rotate("left")}
+              aria-label="Xoay sản phẩm sang trái"
+              className="absolute left-0 md:-left-8 top-1/2 -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-gray-200 transition-colors z-10"
+            >
+              <LeftOutlined className="text-xl" />
+            </button>
+          )}
+        </Tooltip>
+        <div className="flex gap-4 overflow-hidden">
+          {displayProducts.length > 0 ? (
+            displayProducts.map((item) => (
               <Link
                 to={`/detail/${item._id}`}
                 key={item._id}
@@ -85,6 +88,7 @@ const RelatedProducts = () => {
                   src={item.image || "/default-image.jpg"}
                   alt={item.name}
                   className="w-full h-40 object-cover"
+                  loading="lazy"
                 />
                 <div className="p-3">
                   <h3 className="font-semibold text-lg truncate">{item.name}</h3>
@@ -92,7 +96,10 @@ const RelatedProducts = () => {
                     <p className="text-red-600 font-bold">
                       {item.price || "Liên hệ"}
                     </p>
-                    <button className="text-gray-600 hover:text-red-600">
+                    <button
+                      aria-label={`Thêm ${item.name} vào giỏ hàng`}
+                      className="text-gray-600 hover:text-red-600"
+                    >
                       <ShoppingCartOutlined className="text-xl" />
                     </button>
                   </div>
@@ -100,16 +107,23 @@ const RelatedProducts = () => {
               </Link>
             ))
           ) : (
-            <p>Không có sản phẩm liên quan.</p>
+            <p className="text-center w-full text-gray-500">
+              Không có sản phẩm liên quan.
+            </p>
           )}
         </div>
+        <Tooltip title="Sang phải" placement="right">
+          {isHovering && displayProducts.length > 1 && (
+            <button
+              onClick={() => rotate("right")}
+              aria-label="Xoay sản phẩm sang phải"
+              className="absolute right-0 md:-right-8 top-1/2 -translate-y-1/2 bg-white rounded-full p-2 shadow-md hover:bg-gray-200 transition-colors z-10"
+            >
+              <RightOutlined className="text-xl" />
+            </button>
+          )}
+        </Tooltip>
       </div>
-      <button
-        onClick={() => scrollRelatedProducts("right")}
-        className="hidden md:flex absolute -right-16 top-1/2 transform -translate-y-1/2 bg-gray-200 rounded-full p-2 hover:bg-gray-300 z-10 shadow"
-      >
-        <RightOutlined className="text-3xl" />
-      </button>
     </section>
   );
 };
