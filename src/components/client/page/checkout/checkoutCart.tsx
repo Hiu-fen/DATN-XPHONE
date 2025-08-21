@@ -39,14 +39,12 @@ interface IUserExtended {
   address?: string;
 }
 
-// Interface cho thông tin người đặt hàng
 interface OrdererInfo {
   name: string;
   phone: string;
   email: string;
 }
 
-// Interface cho thông tin người nhận hàng
 interface RecipientInfo {
   name: string;
   phone: string;
@@ -55,6 +53,7 @@ interface RecipientInfo {
   note: string;
   to_district_id: string;
   to_ward_code: string;
+  shippingProvider: string;
 }
 
 const Checkout = () => {
@@ -77,21 +76,21 @@ const Checkout = () => {
       if (!user?._id) return 0;
       try {
         const res = await axios.get(
-          `http://localhost:5000/api/orders/user/${user._id}?status=Hoàn thành`,
+          `http://localhost:5000/api/orders/user/${user._id}?status=Đã nhận hàng`,
           {
             withCredentials: true,
           }
         );
-        console.log("Đã lấy số đơn hàng hoàn thành:", res.data.length);
+        console.log("✅ Đã lấy số đơn hàng hoàn thành:", res.data.length);
         return res.data.length;
       } catch (error) {
-        console.error("Lỗi khi lấy số đơn hàng hoàn thành:", error);
+        console.error("❌ Lỗi khi lấy số đơn hàng hoàn thành:", error);
         message.error("Không thể tải dữ liệu đơn hàng. Vui lòng thử lại.");
         return 0;
       }
     },
     enabled: !!user?._id,
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: true,
   });
 
@@ -124,10 +123,8 @@ const Checkout = () => {
     discountValue: string;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("VNPAY"); // Changed default to VNPAY
+  const [paymentMethod, setPaymentMethod] = useState("VNPAY");
   const [shippingProvider, setShippingProvider] = useState("GHN");
-
-  // State cho validation errors
   const [errors, setErrors] = useState<{
     orderer?: {
       name?: string;
@@ -141,8 +138,6 @@ const Checkout = () => {
       address?: string;
     };
   }>({});
-
-  // State cho thông tin người đặt hàng
   const [ordererInfo, setOrdererInfo] = useState<OrdererInfo>({
     name: currentUser?.name || "",
     phone: currentUser?.sdt || "",
@@ -158,34 +153,28 @@ const Checkout = () => {
     note: "",
     to_district_id: "",
     to_ward_code: "",
+    shippingProvider: "",
   });
-
-  // State để kiểm tra người nhận có khác người đặt không
   const [isDifferentRecipient, setIsDifferentRecipient] = useState(false);
 
-  // Function validate số điện thoại Việt Nam
   const validatePhoneNumber = (phone: string): boolean => {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
     return phoneRegex.test(phone);
   };
 
-  // Function validate email
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Function validate tên
   const validateName = (name: string): boolean => {
     const nameRegex = /^[a-zA-ZÀ-ỹ\s]{2,50}$/;
     return nameRegex.test(name.trim());
   };
 
-  // Function validate toàn bộ form
   const validateForm = (): boolean => {
     const newErrors: typeof errors = {};
 
-    // Validate thông tin người đặt hàng
     if (!ordererInfo.name.trim()) {
       newErrors.orderer = {
         ...newErrors.orderer,
@@ -297,7 +286,6 @@ const Checkout = () => {
     return !hasErrors;
   };
 
-  // Function xóa lỗi khi người dùng nhập
   const clearError = (section: "orderer" | "recipient", field: string) => {
     setErrors((prev) => ({
       ...prev,
@@ -320,7 +308,120 @@ const Checkout = () => {
   const orderDiscount = getOrderDiscount(completedOrderCount);
   const showOrderDiscountLine = orderDiscount > 0;
 
-  // Cập nhật thông tin người dùng khi component mount
+  const calculateShipping = async ({
+    to_district_id,
+    to_ward_code,
+    provider = shippingProvider,
+    cartParam = cart,
+  }: {
+    to_district_id?: string | number;
+    to_ward_code?: string | number;
+    provider?: string;
+    cartParam?: CartItem[];
+  }) => {
+    if (!to_district_id || !to_ward_code || !cartParam.length) {
+      setShippingFee(35000);
+      return;
+    }
+
+    const weight = cartParam.reduce((sum, item) => sum + item.soluong * 300, 0);
+
+    if (provider === "GHN") {
+      try {
+        const res = await axios.post(
+          "http://localhost:5000/api/ghn/calculate-fee",
+          {
+            to_district_id: Number(to_district_id),
+            to_ward_code: String(to_ward_code),
+            weight,
+            insurance_value: 0,
+          },
+          { withCredentials: true }
+        );
+
+        const fee = res.data.shippingFee ?? 35000;
+        setShippingFee(fee);
+        console.log(`✅ Phí vận chuyển cập nhật: ${fee} VND`);
+      } catch (err: any) {
+        console.error("❌ Lỗi tính phí GHN:", err);
+        message.error(
+          "Không thể tính phí vận chuyển. Sử dụng phí mặc định 35,000 VND."
+        );
+        setShippingFee(35000);
+      }
+    } else {
+      setShippingFee(35000);
+    }
+  };
+
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      if (currentUser?._id) {
+        try {
+          const res = await axios.get(
+            `http://localhost:5000/api/addresses/${currentUser._id}`,
+            {
+              withCredentials: true,
+            }
+          );
+          const addresses = res.data;
+          setAddressList(addresses);
+          const defaultAddr =
+            addresses.find((addr: IAddress) => addr.default === true) ||
+            addresses[0];
+          if (defaultAddr) {
+            setRecipientInfo((prev) => ({
+              ...prev,
+              name: defaultAddr.name,
+              phone: defaultAddr.phone,
+              address: defaultAddr.address,
+              to_district_id: defaultAddr.district_id,
+              to_ward_code: defaultAddr.ward_code,
+            }));
+            // Gọi calculateShipping sau khi recipientInfo được cập nhật
+            if (
+              defaultAddr.district_id &&
+              defaultAddr.ward_code &&
+              cart.length
+            ) {
+              calculateShipping({
+                to_district_id: defaultAddr.district_id,
+                to_ward_code: defaultAddr.ward_code,
+                provider: shippingProvider,
+                cartParam: cart,
+              });
+            }
+          }
+        } catch (error) {
+          console.error("Lỗi khi lấy địa chỉ:", error);
+          message.error("Không thể tải danh sách địa chỉ.");
+        }
+      }
+    };
+
+    fetchAddresses();
+  }, [currentUser?._id, cart, shippingProvider]);
+
+  useEffect(() => {
+    if (
+      recipientInfo.to_district_id &&
+      recipientInfo.to_ward_code &&
+      cart.length
+    ) {
+      calculateShipping({
+        to_district_id: recipientInfo.to_district_id,
+        to_ward_code: recipientInfo.to_ward_code,
+        provider: shippingProvider,
+        cartParam: cart,
+      });
+    }
+  }, [
+    recipientInfo.to_district_id,
+    recipientInfo.to_ward_code,
+    shippingProvider,
+    cart,
+  ]);
+
   useEffect(() => {
     if (currentUser) {
       setOrdererInfo({
@@ -340,7 +441,6 @@ const Checkout = () => {
     }
   }, [currentUser, isDifferentRecipient]);
 
-  // Handle high-value order: reset payment method if COD is selected and total exceeds 50M
   const totalPrice = cart.reduce(
     (sum, item) => sum + item.price * item.soluong,
     0
@@ -348,11 +448,11 @@ const Checkout = () => {
   const totalWithDiscountAndShipping =
     (discountAmount > 0 ? finalPrice : totalPrice - orderDiscount) +
     shippingFee;
-  const isHighValueOrder = totalWithDiscountAndShipping > 50000000; // 50 million VND threshold
+  const isHighValueOrder = totalWithDiscountAndShipping > 50000000;
 
   useEffect(() => {
     if (isHighValueOrder && paymentMethod === "COD") {
-      setPaymentMethod("VNPAY"); // Reset to VNPAY if COD is selected for high-value order
+      setPaymentMethod("VNPAY");
       message.warning(
         "Đơn hàng trên 50 triệu không hỗ trợ thanh toán COD. Vui lòng chọn phương thức khác."
       );
@@ -401,45 +501,18 @@ const Checkout = () => {
   };
 
   useEffect(() => {
-    const fetchAddresses = async () => {
-      if (currentUser?._id) {
-        try {
-          const res = await axios.get(
-            `http://localhost:5000/api/addresses/${currentUser._id}`,
-            {
-              withCredentials: true,
-            }
-          );
-          const addresses = res.data;
-          setAddressList(addresses);
-          const defaultAddr =
-            addresses.find((addr: IAddress) => addr.default === true) ||
-            addresses[0];
-          if (defaultAddr) {
-            setRecipientInfo((prev) => ({
-              ...prev,
-              name: defaultAddr.name,
-              phone: defaultAddr.phone,
-              address: defaultAddr.address,
-              to_district_id: defaultAddr.district_id,
-              to_ward_code: defaultAddr.ward_code,
-            }));
-          }
-        } catch (error) {
-          console.error("Lỗi khi lấy địa chỉ:", error);
-          message.error("Không thể tải danh sách địa chỉ.");
-        }
-      }
-    };
-
-    fetchAddresses();
-  }, [currentUser]);
-
-  useEffect(() => {
     const fetchCartAndProducts = async () => {
       try {
         if (buyNowItem) {
           setCart([buyNowItem]);
+          if (recipientInfo.to_district_id && recipientInfo.to_ward_code) {
+            calculateShipping({
+              to_district_id: recipientInfo.to_district_id,
+              to_ward_code: recipientInfo.to_ward_code,
+              provider: shippingProvider,
+              cartParam: [buyNowItem],
+            });
+          }
           return;
         }
 
@@ -482,6 +555,14 @@ const Checkout = () => {
           });
 
           setCart(enrichedCartItems);
+          if (recipientInfo.to_district_id && recipientInfo.to_ward_code) {
+            calculateShipping({
+              to_district_id: recipientInfo.to_district_id,
+              to_ward_code: recipientInfo.to_ward_code,
+              provider: shippingProvider,
+              cartParam: enrichedCartItems,
+            });
+          }
           return;
         }
 
@@ -530,6 +611,14 @@ const Checkout = () => {
           });
 
           setCart(enrichedCartItems);
+          if (recipientInfo.to_district_id && recipientInfo.to_ward_code) {
+            calculateShipping({
+              to_district_id: recipientInfo.to_district_id,
+              to_ward_code: recipientInfo.to_ward_code,
+              provider: shippingProvider,
+              cartParam: enrichedCartItems,
+            });
+          }
         }
       } catch (error) {
         console.error("Lỗi khi lấy giỏ hàng từ server:", error);
@@ -538,7 +627,14 @@ const Checkout = () => {
     };
 
     fetchCartAndProducts();
-  }, [currentUser, buyNowItem, selectedItems]);
+  }, [
+    currentUser,
+    buyNowItem,
+    selectedItems,
+    recipientInfo.to_district_id,
+    recipientInfo.to_ward_code,
+    shippingProvider,
+  ]);
 
   const handleApplyVoucher = async (code: string) => {
     try {
@@ -833,7 +929,6 @@ const Checkout = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                {/* Thông tin người đặt hàng */}
                 <div className="mb-8">
                   <h2 className="text-2xl font-semibold mb-6 text-gray-700 border-b pb-2">
                     Thông tin người đặt hàng
@@ -1084,9 +1179,7 @@ const Checkout = () => {
                       className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:border-blue-500"
                       disabled={isSubmitting}
                     >
-                      <option value="Giao hàng tiêu chuẩn">
-                        Giao hàng tiêu chuẩn
-                      </option>
+                      <option value="Standard">Giao hàng tiêu chuẩn</option>
                       <option value="GHN">Giao hàng nhanh (GHN)</option>
                       <option value="J&T">J&T Express</option>
                     </select>
@@ -1144,6 +1237,18 @@ const Checkout = () => {
                                 to_ward_code: addr.ward_code,
                               }));
                               setShowAddressModal(false);
+                              if (
+                                addr.district_id &&
+                                addr.ward_code &&
+                                cart.length
+                              ) {
+                                calculateShipping({
+                                  to_district_id: addr.district_id,
+                                  to_ward_code: addr.ward_code,
+                                  provider: shippingProvider,
+                                  cartParam: cart,
+                                });
+                              }
                             }}
                             disabled={isSubmitting}
                           >

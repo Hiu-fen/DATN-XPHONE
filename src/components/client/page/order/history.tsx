@@ -20,6 +20,9 @@ interface Order {
   _id: string
   orderCode: string
   total: number
+  originalTotal?: number
+  refundedAmount?: number
+  refunds?: { amount?: number; status?: string }[]
   status: string
   date: string
   items: OrderItem[]
@@ -85,6 +88,39 @@ const OrderHistory = () => {
   const user: User | null = useMemo(() => {
     return JSON.parse(localStorage.getItem("user") || "null")
   }, [])
+
+  // ----- Helper: compute totals (original, refunded, remaining) cho mỗi order -----
+  const computeOrderTotals = (order: Order) => {
+    const refundedFromField = typeof order.refundedAmount === "number" ? order.refundedAmount : 0
+
+    // sum successful refunds from refunds array if present
+    const refundedFromArray =
+      Array.isArray(order.refunds) && order.refunds.length > 0
+        ? order.refunds
+            .filter((r) => (r.status || "").toLowerCase().includes("success"))
+            .reduce((s, r) => s + (r.amount || 0), 0)
+        : 0
+
+    const refundedAmount = Math.max(refundedFromField, refundedFromArray)
+
+    // originalTotal priority; if absent, try total + refundedAmount (case backend set total = 0)
+    let originalTotal: number
+    if (typeof order.originalTotal === "number") {
+      originalTotal = order.originalTotal
+    } else {
+      // fallback: if backend zeroed total on refund, reconstruct
+      originalTotal = (typeof order.total === "number" ? order.total : 0) + refundedAmount
+    }
+
+    // remaining amount to customer (original - refunded)
+    const remaining = Math.max(0, originalTotal - refundedAmount)
+
+    return {
+      originalTotal,
+      refundedAmount,
+      remaining,
+    }
+  }
 
   const filteredOrders = useMemo(() => {
     let sorted = [...orders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -376,7 +412,7 @@ const OrderHistory = () => {
       }, 3500) // Tự động ẩn sau 3.5 giây
       return () => clearTimeout(timer)
     }
-  }, [showAchievementNotification]) // [^1]
+  }, [showAchievementNotification])
 
   useEffect(() => {
     if (showThankYouReviewModal) {
@@ -385,7 +421,7 @@ const OrderHistory = () => {
       }, 3500) // Tự động ẩn sau 3.5 giây
       return () => clearTimeout(timer)
     }
-  }, [showThankYouReviewModal]) // [^1]
+  }, [showThankYouReviewModal])
 
   if (loading) {
     return (
@@ -401,6 +437,13 @@ const OrderHistory = () => {
       </div>
     )
   }
+
+  // ===== Summary stats compute using computedOriginal totals =====
+  const totalOrders = orders.length
+  const totalSpend = orders.reduce((sum, o) => {
+    const { originalTotal } = computeOrderTotals(o)
+    return sum + (originalTotal || 0)
+  }, 0)
 
   return (
     <>
@@ -426,78 +469,88 @@ const OrderHistory = () => {
                 ))}
               </Radio.Group>
             </div>
+
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
               {/* Mobile View */}
               <div className="block lg:hidden">
                 <div className="divide-y divide-gray-200">
-                  {filteredOrders.map((order) => (
-                    <div key={order._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
+                  {filteredOrders.map((order) => {
+                    const { originalTotal, refundedAmount } = computeOrderTotals(order)
+                    return (
+                      <div key={order._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <Link
+                              to={`/history/${order._id}`}
+                              className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                            >
+                              #{order.orderCode}
+                            </Link>
+                            <p className="text-sm text-gray-500">{new Date(order.date).toLocaleDateString("vi-VN")}</p>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                              order.status,
+                            )}`}
+                          >
+                            {order.status}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                          <div>
+                            <p className="text-sm text-gray-500">Số sản phẩm</p>
+                            <p className="font-medium text-gray-900">{order.items?.length || 0} sản phẩm</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-500">Tổng tiền</p>
+                            <p className="font-semibold text-green-600 text-lg">
+                              {originalTotal.toLocaleString()} đ
+                            </p>
+                            {refundedAmount > 0 && (
+                              <p className="text-sm text-gray-500">Đã hoàn: {refundedAmount.toLocaleString()} đ</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            {getPaymentMethodIcon(order.paymentMethod || "")}
+                            <span className="text-sm text-gray-700">{order.paymentMethod || "Chưa rõ"}</span>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                            <span className="text-sm text-gray-700 line-clamp-2">{order.address}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
                           <Link
                             to={`/history/${order._id}`}
                             className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
                           >
-                            #{order.orderCode}
+                            <FaEye className="w-4 h-4" />
+                            Xem chi tiết
                           </Link>
-                          <p className="text-sm text-gray-500">{new Date(order.date).toLocaleDateString("vi-VN")}</p>
-                        </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                            order.status,
-                          )}`}
-                        >
-                          {order.status}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-gray-500">Số sản phẩm</p>
-                          <p className="font-medium text-gray-900">{order.items?.length || 0} sản phẩm</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Tổng tiền</p>
-                          <p className="font-semibold text-green-600 text-lg">{order.total.toLocaleString()} đ</p>
+                          {isOrderCompleted(order.status) && !reviewedOrders.has(order._id) && (
+                            <button
+                              onClick={() => openReviewModal(order)}
+                              className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200"
+                            >
+                              <FaStar className="w-4 h-4" />
+                              Đánh giá
+                            </button>
+                          )}
+                          {reviewedOrders.has(order._id) && (
+                            <div className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-green-100 text-green-700 font-medium rounded-lg">
+                              <FaStar className="w-4 h-4" />
+                              Đã đánh giá
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          {getPaymentMethodIcon(order.paymentMethod || "")}
-                          <span className="text-sm text-gray-700">{order.paymentMethod || "Chưa rõ"}</span>
-                        </div>
-                        <div className="flex items-start gap-2">
-                          <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-700 line-clamp-2">{order.address}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Link
-                          to={`/history/${order._id}`}
-                          className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                        >
-                          <FaEye className="w-4 h-4" />
-                          Xem chi tiết
-                        </Link>
-                        {isOrderCompleted(order.status) && !reviewedOrders.has(order._id) && (
-                          <button
-                            onClick={() => openReviewModal(order)}
-                            className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200"
-                          >
-                            <FaStar className="w-4 h-4" />
-                            Đánh giá
-                          </button>
-                        )}
-                        {reviewedOrders.has(order._id) && (
-                          <div className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-green-100 text-green-700 font-medium rounded-lg">
-                            <FaStar className="w-4 h-4" />
-                            Đã đánh giá
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
+
               {/* Desktop View */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -530,82 +583,91 @@ const OrderHistory = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredOrders.map((order) => (
-                      <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
-                        <td className="px-5 py-4">
-                          <Link
-                            to={`/history/${order._id}`}
-                            className="text-blue-600 font-semibold hover:underline truncate block max-w-[160px]"
-                          >
-                            #{order.orderCode}
-                          </Link>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {order.items?.length || 0}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
-                          <span className="text-lg font-semibold text-green-600">{order.total.toLocaleString()} đ</span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <span
-                            className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                              order.status,
-                            )}`}
-                          >
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
-                          {new Date(order.date).toLocaleDateString("vi-VN")}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            {getPaymentMethodIcon(order.paymentMethod || "")}
-                            <span className="text-sm text-gray-700">{order.paymentMethod || "Chưa rõ"}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
-                          <div className="flex items-start gap-2">
-                            <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                            <span className="truncate">{order.address}</span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="flex gap-2 justify-center">
-                            {order.status === "Giao thành công" && (
-                              <button
-                                onClick={() => confirmReceived(order._id)}
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition-all duration-200"
-                              >
-                                <FaCheck className="w-4 h-4" />
-                                Đã nhận hàng
-                              </button>
-                            )}
-                            {order.status === "Đã nhận hàng" && !reviewedOrders.has(order._id) && (
-                              <button
-                                onClick={() => openReviewModal(order)}
-                                className="inline-flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600"
-                              >
-                                <FaStar className="w-4 h-4" />
-                                Đánh giá
-                              </button>
-                            )}
-                            {order.status === "Đã nhận hàng" && reviewedOrders.has(order._id) && (
-                              <span className="inline-flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
-                                <FaStar className="w-4 h-4" />
-                                Đã đánh giá
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredOrders.map((order) => {
+                      const { originalTotal, refundedAmount } = computeOrderTotals(order)
+                      return (
+                        <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
+                          <td className="px-5 py-4">
+                            <Link
+                              to={`/history/${order._id}`}
+                              className="text-blue-600 font-semibold hover:underline truncate block max-w-[160px]"
+                            >
+                              #{order.orderCode}
+                            </Link>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {order.items?.length || 0}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <div className="flex flex-col items-end">
+                              <span className="text-lg font-semibold text-green-600">{originalTotal.toLocaleString()} đ</span>
+                              {refundedAmount > 0 && (
+                                <small className="text-sm text-gray-500">Đã hoàn: {refundedAmount.toLocaleString()} đ</small>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <span
+                              className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                                order.status,
+                              )}`}
+                            >
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-700">
+                            {new Date(order.date).toLocaleDateString("vi-VN")}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              {getPaymentMethodIcon(order.paymentMethod || "")}
+                              <span className="text-sm text-gray-700">{order.paymentMethod || "Chưa rõ"}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700 max-w-xs">
+                            <div className="flex items-start gap-2">
+                              <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                              <span className="truncate">{order.address}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex gap-2 justify-center">
+                              {order.status === "Giao thành công" && (
+                                <button
+                                  onClick={() => confirmReceived(order._id)}
+                                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition-all duration-200"
+                                >
+                                  <FaCheck className="w-4 h-4" />
+                                  Đã nhận hàng
+                                </button>
+                              )}
+                              {order.status === "Đã nhận hàng" && !reviewedOrders.has(order._id) && (
+                                <button
+                                  onClick={() => openReviewModal(order)}
+                                  className="inline-flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600"
+                                >
+                                  <FaStar className="w-4 h-4" />
+                                  Đánh giá
+                                </button>
+                              )}
+                              {order.status === "Đã nhận hàng" && reviewedOrders.has(order._id) && (
+                                <span className="inline-flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
+                                  <FaStar className="w-4 h-4" />
+                                  Đã đánh giá
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
+
             {/* Summary Stats */}
             {orders.length > 0 && (
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -616,10 +678,11 @@ const OrderHistory = () => {
                     </div>
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-500">Tổng đơn hàng</p>
-                      <p className="text-2xl font-semibold text-gray-900">{orders.length}</p>
+                      <p className="text-2xl font-semibold text-gray-900">{totalOrders}</p>
                     </div>
                   </div>
                 </div>
+
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -628,11 +691,12 @@ const OrderHistory = () => {
                     <div className="ml-4">
                       <p className="text-sm font-medium text-gray-500">Tổng chi tiêu</p>
                       <p className="text-2xl font-semibold text-gray-900">
-                        {orders.reduce((sum, order) => sum + order.total, 0).toLocaleString()} đ
+                        {totalSpend.toLocaleString()} đ
                       </p>
                     </div>
                   </div>
                 </div>
+
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <div className="flex items-center">
                     <div className="flex-shrink-0">
@@ -651,6 +715,7 @@ const OrderHistory = () => {
           </div>
         </div>
       </div>
+
       {/* Modal đánh giá sản phẩm */}
       {showReviewModal && selectedOrder && uniqueProducts.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -690,6 +755,7 @@ const OrderHistory = () => {
                       ))}
                     </div>
                   </div>
+
                   {/* Đánh giá sao */}
                   <div className="mb-6 text-center">
                     <p className="mb-4 text-lg font-semibold text-gray-800">Bạn cảm thấy sản phẩm này như thế nào?</p>
@@ -724,6 +790,7 @@ const OrderHistory = () => {
                       </p>
                     )}
                   </div>
+
                   <div className="mb-4">
                     <p className="mb-2 font-medium">Chia sẻ trải nghiệm của bạn về sản phẩm này:</p>
                   </div>
@@ -778,6 +845,7 @@ const OrderHistory = () => {
           </div>
         </div>
       )}
+
       {/* Achievement Notification (Chỉ cho điểm thành tích) */}
       {showAchievementNotification && <AchievementNotification />}
       {/* Thank You Review Modal (Chỉ cho đánh giá) */}
