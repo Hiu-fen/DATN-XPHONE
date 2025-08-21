@@ -5,6 +5,17 @@ const Product = require("../models/productModels");
 // Trạng thái hoàn thành đơn hàng
 const completedStatuses = ["Giao thành công", "Đã nhận hàng"];
 
+// Bộ lọc cho đơn hàng thật (loại bỏ đơn VNPay có isPaid: false)
+const realOrderFilter = {
+  $or: [
+    { paymentMethod: { $ne: "VNPAY" } }, // Lấy tất cả đơn không phải VNPay
+    {
+      paymentMethod: "VNPAY",
+      isPaid: true,
+    },
+  ],
+};
+
 // Thống kê tổng quan
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -47,16 +58,18 @@ exports.getDashboardStats = async (req, res) => {
       createdAt: { $gte: startOfYear },
     });
 
-    // Thống kê đơn hàng và doanh thu
-    const totalOrders = await Order.countDocuments();
+    // Thống kê đơn hàng (sử dụng realOrderFilter để loại bỏ VNPay isPaid: false)
+    const totalOrders = await Order.countDocuments(realOrderFilter);
     const completedOrders = await Order.countDocuments({
-      status: "Giao thành công",
+      ...realOrderFilter,
+      status: { $in: completedStatuses },
     });
     const pendingOrders = await Order.countDocuments({
+      ...realOrderFilter,
       status: { $in: ["Chờ xác nhận", "Đang xử lý", "Đang giao"] },
     });
 
-    // Doanh thu theo thời gian
+    // Doanh thu theo thời gian (giữ nguyên vì chỉ tính đơn đã thanh toán)
     const revenueToday = await Order.aggregate([
       {
         $match: {
@@ -67,7 +80,6 @@ exports.getDashboardStats = async (req, res) => {
               paymentStatus: "Đã thanh toán",
             },
           ],
-
           date: { $gte: startOfDay },
         },
       },
@@ -89,7 +101,6 @@ exports.getDashboardStats = async (req, res) => {
               paymentStatus: "Đã thanh toán",
             },
           ],
-
           date: { $gte: startOfWeek },
         },
       },
@@ -147,8 +158,11 @@ exports.getDashboardStats = async (req, res) => {
     const totalProducts = await Product.countDocuments();
     const outOfStockProducts = await Product.countDocuments({ soluong: 0 });
 
-    // Đơn hàng theo trạng thái
+    // Đơn hàng theo trạng thái (sử dụng realOrderFilter)
     const ordersByStatus = await Order.aggregate([
+      {
+        $match: realOrderFilter,
+      },
       {
         $group: {
           _id: "$status",
@@ -157,7 +171,7 @@ exports.getDashboardStats = async (req, res) => {
       },
     ]);
 
-    // Doanh thu theo tháng (12 tháng trong năm hiện tại)
+    // Doanh thu theo tháng (12 tháng trong năm hiện tại) (giữ nguyên vì chỉ tính đơn đã thanh toán)
     const currentYear = now.getFullYear();
     const monthlyRevenueRaw = await Order.aggregate([
       {
@@ -234,17 +248,24 @@ exports.getDailyStats = async (req, res) => {
     const startOfDay = new Date(
       targetDate.getFullYear(),
       targetDate.getMonth(),
-      targetDate.getDate()
+      targetDate.getDate(),
+      0, 0, 0, 0
     );
-    const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+    const endOfDay = new Date(
+      targetDate.getFullYear(),
+      targetDate.getMonth(),
+      targetDate.getDate(),
+      23, 59, 59, 999
+    );
 
     const newUsers = await User.countDocuments({
       role: "user",
-      createdAt: { $gte: startOfDay, $lt: endOfDay },
+      createdAt: { $gte: startOfDay, $lte: endOfDay },
     });
 
     const orders = await Order.countDocuments({
-      date: { $gte: startOfDay, $lt: endOfDay },
+      ...realOrderFilter,
+      date: { $gte: startOfDay, $lte: endOfDay },
     });
 
     const revenue = await Order.aggregate([
@@ -257,7 +278,7 @@ exports.getDailyStats = async (req, res) => {
               paymentStatus: "Đã thanh toán",
             },
           ],
-          date: { $gte: startOfDay, $lt: endOfDay },
+          date: { $gte: startOfDay, $lte: endOfDay },
         },
       },
       {
@@ -301,17 +322,13 @@ exports.getStatsByDateRange = async (req, res) => {
     });
 
     const orders = await Order.countDocuments({
+      ...realOrderFilter,
       date: { $gte: start, $lte: end },
     });
 
     const completedOrders = await Order.countDocuments({
-      $or: [
-        { paymentMethod: "COD", status: { $in: completedStatuses } },
-        {
-          paymentMethod: { $in: ["Momo", "VNPAY"] },
-          paymentStatus: "Đã thanh toán",
-        },
-      ],
+      ...realOrderFilter,
+      status: { $in: completedStatuses },
       date: { $gte: start, $lte: end },
     });
 

@@ -84,10 +84,11 @@ useEffect(() => {
         message.error(errorMessage);
       }
     } catch (err: unknown) {
-      console.error("Lỗi xác minh thanh toán:", err);
+      // console.error("Lỗi xác minh thanh toán:", err);
       setStatus("error");
-      const errorMessage = err instanceof Error ? err.message : "Lỗi không xác định";
-      message.error(`Xác minh thanh toán thất bại: ${errorMessage}`);
+      // const errorMessage = err instanceof Error ? err.message : "Lỗi không xác định";
+      // message.error(`Xác minh thanh toán thất bại: ${errorMessage}`);
+      message.error('Thanh toán thất bại')
     }
   };
 
