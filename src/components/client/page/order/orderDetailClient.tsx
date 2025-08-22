@@ -814,18 +814,8 @@ const OrderDetail = () => {
                 <p className="text-lg text-gray-800 font-semibold mb-2">{fmt(shippingFee)}</p>
 
                 <p className="text-sm text-gray-500 mb-2">Tổng thanh toán (ban đầu)</p>
-                <div className="flex items-center gap-3 text-3xl font-bold text-green-600">
-                  <DollarSign className="w-8 h-8" />
-                  <div>
-                    <div>{fmt(originalTotal)}</div>
-                    {refundedAmount > 0 ? (
-                      <div className="text-sm text-gray-500 mt-1">
-                        Đã hoàn: {fmt(refundedAmount)} — Còn lại: <span className="font-semibold">{fmt(remaining)}</span>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 mt-1">Chưa có hoàn tiền</div>
-                    )}
-                  </div>
+                <div className="text-3xl font-bold text-green-600 text-right">
+                  {fmt(originalTotal)}
                 </div>
               </div>
             </div>
