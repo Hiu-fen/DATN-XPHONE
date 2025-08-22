@@ -50,6 +50,7 @@ const Details = () => {
       message.error("Không thể cập nhật yêu thích.");
     }
   };
+  
 
   // 🔥 FUNCTION KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG CÓ TRÊN 100 TRIỆU KHÔNG
   const isHighValueOrder = (unitPrice: number, quantity: number): boolean => {
@@ -90,6 +91,18 @@ const Details = () => {
     const unitPrice = getCurrentPrice();
     return unitPrice * quantity;
   };
+  useEffect(() => {
+    socket.on('productUpdated', (data) => {
+      if (data.productId === id) {
+        setProduct(prev => prev ? { ...prev, soluong: data.newSoluong } : prev);
+        message.info(`Số lượng tồn kho đã cập nhật: ${data.newSoluong}`);
+      }
+    });
+
+    return () => {
+      socket.off('productUpdated');
+    };
+  }, [id]);
 
   // Fetch product details
   useEffect(() => {
