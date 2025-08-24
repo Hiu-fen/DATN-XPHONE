@@ -11,7 +11,6 @@ interface IProduct {
   name: string;
 }
 
-
 const CommentAdmin = () => {
   const [searchText, setSearchText] = useState('');
 
@@ -32,7 +31,6 @@ const CommentAdmin = () => {
     return product ? product.name : 'Không có sản phẩm';
   };
 
-
   const toggleStatus = async (_id: string, currentStatus: boolean) => {
     try {
       await axios.patch(`http://localhost:5000/api/comments/${_id}`, {
@@ -45,20 +43,6 @@ const CommentAdmin = () => {
       message.error('Cập nhật trạng thái thất bại');
     }
   };
-
-  // const toggleLike = async (_id: string, currentLikes: number) => {
-  //   try {
-  //     const updatedLikes = currentLikes + 1;
-  //     await axios.patch(`http://localhost:5000/api/comments/${_id}`, {
-  //       likes: updatedLikes,
-  //     });
-  //     message.success('Đã thích bình luận');
-  //     refetch();
-  //   } catch (error: any) {
-  //     console.error('Lỗi khi cập nhật số tim:', error);
-  //     message.error('Không thể thích bình luận');
-  //   }
-  // };
 
   const mutation = useMutation({
     mutationFn: async (_id: string) =>
@@ -77,16 +61,18 @@ const CommentAdmin = () => {
     mutation.mutate(_id);
   };
 
-  const search = comments?.filter((c: IComment) => {
-    const productName = getProductName((c.sanpham));
-    const Text = ` ${c.user} ${c.content} ${c.date} ${productName}`.toLowerCase();
-    return Text.includes(searchText.toLowerCase());
-  });
+  const search = comments
+    ?.filter((c: IComment) => {
+      const productName = getProductName(c.sanpham);
+      const text = `${c.user} ${c.content} ${c.date} ${productName}`.toLowerCase();
+      return text.includes(searchText.toLowerCase());
+    })
+    .sort((a: IComment, b: IComment) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sắp xếp theo ngày giảm dần
 
   const columns = [
     {
       title: 'Người dùng',
-      dataIndex: 'user'
+      dataIndex: 'user',
     },
     {
       title: 'Sản phẩm',
@@ -105,7 +91,7 @@ const CommentAdmin = () => {
       render: (likes: number) => {
         return (
           <div>
-            <span className='flex items-center gap-1'>
+            <span className="flex items-center gap-1">
               {likes}<AiOutlineLike />
             </span>
           </div>
@@ -143,8 +129,7 @@ const CommentAdmin = () => {
           </Tooltip>
         </Popconfirm>
       ),
-    }
-
+    },
   ];
 
   return (

@@ -117,25 +117,38 @@ const GetPromotion = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: boolean, record: Promotion) => (
-        <Popconfirm
-          title="Bạn có chắc muốn thay đổi trạng thái?"
-          onConfirm={() =>
-            updateStatusMutation.mutate({
-              id: record._id,
-              status: !status,
-            })
-          }
-          okText="Đồng ý"
-          cancelText="Hủy"
-        >
-          <Switch
-            checked={status}
-            checkedChildren="Hoạt động"
-            unCheckedChildren="Hết hạn"
-          />
-        </Popconfirm>
-      ),
+      render: (status: boolean, record: Promotion) => {
+        const isExpired = dayjs(record.endDate).isBefore(dayjs());
+
+        return (
+          <Popconfirm
+            title="Bạn có chắc muốn thay đổi trạng thái?"
+            onConfirm={() => {
+              if (isExpired) {
+                message.warning("Vui lòng cập nhật thời gian của mã khuyến mãi.");
+                return; // Không thực hiện thay đổi trạng thái
+              }
+              updateStatusMutation.mutate({
+                id: record._id,
+                status: !status,
+              });
+            }}
+            okText="Đồng ý"
+            cancelText="Hủy"
+          >
+            <Switch
+              checked={status && !isExpired} // Tự động set về false nếu hết hạn
+              checkedChildren="Hoạt động"
+              unCheckedChildren="Hết hạn"
+              onChange={() => {
+                if (isExpired) {
+                  message.warning("Vui lòng cập nhật thời gian của mã khuyến mãi.");
+                }
+              }}
+            />
+          </Popconfirm>
+        );
+      },
     },
     {
       title: "Thao tác",

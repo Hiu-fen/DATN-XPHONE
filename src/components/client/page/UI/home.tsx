@@ -10,7 +10,6 @@ import { RiShieldCheckFill } from "react-icons/ri";
 import { FaShippingFast } from "react-icons/fa";
 import HomeBannerLayout from "../../componentChild/Home/BannerLayout";
 
-
 const Home = () => {
   const categoryRef = useRef<HTMLDivElement>(null);
   const smallBannerRef = useRef<HTMLDivElement>(null);
@@ -20,6 +19,7 @@ const Home = () => {
 
   const [visibleElements, setVisibleElements] = useState<Set<string>>(new Set());
   const [showWelcome, setShowWelcome] = useState<boolean>(false);
+  const [progress, setProgress] = useState(100); // Tiến trình từ 100% đến 0%
 
   // Animation khi cuộn
   useEffect(() => {
@@ -53,13 +53,26 @@ const Home = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Hiện popup chào mừng
+  // Hiện popup chào mừng và chạy tiến trình
   useEffect(() => {
     setShowWelcome(true);
+    setProgress(100);
+
     const timer = setTimeout(() => {
       setShowWelcome(false);
-    }, 10000); // tự động tắt sau 10s
-    return () => clearTimeout(timer);
+    }, 10000); // Tắt sau 10 giây
+
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        const newProgress = prev - (100 / (10000 / 100)); // Giảm 1% mỗi 100ms
+        return newProgress > 0 ? newProgress : 0;
+      });
+    }, 100); // Cập nhật tiến trình mỗi 100ms
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(progressInterval);
+    };
   }, []);
 
   const closePopup = () => {
@@ -70,7 +83,7 @@ const Home = () => {
     `transition-all duration-1000 ease-out ${visibleElements.has(id) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
     }`;
   const [showChat, setShowChat] = useState(false);
-  const toggleChat = () => setShowChat(prev => !prev);
+  const toggleChat = () => setShowChat((prev) => !prev);
 
   return (
     <>
@@ -104,8 +117,16 @@ const Home = () => {
                 <li>Giao hàng nhanh, miễn phí toàn quốc.</li>
               </ul>
 
-              <p className="text-sm text-gray-500 italic">
-                (Thông báo này sẽ tự động biến mất sau 10 giây)
+              {/* Thanh tiến trình */}
+              <div className="w-full bg-gray-200 rounded-full h-2.5 mt-4">
+                <div
+                  className="bg-blue-600 h-2.5 rounded-full transition-all duration-100"
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+
+              <p className="text-sm text-gray-500 italic mt-2">
+                (Thông báo sẽ tự động biến mất sau {Math.ceil(progress / 10)} giây)
               </p>
             </div>
           </div>
@@ -207,7 +228,6 @@ const Home = () => {
             </div>
           )}
         </div>
-
       </div>
     </>
   );

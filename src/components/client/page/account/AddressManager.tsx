@@ -84,7 +84,6 @@ const AddressManager = () => {
     }
     setIsModalVisible(true)
   }
-  
 
   const handleSubmit = async () => {
     try {
@@ -368,7 +367,14 @@ const AddressManager = () => {
                   }
                 >
                   {provinces.map((p) => (
-                    <Select.Option key={p.ProvinceID} value={p.ProvinceID}>
+                    <Select.Option
+                      key={p.ProvinceID}
+                      value={p.ProvinceID}
+                      style={{
+                        backgroundColor: province === p.ProvinceID ? "#e6f3ff" : "transparent",
+                        fontWeight: province === p.ProvinceID ? "bold" : "normal",
+                      }}
+                    >
                       {p.ProvinceName}
                     </Select.Option>
                   ))}

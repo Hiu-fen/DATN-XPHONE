@@ -119,7 +119,7 @@ const About = () => {
       description: "2 năm kinh nghiệm trong ngành công nghệ",
     },
     {
-      name: "Trịnh Thị Dương",
+      name: "Trịnh Mạnh Dương",
       position: "Marketing Director",
       avatar: "/placeholder.svg?height=80&width=80",
       description: "Chuyên gia marketing với 6 ngày kinh nghiệm",
