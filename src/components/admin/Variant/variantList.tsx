@@ -3,10 +3,11 @@
 import type React from "react"
 
 import { useState, useMemo } from "react"
-// import { useRouter } from "next/navigation" // Đã bỏ useRouter như yêu cầu
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import axios from "axios"
-import { Search } from "lucide-react" // Icon tìm kiếm từ Lucide React
+import { Search } from "lucide-react"
+import { Button, Table, Modal, message } from "antd"
+import { DeleteOutlined, EditOutlined } from "@ant-design/icons"
 
 // Định nghĩa các interface ngay trong file này
 interface IRam {
@@ -27,7 +28,6 @@ interface IVariantCategory {
 const API_BASE_URL = "http://localhost:5000/api" // URL API cơ sở
 
 const VariantList: React.FC = () => {
-  // const router = useRouter() // Đã bỏ useRouter như yêu cầu
   const queryClient = useQueryClient()
 
   // State cho các thanh tìm kiếm của từng bảng
@@ -69,11 +69,11 @@ const VariantList: React.FC = () => {
   const delRamMut = useMutation({
     mutationFn: (id: string) => axios.delete(`${API_BASE_URL}/rams/${id}`),
     onSuccess: () => {
-      window.alert("Xóa RAM thành công.") // Sử dụng alert thay cho toast
+      message.success("Xóa RAM thành công.")
       queryClient.invalidateQueries({ queryKey: ["rams"] })
     },
     onError: (error: any) => {
-      window.alert(`Xóa RAM thất bại: ${error.message}`) // Sử dụng alert thay cho toast
+      message.error(`Xóa RAM thất bại: ${error.message}`)
     },
   })
 
@@ -81,11 +81,11 @@ const VariantList: React.FC = () => {
   const delColorMut = useMutation({
     mutationFn: (id: string) => axios.delete(`${API_BASE_URL}/colors/${id}`),
     onSuccess: () => {
-      window.alert("Xóa màu thành công.")
+      message.success("Xóa màu thành công.")
       queryClient.invalidateQueries({ queryKey: ["colors"] })
     },
     onError: (error: any) => {
-      window.alert(`Xóa màu thất bại: ${error.message}`)
+      message.error(`Xóa màu thất bại: ${error.message}`)
     },
   })
 
@@ -93,11 +93,11 @@ const VariantList: React.FC = () => {
   const delVariantCategoryMut = useMutation({
     mutationFn: (id: string) => axios.delete(`${API_BASE_URL}/variant-category/${id}`),
     onSuccess: () => {
-      window.alert("Xóa danh mục biến thể thành công.")
+      message.success("Xóa danh mục biến thể thành công.")
       queryClient.invalidateQueries({ queryKey: ["variantCategories"] })
     },
     onError: (error: any) => {
-      window.alert(`Xóa danh mục biến thể thất bại: ${error.message}`)
+      message.error(`Xóa danh mục biến thể thất bại: ${error.message}`)
     },
   })
 
@@ -120,194 +120,149 @@ const VariantList: React.FC = () => {
 
   // Hàm render bảng RAM
   const renderRamTable = () => (
-    <table className="w-full caption-bottom text-sm">
-      <thead className="[&_tr]:border-b">
-        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-          <th className="h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0">
-            Dung lượng
-          </th>
-          <th className="h-12 px-4 text-right align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0">
-            Hành động
-          </th>
-        </tr>
-      </thead>
-      <tbody className="[&_tr:last-child]:border-0">
-        {isLoadingRams ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center">
-              Đang tải RAM...
-            </td>
-          </tr>
-        ) : ramsError ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center text-red-500">
-              Lỗi tải RAM: {ramsError.message}
-            </td>
-          </tr>
-        ) : filteredRams.length === 0 ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center text-gray-500">
-              Không tìm thấy RAM nào.
-            </td>
-          </tr>
-        ) : (
-          filteredRams.map((ram) => (
-            <tr key={ram._id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-              <td className="p-4 align-middle font-medium">{ram.size}</td>
-              <td className="p-4 align-middle text-right">
-                <div className="flex justify-end space-x-2">
-                  <button
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-gray-100 hover:text-gray-900 h-9 px-3"
-                    onClick={() => (window.location.href = `/admin/ram/${ram._id}`)} // Thay thế router.push
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-500 text-white hover:bg-red-600/90 h-9 px-3"
-                    onClick={() => {
-                      if (window.confirm("Xác nhận xóa RAM? Hành động này không thể hoàn tác.")) {
-                        delRamMut.mutate(ram._id!)
-                      }
-                    }}
-                  >
-                    Xóa
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+    <Table
+      dataSource={filteredRams}
+      columns={[
+        {
+          title: "Dung lượng",
+          dataIndex: "size",
+          key: "size",
+        },
+        {
+          title: "Hành động",
+          key: "action",
+          render: (_, record: IRam) => (
+            <div className="flex justify-end space-x-2">
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => (window.location.href = `/admin/ram/${record._id}`)}
+              >
+                Sửa
+              </Button>
+              <Button
+                type="primary"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() =>
+                  Modal.confirm({
+                    title: "Xác nhận xóa RAM",
+                    content: "Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa?",
+                    okText: "Xóa",
+                    okType: "danger",
+                    cancelText: "Hủy",
+                    onOk: () => delRamMut.mutate(record._id!),
+                  })
+                }
+              >
+                Xóa
+              </Button>
+            </div>
+          ),
+        },
+      ]}
+      rowKey="_id"
+      pagination={false}
+      locale={{ emptyText: isLoadingRams ? "Đang tải RAM..." : ramsError ? `Lỗi tải RAM: ${ramsError.message}` : "Không tìm thấy RAM nào." }}
+      style={{ maxHeight: "300px", overflowY: "auto" }} // Giới hạn chiều cao và thêm thanh cuộn
+    />
   )
 
   // Hàm render bảng Màu sắc
   const renderColorTable = () => (
-    <table className="w-full caption-bottom text-sm">
-      <thead className="[&_tr]:border-b">
-        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-          <th className="h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0">
-            Tên màu
-          </th>
-          <th className="h-12 px-4 text-right align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0">
-            Hành động
-          </th>
-        </tr>
-      </thead>
-      <tbody className="[&_tr:last-child]:border-0">
-        {isLoadingColors ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center">
-              Đang tải màu sắc...
-            </td>
-          </tr>
-        ) : colorsError ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center text-red-500">
-              Lỗi tải màu sắc: {colorsError.message}
-            </td>
-          </tr>
-        ) : filteredColors.length === 0 ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center text-gray-500">
-              Không tìm thấy màu sắc nào.
-            </td>
-          </tr>
-        ) : (
-          filteredColors.map((color) => (
-            <tr key={color._id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-              <td className="p-4 align-middle font-medium">{color.name}</td>
-              <td className="p-4 align-middle text-right">
-                <div className="flex justify-end space-x-2">
-                  <button
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-gray-100 hover:text-gray-900 h-9 px-3"
-                    onClick={() => (window.location.href = `/admin/color/${color._id}`)} // Thay thế router.push
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-500 text-white hover:bg-red-600/90 h-9 px-3"
-                    onClick={() => {
-                      if (window.confirm("Xác nhận xóa màu? Hành động này không thể hoàn tác.")) {
-                        delColorMut.mutate(color._id!)
-                      }
-                    }}
-                  >
-                    Xóa
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+    <Table
+      dataSource={filteredColors}
+      columns={[
+        {
+          title: "Tên màu",
+          dataIndex: "name",
+          key: "name",
+        },
+        {
+          title: "Hành động",
+          key: "action",
+          render: (_, record: IColor) => (
+            <div className="flex justify-end space-x-2">
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => (window.location.href = `/admin/color/${record._id}`)}
+              >
+                Sửa
+              </Button>
+              <Button
+                type="primary"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() =>
+                  Modal.confirm({
+                    title: "Xác nhận xóa màu",
+                    content: "Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa?",
+                    okText: "Xóa",
+                    okType: "danger",
+                    cancelText: "Hủy",
+                    onOk: () => delColorMut.mutate(record._id!),
+                  })
+                }
+              >
+                Xóa
+              </Button>
+            </div>
+          ),
+        },
+      ]}
+      rowKey="_id"
+      pagination={false}
+      locale={{ emptyText: isLoadingColors ? "Đang tải màu sắc..." : colorsError ? `Lỗi tải màu sắc: ${colorsError.message}` : "Không tìm thấy màu sắc nào." }}
+      style={{ maxHeight: "300px", overflowY: "auto" }} // Giới hạn chiều cao và thêm thanh cuộn
+    />
   )
 
   // Hàm render bảng Danh mục biến thể
   const renderVariantCategoryTable = () => (
-    <table className="w-full caption-bottom text-sm">
-      <thead className="[&_tr]:border-b">
-        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-          <th className="h-12 px-4 text-left align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0">
-            Tên danh mục biến thể
-          </th>
-          <th className="h-12 px-4 text-right align-middle font-medium text-gray-500 [&:has([role=checkbox])]:pr-0">
-            Hành động
-          </th>
-        </tr>
-      </thead>
-      <tbody className="[&_tr:last-child]:border-0">
-        {isLoadingVariantCategories ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center">
-              Đang tải danh mục biến thể...
-            </td>
-          </tr>
-        ) : variantCategoriesError ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center text-red-500">
-              Lỗi tải danh mục biến thể: {variantCategoriesError.message}
-            </td>
-          </tr>
-        ) : filteredVariantCategories.length === 0 ? (
-          <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <td colSpan={2} className="p-4 align-middle text-center text-gray-500">
-              Không tìm thấy danh mục biến thể nào.
-            </td>
-          </tr>
-        ) : (
-          filteredVariantCategories.map((category) => (
-            <tr
-              key={category._id}
-              className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-            >
-              <td className="p-4 align-middle font-medium">{category.name}</td>
-              <td className="p-4 align-middle text-right">
-                <div className="flex justify-end space-x-2">
-                  <button
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-gray-100 hover:text-gray-900 h-9 px-3"
-                    onClick={() => (window.location.href = `/admin/categoryVariant/${category._id}`)} // Thay thế router.push
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-red-500 text-white hover:bg-red-600/90 h-9 px-3"
-                    onClick={() => {
-                      if (window.confirm("Xác nhận xóa danh mục biến thể? Hành động này không thể hoàn tác.")) {
-                        delVariantCategoryMut.mutate(category._id!)
-                      }
-                    }}
-                  >
-                    Xóa
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+    <Table
+      dataSource={filteredVariantCategories}
+      columns={[
+        {
+          title: "Tên danh mục biến thể",
+          dataIndex: "name",
+          key: "name",
+        },
+        {
+          title: "Hành động",
+          key: "action",
+          render: (_, record: IVariantCategory) => (
+            <div className="flex justify-end space-x-2">
+              <Button
+                icon={<EditOutlined />}
+                onClick={() => (window.location.href = `/admin/categoryVariant/${record._id}`)}
+              >
+                Sửa
+              </Button>
+              <Button
+                type="primary"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() =>
+                  Modal.confirm({
+                    title: "Xác nhận xóa danh mục biến thể",
+                    content: "Hành động này không thể hoàn tác. Bạn có chắc chắn muốn xóa?",
+                    okText: "Xóa",
+                    okType: "danger",
+                    cancelText: "Hủy",
+                    onOk: () => delVariantCategoryMut.mutate(record._id!),
+                  })
+                }
+              >
+                Xóa
+              </Button>
+            </div>
+          ),
+        },
+      ]}
+      rowKey="_id"
+      pagination={false}
+      locale={{ emptyText: isLoadingVariantCategories ? "Đang tải danh mục biến thể..." : variantCategoriesError ? `Lỗi tải danh mục biến thể: ${variantCategoriesError.message}` : "Không tìm thấy danh mục biến thể nào." }}
+      style={{ maxHeight: "300px", overflowY: "auto" }} // Giới hạn chiều cao và thêm thanh cuộn
+    />
   )
 
   return (
@@ -326,12 +281,13 @@ const VariantList: React.FC = () => {
           </div>
           <div className="p-6 pt-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
-              <button
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700/90 h-10 px-4 py-2"
-                onClick={() => (window.location.href = "/admin/ram/add")} // Thay thế router.push
+              <Button
+                type="primary"
+                onClick={() => (window.location.href = "/admin/ram/add")}
+                className="bg-blue-600 hover:bg-blue-700/90"
               >
                 Thêm RAM mới
-              </button>
+              </Button>
               <div className="relative w-full sm:w-auto">
                 <input
                   type="text"
@@ -355,12 +311,13 @@ const VariantList: React.FC = () => {
           </div>
           <div className="p-6 pt-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
-              <button
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700/90 h-10 px-4 py-2"
-                onClick={() => (window.location.href = "/admin/color/add")} // Thay thế router.push
+              <Button
+                type="primary"
+                onClick={() => (window.location.href = "/admin/color/add")}
+                className="bg-blue-600 hover:bg-blue-700/90"
               >
                 Thêm màu mới
-              </button>
+              </Button>
               <div className="relative w-full sm:w-auto">
                 <input
                   type="text"
@@ -384,12 +341,13 @@ const VariantList: React.FC = () => {
           </div>
           <div className="p-6 pt-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-4">
-              <button
-                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700/90 h-10 px-4 py-2"
-                onClick={() => (window.location.href = "/admin/categoryVariant/add")} // Thay thế router.push
+              <Button
+                type="primary"
+                onClick={() => (window.location.href = "/admin/categoryVariant/add")}
+                className="bg-blue-600 hover:bg-blue-700/90"
               >
                 Thêm danh mục biến thể mới
-              </button>
+              </Button>
               <div className="relative w-full sm:w-auto">
                 <input
                   type="text"

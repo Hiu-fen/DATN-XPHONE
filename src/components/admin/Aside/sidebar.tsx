@@ -62,7 +62,6 @@ const AdminSidebar = () => {
       children: [
         { key: '/admin/user/listadmin', label: <span className="text-[15px]">Tài khoản quản trị</span> },
         { key: '/admin/user/listclient', label: <span className="text-[15px]">Tài khoản người dùng</span> },
-        
         { key: '/admin/user/history', label: <span className="text-[15px]">Lịch sử cập nhật</span> },
       ],
     },
@@ -148,6 +147,7 @@ const AdminSidebar = () => {
       width={280}
       className="h-screen sticky top-0 left-0 bg-green-700"
       theme="dark"
+      style={{ overflowY: 'auto', height: '100vh' }} // Thêm thuộc tính cuộn và cố định chiều cao
     >
       <Menu
         mode="inline"
@@ -165,6 +165,7 @@ const AdminSidebar = () => {
           [&_.ant-menu-submenu-title:hover]:!bg-green-600
           py-5
           "
+        style={{ height: '100%', overflowY: 'auto' }} // Thêm thuộc tính cuộn cho Menu
       />
     </Sider>
   );
