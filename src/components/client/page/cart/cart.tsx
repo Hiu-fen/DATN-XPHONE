@@ -16,6 +16,7 @@ import {
   FaExclamationTriangle,
   FaShoppingBag,
 } from "react-icons/fa";
+import { Modal } from "antd";
 
 // 🔥 CẬP NHẬT INTERFACE CART ITEM ĐỂ BAO GỒM SNAPSHOT
 interface EnrichedCartItem extends ICartItem {
@@ -354,6 +355,20 @@ const Cart = () => {
   // 🔥 FUNCTION LẤY GIÁ HIỂN THỊ (ƯU TIÊN GIÁ HIỆN TẠI)
   const getDisplayPrice = (item: EnrichedCartItem): number => {
     return item.currentPrice || item.snapshot.price;
+  };
+
+  // Modal state for high value order contact
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+
+  // Handler for Modal OK button
+  const handleContactModalOk = () => {
+    setIsContactModalOpen(false);
+    // You can add logic to redirect to contact page or open chat here
+  };
+
+  // Handler for Modal Cancel button
+  const handleContactModalCancel = () => {
+    setIsContactModalOpen(false);
   };
 
   // 🔥 FUNCTION LẤY TRẠNG THÁI HIỂN THỊ

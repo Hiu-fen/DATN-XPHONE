@@ -342,8 +342,8 @@ const Details = () => {
               name: product.name,
               image: product.image,
               price: variant?.price || product.price,
-              color: modalVariant.color,
-              storage: modalVariant.ram,
+              color: selectedVariant.color,
+              storage: selectedVariant.ram,
               categoryId: Array.isArray(product.danhmuc)
                 ? product.danhmuc[0]
                 : product.danhmuc,
@@ -408,8 +408,8 @@ const Details = () => {
         name: product.name,
         image: product.image,
         price: variant.price || product.price,
-        color: modalVariant.color,
-        storage: modalVariant.ram,
+        color: selectedVariant.color,
+        storage: selectedVariant.ram,
         categoryId,
       },
     };
