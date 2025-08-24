@@ -2,9 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios, { AxiosError } from "axios";
-import { Modal } from "antd";
-import { IProduct } from "../../../../interface/product";
 import { ICartItem } from "../../../../interface/cart";
+import { IProduct } from "../../../../interface/product";
 import { useUser } from "../../context/UserContext";
 import {
   FaShoppingCart,
@@ -18,13 +17,22 @@ import {
   FaShoppingBag,
 } from "react-icons/fa";
 
+// 🔥 CẬP NHẬT INTERFACE CART ITEM ĐỂ BAO GỒM SNAPSHOT
 interface EnrichedCartItem extends ICartItem {
-  productName: string;
-  image: string;
+  // Thông tin snapshot được lưu sẵn trong cart
+  snapshot: {
+    name: string;
+    image: string;
+    price: number;
+    color: string;
+    storage: string;
+    categoryId: string;
+  };
+  // Thông tin realtime từ database (để kiểm tra tồn kho, trạng thái)
   isAvailable: boolean;
-  price: number;
+  currentPrice: number;
   maxStock: number;
-  orderIndex: number;
+  productExists: boolean;
 }
 
 const Cart = () => {
@@ -35,10 +43,7 @@ const Cart = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
-  const [toastType, setToastType] = useState<"success" | "error" | "warning">(
-    "success"
-  );
-  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [toastType, setToastType] = useState<"success" | "error" | "warning">("success");
 
   const showToastMessage = (
     message: string,
@@ -58,20 +63,14 @@ const Cart = () => {
     });
   };
 
-  // Check if total value exceeds 100 million VND
-  const isHighValueOrder = (total: number): boolean => {
-    const threshold = 1000000000; // 1 tỷ VND
-    const isHigh = total > threshold;
-    if (isHigh) {
-      console.log("💎 High value order detected:", {
-        totalValue: total.toLocaleString(),
-        threshold: threshold.toLocaleString(),
-      });
-    }
-    return isHigh;
+  // 🔥 FUNCTION KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG CÓ TRÊN 100 TRIỆU KHÔNG
+  const isHighValueOrder = (unitPrice: number, quantity: number): boolean => {
+    const totalValue = Number(unitPrice) * Number(quantity);
+    const threshold = 100000000; // 100 triệu
+    return totalValue > threshold;
   };
 
-  // Fetch cart items
+  // Fetch cart items với snapshot
   const {
     data: cartItems = [],
     isLoading: isLoadingCart,
@@ -83,7 +82,7 @@ const Cart = () => {
       const res = await axios.get(`http://localhost:5000/api/carts/${userId}`, {
         withCredentials: true,
       });
-      console.log("✅ Đã lấy giỏ hàng:", res.data.items);
+      console.log("✅ Đã lấy giỏ hàng với snapshot:", res.data.items);
       return res.data.items as ICartItem[];
     },
     enabled: !!userId,
@@ -91,78 +90,56 @@ const Cart = () => {
     refetchOnWindowFocus: true,
   });
 
-  // Fetch products
+  // Fetch products để kiểm tra trạng thái realtime
   const {
     data: products = [],
     isLoading: isLoadingProducts,
-    error: productsError,
   } = useQuery({
     queryKey: ["products"],
     queryFn: async () => {
       const res = await axios.get("http://localhost:5000/api/products", {
         withCredentials: true,
       });
-      console.log("✅ Đã lấy danh sách sản phẩm:", res.data);
       return res.data as IProduct[];
     },
     staleTime: 5000,
     refetchOnWindowFocus: true,
   });
 
-  // Enrich cart items with product details
-  const enrichedCartItems: EnrichedCartItem[] = cartItems
-    .map((item: ICartItem, index: number) => {
-      const product = products.find(
-        (p) => String(p._id) === String(item.productId)
-      );
+  // 🔥 ENRICH CART ITEMS VỚI THÔNG TIN REALTIME
+  const enrichedCartItems: EnrichedCartItem[] = cartItems.map((item) => {
+    // Tìm sản phẩm hiện tại trong database
+    const currentProduct = products.find((p: IProduct) => p._id === item.productId);
+    
+    // Tìm variant hiện tại
+    const currentVariant = currentProduct?.variants?.find(
+      (v: any) => v.color === item.color && v.ram === item.storage
+    );
 
-      if (product) {
-        const variant = product.variants?.find(
-          (v) =>
-            String(v.color).trim().toLowerCase() ===
-              String(item.color).trim().toLowerCase() &&
-            String(v.ram).trim().toLowerCase() ===
-              String(item.storage).trim().toLowerCase()
-        );
+    // Thông tin realtime
+    const productExists = !!currentProduct;
+    const isAvailable = !!(currentProduct && currentProduct.status !== false);
+    const currentPrice = Number(currentVariant?.price || currentProduct?.price || 0);
+    const maxStock = currentVariant?.soluong || currentProduct?.soluong || 0;
 
-        const variantStock = variant?.soluong ?? 0;
-        const imageToUse =
-          variant?.image ||
-          item.image ||
-          product.albumImages?.find((img) =>
-            item.color
-              ? img.toLowerCase().includes(item.color.toLowerCase())
-              : false
-          ) ||
-          product.image ||
-          product.albumImages?.[0];
-
-        return {
-          ...item,
-          productName: product.name,
-          image: imageToUse,
-          isAvailable: !!variant && variantStock > 0 && product.status !== false,
-          price: variant?.price ?? product.price,
-          maxStock: variantStock,
-          orderIndex: index,
-        };
-      } else {
-        return {
-          ...item,
-          productName: item.name || "Sản phẩm không còn được bán",
-          image: item.image,
-          isAvailable: false,
-          price: item.price || 0,
-          maxStock: 0,
-          orderIndex: index,
-        };
-      }
-    })
-    .sort((a, b) => {
-      if (a.isAvailable && !b.isAvailable) return -1;
-      if (!a.isAvailable && b.isAvailable) return 1;
-      return b.orderIndex - a.orderIndex;
-    });
+    return {
+      ...item,
+      // 🔥 SỬ DỤNG SNAPSHOT ĐÃ LUU THAY VÌ THÔNG TIN REALTIME
+      snapshot: item.snapshot || {
+        name: item.productName || "Sản phẩm không xác định",
+        image: item.image || "https://cdn-icons-png.flaticon.com/512/2748/2748558.png",
+        price: item.price || 0,
+        color: item.color || "",
+        storage: item.storage || "",
+        categoryId: item.categoryId || "",
+      },
+      // Thông tin realtime để kiểm tra
+      productExists,
+      isAvailable,
+      currentPrice,
+      maxStock: Math.max(0, maxStock),
+    };
+  });
 
   // Mutation to update cart on server
   const updateCartMutation = useMutation({
@@ -214,18 +191,40 @@ const Cart = () => {
       (i) =>
         i.productId === productId && i.color === color && i.storage === storage
     );
-    if (!item || !item.isAvailable) {
+    
+    if (!item) return;
+
+    // Kiểm tra sản phẩm có còn tồn tại không
+    if (!item.productExists) {
+      showToastMessage("Sản phẩm đã bị xóa khỏi hệ thống", "warning");
+      return;
+    }
+
+    // Kiểm tra sản phẩm có còn được bán không
+    if (!item.isAvailable) {
       showToastMessage("Sản phẩm không còn được bán", "warning");
       return;
     }
 
     const newQuantity = item.quantity + delta;
+    
     if (newQuantity < 1) {
       showToastMessage("Số lượng không được nhỏ hơn 1", "error");
       return;
     }
+    
     if (newQuantity > item.maxStock) {
       showToastMessage("Số lượng sản phẩm không đủ trong kho", "error");
+      return;
+    }
+
+    // 🔥 KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG
+    const unitPrice = item.currentPrice || item.snapshot.price;
+    if (isHighValueOrder(unitPrice, newQuantity)) {
+      showToastMessage(
+        `Đơn hàng cao cấp (${(unitPrice * newQuantity).toLocaleString("vi-VN")} VNĐ) - Vui lòng liên hệ để được tư vấn`,
+        "warning"
+      );
       return;
     }
 
@@ -234,6 +233,7 @@ const Cart = () => {
         ? { ...i, quantity: newQuantity }
         : i
     );
+    
     updateCartMutation.mutate(updatedItems);
   };
 
@@ -242,19 +242,38 @@ const Cart = () => {
   };
 
   const handleSelectAll = () => {
-    const availableItems = enrichedCartItems.filter((item) => item.isAvailable);
-    if (selectedItems.length === availableItems.length) {
+    // Chỉ chọn những item có thể mua được
+    const selectableItems = enrichedCartItems.filter(
+      (item) => item.productExists && item.isAvailable
+    );
+    
+    if (selectedItems.length === selectableItems.length) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(availableItems.map((item) => item._id));
+      setSelectedItems(selectableItems.map((item) => item._id));
     }
   };
 
   const handleSelectItem = (itemId: string) => {
     const item = enrichedCartItems.find((i) => i._id === itemId);
-    if (!item?.isAvailable) {
+    
+    if (!item) return;
+
+    if (!item.productExists) {
+      showToastMessage("Sản phẩm đã bị xóa, không thể chọn", "warning");
+      return;
+    }
+
+    if (!item.isAvailable) {
+      showToastMessage("Sản phẩm không còn được bán, không thể chọn", "warning");
+      return;
+    }
+
+    // 🔥 KIỂM TRA TỔNG GIÁ TRỊ KHI CHỌN
+    const unitPrice = item.currentPrice || item.snapshot.price;
+    if (isHighValueOrder(unitPrice, item.quantity)) {
       showToastMessage(
-        "Sản phẩm không còn được bán, không thể chọn",
+        `Sản phẩm cao cấp (${(unitPrice * item.quantity).toLocaleString("vi-VN")} VNĐ) - Vui lòng liên hệ để được tư vấn`,
         "warning"
       );
       return;
@@ -275,36 +294,49 @@ const Cart = () => {
     }
 
     if (selectedItems.length === 0) {
+      showToastMessage("Vui lòng chọn ít nhất một sản phẩm để thanh toán", "warning");
+      return;
+    }
+
+    // Kiểm tra các sản phẩm được chọn
+    const selectedCartItems = enrichedCartItems.filter((item) =>
+      selectedItems.includes(item._id)
+    );
+
+    // Kiểm tra sản phẩm có còn tồn tại và có thể mua không
+    const hasInvalidItems = selectedCartItems.some(
+      (item) => !item.productExists || !item.isAvailable
+    );
+
+    if (hasInvalidItems) {
+      showToastMessage("Một số sản phẩm không còn được bán", "error");
+      return;
+    }
+
+    // Kiểm tra số lượng tồn kho
+    const hasInvalidQuantity = selectedCartItems.some(
+      (item) => item.quantity > item.maxStock
+    );
+
+    if (hasInvalidQuantity) {
+      showToastMessage("Một hoặc nhiều sản phẩm vượt quá số lượng tồn kho", "error");
+      return;
+    }
+
+    // 🔥 KIỂM TRA TỔNG GIÁ TRỊ CÁC SẢN PHẨM ĐƯỢC CHỌN
+    const hasHighValueItems = selectedCartItems.some((item) => {
+      const unitPrice = item.currentPrice || item.snapshot.price;
+      return isHighValueOrder(unitPrice, item.quantity);
+    });
+
+    if (hasHighValueItems) {
       showToastMessage(
-        "Vui lòng chọn ít nhất một sản phẩm để thanh toán",
+        "Giỏ hàng có sản phẩm cao cấp - Vui lòng liên hệ để được tư vấn tốt nhất",
         "warning"
       );
       return;
     }
 
-    const hasInvalidQuantity = selectedItems.some((itemId) => {
-      const item = enrichedCartItems.find((i) => i._id === itemId);
-      return item && item.quantity > item.maxStock;
-    });
-
-    if (hasInvalidQuantity) {
-      showToastMessage(
-        "Một hoặc nhiều sản phẩm vượt quá số lượng tồn kho",
-        "error"
-      );
-      return;
-    }
-
-    const totalValue = calculateTotal();
-    if (isHighValueOrder(totalValue)) {
-      console.log("💎 Showing contact modal for high value cart");
-      setIsContactModalOpen(true);
-      return;
-    }
-
-    const selectedCartItems = enrichedCartItems.filter((item) =>
-      selectedItems.includes(item._id)
-    );
     navigate("/checkout", { state: { selectedItems: selectedCartItems } });
   };
 
@@ -312,18 +344,62 @@ const Cart = () => {
     return selectedItems.reduce((total, itemId) => {
       const item = enrichedCartItems.find((i) => i._id === itemId);
       if (!item) return total;
-      return total + item.price * item.quantity;
+      
+      // Ưu tiên giá hiện tại, nếu không có thì dùng giá snapshot
+      const price = item.currentPrice || item.snapshot.price;
+      return total + price * item.quantity;
     }, 0);
   };
 
-  // Handle contact modal actions
-  const handleContactModalOk = () => {
-    navigate("/contact");
-    setIsContactModalOpen(false);
+  // 🔥 FUNCTION LẤY GIÁ HIỂN THỊ (ƯU TIÊN GIÁ HIỆN TẠI)
+  const getDisplayPrice = (item: EnrichedCartItem): number => {
+    return item.currentPrice || item.snapshot.price;
   };
 
-  const handleContactModalCancel = () => {
-    setIsContactModalOpen(false);
+  // 🔥 FUNCTION LẤY TRẠNG THÁI HIỂN THỊ
+  const getItemStatus = (item: EnrichedCartItem): {
+    text: string;
+    className: string;
+    canSelect: boolean;
+  } => {
+    if (!item.productExists) {
+      return {
+        text: "Sản phẩm đã bị xóa",
+        className: "text-red-600 font-semibold",
+        canSelect: false,
+      };
+    }
+    
+    if (!item.isAvailable) {
+      return {
+        text: "Hàng không còn bán",
+        className: "text-red-600 font-semibold",
+        canSelect: false,
+      };
+    }
+
+    if (item.maxStock === 0) {
+      return {
+        text: "Hết hàng",
+        className: "text-orange-600 font-semibold",
+        canSelect: false,
+      };
+    }
+
+    // Kiểm tra giá có thay đổi không
+    if (item.currentPrice && item.currentPrice !== item.snapshot.price) {
+      return {
+        text: "Giá đã thay đổi",
+        className: "text-blue-600 font-semibold",
+        canSelect: true,
+      };
+    }
+
+    return {
+      text: "",
+      className: "",
+      canSelect: true,
+    };
   };
 
   if (isLoadingCart || isLoadingProducts) {
@@ -341,7 +417,7 @@ const Cart = () => {
     );
   }
 
-  if (cartError || productsError) {
+  if (cartError) {
     return (
       <div className="pt-20 pb-8 min-h-screen">
         <div className="bg-gray-50 min-h-full">
@@ -510,9 +586,7 @@ const Cart = () => {
           <div className="mb-8 pt-8">
             <div className="flex items-center gap-3 mb-2">
               <FaShoppingCart className="w-8 h-8 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-900">
-                Giỏ hàng của bạn
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900">Giỏ hàng của bạn</h1>
             </div>
             <p className="text-gray-600">
               {enrichedCartItems.length > 0
@@ -526,9 +600,7 @@ const Cart = () => {
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FaShoppingBag className="w-12 h-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Giỏ hàng trống
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Giỏ hàng trống</h3>
               <p className="text-gray-500 mb-6">
                 Bạn chưa có sản phẩm nào trong giỏ hàng. Hãy bắt đầu mua sắm
                 ngay!
@@ -545,116 +617,118 @@ const Cart = () => {
             <div className="space-y-6">
               {/* Mobile View */}
               <div className="block lg:hidden space-y-4">
-                {enrichedCartItems.map((item) => (
-                  <div
-                    key={`${item.productId}-${item.color}-${item.storage}-${item.price}`}
-                    className="bg-white rounded-xl shadow-sm border border-gray-200 p-4"
-                  >
-                    <div className="flex items-start gap-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(item._id)}
-                        onChange={() => handleSelectItem(item._id)}
-                        disabled={!item.isAvailable}
-                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 disabled:opacity-50"
-                      />
-                      <Link to={`/detail/${item.productId}`}>
-                        <img
-                          src={item.image}
-                          alt={item.productName}
-                          className="w-20 h-20 rounded-lg border border-gray-200 object-cover flex-shrink-0 hover:opacity-90 transition"
+                {enrichedCartItems.map((item) => {
+                  const status = getItemStatus(item);
+                  const displayPrice = getDisplayPrice(item);
+                  
+                  return (
+                    <div
+                      key={`${item.productId}-${item.color}-${item.storage}-${item._id}`}
+                      className="bg-white rounded-xl shadow-sm border border-gray-200 p-4"
+                    >
+                      <div className="flex items-start gap-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedItems.includes(item._id)}
+                          onChange={() => handleSelectItem(item._id)}
+                          disabled={!status.canSelect}
+                          className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mt-1 disabled:opacity-50"
                         />
-                      </Link>
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          to={`/detail/${item.productId}`}
-                          className="block"
-                        >
-                          <h3
-                            className={`font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 hover:underline transition ${
-                              item.isAvailable ? "" : "line-through"
-                            }`}
-                          >
-                            {item.productName}
-                          </h3>
+                        <Link to={`/detail/${item.productId}`}>
+                          <img
+                            src={item.snapshot.image || "/placeholder.svg"}
+                            alt={item.snapshot.name}
+                            className="w-20 h-20 rounded-lg border border-gray-200 object-cover flex-shrink-0 hover:opacity-90 transition"
+                          />
                         </Link>
-                        {!item.isAvailable && (
-                          <p className="text-red-600 font-semibold mb-3">
-                            Sản phẩm đã ngừng bán
-                          </p>
-                        )}
-                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
-                          <div>
-                            <span className="font-medium">Màu:</span>{" "}
-                            {item.color || "-"}
-                          </div>
-                          <div>
-                            <span className="font-medium">Dung lượng:</span>{" "}
-                            {item.storage || "-"}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <div className="text-lg font-semibold text-red-600">
-                              {formatPrice(item.price)}
+                        <div className="flex-1 min-w-0">
+                          <Link to={`/detail/${item.productId}`} className="block">
+                            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 hover:underline transition">
+                              {item.snapshot.name}
+                            </h3>
+                          </Link>
+                          
+                          {/* 🔥 HIỂN THỊ TRẠNG THÁI */}
+                          {status.text && (
+                            <p className={`mb-3 ${status.className}`}>
+                              {status.text}
+                            </p>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+                            <div>
+                              <span className="font-medium">Màu:</span> {item.snapshot.color || "-"}
                             </div>
-                            <div className="text-xs text-gray-500">
-                              Tồn kho: {item.maxStock}
+                            <div>
+                              <span className="font-medium">Dung lượng:</span> {item.snapshot.storage || "-"}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <div className="text-lg font-semibold text-red-600">
+                                {formatPrice(displayPrice)}
+                              </div>
+                              {/* 🔥 HIỂN THỊ GIÁ CŨ NẾU CÓ THAY ĐỔI */}
+                              {item.currentPrice && item.currentPrice !== item.snapshot.price && (
+                                <div className="text-sm text-gray-500 line-through">
+                                  {formatPrice(item.snapshot.price)}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-500">
+                                Tồn kho: {item.maxStock}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.productId,
+                                    item.color,
+                                    item.storage,
+                                    -1
+                                  )
+                                }
+                                disabled={!status.canSelect}
+                                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <FaMinus className="w-3 h-3" />
+                              </button>
+                              <span className="w-8 text-center font-medium">{item.quantity}</span>
+                              <button
+                                onClick={() =>
+                                  handleQuantityChange(
+                                    item.productId,
+                                    item.color,
+                                    item.storage,
+                                    1
+                                  )
+                                }
+                                disabled={!status.canSelect || item.quantity >= item.maxStock}
+                                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <FaPlus className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <div className="text-lg font-bold text-green-600">
+                              {formatPrice(displayPrice * item.quantity)}
+                            </div>
                             <button
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId,
-                                  item.color,
-                                  item.storage,
-                                  -1
-                                )
-                              }
-                              disabled={!item.isAvailable}
-                              className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleRemove(item._id)}
+                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200"
                             >
-                              <FaMinus className="w-3 h-3" />
-                            </button>
-                            <span className="w-8 text-center font-medium">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productId,
-                                  item.color,
-                                  item.storage,
-                                  1
-                                )
-                              }
-                              disabled={
-                                !item.isAvailable ||
-                                item.quantity >= item.maxStock
-                              }
-                              className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <FaPlus className="w-3 h-3" />
+                              <FaTrash className="w-3 h-3" />
+                              Xóa
                             </button>
                           </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="text-lg font-bold text-green-600">
-                            {formatPrice(item.price * item.quantity)}
-                          </div>
-                          <button
-                            onClick={() => handleRemove(item._id)}
-                            className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200"
-                          >
-                            <FaTrash className="w-3 h-3" />
-                            Xóa
-                          </button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Desktop View */}
@@ -668,8 +742,8 @@ const Cart = () => {
                             type="checkbox"
                             checked={
                               selectedItems.length ===
-                                enrichedCartItems.filter((i) => i.isAvailable)
-                                  .length && enrichedCartItems.length > 0
+                                enrichedCartItems.filter((i) => getItemStatus(i).canSelect).length &&
+                              enrichedCartItems.length > 0
                             }
                             onChange={handleSelectAll}
                             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
@@ -702,134 +776,119 @@ const Cart = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {enrichedCartItems.map((item, index) => (
-                        <tr
-                          key={`${item.productId}-${item.color}-${item.storage}-${item.price}`}
-                          className="hover:bg-gray-50 transition-colors duration-200"
-                        >
-                          <td className="px-6 py-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedItems.includes(item._id)}
-                              onChange={() => handleSelectItem(item._id)}
-                              disabled={!item.isAvailable}
-                              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
-                            />
-                          </td>
-                          <td className="px-6 py-4 text-center font-medium text-gray-900">
-                            {index + 1}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-4">
-                              <Link to={`/detail/${item.productId}`}>
-                                <div className="relative w-20 h-20">
+                      {enrichedCartItems.map((item, index) => {
+                        const status = getItemStatus(item);
+                        const displayPrice = getDisplayPrice(item);
+                        
+                        return (
+                          <tr
+                            key={`${item.productId}-${item.color}-${item.storage}-${item._id}`}
+                            className="hover:bg-gray-50 transition-colors duration-200"
+                          >
+                            <td className="px-6 py-4">
+                              <input
+                                type="checkbox"
+                                checked={selectedItems.includes(item._id)}
+                                onChange={() => handleSelectItem(item._id)}
+                                disabled={!status.canSelect}
+                                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
+                              />
+                            </td>
+                            <td className="px-6 py-4 text-center font-medium text-gray-900">
+                              {index + 1}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-4">
+                                <Link to={`/detail/${item.productId}`}>
                                   <img
-                                    src={item.image}
-                                    alt={item.productName}
-                                    className="w-20 h-20 rounded-lg border border-gray-200 object-cover flex-shrink-0 hover:opacity-90 transition"
+                                    src={item.snapshot.image || "/placeholder.svg"}
+                                    alt={item.snapshot.name}
+                                    className="w-16 h-16 rounded-lg border border-gray-200 object-cover hover:opacity-90 transition"
                                   />
-                                  {!item.isAvailable && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg">
-                                      <span className="text-white text-xs font-semibold">
-                                        Không có sẵn
-                                      </span>
-                                    </div>
+                                </Link>
+                                <div>
+                                  <Link to={`/detail/${item.productId}`} className="block">
+                                    <span className="font-medium text-gray-900 line-clamp-2 hover:text-blue-600 hover:underline transition">
+                                      {item.snapshot.name}
+                                    </span>
+                                  </Link>
+                                  {/* 🔥 HIỂN THỊ TRẠNG THÁI */}
+                                  {status.text && (
+                                    <p className={`mt-1 ${status.className}`}>
+                                      {status.text}
+                                    </p>
                                   )}
                                 </div>
-                              </Link>
-                              <div>
-                                <Link
-                                  to={`/detail/${item.productId}`}
-                                  className="block"
-                                >
-                                  <span
-                                    className={`font-medium text-gray-900 line-clamp-2 hover:text-blue-600 hover:underline transition ${
-                                      item.isAvailable ? "" : "line-through"
-                                    }`}
-                                  >
-                                    {item.productName}
-                                  </span>
-                                </Link>
-                                {!item.isAvailable && (
-                                  <p className="text-red-600 font-semibold mt-1">
-                                    Hàng không còn bán
-                                  </p>
-                                )}
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-center text-gray-700">
-                            {item.color || "-"}
-                          </td>
-                          <td className="px-6 py-4 text-center text-gray-700">
-                            {item.storage || "-"}
-                          </td>
-                          <td className="px-6 py-4 text-center font-semibold text-red-600">
-                            {formatPrice(item.price)}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center justify-center gap-2">
+                            </td>
+                            <td className="px-6 py-4 text-center text-gray-700">
+                              {item.snapshot.color || "-"}
+                            </td>
+                            <td className="px-6 py-4 text-center text-gray-700">
+                              {item.snapshot.storage || "-"}
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <div className="font-semibold text-red-600">
+                                {formatPrice(displayPrice)}
+                              </div>
+                              {/* 🔥 HIỂN THỊ GIÁ CŨ NẾU CÓ THAY ĐỔI */}
+                              {item.currentPrice && item.currentPrice !== item.snapshot.price && (
+                                <div className="text-sm text-gray-500 line-through">
+                                  {formatPrice(item.snapshot.price)}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    handleQuantityChange(
+                                      item.productId,
+                                      item.color,
+                                      item.storage,
+                                      -1
+                                    )
+                                  }
+                                  disabled={!status.canSelect}
+                                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <FaMinus className="w-3 h-3" />
+                                </button>
+                                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                <button
+                                  onClick={() =>
+                                    handleQuantityChange(
+                                      item.productId,
+                                      item.color,
+                                      item.storage,
+                                      1
+                                    )
+                                  }
+                                  disabled={!status.canSelect || item.quantity >= item.maxStock}
+                                  className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <FaPlus className="w-3 h-3" />
+                                </button>
+                              </div>
+                              <div className="text-xs text-gray-500 text-center mt-1">
+                                Tồn kho: {item.maxStock}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-center font-bold text-green-600">
+                              {formatPrice(displayPrice * item.quantity)}
+                            </td>
+                            <td className="px-6 py-4 text-center">
                               <button
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.productId,
-                                    item.color,
-                                    item.storage,
-                                    -1
-                                  )
-                                }
-                                disabled={!item.isAvailable}
-                                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => handleRemove(item._id)}
+                                className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200"
                               >
-                                <FaMinus className="w-3 h-3" />
+                                <FaTrash className="w-3 h-3" />
+                                Xóa
                               </button>
-                              <span className="w-8 text-center font-medium">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.productId,
-                                    item.color,
-                                    item.storage,
-                                    1
-                                  )
-                                }
-                                disabled={
-                                  !item.isAvailable ||
-                                  item.quantity >= item.maxStock
-                                }
-                                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <FaPlus className="w-3 h-3" />
-                              </button>
-                            </div>
-                            <div
-                              className={`text-xs text-center ${
-                                item.isAvailable
-                                  ? "text-gray-500"
-                                  : "text-red-600"
-                              }`}
-                            >
-                              {item.isAvailable
-                                ? `Tồn kho: ${item.maxStock}`
-                                : "không có sẵn"}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-center font-bold text-green-600">
-                            {formatPrice(item.price * item.quantity)}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <button
-                              onClick={() => handleRemove(item._id)}
-                              className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors duration-200"
-                            >
-                              <FaTrash className="w-3 h-3" />
-                              Xóa
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

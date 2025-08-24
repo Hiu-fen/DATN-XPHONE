@@ -1,12 +1,21 @@
 export interface ICartItem {
+  _id: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  color: string;
+  storage: string;
+  categoryId: string;
+
+  snapshot?: {
+    name: string;
     image: string;
-    productName: string;
-    name?: string;
-    _id: string;         
-    productId: string;
-    quantity: number;
     price: number;
     color: string;
     storage: string;
-    categoryId?: string;
+    categoryId: string;
+  };
+  
+  productName?: string;
+  image?: string;
 }

@@ -259,7 +259,7 @@ const Details = () => {
     setContactModalAction(null);
   };
 
-  // Add to cart
+  // 🔥 CẬP NHẬT FUNCTION ADD TO CART ĐỂ LƯU SNAPSHOT
   const handleAddToCart = async () => {
     if (!product) {
       message.error("Không tìm thấy sản phẩm.");
@@ -324,6 +324,7 @@ const Details = () => {
         return;
       }
 
+      // 🔥 TẠO CART ITEM VỚI SNAPSHOT ĐẦY ĐỦ
       const cartItemToAdd = {
         userId: user._id,
         items: [
@@ -336,6 +337,20 @@ const Details = () => {
             categoryId: Array.isArray(product.danhmuc)
               ? product.danhmuc[0]
               : product.danhmuc,
+            // 🔥 THÊM SNAPSHOT ĐẦY ĐỦ THÔNG TIN SẢN PHẨM
+            snapshot: {
+              name: product.name,
+              image: product.image,
+              price: variant?.price || product.price,
+              color: modalVariant.color,
+              storage: modalVariant.ram,
+              categoryId: Array.isArray(product.danhmuc)
+                ? product.danhmuc[0]
+                : product.danhmuc,
+            },
+            // Thêm các trường cũ để tương thích ngược
+            productName: product.name,
+            image: product.image,
           },
         ],
       };
@@ -377,6 +392,7 @@ const Details = () => {
       ? product.danhmuc[0]
       : product.danhmuc;
 
+    // 🔥 TẠO BUY NOW ITEM VỚI SNAPSHOT
     const buyNowItem = {
       _id: "buy-now-temp-id",
       productId: product._id,
@@ -387,6 +403,15 @@ const Details = () => {
       color: selectedVariant.color,
       storage: selectedVariant.ram,
       categoryId,
+      // 🔥 THÊM SNAPSHOT
+      snapshot: {
+        name: product.name,
+        image: product.image,
+        price: variant.price || product.price,
+        color: modalVariant.color,
+        storage: modalVariant.ram,
+        categoryId,
+      },
     };
 
     navigate("/checkout", { state: { buyNowItem } });
