@@ -8,9 +8,9 @@ const AdminLayout = () => {
             <AdminHeader />
 
             {/* Wrapper responsive */}
-            <div className="flex flex-col lg:flex-row max-w-screen-2xl mx-auto">
+            <div className="flex flex-col lg:flex-row max-w-screen-2xl mx-auto min-h-screen">
                 {/* Sidebar */}
-                <aside className="w-full lg:w-1/5 border-r bg-white">
+                <aside className="hidden lg:block w-1/5 border-r bg-white">
                     <AdminSidebar />
                 </aside>
 
@@ -19,6 +19,10 @@ const AdminLayout = () => {
                     <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 min-h-[calc(100vh-120px)]">
                         <Outlet />
                     </div>
+                    {/* Footer */}
+                    <footer className="mt-6 text-center text-sm text-gray-500">
+                        © 2025 Your Company. All rights reserved.
+                    </footer>
                 </section>
             </div>
         </main>

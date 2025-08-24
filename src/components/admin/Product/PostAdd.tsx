@@ -230,8 +230,8 @@ const AddProduct: React.FC = () => {
             newVariants.push({
               color: color.name,
               ram: ram.size,
-              price: 0,
-              soluong: 0,
+              price: 10000000, // Giá mặc định 10 triệu
+              soluong: 10,    // Số lượng mặc định 10
             });
           }
         });
@@ -347,7 +347,7 @@ const AddProduct: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>
+    <div style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}>
       <h2 className="text-xl font-semibold text-center mb-4">Thêm sản phẩm</h2>
 
       <Form layout="vertical" onFinish={handleSubmit(onSubmit)} className="bg-white shadow rounded border-2 p-6">

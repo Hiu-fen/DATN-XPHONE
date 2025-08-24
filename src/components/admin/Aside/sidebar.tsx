@@ -35,7 +35,6 @@ const AdminSidebar = () => {
       label: <span className="text-[17px] font-semibold">Quản lý sản phẩm</span>,
       children: [
         { key: '/admin/phone/list', label: <span className="text-[15px]">Danh sách sản phẩm</span> },
-        // { key: '/admin/phone/add', label: <span className="text-[15px]">Thêm sản phẩm</span> },
       ],
     },
     {
@@ -44,16 +43,13 @@ const AdminSidebar = () => {
       label: <span className="text-[17px] font-semibold">Quản lý danh mục</span>,
       children: [
         { key: '/admin/category/list', label: <span className="text-[15px]">Danh sách danh mục</span> },
-        // { key: '/admin/category/add', label: <span className="text-[15px]">Thêm danh mục</span> },
       ],
     },
     {
       key: 'comment-manage',
       icon: <CommentOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý bình luận</span>,
-      children: [
-        { key: '/admin/comment/list', label: <span className="text-[15px]">Bình luận</span> },
-      ],
+      children: [{ key: '/admin/comment/list', label: <span className="text-[15px]">Bình luận</span> }],
     },
     {
       key: 'user',
@@ -69,17 +65,13 @@ const AdminSidebar = () => {
       key: 'banner',
       icon: <PictureOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý ảnh</span>,
-      children: [
-        { key: '/admin/banner/list', label: <span className="text-[15px]">Quản lý banner</span> },
-      ],
+      children: [{ key: '/admin/banner/list', label: <span className="text-[15px]">Quản lý banner</span> }],
     },
     {
       key: 'contact',
       icon: <PhoneOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý liên hệ</span>,
-      children: [
-        { key: '/admin/contact/list', label: <span className="text-[15px]">Liên hệ</span> },
-      ],
+      children: [{ key: '/admin/contact/list', label: <span className="text-[15px]">Liên hệ</span> }],
     },
     {
       key: 'orders',
@@ -91,18 +83,13 @@ const AdminSidebar = () => {
       key: 'address',
       icon: <FileImageOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý địa chỉ</span>,
-      children: [
-        { key: '/admin/addresses/list', label: <span className="text-[15px]">Địa chỉ</span> },
-        // { key: '/admin/address/add', label: <span className="text-[15px]">Thêm Địa chỉ</span> },
-      ],
+      children: [{ key: '/admin/addresses/list', label: <span className="text-[15px]">Địa chỉ</span> }],
     },
     {
       key: 'news',
       icon: <ReadOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý tin tức</span>,
-      children: [
-        { key: '/admin/news/list', label: <span className="text-[15px]">Tin tức</span> },
-      ],
+      children: [{ key: '/admin/news/list', label: <span className="text-[15px]">Tin tức</span> }],
     },
     {
       key: 'variant',
@@ -114,10 +101,7 @@ const AdminSidebar = () => {
       key: 'promotion',
       icon: <GiftOutlined className="text-xl" />,
       label: <span className="text-[17px] font-semibold">Quản lý khuyến mãi</span>,
-      children: [
-        { key: '/admin/promotion/list', label: <span className="text-[15px]">Khuyến mãi</span> },
-        // { key: '/admin/promotion/add', label: <span className="text-[15px]">Thêm khuyến mãi</span> },
-      ],
+      children: [{ key: '/admin/promotion/list', label: <span className="text-[15px]">Khuyến mãi</span> }],
     },
   ];
 
@@ -143,31 +127,53 @@ const AdminSidebar = () => {
   };
 
   return (
-    <Sider
-      width={280}
-      className="h-screen sticky top-0 left-0 bg-green-700"
-      theme="dark"
-      style={{ overflowY: 'auto', height: '100vh' }} // Thêm thuộc tính cuộn và cố định chiều cao
-    >
-      <Menu
-        mode="inline"
-        selectedKeys={[pathname]}
-        openKeys={openKeys}
-        onOpenChange={(keys) => setOpenKeys(keys)}
-        onClick={handleClick}
-        items={menuItems}
-        className="bg-green-700 text-white text-[16px]
-          [&_.ant-menu-item]:!text-white
-          [&_.ant-menu-submenu-title]:!text-white
-          [&_.ant-menu-item-selected]:!bg-green-900
-          [&_.ant-menu-item-selected]:!text-white
-          [&_.ant-menu-item:hover]:!bg-green-600
-          [&_.ant-menu-submenu-title:hover]:!bg-green-600
-          py-5
-          "
-        style={{ height: '100%', overflowY: 'auto' }} // Thêm thuộc tính cuộn cho Menu
-      />
-    </Sider>
+    <>
+<Sider
+  width={280}
+  className="h-auto min-h-screen sticky top-0 left-0 bg-green-700 custom-scrollbar"
+  theme="dark"
+  breakpoint="lg"          // ✅ Tự động ẩn khi nhỏ hơn "lg" (>= 992px)
+  collapsedWidth={0}       // ✅ Ẩn hẳn, không chiếm chỗ
+>
+  <Menu
+    mode="inline"
+    selectedKeys={[pathname]}
+    openKeys={openKeys}
+    onOpenChange={(keys) => setOpenKeys(keys)}
+    onClick={handleClick}
+    items={menuItems}
+    className="bg-green-700 text-white text-[16px]
+      [&_.ant-menu-item]:!text-white
+      [&_.ant-menu-submenu-title]:!text-white
+      [&_.ant-menu-item-selected]:!bg-green-900
+      [&_.ant-menu-item-selected]:!text-white
+      [&_.ant-menu-item:hover]:!bg-green-600
+      [&_.ant-menu-submenu-title:hover]:!bg-green-600
+      py-5"
+  />
+</Sider>
+
+
+      {/* ✅ viết CSS trực tiếp */}
+      <style>{`
+        .custom-scrollbar {
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: #888 #333;
+          scrollbar-gutter: stable;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #333;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #888;
+          border-radius: 3px;
+        }
+      `}</style>
+    </>
   );
 };
 
