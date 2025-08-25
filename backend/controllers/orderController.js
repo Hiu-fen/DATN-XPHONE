@@ -84,6 +84,7 @@ exports.updateOrderStatus = async (req, res) => {
       if (status === "Đã huỷ" && order.isPaid) {
         order.paymentStatus = "Đã hoàn tiền";
         order.total = 0;
+        order.refunded = true;
       }
     }
     if (
