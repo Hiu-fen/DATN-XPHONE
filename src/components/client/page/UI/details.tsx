@@ -34,7 +34,6 @@ const Details = () => {
       message.warning("Bạn cần đăng nhập để thích sản phẩm.");
       return;
     }
-
     try {
       const { data } = await axios.patch(
         `http://localhost:5000/api/users/${userId}/like`,
@@ -50,7 +49,22 @@ const Details = () => {
       message.error("Không thể cập nhật yêu thích.");
     }
   };
-  
+
+  // Lấy danh sách sản phẩm đã thích khi load trang chi tiết
+  useEffect(() => {
+    const fetchLikedProducts = async () => {
+      if (!userId) return;
+      try {
+        const { data } = await axios.get(`http://localhost:5000/api/users/${userId}`);
+
+        setLikedProducts(data.like || []);
+      } catch (error) {
+        console.error("Không thể tải danh sách yêu thích:", error);
+      }
+    };
+
+    fetchLikedProducts();
+  }, [userId]);
 
   // 🔥 FUNCTION KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG CÓ TRÊN 100 TRIỆU KHÔNG
   const isHighValueOrder = (unitPrice: number, quantity: number): boolean => {
@@ -466,28 +480,20 @@ const Details = () => {
               {/* Nút Yêu thích */}
               <button
                 onClick={() => handleLike(product._id!)}
-                className="flex items-center gap-2 text-base font-medium transition"
+                className="flex items-center gap-2"
               >
-                <FaHeart
-                  size={18}
-                  className={`${likedProducts.includes(product._id!)
-                    ? "text-red-500"
-                    : "text-gray-400"
-                    }`}
-                />
-                <span
-                  className={
-                    likedProducts.includes(product._id!)
-                      ? "text-red-500"
-                      : "text-gray-600"
-                  }
-                >
-                  {likedProducts.includes(product._id!)
-                    ? "Đã thích"
-                    : "Thêm vào yêu thích"}
-                </span>
+                {likedProducts?.includes(String(product._id)) ? (
+                  <>
+                    <FaHeart className="text-red-500" size={18} />
+                    <span className="text-red-500">Đã thích</span>
+                  </>
+                ) : (
+                  <>
+                    <FaHeart className="text-gray-400" size={18} />
+                    <span className="text-gray-600">Thêm vào yêu thích</span>
+                  </>
+                )}
               </button>
-
               {/* Nút Chia sẻ */}
               <button
                 onClick={handleShare}
