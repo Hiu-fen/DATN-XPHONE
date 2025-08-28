@@ -60,7 +60,7 @@ interface RecipientInfo {
   shippingProvider: string;
 }
 
-const SOCKET_URL = "http://localhost:5000"; // URL socket server của bạn
+const SOCKET_URL = "http://localhost:5000"; // URL socket server
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -151,29 +151,86 @@ const Checkout = () => {
   useEffect(() => {
     const socket = io(SOCKET_URL);
 
+    socket.on("connect", () => {
+      console.log("✅ Connected to Socket.IO server");
+    });
+
     socket.on("productDeleted", (productId: string) => {
-      setCart((prev) => prev.map((item) => 
-        item.productId === productId ? { ...item, isAvailable: false } : item
-      ));
+      console.log("🔔 Received productDeleted event for ID:", productId);
+      setCart((prev) =>
+        prev.map((item) =>
+          item.productId === productId
+            ? { ...item, isAvailable: false, maxStock: 0 }
+            : item
+        )
+      );
       message.warning("Sản phẩm đã bị xóa mềm và không còn được bán nữa.");
     });
 
     socket.on("productUpdated", (updatedProduct: IProduct) => {
-      setCart((prev) => prev.map((item) => {
-        if (item.productId === updatedProduct._id) {
-          return {
-            ...item,
-            isAvailable: updatedProduct.status === true,
-          };
-        }
-        return item;
-      }));
+      console.log("🔔 Received productUpdated event:", updatedProduct);
+      setCart((prev) =>
+        prev.map((item) => {
+          if (item.productId === updatedProduct._id) {
+            let price = updatedProduct.price;
+            let isAvailable = updatedProduct.status !== false;
+            let maxStock = updatedProduct.soluong || 0;
+
+            if (updatedProduct.variants && item.color && item.storage) {
+              const variant = updatedProduct.variants.find(
+                (v) => v.color === item.color && v.ram === item.storage
+              );
+              if (variant) {
+                price = Number(variant.price);
+                maxStock = variant.soluong;
+                isAvailable = isAvailable && maxStock >= item.soluong;
+              } else {
+                isAvailable = false;
+                maxStock = 0;
+              }
+            } else {
+              isAvailable = isAvailable && maxStock >= item.soluong;
+            }
+
+            return {
+              ...item,
+              productName: updatedProduct.name,
+              price,
+              image: updatedProduct.image || item.image,
+              isAvailable,
+              maxStock,
+            };
+          }
+          return item;
+        })
+      );
+      message.info(`Sản phẩm ${updatedProduct.name} đã được cập nhật thông tin.`);
     });
 
     return () => {
+      console.log("🔌 Disconnecting from Socket.IO server");
       socket.disconnect();
     };
   }, []);
+
+  // Recalculate shipping and validate cart after updates
+  useEffect(() => {
+    if (cart.length > 0 && recipientInfo.to_district_id && recipientInfo.to_ward_code) {
+      calculateShipping({
+        to_district_id: recipientInfo.to_district_id,
+        to_ward_code: recipientInfo.to_ward_code,
+        provider: shippingProvider,
+        cartParam: cart,
+      });
+    }
+
+    const unavailableItems = cart.filter((item) => !item.isAvailable);
+    if (unavailableItems.length > 0) {
+      message.warning(
+        `Có ${unavailableItems.length} sản phẩm không còn được bán hoặc hết hàng. Vui lòng quay lại giỏ hàng để cập nhật.`
+      );
+    }
+  }, [cart, recipientInfo.to_district_id, recipientInfo.to_ward_code, shippingProvider]);
 
   const validatePhoneNumber = (phone: string): boolean => {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
@@ -436,21 +493,6 @@ const Checkout = () => {
 
     fetchCartAndProducts();
   }, [currentUser, buyNowItem, selectedItems]);
-
-  useEffect(() => {
-    if (
-      cart.length > 0 &&
-      recipientInfo.to_district_id &&
-      recipientInfo.to_ward_code
-    ) {
-      calculateShipping({
-        to_district_id: recipientInfo.to_district_id,
-        to_ward_code: recipientInfo.to_ward_code,
-        provider: shippingProvider,
-        cartParam: cart,
-      });
-    }
-  }, [cart, recipientInfo.to_district_id, recipientInfo.to_ward_code, shippingProvider]);
 
   useEffect(() => {
     if (currentUser) {
@@ -1230,6 +1272,11 @@ const Checkout = () => {
                   {isHighValueOrder && (
                     <p className="mt-2 font-medium text-red-600">
                       ⚠️ Đơn hàng trên 50 triệu không hỗ trợ thanh toán COD.
+                    </p>
+                  )}
+                  {cart.some((item) => !item.isAvailable) && (
+                    <p className="mt-2 font-medium text-red-600">
+                      ⚠️ Một số sản phẩm không còn được bán. Vui lòng quay lại giỏ hàng để cập nhật.
                     </p>
                   )}
                 </div>
