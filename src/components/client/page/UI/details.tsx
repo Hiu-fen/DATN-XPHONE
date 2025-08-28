@@ -55,7 +55,7 @@ const Details = () => {
   // 🔥 FUNCTION KIỂM TRA TỔNG GIÁ TRỊ ĐƠN HÀNG CÓ TRÊN 100 TRIỆU KHÔNG
   const isHighValueOrder = (unitPrice: number, quantity: number): boolean => {
     const totalValue = Number(unitPrice) * Number(quantity);
-    const threshold = 1000000000; // 1 tỷ
+    const threshold = 200000000; // 200 triệu 
     const isHigh = totalValue > threshold;
 
     if (isHigh) {
@@ -688,7 +688,7 @@ const Details = () => {
               <span className="text-4xl">💎</span>
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Đơn hàng cao cấp trên 1 tỷ VNĐ
+              Đơn hàng cao cấp trên 200 triệu VNĐ
             </h3>
             <p className="text-gray-600">
               Để đảm bảo bạn nhận được sự tư vấn tốt nhất và chính sách hỗ trợ đặc biệt

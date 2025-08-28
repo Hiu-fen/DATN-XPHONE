@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { message, Modal, Spin, Checkbox } from "antd";
@@ -9,6 +8,7 @@ import axios, { type AxiosError } from "axios";
 import VoucherInput from "./VoucherInput";
 import { applyVoucherToOrder } from "../../../../api/client/promotionApiClient";
 import { useQuery } from "@tanstack/react-query";
+import io from "socket.io-client";
 
 interface CartItem {
   _id: string;
@@ -20,6 +20,8 @@ interface CartItem {
   color?: string;
   storage?: string;
   categoryId?: string;
+  isAvailable?: boolean;
+  maxStock?: number;
 }
 
 interface IAddress {
@@ -57,6 +59,8 @@ interface RecipientInfo {
   to_ward_code: string;
   shippingProvider: string;
 }
+
+const SOCKET_URL = "http://localhost:5000"; // URL socket server của bạn
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -142,6 +146,34 @@ const Checkout = () => {
     shippingProvider: "GHN",
   });
   const [isDifferentRecipient, setIsDifferentRecipient] = useState(false);
+
+  // Socket connection to handle real-time updates
+  useEffect(() => {
+    const socket = io(SOCKET_URL);
+
+    socket.on("productDeleted", (productId: string) => {
+      setCart((prev) => prev.map((item) => 
+        item.productId === productId ? { ...item, isAvailable: false } : item
+      ));
+      message.warning("Sản phẩm đã bị xóa mềm và không còn được bán nữa.");
+    });
+
+    socket.on("productUpdated", (updatedProduct: IProduct) => {
+      setCart((prev) => prev.map((item) => {
+        if (item.productId === updatedProduct._id) {
+          return {
+            ...item,
+            isAvailable: updatedProduct.status === true,
+          };
+        }
+        return item;
+      }));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const validatePhoneNumber = (phone: string): boolean => {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
@@ -326,83 +358,75 @@ const Checkout = () => {
   useEffect(() => {
     const fetchCartAndProducts = async () => {
       try {
+        let itemsToEnrich: ICartItem[] = [];
+        let productsData: IProduct[] = [];
+
+        const productsResponse = await axios.get("http://localhost:5000/api/products", { withCredentials: true });
+        productsData = productsResponse.data;
+
         if (buyNowItem) {
-          setCart([buyNowItem]);
-          return;
+          itemsToEnrich = [{
+            _id: buyNowItem._id,
+            productId: buyNowItem.productId,
+            quantity: buyNowItem.soluong,
+            price: buyNowItem.price,
+            color: buyNowItem.color || "",
+            storage: buyNowItem.storage || "",
+            image: buyNowItem.image,
+            productName: buyNowItem.productName,
+            categoryId: buyNowItem.categoryId,
+          }];
+        } else if (selectedItems && selectedItems.length > 0) {
+          itemsToEnrich = selectedItems;
+        } else if (currentUser?._id) {
+          const cartResponse = await axios.get(`http://localhost:5000/api/carts/${currentUser._id}`, {
+            withCredentials: true,
+          });
+          itemsToEnrich = cartResponse.data.items || [];
         }
 
-        if (selectedItems && selectedItems.length > 0) {
-          const productsResponse = await axios.get("http://localhost:5000/api/products", { withCredentials: true });
-          const productsData = productsResponse.data;
+        const enrichedCartItems = itemsToEnrich.map((item: ICartItem) => {
+          const product = productsData.find((p: IProduct) => p._id === item.productId);
+          let price = item.price || (product ? product.price : 0);
+          let isAvailable = !!product && product.status !== false;
+          let maxStock = 0;
 
-          const enrichedCartItems = selectedItems.map((item: ICartItem) => {
-            const product = productsData.find((p: IProduct) => p._id === item.productId);
-            let price = item.price || (product ? product.price : 0);
-
-            if (product?.variants && item.color && item.storage) {
-              const variant = product.variants.find(
-                (v: { color: string; ram: string; price: number; soluong: number }) =>
-                  v.color === item.color && v.ram === item.storage
-              );
-              price = variant ? Number(variant.price) : price;
+          if (product?.variants && item.color && item.storage) {
+            const variant = product.variants.find(
+              (v) => v.color === item.color && v.ram === item.storage
+            );
+            if (variant) {
+              price = Number(variant.price);
+              maxStock = variant.soluong;
+              isAvailable = isAvailable && maxStock >= item.quantity;
+            } else {
+              isAvailable = false;
             }
+          } else if (product) {
+            maxStock = product.soluong || 0;
+            isAvailable = isAvailable && maxStock >= item.quantity;
+          }
 
-            return {
-              _id: item._id,
-              productId: item.productId,
-              productName: product ? product.name : "Sản phẩm không tồn tại",
-              price,
-              soluong: item.quantity,
-              image: product?.image || "",
-              color: item.color || "",
-              storage: item.storage || "",
-              categoryId: item.categoryId || product?.categoryId || "",
-            };
-          });
+          return {
+            _id: item._id,
+            productId: item.productId,
+            productName: product ? product.name : "Sản phẩm không tồn tại",
+            price,
+            soluong: item.quantity,
+            image: product?.image || "",
+            color: item.color || "",
+            storage: item.storage || "",
+            categoryId: item.categoryId || "",
+            isAvailable,
+            maxStock,
+          };
+        });
 
-          setCart(enrichedCartItems);
-          return;
-        }
+        setCart(enrichedCartItems);
 
-        if (currentUser?._id) {
-          const [cartResponse, productsResponse] = await Promise.all([
-            axios.get(`http://localhost:5000/api/carts/${currentUser._id}`, {
-              withCredentials: true,
-            }),
-            axios.get("http://localhost:5000/api/products", {
-              withCredentials: true,
-            }),
-          ]);
-
-          const cartItems = cartResponse.data.items || [];
-          const productsData = productsResponse.data;
-
-          const enrichedCartItems = cartItems.map((item: ICartItem) => {
-            const product = productsData.find((p: IProduct) => p._id === item.productId);
-            let price = item.price || (product ? product.price : 0);
-
-            if (product?.variants && item.color && item.storage) {
-              const variant = product.variants.find(
-                (v: { color: string; ram: string; price: number; soluong: number }) =>
-                  v.color === item.color && v.ram === item.storage
-              );
-              price = variant ? Number(variant.price) : price;
-            }
-
-            return {
-              _id: item._id,
-              productId: item.productId,
-              productName: product ? product.name : "Sản phẩm không tồn tại",
-              price,
-              soluong: item.quantity,
-              image: product?.image || "",
-              color: item.color || "",
-              storage: item.storage || "",
-              categoryId: item.categoryId || product?.categoryId || "",
-            };
-          });
-
-          setCart(enrichedCartItems);
+        const unavailableItems = enrichedCartItems.filter(item => !item.isAvailable);
+        if (unavailableItems.length > 0) {
+          message.warning(`Có ${unavailableItems.length} sản phẩm không còn được bán hoặc hết hàng. Vui lòng quay lại giỏ hàng để cập nhật.`);
         }
       } catch (error) {
         console.error("Lỗi khi lấy giỏ hàng từ server:", error);
@@ -1098,9 +1122,9 @@ const Checkout = () => {
 
                 <button
                   onClick={handleOrder}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || cart.some((item) => !item.isAvailable)}
                   className={`mt-10 w-full bg-green-600 text-white font-semibold py-4 rounded-lg transition-all ${
-                    isSubmitting
+                    isSubmitting || cart.some((item) => !item.isAvailable)
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-green-700 hover:shadow-lg"
                   }`}
@@ -1117,7 +1141,7 @@ const Checkout = () => {
                   {cart.map((item) => (
                     <li
                       key={`${item.productId}-${item.color || ""}-${item.storage || ""}`}
-                      className="flex items-center py-4"
+                      className={`flex items-center py-4 ${!item.isAvailable ? 'opacity-50' : ''}`}
                     >
                       <img
                         src={item.image || "/placeholder-image.png"}
@@ -1125,7 +1149,7 @@ const Checkout = () => {
                         className="w-16 h-16 rounded-lg object-cover mr-4 border border-gray-300"
                       />
                       <div className="flex-1">
-                        <p className="font-medium text-gray-800">
+                        <p className={`font-medium text-gray-800 ${!item.isAvailable ? 'line-through' : ''}`}>
                           {item.productName}
                         </p>
                         <p className="text-sm text-gray-500">
@@ -1139,6 +1163,11 @@ const Checkout = () => {
                         {item.storage && (
                           <p className="text-sm text-gray-500">
                             Dung lượng: {item.storage}
+                          </p>
+                        )}
+                        {!item.isAvailable && (
+                          <p className="text-red-600 font-semibold mt-1">
+                            Sản phẩm không còn được bán nữa
                           </p>
                         )}
                       </div>
