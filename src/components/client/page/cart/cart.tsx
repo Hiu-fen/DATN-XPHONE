@@ -60,7 +60,7 @@ const Cart = () => {
 
   // Check if total value exceeds 100 million VND
   const isHighValueOrder = (total: number): boolean => {
-    const threshold = 1000000000; // 1 tỷ VND
+    const threshold = 200000000; // 200 triệu VND
     const isHigh = total > threshold;
     if (isHigh) {
       console.log("💎 High value order detected:", {
@@ -416,7 +416,7 @@ const Cart = () => {
                 <span className="text-4xl">💎</span>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Đơn hàng cao cấp trên 1 tỷ VNĐ
+                Đơn hàng cao cấp trên 200 triệu VNĐ
               </h3>
               <p className="text-gray-600">
                 Để đảm bảo bạn nhận được sự tư vấn tốt nhất và chính sách hỗ trợ
