@@ -146,11 +146,10 @@ const CommentSection = () => {
         placeholder={
           isLoggedIn ? "Viết bình luận của bạn..." : "Bạn cần đăng nhập để bình luận"
         }
-        className={`w-full p-2 text-sm border rounded-md resize-none focus:outline-none mt-3 ${
-          isLoggedIn
-            ? "border-gray-300 focus:border-blue-500"
-            : "border-red-400 bg-red-50 placeholder-red-500 font-semibold"
-        }`}
+        className={`w-full p-2 text-sm border rounded-md resize-none focus:outline-none mt-3 ${isLoggedIn
+          ? "border-gray-300 focus:border-blue-500"
+          : "border-red-400 bg-red-50 placeholder-red-500 font-semibold"
+          }`}
         value={newComment}
         onChange={(e) => setNewComment(e.target.value)}
         disabled={!isLoggedIn}

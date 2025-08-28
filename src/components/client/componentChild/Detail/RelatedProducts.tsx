@@ -56,8 +56,8 @@ const RelatedProducts = () => {
   return (
     <section className="max-w-5xl mx-auto mt-16 px-4 md:px-0">
       <div className="flex items-center gap-3">
-        <div className="bg-red-500 w-8 h-12 rounded-lg" />
-        <h6 className="text-red-500 font-semibold">Sản phẩm liên quan</h6>
+        
+        <h6 className=" font-semibold">Sản phẩm liên quan</h6>
       </div>
       <div className="mt-6" />
       <div
