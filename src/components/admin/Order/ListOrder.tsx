@@ -51,6 +51,7 @@ const statusOptions = [
 ];
 
 const fullStatusOptions = [...statusOptions, "Đã nhận hàng"];
+
 const OrderList = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
@@ -62,8 +63,19 @@ const OrderList = () => {
 
   const getValidStatusOptions = (
     currentStatus: string,
-    returnStatus?: string
+    returnStatus?: string,
+    paymentMethod?: string,
+    isPaid?: boolean
   ) => {
+    // Trường hợp đơn hàng VNPAY chưa thanh toán
+    if (paymentMethod === "VNPAY" && !isPaid) {
+      return [
+        { label: "Chờ xác nhận", value: "Chờ xác nhận" },
+        { label: "Đã huỷ", value: "Đã huỷ" },
+      ];
+    }
+
+    // Logic cho các đơn hàng khác
     if (returnStatus === "Đang chờ duyệt" || returnStatus === "Đã duyệt") {
       return [{ label: currentStatus, value: currentStatus }];
     }
@@ -327,7 +339,12 @@ const OrderList = () => {
           }
           style={{ width: 160 }}
           loading={loadingStatusUpdateId === record._id}
-          options={getValidStatusOptions(record.status, record.returnStatus)}
+          options={getValidStatusOptions(
+            record.status,
+            record.returnStatus,
+            record.paymentMethod,
+            record.isPaid
+          )}
           placeholder="Chọn trạng thái"
           disabled={
             ["Hoàn thành", "Đã huỷ", "Trả hàng/Hoàn tiền"].includes(
