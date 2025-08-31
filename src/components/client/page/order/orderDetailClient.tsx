@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { createPortal } from "react-dom"
 import axios from "axios"
 import socket from "../../../../socket"
@@ -89,6 +89,7 @@ interface Order {
   cancelReason?: string
   returnStatus?: string
   paymentStatus?: string
+  isPaid?: boolean
   statusHistory?: { status: string; timestamp: string }[]
   returnStatusHistory?: { status: string; timestamp: string }[]
   shippingFee?: number
@@ -100,6 +101,7 @@ interface Order {
 
 const OrderDetail = () => {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
   const [order, setOrder] = useState<Order | null>(null)
   const [cancelReason, setCancelReason] = useState("")
   const [customReason, setCustomReason] = useState("")
@@ -111,6 +113,7 @@ const OrderDetail = () => {
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
   const [toastType, setToastType] = useState<"success" | "error" | "warning">("success")
+  const [timeLeft, setTimeLeft] = useState<number | null>(null)
 
   // Track logged messages to prevent duplicates
   const loggedMessages = new Set<string>()
@@ -140,6 +143,48 @@ const OrderDetail = () => {
     return 0
   }
 
+  // Hàm xử lý thanh toán ngay
+  const handlePayNow = async () => {
+    if (!order) return
+    try {
+      const res = await axios.post(`http://localhost:5000/api/vnpay/create_payment_url`, {
+        orderCode: order.orderCode,
+        orderId: order._id,
+        amount: order.total,
+      })
+      if (res.data.success) {
+        window.location.href = res.data.paymentUrl
+      } else {
+        showToastMessage(res.data.message || "Lỗi khi tạo liên kết thanh toán!", "error")
+      }
+    } catch (err) {
+      console.error("Lỗi handlePayNow:", err)
+      showToastMessage("Lỗi khi tạo liên kết thanh toán!", "error")
+    }
+  }
+
+  // Tính thời gian đếm ngược
+  useEffect(() => {
+    if (order && order.paymentMethod === "VNPAY" && !order.isPaid) {
+      const createdAt = new Date(order.date).getTime()
+      const expiresAt = createdAt + 60 * 1000 // 1 phút sau khi tạo
+      const updateTimer = () => {
+        const now = Date.now()
+        const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))
+        setTimeLeft(remaining)
+        if (remaining === 0) {
+          setOrder(null) // Xóa đơn hàng khỏi state khi hết thời gian
+          showToastMessage("Đơn hàng đã bị hủy do hết thời gian thanh toán", "warning")
+          setTimeout(() => navigate("/history"), 3000) // Chuyển về lịch sử sau 3 giây
+        }
+      }
+      updateTimer() // Cập nhật ngay lập tức
+      const interval = setInterval(updateTimer, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [order, navigate])
+
+  // Lấy dữ liệu đơn hàng
   useEffect(() => {
     const fetchOrder = async () => {
       try {
@@ -237,11 +282,22 @@ const OrderDetail = () => {
         }
       }
     }
+
+    const handleOrderDeleted = (data: { orderId: string; userId: string }) => {
+      if (data.orderId === id) {
+        setOrder(null)
+        showToastMessage("Đơn hàng đã bị hủy do hết thời gian thanh toán", "warning")
+        setTimeout(() => navigate("/history"), 3000)
+      }
+    }
+
     socket.on("orderUpdated", handleOrderUpdated)
+    socket.on("orderDeleted", handleOrderDeleted)
     return () => {
       socket.off("orderUpdated", handleOrderUpdated)
+      socket.off("orderDeleted", handleOrderDeleted)
     }
-  }, [id])
+  }, [id, navigate])
 
   const confirmReceived = async () => {
     if (!order) return
@@ -333,6 +389,13 @@ const OrderDetail = () => {
   }
 
   const fmt = (n?: number) => (Number(n || 0)).toLocaleString("vi-VN") + " đ"
+
+  // Format thời gian đếm ngược
+  const formatTimeLeft = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+  }
 
   if (loading) {
     return (
@@ -449,6 +512,16 @@ const OrderDetail = () => {
             </Link>
           </div>
         </div>
+
+        {/* Countdown Timer for VNPAY unpaid orders */}
+        {order.paymentMethod === "VNPAY" && !order.isPaid && timeLeft !== null && timeLeft > 0 && (
+          <div className="bg-yellow-50 rounded-xl p-6 border border-yellow-200 flex items-center gap-3">
+            <Clock className="w-6 h-6 text-yellow-600" />
+            <p className="text-lg font-semibold text-yellow-800">
+              Thời gian thanh toán còn lại: {formatTimeLeft(timeLeft)}
+            </p>
+          </div>
+        )}
 
         {/* Info cards & details */}
         <div className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl">
@@ -766,9 +839,9 @@ const OrderDetail = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  disabled={isCancelDisabled}
+                  disabled={isCancelDisabled || (order.paymentMethod === "VNPAY" && !order.isPaid && timeLeft === 0)}
                   className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 ${
-                    isCancelDisabled
+                    isCancelDisabled || (order.paymentMethod === "VNPAY" && !order.isPaid && timeLeft === 0)
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                       : "bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                   }`}
@@ -798,6 +871,16 @@ const OrderDetail = () => {
                     Đã nhận hàng
                   </button>
                 ) : null}
+
+                {order.paymentMethod === "VNPAY" && !order.isPaid && timeLeft !== null && timeLeft > 0 && (
+                  <button
+                    onClick={handlePayNow}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors duration-200 bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    Thanh toán ngay
+                  </button>
+                )}
               </div>
 
               <div className="text-right">
