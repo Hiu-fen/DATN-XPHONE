@@ -232,6 +232,13 @@ const Checkout = () => {
     }
   }, [cart, recipientInfo.to_district_id, recipientInfo.to_ward_code, shippingProvider]);
 
+  // Cuộn lên đầu trang khi bắt đầu submit
+  useEffect(() => {
+    if (isSubmitting) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [isSubmitting]);
+
   const validatePhoneNumber = (phone: string): boolean => {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
     return phoneRegex.test(phone);
@@ -597,6 +604,8 @@ const Checkout = () => {
 
   const handleOrder = async () => {
     if (isSubmitting) return;
+    // Cuộn lên đầu trang trước khi xử lý
+    window.scrollTo({ top: 0, behavior: "smooth" });
     setIsSubmitting(true);
 
     if (!user) {

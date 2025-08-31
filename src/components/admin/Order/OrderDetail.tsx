@@ -14,8 +14,10 @@ import {
   Space,
   message,
   Select,
-  Result
+  Result,
+  Tag,
 } from "antd";
+import { useEffect, useState } from "react";
 
 const { Title } = Typography;
 
@@ -74,7 +76,20 @@ const OrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const getValidStatusOptions = (currentStatus: string) => {
+  const getValidStatusOptions = (currentStatus: string, paymentMethod?: string, isPaid?: boolean) => {
+    if (paymentMethod === "VNPAY" && !isPaid) {
+      if (currentStatus === "Chờ xác nhận") {
+        return [
+          { label: "Chờ xác nhận", value: "Chờ xác nhận" },
+          { label: "Đã huỷ", value: "Đã huỷ" },
+        ];
+      }
+      if (currentStatus === "Đã huỷ") {
+        return [{ label: "Đã huỷ", value: "Đã huỷ" }];
+      }
+      return [{ label: currentStatus, value: currentStatus }];
+    }
+
     if (
       currentStatus === "Giao thành công" ||
       currentStatus === "Đã huỷ" ||
@@ -113,8 +128,8 @@ const OrderDetail = () => {
       return res.data;
     },
     enabled: !!id,
-    retry: 0, // Ngăn chặn tự động retry khi lỗi (ví dụ: 404)
-    refetchOnWindowFocus: false, // Ngăn chặn refetch khi window focus lại
+    retry: 0,
+    refetchOnWindowFocus: false,
   });
 
   const statusMutation = useMutation({
@@ -130,6 +145,21 @@ const OrderDetail = () => {
     onError: (error: any) => {
       message.error(
         error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
+      );
+    },
+  });
+
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`http://localhost:5000/api/orders/${id}`);
+    },
+    onSuccess: () => {
+      message.success("Đơn hàng đã được xóa");
+      navigate("/admin/orders");
+    },
+    onError: (error: any) => {
+      message.error(
+        error.response?.data?.message || "Lỗi khi xóa đơn hàng"
       );
     },
   });
@@ -159,6 +189,39 @@ const OrderDetail = () => {
     }
     statusMutation.mutate({ id: id!, status });
   };
+
+  // State cho thời gian đếm ngược
+  const [timeLeft, setTimeLeft] = useState<number>(60);
+
+  // Logic đếm ngược và refetch khi hết thời gian
+  useEffect(() => {
+    if (order && order.paymentMethod === "VNPAY" && !order.isPaid) {
+      const orderDate = new Date(order.date).getTime();
+      const currentTime = new Date().getTime();
+      const timeElapsed = Math.floor((currentTime - orderDate) / 1000); // Giây đã trôi qua
+      let remainingTime = 60 - timeElapsed; // 1 phút = 60 giây
+
+      if (remainingTime <= 0) {
+        refetch(); // Cập nhật lại trang khi hết thời gian
+      } else {
+        setTimeLeft(remainingTime);
+
+        const timerId = setInterval(() => {
+          setTimeLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(timerId);
+              refetch(); // Cập nhật lại trang khi hết thời gian
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+
+        // Cleanup interval khi component unmount hoặc order thay đổi
+        return () => clearInterval(timerId);
+      }
+    }
+  }, [order, id, refetch]);
 
   const columns = [
     {
@@ -329,7 +392,7 @@ const OrderDetail = () => {
                 value={order.status}
                 onChange={(value) => handleStatusChange(value)}
                 style={{ width: 180 }}
-                options={getValidStatusOptions(order.status)}
+                options={getValidStatusOptions(order.status, order.paymentMethod, order.isPaid)}
                 placeholder="Chọn trạng thái"
                 disabled={
                   order.status === "Giao thành công" ||
@@ -358,6 +421,15 @@ const OrderDetail = () => {
           <Descriptions.Item label="Lý do huỷ đơn hàng">
             {order.cancelReason || "Không có"}
           </Descriptions.Item>
+          {order.paymentMethod === "VNPAY" && !order.isPaid && (
+            <Descriptions.Item label="Thời gian còn lại">
+              <Tag color="red">
+                {Math.floor(timeLeft / 60)}:{(timeLeft % 60)
+                  .toString()
+                  .padStart(2, "0")} phút
+              </Tag>
+            </Descriptions.Item>
+          )}
         </Descriptions>
       </Card>
 

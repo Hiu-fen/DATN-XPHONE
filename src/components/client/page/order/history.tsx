@@ -14,7 +14,7 @@ import {
   FaTrophy,
 } from "react-icons/fa"
 import { message, Radio } from "antd"
-import socket from "../../../../socket" // <-- đường dẫn tới file socket.ts
+import socket from "../../../../socket"
 
 interface Order {
   _id: string
@@ -28,6 +28,8 @@ interface Order {
   items: OrderItem[]
   paymentMethod?: string
   address: string
+  isPaid: boolean
+  returnStatus?: string // Tracks return request status
 }
 
 interface OrderItem {
@@ -61,6 +63,7 @@ const statusOptions: string[] = [
   "Đã nhận hàng",
   "Đã huỷ",
   "Trả hàng/Hoàn tiền",
+  "Chưa thanh toán",
 ]
 
 const OrderHistory = () => {
@@ -79,54 +82,40 @@ const OrderHistory = () => {
     const saved = localStorage.getItem("reviewedOrders")
     return saved ? new Set(JSON.parse(saved)) : new Set()
   })
-
-  // State cho thông báo điểm thành tích
+  const [timeLeftMap, setTimeLeftMap] = useState<{ [key: string]: number }>({})
   const [showAchievementNotification, setShowAchievementNotification] = useState(false)
-  // State cho thông báo cảm ơn đánh giá
   const [showThankYouReviewModal, setShowThankYouReviewModal] = useState(false)
 
   const user: User | null = useMemo(() => {
     return JSON.parse(localStorage.getItem("user") || "null")
   }, [])
 
-  // ----- Helper: compute totals (original, refunded, remaining) cho mỗi order -----
   const computeOrderTotals = (order: Order) => {
     const refundedFromField = typeof order.refundedAmount === "number" ? order.refundedAmount : 0
-
-    // sum successful refunds from refunds array if present
     const refundedFromArray =
       Array.isArray(order.refunds) && order.refunds.length > 0
         ? order.refunds
             .filter((r) => (r.status || "").toLowerCase().includes("success"))
             .reduce((s, r) => s + (r.amount || 0), 0)
         : 0
-
     const refundedAmount = Math.max(refundedFromField, refundedFromArray)
-
-    // originalTotal priority; if absent, try total + refundedAmount (case backend set total = 0)
     let originalTotal: number
     if (typeof order.originalTotal === "number") {
       originalTotal = order.originalTotal
     } else {
-      // fallback: if backend zeroed total on refund, reconstruct
       originalTotal = (typeof order.total === "number" ? order.total : 0) + refundedAmount
     }
-
-    // remaining amount to customer (original - refunded)
     const remaining = Math.max(0, originalTotal - refundedAmount)
-
-    return {
-      originalTotal,
-      refundedAmount,
-      remaining,
-    }
+    return { originalTotal, refundedAmount, remaining }
   }
 
   const filteredOrders = useMemo(() => {
     let sorted = [...orders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    if (statusFilter !== "all") {
+    if (statusFilter === "Chưa thanh toán") {
+      sorted = sorted.filter((order) => order.paymentMethod === "VNPAY" && !order.isPaid)
+    } else if (statusFilter !== "all") {
       sorted = sorted.filter((order) =>
-        order.status.toLowerCase().replace(/\s/g, "").includes(statusFilter.toLowerCase().replace(/\s/g, "")),
+        order.status.toLowerCase().replace(/\s/g, "").includes(statusFilter.toLowerCase().replace(/\s/g, ""))
       )
     }
     return sorted
@@ -135,7 +124,6 @@ const OrderHistory = () => {
   useEffect(() => {
     const handleOrderUpdated = (updatedOrder: any) => {
       if (updatedOrder.userId !== user?._id) return
-      console.log("🔄 Đơn hàng vừa được cập nhật:", updatedOrder)
       setOrders((prev) => {
         const exists = prev.some((o) => o._id === updatedOrder._id)
         if (exists) {
@@ -181,6 +169,51 @@ const OrderHistory = () => {
     fetchOrders()
   }, [user?._id])
 
+  useEffect(() => {
+    const timers: { [key: string]: NodeJS.Timeout } = {}
+    if (orders) {
+      orders.forEach((order) => {
+        if (order.paymentMethod === "VNPAY" && !order.isPaid) {
+          const orderDate = new Date(order.date).getTime()
+          const currentTime = new Date().getTime()
+          const timeElapsed = Math.floor((currentTime - orderDate) / 1000)
+          let remainingTime = 60 - timeElapsed
+          if (remainingTime > 0) {
+            setTimeLeftMap((prev) => ({ ...prev, [order._id]: remainingTime }))
+            timers[order._id] = setInterval(() => {
+              setTimeLeftMap((prev) => {
+                const newTime = (prev[order._id] || 0) - 1
+                if (newTime <= 0) {
+                  clearInterval(timers[order._id])
+                  refetchOrders()
+                  return { ...prev, [order._id]: 0 }
+                }
+                return { ...prev, [order._id]: newTime }
+              })
+            }, 1000)
+          } else {
+            setTimeLeftMap((prev) => ({ ...prev, [order._id]: 0 }))
+            refetchOrders()
+          }
+        }
+      })
+      return () => {
+        Object.values(timers).forEach((timer) => clearInterval(timer))
+      }
+    }
+  }, [orders])
+
+  const refetchOrders = async () => {
+    if (user?._id) {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/orders/user/${user._id}`)
+        setOrders(res.data)
+      } catch (err) {
+        console.error("Lỗi khi refetch orders:", err)
+      }
+    }
+  }
+
   const confirmReceived = async (orderId: string) => {
     try {
       await axios.patch(`http://localhost:5000/api/orders/${orderId}`, {
@@ -188,9 +221,27 @@ const OrderHistory = () => {
       })
       message.success("Xác nhận đã nhận hàng thành công!")
       setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, status: "Đã nhận hàng" } : o)))
-      setShowAchievementNotification(true) // Hiển thị thông báo điểm thưởng
+      setShowAchievementNotification(true)
     } catch (error) {
       message.error("Xác nhận thất bại!")
+    }
+  }
+
+  const handlePayNow = async (order: Order) => {
+    try {
+      const res = await axios.post(`http://localhost:5000/api/vnpay/create_payment_url`, {
+        orderCode: order.orderCode,
+        orderId: order._id,
+        amount: order.total
+      })
+      if (res.data.success) {
+        window.location.href = res.data.paymentUrl
+      } else {
+        message.error(res.data.message || "Lỗi khi tạo liên kết thanh toán!")
+      }
+    } catch (err) {
+      console.error("Lỗi handlePayNow:", err)
+      message.error("Lỗi khi tạo liên kết thanh toán!")
     }
   }
 
@@ -240,6 +291,8 @@ const OrderHistory = () => {
         return "bg-red-100 text-red-800 border-red-200"
       case "trả hàng/hoàn tiền":
         return "bg-pink-100 text-pink-800 border-pink-200"
+      case "chưa thanh toán":
+        return "bg-red-100 text-red-800 border-red-200"
       default:
         return "bg-gray-100 text-gray-800 border-gray-200"
     }
@@ -323,7 +376,7 @@ const OrderHistory = () => {
         setCurrentProductIndex((prev) => prev + 1)
       } else {
         handleCloseReviewModal()
-        setShowThankYouReviewModal(true) // Hiển thị thông báo cảm ơn đánh giá
+        setShowThankYouReviewModal(true)
       }
     } catch (error) {
       console.error("Lỗi gửi đánh giá:", error)
@@ -350,7 +403,6 @@ const OrderHistory = () => {
     setShowThankYouReviewModal(false)
   }
 
-  // Logic cho component AchievementNotification được tích hợp
   const AchievementNotification = () => {
     const icon = <FaTrophy className="w-20 h-20 text-yellow-500 animate-pop-in" />
     const title = "Thành tích mới!"
@@ -380,7 +432,6 @@ const OrderHistory = () => {
     )
   }
 
-  // Component mới cho thông báo cảm ơn đánh giá
   const ThankYouReviewModal = () => {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[9999] backdrop-blur-sm">
@@ -409,7 +460,7 @@ const OrderHistory = () => {
     if (showAchievementNotification) {
       const timer = setTimeout(() => {
         handleCloseAchievementNotification()
-      }, 3500) // Tự động ẩn sau 3.5 giây
+      }, 3500)
       return () => clearTimeout(timer)
     }
   }, [showAchievementNotification])
@@ -418,7 +469,7 @@ const OrderHistory = () => {
     if (showThankYouReviewModal) {
       const timer = setTimeout(() => {
         handleCloseThankYouReviewModal()
-      }, 3500) // Tự động ẩn sau 3.5 giây
+      }, 3500)
       return () => clearTimeout(timer)
     }
   }, [showThankYouReviewModal])
@@ -438,7 +489,6 @@ const OrderHistory = () => {
     )
   }
 
-  // ===== Summary stats compute using computedOriginal totals =====
   const totalOrders = orders.length
   const totalSpend = orders.reduce((sum, o) => {
     const { originalTotal } = computeOrderTotals(o)
@@ -450,7 +500,6 @@ const OrderHistory = () => {
       <div className="pt-20 pb-8 min-h-screen">
         <div className="bg-gray-50 min-h-full">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header */}
             <div className="mb-8 pt-8">
               <div className="flex items-center gap-3 mb-2">
                 <FaShoppingBag className="w-8 h-8 text-blue-600" />
@@ -458,7 +507,6 @@ const OrderHistory = () => {
               </div>
               <p className="text-gray-600">Quản lý và theo dõi tất cả đơn hàng của bạn</p>
             </div>
-            {/* Bộ lọc trạng thái */}
             <div className="flex justify-center overflow-x-auto whitespace-nowrap mb-[20px]">
               <Radio.Group value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} buttonStyle="solid">
                 <Radio.Button value="all">Tất cả</Radio.Button>
@@ -471,11 +519,13 @@ const OrderHistory = () => {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Mobile View */}
               <div className="block lg:hidden">
                 <div className="divide-y divide-gray-200">
                   {filteredOrders.map((order) => {
                     const { originalTotal, refundedAmount } = computeOrderTotals(order)
+                    const hasReturnRequest = order.returnStatus && order.returnStatus !== "Từ chối"
+                    const showReviewButton = order.status === "Trả hàng/Hoàn tiền" && !reviewedOrders.has(order._id)
+
                     return (
                       <div key={order._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
                         <div className="flex justify-between items-start mb-4">
@@ -489,9 +539,7 @@ const OrderHistory = () => {
                             <p className="text-sm text-gray-500">{new Date(order.date).toLocaleDateString("vi-VN")}</p>
                           </div>
                           <span
-                            className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                              order.status,
-                            )}`}
+                            className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}
                           >
                             {order.status}
                           </span>
@@ -529,7 +577,30 @@ const OrderHistory = () => {
                             <FaEye className="w-4 h-4" />
                             Xem chi tiết
                           </Link>
-                          {isOrderCompleted(order.status) && !reviewedOrders.has(order._id) && (
+                          {order.paymentMethod === "VNPAY" && !order.isPaid && (
+                            <button
+                              onClick={() => handlePayNow(order)}
+                              className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200"
+                            >
+                              <FaCreditCard className="w-4 h-4" />
+                              Thanh toán ngay
+                            </button>
+                          )}
+                          {!hasReturnRequest && order.status === "Giao thành công" && !reviewedOrders.has(order._id) && (
+                            <button
+                              onClick={() => confirmReceived(order._id)}
+                              className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors duration-200"
+                            >
+                              <FaCheck className="w-4 h-4" />
+                              Đã nhận hàng
+                            </button>
+                          )}
+                          {hasReturnRequest && order.status !== "Trả hàng/Hoàn tiền" && (
+                            <span className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-orange-100 text-orange-800 font-medium rounded-lg">
+                              Đang chờ duyệt
+                            </span>
+                          )}
+                          {showReviewButton && (
                             <button
                               onClick={() => openReviewModal(order)}
                               className="flex-1 inline-flex items-center gap-2 justify-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200"
@@ -551,7 +622,6 @@ const OrderHistory = () => {
                 </div>
               </div>
 
-              {/* Desktop View */}
               <div className="hidden lg:block overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -585,6 +655,9 @@ const OrderHistory = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredOrders.map((order) => {
                       const { originalTotal, refundedAmount } = computeOrderTotals(order)
+                      const hasReturnRequest = order.returnStatus && order.returnStatus !== "Từ chối"
+                      const showReviewButton = order.status === "Đã nhận hàng" && !reviewedOrders.has(order._id)
+
                       return (
                         <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
                           <td className="px-5 py-4">
@@ -610,9 +683,7 @@ const OrderHistory = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <span
-                              className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                                order.status,
-                              )}`}
+                              className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(order.status)}`}
                             >
                               {order.status}
                             </span>
@@ -634,7 +705,24 @@ const OrderHistory = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                             <div className="flex gap-2 justify-center">
-                              {order.status === "Giao thành công" && (
+                              {order.paymentMethod === "VNPAY" && !order.isPaid && (
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={() => handlePayNow(order)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 transition-all duration-200"
+                                  >
+                                    <FaCreditCard className="w-4 h-4" />
+                                    Thanh toán ngay
+                                  </button>
+                                  <span className="text-sm text-red-600 font-medium">
+                                    ({Math.floor((timeLeftMap[order._id] || 0) / 60)}:
+                                    {((timeLeftMap[order._id] || 0) % 60)
+                                      .toString()
+                                      .padStart(2, "0")} phút)
+                                  </span>
+                                </div>
+                              )}
+                              {order.status === "Giao thành công" && !hasReturnRequest && !reviewedOrders.has(order._id) && (
                                 <button
                                   onClick={() => confirmReceived(order._id)}
                                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 transition-all duration-200"
@@ -643,7 +731,12 @@ const OrderHistory = () => {
                                   Đã nhận hàng
                                 </button>
                               )}
-                              {order.status === "Đã nhận hàng" && !reviewedOrders.has(order._id) && (
+                              {hasReturnRequest && order.status !== "Trả hàng/Hoàn tiền" && (
+                                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-orange-100 text-orange-800">
+                                  Đang chờ duyệt
+                                </span>
+                              )}
+                              {showReviewButton && (
                                 <button
                                   onClick={() => openReviewModal(order)}
                                   className="inline-flex items-center gap-2 px-3 py-2 bg-yellow-500 text-white text-sm font-medium rounded-lg hover:bg-yellow-600"
@@ -652,7 +745,7 @@ const OrderHistory = () => {
                                   Đánh giá
                                 </button>
                               )}
-                              {order.status === "Đã nhận hàng" && reviewedOrders.has(order._id) && (
+                              {reviewedOrders.has(order._id) && (
                                 <span className="inline-flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
                                   <FaStar className="w-4 h-4" />
                                   Đã đánh giá
@@ -668,7 +761,6 @@ const OrderHistory = () => {
               </div>
             </div>
 
-            {/* Summary Stats */}
             {orders.length > 0 && (
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -716,7 +808,6 @@ const OrderHistory = () => {
         </div>
       </div>
 
-      {/* Modal đánh giá sản phẩm */}
       {showReviewModal && selectedOrder && uniqueProducts.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
@@ -728,7 +819,6 @@ const OrderHistory = () => {
               {uniqueProducts[currentProductIndex] && (
                 <>
                   <div className="mb-4 p-4 border rounded-lg bg-gray-50">
-                    {/* Thêm hình ảnh sản phẩm */}
                     <div className="flex items-center gap-3 mb-3">
                       <img
                         src={productImages[uniqueProducts[currentProductIndex].productId] || "/placeholder-image.png"}
@@ -756,7 +846,6 @@ const OrderHistory = () => {
                     </div>
                   </div>
 
-                  {/* Đánh giá sao */}
                   <div className="mb-6 text-center">
                     <p className="mb-4 text-lg font-semibold text-gray-800">Bạn cảm thấy sản phẩm này như thế nào?</p>
                     <div className="flex justify-center gap-2 mb-4">
@@ -846,9 +935,7 @@ const OrderHistory = () => {
         </div>
       )}
 
-      {/* Achievement Notification (Chỉ cho điểm thành tích) */}
       {showAchievementNotification && <AchievementNotification />}
-      {/* Thank You Review Modal (Chỉ cho đánh giá) */}
       {showThankYouReviewModal && <ThankYouReviewModal />}
     </>
   )
