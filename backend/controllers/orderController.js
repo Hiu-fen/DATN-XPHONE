@@ -8,17 +8,6 @@ const { sendOrderConfirmation } = require("../utils/emailService");
 const { sendDeliverySuccessEmail } = require("../utils/emailService");
 const { sendVnpaySuccessEmail } = require("../utils/emailService");
 
-// exports.getAllOrders = async (req, res) => {
-//   try {
-//     const orders = await Order.find({
-//       $or: [{ paymentMethod: { $ne: "VNPAY" } }, { isPaid: true }],
-//     });
-//     res.json(orders);
-//   } catch (error) {
-//     res.status(500).json({ message: "Lỗi server" });
-//   }
-// };
-// Trong orderController.js
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find(); // Loại bỏ điều kiện $or để hiển thị tất cả
@@ -322,7 +311,7 @@ exports.createOrder = async (req, res) => {
         } catch (err) {
           console.error("Lỗi khi xóa đơn hàng hết hạn:", err.message);
         }
-      }, 60 * 1000); // 1 phút
+      }, 5 * 60 * 1000); // 5 phút
     }
 
     console.log("SAVED ORDER:");

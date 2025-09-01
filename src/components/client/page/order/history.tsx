@@ -177,7 +177,7 @@ const OrderHistory = () => {
           const orderDate = new Date(order.date).getTime()
           const currentTime = new Date().getTime()
           const timeElapsed = Math.floor((currentTime - orderDate) / 1000)
-          let remainingTime = 60 - timeElapsed
+          let remainingTime = 300 - timeElapsed
           if (remainingTime > 0) {
             setTimeLeftMap((prev) => ({ ...prev, [order._id]: remainingTime }))
             timers[order._id] = setInterval(() => {

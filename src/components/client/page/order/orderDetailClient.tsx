@@ -167,7 +167,7 @@ const OrderDetail = () => {
   useEffect(() => {
     if (order && order.paymentMethod === "VNPAY" && !order.isPaid) {
       const createdAt = new Date(order.date).getTime()
-      const expiresAt = createdAt + 60 * 1000 // 1 phút sau khi tạo
+      const expiresAt = createdAt + 5 * 60 * 1000 // 5 phút sau khi tạo
       const updateTimer = () => {
         const now = Date.now()
         const remaining = Math.max(0, Math.floor((expiresAt - now) / 1000))

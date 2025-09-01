@@ -51,6 +51,7 @@ const statusOptions = [
 ];
 
 const fullStatusOptions = [...statusOptions, "Đã nhận hàng"];
+
 const OrderList = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
@@ -59,6 +60,33 @@ const OrderList = () => {
     string | null
   >(null);
   const [timeLeftMap, setTimeLeftMap] = useState<{ [key: string]: number }>({});
+
+  const {
+    data: orders,
+    refetch,
+    isLoading,
+  } = useQuery<Order[]>({
+    queryKey: ["orders"],
+    queryFn: async () => {
+      const response = await axios.get("http://localhost:5000/api/orders");
+      return response.data;
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await axios.patch(`http://localhost:5000/api/orders/${id}`, { status });
+    },
+    onSuccess: () => {
+      message.success("Cập nhật trạng thái thành công");
+      refetch();
+    },
+    onError: (error: any) => {
+      message.error(
+        error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
+      );
+    },
+  });
 
   const getValidStatusOptions = (
     currentStatus: string,
@@ -91,33 +119,6 @@ const OrderList = () => {
     }
     return [{ label: currentStatus, value: currentStatus }];
   };
-
-  const {
-    data: orders,
-    refetch,
-    isLoading,
-  } = useQuery<Order[]>({
-    queryKey: ["orders"],
-    queryFn: async () => {
-      const response = await axios.get("http://localhost:5000/api/orders");
-      return response.data;
-    },
-  });
-
-  const mutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      await axios.patch(`http://localhost:5000/api/orders/${id}`, { status });
-    },
-    onSuccess: () => {
-      message.success("Cập nhật trạng thái thành công");
-      refetch();
-    },
-    onError: (error: any) => {
-      message.error(
-        error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
-      );
-    },
-  });
 
   const handleStatusChange = (
     id: string,
@@ -162,13 +163,12 @@ const OrderList = () => {
       return;
     }
 
-    setLoadingStatusUpdateId(id); // chặn bấm lại
+    setLoadingStatusUpdateId(id);
 
     mutation.mutate(
       { id, status: newStatus },
       {
         onSuccess: () => {
-          // Nếu là đơn COD và chuyển sang Giao thành công → đã thanh toán
           if (newStatus === "Giao thành công") {
             const order = orders?.find((o) => o._id === id);
             if (
@@ -198,7 +198,6 @@ const OrderList = () => {
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // Logic đếm ngược cho từng đơn VNPAY chưa thanh toán
   useEffect(() => {
     const timers: { [key: string]: NodeJS.Timeout } = {};
     if (orders) {
@@ -206,8 +205,8 @@ const OrderList = () => {
         if (order.paymentMethod === "VNPAY" && !order.isPaid) {
           const orderDate = new Date(order.date).getTime();
           const currentTime = new Date().getTime();
-          const timeElapsed = Math.floor((currentTime - orderDate) / 1000); // Giây đã trôi qua
-          let remainingTime = 60 - timeElapsed; // 1 phút = 60 giây
+          const timeElapsed = Math.floor((currentTime - orderDate) / 1000);
+          let remainingTime = 300 - timeElapsed; // 5 phút = 300 giây
 
           if (remainingTime > 0) {
             setTimeLeftMap((prev) => ({ ...prev, [order._id]: remainingTime }));
@@ -216,7 +215,7 @@ const OrderList = () => {
                 const newTime = (prev[order._id] || 0) - 1;
                 if (newTime <= 0) {
                   clearInterval(timers[order._id]);
-                  refetch(); // Cập nhật trang khi hết thời gian
+                  refetch();
                   return { ...prev, [order._id]: 0 };
                 }
                 return { ...prev, [order._id]: newTime };
@@ -224,12 +223,11 @@ const OrderList = () => {
             }, 1000);
           } else {
             setTimeLeftMap((prev) => ({ ...prev, [order._id]: 0 }));
-            refetch(); // Cập nhật ngay nếu đã hết thời gian
+            refetch();
           }
         }
       });
 
-      // Cleanup khi component unmount hoặc orders thay đổi
       return () => {
         Object.values(timers).forEach((timer) => clearInterval(timer));
       };
@@ -286,21 +284,10 @@ const OrderList = () => {
           record.paymentMethod === "VNPAY"
         ) {
           return (
-            <Tag
-              color={record.isPaid ? "green" : "orange"}
-              style={{ display: "flex", alignItems: "center" }}
-            >
+            <Tag color={record.isPaid ? "green" : "orange"}>
               {record.isPaid
                 ? `${record.paymentMethod} - Đã thanh toán`
                 : `${record.paymentMethod} - Chưa thanh toán`}
-              {!record.isPaid && record.paymentMethod === "VNPAY" && (
-                <span style={{ marginLeft: 8, color: "#f5222d" }}>
-                  ({Math.floor((timeLeftMap[record._id] || 0) / 60)}:
-                  {((timeLeftMap[record._id] || 0) % 60)
-                    .toString()
-                    .padStart(2, "0")} phút)
-                </span>
-              )}
             </Tag>
           );
         }
@@ -314,7 +301,22 @@ const OrderList = () => {
       title: "Phương thức thanh toán",
       dataIndex: "paymentMethod",
       key: "paymentMethod",
-      render: (method: string) => method || "Chưa xác định",
+      render: (method: string, record: Order) => (
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span>{method || "Chưa xác định"}</span>
+          {!record.isPaid && record.paymentMethod === "VNPAY" && (
+            <span style={{ marginLeft: 8, color: "#f5222d" }}>
+              {timeLeftMap[record._id] > 0
+                ? `(${Math.floor(timeLeftMap[record._id] / 60)}:${(
+                    timeLeftMap[record._id] % 60
+                  )
+                    .toString()
+                    .padStart(2, "0")} phút)`
+                : "(Hết thời gian)"}
+            </span>
+          )}
+        </div>
+      ),
     },
     {
       title: "Trạng thái đơn hàng",
@@ -362,7 +364,6 @@ const OrderList = () => {
     <div className="p-4">
       <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách đơn hàng</h2>
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-        {/* Bộ lọc theo trạng thái đơn hàng */}
         <div className="mb-4 md:mb-0">
           <Radio.Group
             value={statusFilter}
@@ -378,8 +379,6 @@ const OrderList = () => {
             ))}
           </Radio.Group>
         </div>
-
-        {/* Tìm kiếm đơn hàng */}
         <div>
           <Input.Search
             placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
@@ -390,8 +389,6 @@ const OrderList = () => {
           />
         </div>
       </div>
-
-      {/* Bảng danh sách đơn */}
       <Table
         dataSource={filteredOrders}
         columns={columns}

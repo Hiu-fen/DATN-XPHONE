@@ -124,6 +124,7 @@ const Checkout = () => {
     discountValue: string;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVNPAYLoading, setIsVNPAYLoading] = useState(false); // Trạng thái loading cho VNPAY
   const [paymentMethod, setPaymentMethod] = useState("VNPAY");
   const [shippingProvider, setShippingProvider] = useState("GHN");
   const [errors, setErrors] = useState<{
@@ -601,6 +602,50 @@ const Checkout = () => {
       setDiscountAmount(0);
     }
   };
+  // Thêm hàm handleVNPAYPayment trước handleOrder
+const handleVNPAYPayment = async (newOrder: any, orderId: string, token: string) => {
+  setIsVNPAYLoading(true);
+  try {
+    const startTime = Date.now();
+    const vnpRes = await axios.post(
+      "http://localhost:5000/api/vnpay/create_payment_url",
+      {
+        amount: newOrder.total,
+        orderCode: newOrder.orderCode,
+        orderId,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 10000, // Timeout 10 giây
+      }
+    );
+    console.log(`✅ Thời gian gọi API VNPAY: ${Date.now() - startTime}ms`);
+    window.location.href = vnpRes.data.paymentUrl;
+  } catch (err: any) {
+    console.error("❌ Lỗi VNPAY:", err);
+    if (err.response?.status === 504) {
+      message.error({
+        content: (
+          <div>
+            Máy chủ VNPAY không phản hồi. Vui lòng thử lại sau vài phút hoặc chọn phương thức thanh toán khác.
+            <button
+              className="ml-2 text-blue-600 underline"
+              onClick={() => handleOrder()}
+            >
+              Thử lại
+            </button>
+          </div>
+        ),
+        duration: 5,
+      });
+    } else {
+      message.error(
+        err.response?.data?.message || "Không thể kết nối đến VNPAY. Vui lòng thử lại."
+      );
+    }
+    setIsVNPAYLoading(false);
+  }
+};
 
   const handleOrder = async () => {
     if (isSubmitting) return;
@@ -719,20 +764,9 @@ const Checkout = () => {
       const orderId = createdOrder._id;
 
       if (paymentMethod === "VNPAY") {
-        localStorage.setItem("fromBuyNow", JSON.stringify(isBuyNow));
-        const vnpRes = await axios.post(
-          "http://localhost:5000/api/vnpay/create_payment_url",
-          {
-            amount: newOrder.total,
-            orderCode: newOrder.orderCode,
-            orderId,
-          },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        const { paymentUrl } = vnpRes.data;
-        window.location.href = paymentUrl;
-        return;
+        // Handle VNPAY payment in a separate function with loading state
+        await handleVNPAYPayment(newOrder, orderId, token);
+        return; // Exit early as the redirect is handled in handleVNPAYPayment
       }
 
       if (paymentMethod === "COD") {
@@ -808,7 +842,7 @@ const Checkout = () => {
           </Spin>
         </div>
       ) : (
-        <Spin spinning={isSubmitting} tip="Đang xử lý đơn hàng..." size="large">
+        <Spin spinning={isSubmitting || isVNPAYLoading} tip={isVNPAYLoading ? "Đang chuyển hướng đến VNPAY..." : "Đang xử lý đơn hàng..."} size="large">
           <div className="mx-4 p-8 bg-white rounded-lg mt-12 mb-12 border-2 w-full max-w-6xl">
             <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
               Xác nhận đơn hàng

@@ -191,7 +191,7 @@ const OrderDetail = () => {
   };
 
   // State cho thời gian đếm ngược
-  const [timeLeft, setTimeLeft] = useState<number>(60);
+  const [timeLeft, setTimeLeft] = useState<number>(300);
 
   // Logic đếm ngược và refetch khi hết thời gian
   useEffect(() => {
@@ -199,7 +199,7 @@ const OrderDetail = () => {
       const orderDate = new Date(order.date).getTime();
       const currentTime = new Date().getTime();
       const timeElapsed = Math.floor((currentTime - orderDate) / 1000); // Giây đã trôi qua
-      let remainingTime = 60 - timeElapsed; // 1 phút = 60 giây
+      let remainingTime = 300 - timeElapsed; // 5 phút = 300 giây
 
       if (remainingTime <= 0) {
         refetch(); // Cập nhật lại trang khi hết thời gian
