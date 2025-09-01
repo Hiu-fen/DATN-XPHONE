@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { Table, Select, message, Tag, Input, Button, Radio } from "antd";
@@ -59,7 +59,6 @@ const OrderList = () => {
   const [loadingStatusUpdateId, setLoadingStatusUpdateId] = useState<
     string | null
   >(null);
-  const [timeLeftMap, setTimeLeftMap] = useState<{ [key: string]: number }>({});
 
   const getValidStatusOptions = (
     currentStatus: string,
@@ -202,51 +201,8 @@ const OrderList = () => {
         .toLowerCase()
         .includes(searchText.toLowerCase())
     )
-    .filter((o) => {
-      if (statusFilter === "all") return true;
-      if (statusFilter === "Chưa thanh toán")
-        return o.paymentMethod === "VNPAY" && !o.isPaid;
-      return o.status === statusFilter;
-    })
+    .filter((o) => statusFilter === "all" || o.status === statusFilter)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  // Logic đếm ngược cho từng đơn VNPAY chưa thanh toán
-  useEffect(() => {
-    const timers: { [key: string]: NodeJS.Timeout } = {};
-    if (orders) {
-      orders.forEach((order) => {
-        if (order.paymentMethod === "VNPAY" && !order.isPaid) {
-          const orderDate = new Date(order.date).getTime();
-          const currentTime = new Date().getTime();
-          const timeElapsed = Math.floor((currentTime - orderDate) / 1000); // Giây đã trôi qua
-          let remainingTime = 60 - timeElapsed; // 1 phút = 60 giây
-
-          if (remainingTime > 0) {
-            setTimeLeftMap((prev) => ({ ...prev, [order._id]: remainingTime }));
-            timers[order._id] = setInterval(() => {
-              setTimeLeftMap((prev) => {
-                const newTime = (prev[order._id] || 0) - 1;
-                if (newTime <= 0) {
-                  clearInterval(timers[order._id]);
-                  refetch(); // Cập nhật trang khi hết thời gian
-                  return { ...prev, [order._id]: 0 };
-                }
-                return { ...prev, [order._id]: newTime };
-              });
-            }, 1000);
-          } else {
-            setTimeLeftMap((prev) => ({ ...prev, [order._id]: 0 }));
-            refetch(); // Cập nhật ngay nếu đã hết thời gian
-          }
-        }
-      });
-
-      // Cleanup khi component unmount hoặc orders thay đổi
-      return () => {
-        Object.values(timers).forEach((timer) => clearInterval(timer));
-      };
-    }
-  }, [orders, refetch]);
 
   const columns = [
     {
@@ -279,6 +235,7 @@ const OrderList = () => {
       render: (_: any, record: Order) =>
         (record.originalTotal ?? 0).toLocaleString() + " VND",
     },
+
     {
       title: "Thanh toán",
       key: "isPaid",
@@ -298,21 +255,10 @@ const OrderList = () => {
           record.paymentMethod === "VNPAY"
         ) {
           return (
-            <Tag
-              color={record.isPaid ? "green" : "orange"}
-              style={{ display: "flex", alignItems: "center" }}
-            >
+            <Tag color={record.isPaid ? "green" : "orange"}>
               {record.isPaid
                 ? `${record.paymentMethod} - Đã thanh toán`
                 : `${record.paymentMethod} - Chưa thanh toán`}
-              {!record.isPaid && record.paymentMethod === "VNPAY" && (
-                <span style={{ marginLeft: 8, color: "#f5222d" }}>
-                  ({Math.floor((timeLeftMap[record._id] || 0) / 60)}:
-                  {((timeLeftMap[record._id] || 0) % 60)
-                    .toString()
-                    .padStart(2, "0")} phút)
-                </span>
-              )}
             </Tag>
           );
         }
@@ -376,18 +322,19 @@ const OrderList = () => {
   ];
 
   return (
-    <div className="p-4">
-      <h2 className="text-3xl font-bold mb-4 text-green-600">Danh sách đơn hàng</h2>
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+    <div>
+      <h2 className="text-3xl font-bold mb-4 text-green-600">
+        Danh sách đơn hàng
+      </h2>
+      <div>
         {/* Bộ lọc theo trạng thái đơn hàng */}
-        <div className="mb-4 md:mb-0">
+        <div className="flex justify-center   mr-[220px] mb-[-33px]">
           <Radio.Group
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             buttonStyle="solid"
           >
             <Radio.Button value="all">Tất cả</Radio.Button>
-            <Radio.Button value="Chưa thanh toán">Chưa thanh toán</Radio.Button>
             {fullStatusOptions.map((status) => (
               <Radio.Button key={status} value={status}>
                 {status}
@@ -397,11 +344,11 @@ const OrderList = () => {
         </div>
 
         {/* Tìm kiếm đơn hàng */}
-        <div>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
           <Input.Search
             placeholder="Tìm kiếm theo mã đơn hàng, khách hàng..."
             className="mb-4"
-            style={{ width: 300 }}
+            style={{ width: 300, marginTop: 50 }}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
           />
