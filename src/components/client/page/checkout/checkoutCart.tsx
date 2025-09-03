@@ -842,7 +842,7 @@ const handleVNPAYPayment = async (newOrder: any, orderId: string, token: string)
           </Spin>
         </div>
       ) : (
-        <Spin spinning={isSubmitting || isVNPAYLoading} tip={isVNPAYLoading ? "Đang chuyển hướng đến VNPAY..." : "Đang xử lý đơn hàng..."} size="large">
+        <Spin spinning={isSubmitting || isVNPAYLoading} tip={isVNPAYLoading ? "Đang chuyển hướng đến VNPAY..." : "Đang xử lý đơn hàng vui lòng chờ trong giây lát..."} size="large">
           <div className="mx-4 p-8 bg-white rounded-lg mt-12 mb-12 border-2 w-full max-w-6xl">
             <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
               Xác nhận đơn hàng
